@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Product** | Y, a question-based social network (French UI) |
-| **Document version** | 0.8 — draft, 2026-10-19 (contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
-| **Changelog** | 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
+| **Document version** | 0.9 — draft, 2026-10-19 (contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
+| **Changelog** | 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
 | **Audience** | Product owner, designers, frontend and backend developers, reviewers |
 | **Companion documents** | [`database/y-database.dbml`](database/y-database.dbml) (schema source), [`database/y-database-documentation.md`](database/y-database-documentation.md) (column reference) |
 
@@ -370,26 +370,30 @@ Note: the design folder is `design/` (decided in M0, step 0.2), inside `y/`. The
 
 ## 7. Local development
 
-> These steps describe the target setup. They work once the backend and frontend are scaffolded.
+> **Status:** the backend runs locally (M0 steps 1 to 4.6 are done). The frontend is not scaffolded yet, so its commands are the target setup.
 
 **Prerequisites**
 - Node.js 24 LTS and npm
-- Docker and Docker Compose
+- Docker, with the Compose plugin (for the PostgreSQL container and for the end-to-end tests, which start their own container)
 
 **Start the database**
 ```bash
-docker compose up -d postgres
+docker compose up -d postgres   # PostgreSQL 18.6 on 127.0.0.1:5434 (DEC-125, DEC-126)
 ```
 
 **Start the backend** (port 8080)
 ```bash
 cd backend
+cp ../.env.example .env         # then fill the secret keys locally; they are empty in the example; never commit .env
 npm install
-npx prisma migrate deploy   # applies the migrations to the local database
-npm run start:dev
+set -a; . ./.env; set +a        # the Prisma CLI reads DATABASE_URL from the environment
+npx prisma migrate deploy       # applies the migrations to the local database
+npm run build && npm start      # there is no watch mode yet
 ```
 
-**Start the frontend** (port 3000)
+The backend refuses to start when a required key is missing, and prints only the key names (section 15.2).
+
+**Start the frontend** (port 3000, not scaffolded yet)
 ```bash
 cd frontend
 npm install
@@ -398,12 +402,12 @@ npm run dev
 
 **Run the checks**
 ```bash
-cd backend && npm run lint && npm test && npm run test:e2e   # unit and integration tests
-cd frontend && npm run lint && npm test
+cd backend && npm run lint && npm test && npm run test:e2e   # unit tests, then end-to-end and migration tests (Docker must run)
+cd frontend && npm run lint && npm test                      # once the frontend exists
 ```
 
 **Useful URLs (local)**
-- App: http://localhost:3000
+- App: http://localhost:3000 (once the frontend exists)
 - API: http://localhost:8080/api/v1
 - Health: http://localhost:8080/health
 - API docs: http://localhost:8080/api/docs (enabled locally and in staging, disabled in production)
@@ -414,7 +418,7 @@ cd frontend && npm run lint && npm test
 
 ### 8.1 Package structure
 
-Organize by feature, then by layer:
+Organize by feature, then by layer. The tree is the target. Today `src/` holds `common/` (CSRF, logging, Problem Details, audit chain), `config/`, `health/`, `app.controller.ts`, `app.module.ts`, `configure-app.ts` and `main.ts`. A feature folder is created when its step starts (owner decision, 2026-10-19).
 
 ```
 src/
@@ -430,7 +434,7 @@ src/
 ├── notifications/   # events, read state, preferences
 ├── moderation/      # reports
 ├── administration/  # back-office (section 3.3)
-└── common/          # errors, pagination, config, database, sessions
+└── common/          # errors (Problem Details), logging, CSRF, audit chain, pagination, database, sessions
 ```
 
 Each feature module contains:
@@ -446,6 +450,7 @@ Each feature module contains:
 - Services own transactions (`prisma.$transaction`) and enforce product rules (section 2).
 - Prisma models never leave the repository layer. Controllers return DTOs.
 - Repositories are the only place that writes queries.
+- The Prisma client enters the project with M0 step 3.2. Until then, only the migration tests query the database.
 
 ### 8.3 Coding rules
 
@@ -462,13 +467,16 @@ All errors use **RFC 9457 Problem Details** (`application/problem+json`), produc
 
 ```json
 {
-  "type": "https://y.app/errors/code-invalid",
-  "title": "Invalid code",
+  "type": "about:blank",
+  "title": "Unprocessable Entity",
   "status": 422,
   "detail": "The code is incorrect or has expired.",
-  "instance": "/api/v1/auth/signup/verify"
+  "instance": "/api/v1/auth/signup/verify",
+  "requestId": "2f1c0e9a-6b3d-4c1e-9f0a-7d2b8e4c5a11"
 }
 ```
+
+As built today, `type` is `about:blank` until specific error types are defined, and `title` is the standard HTTP reason phrase. `requestId` is the ID of the request's log line (M0 step 3.8). A server error (status 500) returns `detail: "Unexpected error."`; its message is only logged.
 
 Use these status codes consistently:
 
@@ -488,6 +496,8 @@ Use these status codes consistently:
 
 Base path: `/api/v1`. JSON everywhere. Authentication by session cookie. Mutations require the CSRF token.
 
+> **Status (2026-10-19):** this section is the target contract. Today the API has `GET /api/v1/status` and `GET /health` only. The CSRF protection is in place: a double-submit cookie `y_csrf`, sent back in the `X-CSRF-Token` header on every mutation. No mutation route exists yet.
+
 ### 9.1 Conventions
 
 - Resource names are plural nouns in kebab-case. Exceptions are listed below.
@@ -498,10 +508,12 @@ Base path: `/api/v1`. JSON everywhere. Authentication by session cookie. Mutatio
 - **Times:** ISO 8601 in UTC. **Field names:** camelCase in JSON, everywhere (including `lastMessageAt`).
 - **Reserved handles:** `me`, `admin`, `api`, `login`, `signup`, `settings`, `explore`, `home`, `messages`, `notifications`, `bookmarks`, `hashtags`, `suggestions`, `support`, `y`. A handle cannot use a reserved word. A handle uses only ASCII letters, digits and underscore (DEC-061).
 - **Exceptions to plural nouns:** `/feed`, `/search`, `/auth/*`, `/admin/*` (sections), `/age-verification`, and the `me` resource (`/users/me`).
-- **OpenAPI:** the OpenAPI document (`openapi.yaml`) is generated from the code (@nestjs/swagger, with `npm run openapi:export`), committed to the repository, and checked in CI for breaking changes (section 14). It is required, not optional.
+- **OpenAPI:** the OpenAPI document (`openapi.yaml`) is generated from the code (@nestjs/swagger). Today it is served at `/api/docs` (not in production). The export script `npm run openapi:export`, the committed file and the CI check for breaking changes (section 14) come with M0 step 7.6. It is required, not optional.
 - **Versioning:** a breaking change creates `/api/v2`. The old version is marked with `Deprecation` and `Sunset` headers before removal.
 
 ### 9.2 Endpoints
+
+Target list. Each endpoint arrives with its milestone. `/health` is outside the `/api/v1` prefix.
 
 **Authentication**
 
@@ -628,8 +640,8 @@ Base path: `/api/v1`. JSON everywhere. Authentication by session cookie. Mutatio
 
 ```http
 PUT /api/v1/questions/0f8c…/reactions/y
-Cookie: SESSION=…
-X-XSRF-TOKEN: …
+Cookie: SESSION=…; y_csrf=…
+X-CSRF-Token: …
 ```
 
 ```http
@@ -648,6 +660,8 @@ Content-Type: application/json
 The same `yThreshold` and `conversationOpen` fields appear in every question payload, so no screen hard-codes the value 50.
 
 ### 9.4 Rate limits (security only)
+
+Today the only limit is global: 120 requests per minute per IP address (value chosen during M0 step 3, not written in the plan). The per-endpoint limits below arrive with the auth module.
 
 Rate limits protect accounts and codes. Content actions (posting, reacting, replying, messaging, following, blocking) have **no quota** (R13). Limits return `429` with a `Retry-After` header. Values are proposed defaults (DEC-040).
 
@@ -668,7 +682,7 @@ Rate limits protect accounts and codes. Content actions (posting, reacting, repl
 ## 10. Database
 
 - **Schema source of truth:** [`database/y-database.dbml`](database/y-database.dbml). Column reference: [`database/y-database-documentation.md`](database/y-database-documentation.md).
-- **24 tables**, grouped into accounts, sessions, social, content, messaging, activity, moderation and administration. Version 0.2 added `blocks` (R14) and the Spring Session tables. Version 0.3 adds `admin_audit_log` (R17). Version 0.4 adds `login_events` (DEC-060). Version 0.5 adds `users.terms_version` (DEC-062), `admin_audit_log.prev_hash` (DEC-063), the encoding rules of the hash chain (DEC-064) and a single unique index on `handle` (DEC-061). Version 0.6 moves the schema from MySQL to PostgreSQL (DEC-070) and replaces the Spring Session tables with one `sessions` table (DEC-071). The handle index is now a unique index on `lower(handle)`.
+- **28 tables** (DBML version 0.9), grouped into accounts, sessions, social, content, messaging, activity, moderation and administration. Version 0.2 added `blocks` (R14) and the Spring Session tables. Version 0.3 adds `admin_audit_log` (R17). Version 0.4 adds `login_events` (DEC-060). Version 0.5 adds `users.terms_version` (DEC-062), `admin_audit_log.prev_hash` (DEC-063), the encoding rules of the hash chain (DEC-064) and a single unique index on `handle` (DEC-061). Version 0.6 moves the schema from MySQL to PostgreSQL (DEC-070) and replaces the Spring Session tables with one `sessions` table (DEC-071). The handle index is now a unique index on `lower(handle)`.
 - **Migrations:** Prisma Migrate (DEC-072). The initial migration creates the schema from the DBML. Every later change is a new migration folder. Never edit a migration that has been applied anywhere.
 - **Identifiers:** `uuid` values generated by the database with `gen_random_uuid()`.
 - **Time:** `timestamptz(3)`, stored in UTC.
@@ -897,6 +911,8 @@ Each screen below exists on desktop, tablet and mobile (rule R5). Only its conta
 
 ## 14. Testing strategy
 
+> **Status (2026-10-19):** in place today: backend unit tests (audit chain, CSRF guard, Problem Details filter, configuration validation), end-to-end tests with Supertest (`backend/test/app.e2e-spec.ts`), and migration tests on PostgreSQL 18 with Testcontainers (`backend/test/database-migrations.e2e-spec.ts`). Not yet: frontend tests, Playwright, axe, the openapi-diff check (M0 step 7.6), the test mail adapter (step 7.5), the Dependency-Check and Semgrep scans (step 7.7), and the k6 and ZAP tests (later milestones).
+
 | Level | Tool | What it covers |
 |---|---|---|
 | Unit (backend) | Jest | Service rules: 50 Y threshold, counter updates, code expiry |
@@ -941,10 +957,13 @@ Each milestone in section 18 also meets this definition of done. Dependencies be
 
 ### 15.2 Configuration keys
 
-Names are proposals. Secrets are never committed.
+The names are the ones used in the code (`backend/src/config/env.validation.ts`) and in `.env.example`. Secrets are never committed.
 
 | Key | Purpose |
 |---|---|
+| `NODE_ENV` | Profile: `local`, `staging` or `production` (section 15.1). Checked at startup (default `local`) |
+| `PORT` | Port of the backend (default `8080`) |
+| `LOG_LEVEL` | Log level (default `info`) |
 | `DATABASE_URL` | PostgreSQL connection URL of the application account (credentials included) |
 | `DATABASE_MAINTENANCE_URL` | PostgreSQL connection URL of the maintenance account. Used only by the purges. It alone can delete rows of `admin_audit_log` and `login_events` (DEC-059, DEC-065) |
 | `AUDIT_HMAC_KEY` / `IP_HASH_KEY` | Secret keys for the audit chain and for hashed IP addresses (DEC-065) |
@@ -954,11 +973,16 @@ Names are proposals. Secrets are never committed.
 | `VERIFAGE_BASE_URL` / `VERIFAGE_API_KEY` | Age verification service |
 | `APP_PUBLIC_URL` | Public URL of the frontend (links in emails, CORS) |
 | `Y_CONVERSATION_THRESHOLD` | Number of Y that opens a conversation (default `50`) |
+| `Y_CODE_TTL_MINUTES` | Validity of the signup and reset codes, in minutes (default `15`) |
+
+At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `APP_PUBLIC_URL`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`. A missing or invalid value stops the start, and only its name is printed. The e-mail and VerifAge keys are not checked yet: they come with their steps (M1).
 | `Y_CODE_TTL_MINUTES` | Lifetime of codes (default `15`, D8) |
 
 ---
 
 ## 16. Deployment and operations
+
+> **Status (2026-10-19):** not built yet. Today the backend has `/health` (no database check until M0 step 3.2), JSON logs with a request ID, and no Dockerfile, CI, staging or backups. Server access (OVH) is postponed by the owner, so the staging, backup and restore steps (M0 steps 10 to 12) wait for it. CI is step 9.
 
 **Build artifacts**
 - Backend: the NestJS application compiled to JavaScript (`dist/`), packaged in a Docker image on Node.js 24.
