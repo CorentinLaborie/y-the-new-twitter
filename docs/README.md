@@ -9,6 +9,7 @@ Index of the project documentation.
 | [Database schema](database/y-database.dbml) | Backend and database developers | Schema source of truth (version 0.9, PostgreSQL), in DBML. Open it with any DBML viewer, such as dbdiagram.io |
 | [Database column reference](database/y-database-documentation.md) | Backend and database developers | Every table and column, its type, keys, defaults and meaning |
 | [Decision journal](decisions/journal-decisions.md) | Whole team | Every decision (DEC-001 onward): status, reason, alternatives, when to revisit |
+| [Operations: rollback procedure](operations.md) | Whoever deploys the backend | Previous image, database dump before each deploy, corrective migrations, restore to a new database. Target procedure: staging and backups come with M0 steps 9 to 12 |
 | [M0 plan](plans/M0-PLAN.md) | Whoever builds the foundations | Step-by-step plan for M0, sorted by area and order |
 | [Legal drafts](legal/README.md) | Whoever publishes the site | Legal notice, terms of use and privacy policy. Drafts for a fictitious portfolio site |
 | [Audit snapshot (2026-10-16)](reports/RAPPORT-AUDIT-Y.md) | Reviewers | The audit made before the decisions. Superseded where the decision journal says otherwise |

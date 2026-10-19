@@ -165,7 +165,7 @@ These need your decision or your account. Nothing below can start until they're 
 
 | # | Task | Output | Done when |
 |---|---|---|---|
-| 13.1 | Write the rollback procedure | `docs/operations.md`: keep the previous container image; a database backup before each deploy; a broken migration is fixed by a new corrective migration, never by editing an applied one (DEC-056) | Procedure written and reviewed. |
+| 13.1 | Write the rollback procedure | `docs/operations.md`: keep the previous container image; a database backup before each deploy; a broken migration is fixed by a new corrective migration, never by editing an applied one (DEC-056) | Procedure written and reviewed. Done 2026-10-19: `docs/operations.md` written (target procedure; the review is the owner's). |
 
 ---
 
