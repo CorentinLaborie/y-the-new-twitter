@@ -583,7 +583,7 @@ Table admin_audit_log {
   reason varchar(500) [note: 'Required for every administrator decision: reject, hide, remove, restore, suspend, reactivate (DEC-088). Not required for contact.close. Never an e-mail address.']
   details json [note: 'Before and after values of the changed fields only. Never passwords, codes, session ids or full e-mail addresses.']
   created_at timestamptz(3) [not null, default: `now()`]
-  prev_hash char(64) [not null, note: 'HMAC-SHA-256 (hex) of the previous entry, keyed with a server secret kept out of Git. 64 zeros for the first entry. Encoding: reference doc, admin_audit_log section (DEC-063, DEC-064).']
+  prev_hash char(64) [not null, note: 'HMAC-SHA-256 (hex) of the previous entry, keyed with a server secret kept out of Git. 64 zeros for the first entry. Encoding: reference doc, admin_audit_log section (DEC-063, DEC-064, DEC-128).']
 
   indexes {
     created_at

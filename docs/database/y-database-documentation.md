@@ -742,31 +742,31 @@ Append-only log of administrator actions and of system jobs. The application dat
 
 **Retention (DEC-027, DEC-059):** 12 months for actions, 6 months for `auth.*` rows. Deleted by the maintenance account in the purge job.
 
-**Hash chain (DEC-063):** each entry stores `prev_hash`, the HMAC-SHA-256 of the previous entry. The first entry uses 64 zeros. Inserts are serialised, so two entries cannot share a previous entry. Verification recomputes each HMAC and compares it with the next entry's `prev_hash`. It starts at the oldest kept entry, so rows removed by the purge are expected and are not reported.
+**Hash chain (DEC-063):** each entry stores `prev_hash`, the HMAC-SHA-256 of the previous entry. The first entry uses 64 zeros. Inserts are serialised, so two entries cannot share a previous entry. Verification recomputes each HMAC and compares it with the next entry's `prev_hash`. It starts at the oldest kept entry, so rows removed by the purge are expected and are not reported. Entries are read ordered by `created_at`, then `id` (DEC-127).
 
-**Encoding (DEC-064):** the HMAC is computed over a message built as follows.
-- Fields in this order, joined by `|`: `prev_hash`, `id`, `actor_id`, `action`, `result`, `target_type`, `target_id`, `reason`, `details`, `created_at`. `result` was added in version 0.7; its place after `action` was confirmed on 2026-10-19 (DEC-112). The HMAC of an entry covers its own fields, including its own `prev_hash`, and the result is stored as the `prev_hash` of the next entry.
-- A NULL value is an empty string.
-- `details` is JSON with keys sorted at every level, compact (no spaces), in UTF-8. Non-ASCII characters are written as they are (`è`, not `è`). Only the escapes JSON requires are used (`"`, `\`, control characters). Use only strings, booleans, null and integers.
+**Encoding (DEC-064, DEC-128):** the HMAC is computed over a message built as follows.
+- The message is a JSON array of ten values, in this order: `prev_hash`, `id`, `actor_id`, `action`, `result`, `target_type`, `target_id`, `reason`, `details`, `created_at`. `result` was added in version 0.7; its place after `action` was confirmed on 2026-10-19 (DEC-112). The HMAC of an entry covers its own fields, including its own `prev_hash`, and the HMAC is stored as the `prev_hash` of the next entry.
+- A NULL value is the JSON `null`. An empty string is `""`. The two are different (DEC-128).
+- `details` is a string inside the array: the JSON text with keys sorted at every level, compact (no spaces), in UTF-8. Non-ASCII characters are written as themselves (`è` stays `è`, it is not escaped). Only the escapes JSON requires are used. Use only strings, booleans, null and safe integers.
 - `created_at` is UTC, with three decimals and a `Z`, for example `2026-10-16T10:41:03.250Z`.
 - HMAC: SHA-256, key = the bytes of `AUDIT_HMAC_KEY` (DEC-065), input = the message encoded in UTF-8, output = 64 lowercase hex characters.
 - The application builds the message from the values it holds, never from the text the database returns for `details`. The stored text can differ from what was written (key order, spacing), so it is never hashed.
 
-**Worked example (test vector, recalculated 2026-10-19, DEC-112).** The HMAC values below use the sample key `sample-key-not-secret`, for tests only, never the real key. Entry 1 is the first entry, so its `prev_hash` is 64 zeros. Each `message` line is the exact text that is hashed.
+**Worked example (test vector, recalculated 2026-10-19, DEC-128).** The HMAC values below use the sample key `sample-key-not-secret`, for tests only, never the real key. Entry 1 is the first entry, so its `prev_hash` is 64 zeros. Each `message` line is the exact text that is hashed.
 
 ```
 entry 1
 prev_hash : 0000000000000000000000000000000000000000000000000000000000000000
-message   : 0000000000000000000000000000000000000000000000000000000000000000|7c9e6679-7425-40de-944b-e07fc1f90ae7|1b4e28ba-2fa1-11d2-883f-0016d3cca427|report.decide|ok|report|3f2504e0-4f89-41d3-9a0c-0305e82c3301|Harcèlement confirmé|{"after":{"status":"resolved"},"before":{"status":"open"}}|2026-10-16T10:41:03.250Z
-hmac      : 5dfc0dad2be792060e198e875c56cf895cb191c476e7f30fef450786780f52ed
+message   : ["0000000000000000000000000000000000000000000000000000000000000000","7c9e6679-7425-40de-944b-e07fc1f90ae7","1b4e28ba-2fa1-11d2-883f-0016d3cca427","report.decide","ok","report","3f2504e0-4f89-41d3-9a0c-0305e82c3301","Harcèlement confirmé","{\"after\":{\"status\":\"resolved\"},\"before\":{\"status\":\"open\"}}","2026-10-16T10:41:03.250Z"]
+hmac      : a470a43289fabd515ad045997615e4d7408e2131b751860eec58f417c54241b9
 
 entry 2
-prev_hash : 5dfc0dad2be792060e198e875c56cf895cb191c476e7f30fef450786780f52ed
-message   : 5dfc0dad2be792060e198e875c56cf895cb191c476e7f30fef450786780f52ed|9b2d1f3a-6c5e-4a7b-8d9f-1e2a3b4c5d6e|1b4e28ba-2fa1-11d2-883f-0016d3cca427|content.hide|ok|question|d290f1ee-6c54-4b01-90e6-d701748f0851||{"after":{"moderation_status":"hidden"},"before":{"moderation_status":"visible"}}|2026-10-16T10:45:17.802Z
-hmac      : a64f2e94bcc42192813a42c76eb6132868dc9228a5d575e579271cd845a01208
+prev_hash : a470a43289fabd515ad045997615e4d7408e2131b751860eec58f417c54241b9
+message   : ["a470a43289fabd515ad045997615e4d7408e2131b751860eec58f417c54241b9","9b2d1f3a-6c5e-4a7b-8d9f-1e2a3b4c5d6e","1b4e28ba-2fa1-11d2-883f-0016d3cca427","content.hide","ok","question","d290f1ee-6c54-4b01-90e6-d701748f0851",null,"{\"after\":{\"moderation_status\":\"hidden\"},\"before\":{\"moderation_status\":\"visible\"}}","2026-10-16T10:45:17.802Z"]
+hmac      : e6332f9501c04eec720b18a7a226851d54d0d327a24212018b0efe026d3cbff4
 ```
 
-Entry 2 has an empty `reason`, which is why its message contains `||`. The example is the test vector for M0 task 4.6. It was recalculated on 2026-10-19 and validated by the owner (DEC-112). Any change to the encoding requires a new vector.
+Entry 2 has no reason: its message contains `null` in the eighth position. The example is the test vector for M0 task 4.6. It was recalculated on 2026-10-19 with the JSON-array encoding (DEC-128). Any change to the encoding requires a new vector.
 
 ## 8. Contact
 Messages that suspended accounts send to the administrator through the contact form (DEC-078, DEC-080). Threads are handled in the back-office queue (DEC-096).

@@ -226,7 +226,7 @@ A separate area for the sole administrator. It is not linked from the public sit
 - Records: who, when, what, target, the reason for sensitive actions, the before and after values of changed fields only, and the result (`ok`, `failed` or `refused`, DEC-085).
 - Never recorded: passwords, codes, session identifiers, full email addresses.
 - Each entry stores `prev_hash`, a keyed hash (HMAC-SHA-256, server secret kept out of Git) of the previous entry. A deleted or altered entry in the middle of the log breaks the chain and is detected. Entries removed by the retention purge are expected: the check starts at the oldest entry kept (DEC-063).
-- The chain is computed with the exact encoding of the database reference (`admin_audit_log`, DEC-064).
+- The chain is computed with the exact encoding of the database reference (`admin_audit_log`, DEC-064, DEC-128).
 - Retained 12 months for actions and 6 months for administrator logins (DEC-027, DEC-059). Ordinary users' login attempts are kept 6 months in `login_events` (DEC-060).
 
 **Later (not in the MVP)**
@@ -1032,7 +1032,7 @@ A feature is built in the milestone where what it needs already exists. This tab
 | Back-office and report handling | Reports, roles, audit log | M7 | |
 | Login attempt log | `login_events` | M1 | Written by login (DEC-060) |
 | Retention purge (login events, audit log) | `login_events`, `admin_audit_log` | M7 | DEC-059, DEC-066 |
-| Audit hash chain | `admin_audit_log.prev_hash` | M7 | DEC-063, DEC-064 |
+| Audit hash chain | `admin_audit_log.prev_hash` | M7 | DEC-063, DEC-064, DEC-127, DEC-128 |
 | Account deletion request and purge | Users, purge job | M7 | Logged by the audit log (M7) |
 | Age check | VerifAge provider | M1, with a mock until the API documentation is available | Decision DEC-020 on hold |
 | Login and sign-up e-mails | Brevo | M1 | Rule R18 |
