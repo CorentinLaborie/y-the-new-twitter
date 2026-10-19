@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Notifications — Desktop</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-qpost{padding:24px 24px 22px}
+.y-qpost.is-compact{padding:18px 24px 16px}
+.y-qpost-who strong{font-size:15px}
+.y-qpost-who span{font-size:11px}
+.y-qpost-tags{font-size:11px}
+.y-qpost-body{font-size:16px;line-height:22px;margin:17px 0 18px}
+.y-qpost.is-compact .y-qpost-body{font-size:16px;line-height:22px;margin:15px 0 16px}
+.y-qpost-actions{gap:12px}
+.y-react{height:32px;padding:0 16px;font-size:14px}
+.y-qpost-head{gap:12px}
+.y-qpost-head .y-avatar{width:40px!important;height:40px!important;font-size:16px!important}
+.y-follow{height:26px!important;font-size:11px!important}
+.y-react{white-space:nowrap}
+.y-save{width:32px;height:32px}
+.y-side-card{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);padding:16px 24px}
+.y-side-card h2{margin:0 0 8px;font-size:20px;line-height:26px;font-weight:700;color:#1e293b}
+.y-trend{display:block;padding:8px 0;border-bottom:1px solid #e2e8f0;text-decoration:none}
+.y-trend:last-child{border-bottom:0;padding-bottom:0}
+.y-trend strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#4f46e5}
+.y-trend span{display:block;font-size:12px;line-height:16px;color:#6b7280}
+.y-user-row{display:flex;align-items:center;gap:12px;padding:8px 0}
+.y-user-row:last-child{padding-bottom:0}
+.y-user-row-text{flex:1;min-width:0;line-height:18px}
+.y-user-row-text strong{display:block;font-size:15px;font-weight:700;color:#1e293b}
+.y-user-row-text span{display:block;font-size:12px;color:#6b7280}
+.y-account{margin-top:auto;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 12px 12px 12px;border:0;border-radius:9999px;background:transparent;font-family:inherit;text-align:left;cursor:pointer}
+.y-account:hover{background:#f3f4f6}
+.y-notif-reply .y-qpost{background:#ffffff;box-shadow:inset 0 0 0 1px #e2e8f0}
+.y-search input{font-size:14px!important}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1073px; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif; display: flex; justify-content: flex-start; padding-left: 108px; overflow: hidden;">
+
+<div style="flex: none; width: 275px; box-sizing: border-box; padding: 8px 23px 16px 8px; display: flex; flex-direction: column; height: 1073px;">
+<div style="padding: 4px 12px 8px;"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import></div>
+<nav aria-label="Navigation principale" style="display: flex; flex-direction: column; gap: 8px; margin-left: -6px;">
+<x-import component-from-global-scope="YDS.NavItem" icon="home" label="Accueil"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="search" label="Explorer"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="bell" label="Notifications" active="{{yes}}"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Messages"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="bookmark" label="Signets"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="user" label="Profil"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="circle-ellipsis" label="Plus"></x-import>
+</nav>
+<div style="margin-top: 24px;"><x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" shape="pill" block="{{yes}}">Poster</x-import></div>
+<button type="button" class="y-account" aria-label="Options du compte Corentin Laborie">
+<span style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="{{av}}"></x-import></span>
+<span style="flex: 1; min-width: 0; line-height: 18px;"><span style="display: block; font-size: 15px; font-weight: 700; color: #1e293b;">Corentin Laborie</span><span style="display: block; font-size: 15px; color: #6b7280;">@corentin</span></span>
+<x-import component-from-global-scope="YDS.Icon" name="ellipsis" size="18" color="#1e293b"></x-import>
+</button>
+</div>
+
+<main style="flex: none; width: 600px; height: 1073px; box-sizing: border-box; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;">
+<x-import component-from-global-scope="YDS.PageHeader" title="Notifications" bordered="{{no}}">
+<x-import component-from-global-scope="YDS.IconButton" tone="ink" icon="settings" label="Paramètres des notifications"></x-import>
+</x-import>
+<div role="tablist" aria-label="Filtrer les notifications" style="display: flex; border-bottom: 1px solid #e2e8f0; height: 53px; box-sizing: border-box; background: #ffffff; flex: none;">
+<x-import component-from-global-scope="YDS.Tab" label="Toutes" active="{{yes}}" style="flex: 1;"></x-import>
+<x-import component-from-global-scope="YDS.Tab" label="Mentions" style="flex: 1;"></x-import>
+</div>
+<section aria-label="Liste des notifications" style="display: flex; flex-direction: column;">
+<article aria-label="Non lue : AliceY a répondu à votre question" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; box-shadow: inset 3px 0 0 #4f46e5;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.Icon" name="message-circle" size="26" color="#4f46e5"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><div aria-hidden="true" style="display: flex; align-items: center;"><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff;"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="{{avS}}"></x-import></span></div><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><span aria-hidden="true" style="flex: none; width: 8px; height: 8px; border-radius: 9999px; background: #4f46e5;"></span><span class="y-sr">Non lue,</span><time datetime="2026-10-15T10:18">il y a 12 min</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;"><strong>AliceY</strong> a répondu à votre question</a></p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 20px; color: #6b7280;">« Pourquoi un message sans réponse nous inquiète-t-il plus qu’un silence en face à face ? »</p>
+<div class="y-notif-reply" style="margin-top: 12px;"><x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="15/10/2026 10h18" body="{{reply.body}}" reactions="{{reply.reactions}}" compact="{{yes}}" hide-follow="{{yes}}"></x-import></div>
+</div>
+</article>
+<article aria-label="Non lue : votre question a atteint 50 Y, la conversation est ouverte" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; box-shadow: inset 3px 0 0 #4f46e5;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.YLogo" size="22"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><span style="font-size: 13px; line-height: 16px; font-weight: 700; color: #4338ca; white-space: nowrap;">Conversation ouverte</span><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><span aria-hidden="true" style="flex: none; width: 8px; height: 8px; border-radius: 9999px; background: #4f46e5;"></span><span class="y-sr">Non lue,</span><time datetime="2026-10-15T09:50">il y a 40 min</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;">Votre question a atteint <strong>50 Y</strong> : la conversation est ouverte</a></p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 20px; color: #6b7280;">« Pourquoi un message sans réponse nous inquiète-t-il plus qu’un silence en face à face ? »</p>
+<div style="margin-top: 12px;"><x-import component-from-global-scope="YDS.Button" variant="primary" size="sm" shape="pill" icon="message-circle">Rejoindre la conversation</x-import></div>
+</div>
+</article>
+<article aria-label="Non lue : AliceY et 12 autres ont réagi Y à votre question" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; box-shadow: inset 3px 0 0 #4f46e5;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.YLogo" size="22"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><div aria-hidden="true" style="display: flex; align-items: center;"><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff;"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="{{avS}}"></x-import></span><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff; margin-left: -6px;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{avS}}"></x-import></span><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff; margin-left: -6px;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{avS}}"></x-import></span></div><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><span aria-hidden="true" style="flex: none; width: 8px; height: 8px; border-radius: 9999px; background: #4f46e5;"></span><span class="y-sr">Non lue,</span><time datetime="2026-10-15T08:30">il y a 2 h</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;"><strong>AliceY</strong> et 12 autres ont réagi Y à votre question</a></p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 20px; color: #6b7280;">« Pourquoi un message sans réponse nous inquiète-t-il plus qu’un silence en face à face ? »</p>
+</div>
+</article>
+<article aria-label="Juliette_B vous suit désormais" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.Icon" name="user-plus" size="26" color="#4f46e5"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><div aria-hidden="true" style="display: flex; align-items: center;"><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff;"><x-import component-from-global-scope="YDS.Avatar" name="Juliette_B" size="{{avS}}"></x-import></span></div><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><time datetime="2026-10-15T05:30">il y a 5 h</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;"><strong>Juliette_B</strong> vous suit désormais</a></p>
+
+<div style="margin-top: 12px;"><x-import component-from-global-scope="YDS.Button" variant="primary" size="sm" shape="pill" icon="user-plus">Suivre en retour</x-import></div>
+</div>
+</article>
+<article aria-label="Robert44 et 24 autres aiment votre question" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.Icon" name="thumbs-up" size="26" color="#4f46e5"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><div aria-hidden="true" style="display: flex; align-items: center;"><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{avS}}"></x-import></span><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff; margin-left: -6px;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{avS}}"></x-import></span><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff; margin-left: -6px;"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="{{avS}}"></x-import></span></div><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><time datetime="2026-10-14T21:08">14/10/2026 21h08</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;"><strong>Robert44</strong> et 24 autres aiment votre question</a></p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 20px; color: #6b7280;">« Est-ce qu’on écoute vraiment, ou est-ce qu’on attend juste son tour pour parler ? »</p>
+</div>
+</article>
+<article aria-label="Robert44 et 3 autres ne sont pas d’accord avec votre question" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.Icon" name="thumbs-down" size="26" color="#ef4444"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><div aria-hidden="true" style="display: flex; align-items: center;"><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{avS}}"></x-import></span><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff; margin-left: -6px;"><x-import component-from-global-scope="YDS.Avatar" name="Juliette_B" size="{{avS}}"></x-import></span><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff; margin-left: -6px;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{avS}}"></x-import></span></div><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><time datetime="2026-10-14T18:30">14/10/2026 18h30</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;"><strong>Robert44</strong> et 3 autres ne sont pas d’accord avec votre question</a></p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 20px; color: #6b7280;">« Est-ce qu’on écoute vraiment, ou est-ce qu’on attend juste son tour pour parler ? »</p>
+</div>
+</article>
+<article aria-label="AliceY vous a mentionné dans une réponse" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.Icon" name="at-sign" size="26" color="#4f46e5"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><div aria-hidden="true" style="display: flex; align-items: center;"><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff;"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="{{avS}}"></x-import></span></div><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><time datetime="2026-10-14T10:41">14/10/2026 10h41</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;"><strong>AliceY</strong> vous a mentionné dans une réponse</a></p>
+
+<blockquote style="margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid #e0e7ff; border-radius: 4px; background: #f8fafc; font-size: 14px; line-height: 20px; color: #1e293b;"><a href="#" style="color: #4338ca; text-decoration: none; font-weight: 600;">@corentin</a> pose la question que tout le monde évite. Moi je pense qu’on écoute surtout ce qui nous rassure.</blockquote>
+</div>
+</article>
+<article aria-label="AliceY et 3 autres vous suivent désormais" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.Icon" name="user-plus" size="26" color="#4f46e5"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><div aria-hidden="true" style="display: flex; align-items: center;"><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff;"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="{{avS}}"></x-import></span><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff; margin-left: -6px;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{avS}}"></x-import></span><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff; margin-left: -6px;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{avS}}"></x-import></span></div><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><time datetime="2026-10-13T11:20">13/10/2026 11h20</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;"><strong>AliceY</strong> et 3 autres vous suivent désormais</a></p>
+
+</div>
+</article>
+<article aria-label="Juliette_B aime votre question" style="display: flex; gap: 12px; padding: 16px 16px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+<div aria-hidden="true" style="flex: none; width: 40px; height: 36px; display: flex; align-items: center; justify-content: flex-end;"><span style="flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;"><x-import component-from-global-scope="YDS.Icon" name="thumbs-up" size="26" color="#4f46e5"></x-import></span></div>
+<div style="flex: 1; min-width: 0;">
+<div style="display: flex; align-items: center; gap: 8px; height: 36px;"><div aria-hidden="true" style="display: flex; align-items: center;"><span style="flex: none; display: flex; width: 28px; height: 28px; border-radius: 9999px; box-shadow: 0 0 0 2px #ffffff;"><x-import component-from-global-scope="YDS.Avatar" name="Juliette_B" size="{{avS}}"></x-import></span></div><span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; color: #6b7280; white-space: nowrap;"><time datetime="2026-10-13T09:05">13/10/2026 09h05</time></span></div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 20px; color: #1e293b;"><a href="#" style="color: inherit; text-decoration: none;"><strong>Juliette_B</strong> aime votre question</a></p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 20px; color: #6b7280;">« Peut-on encore s’ennuyer quand on a toujours un écran dans la poche ? »</p>
+</div>
+</article>
+</section>
+</main>
+
+<div style="flex: none; width: 350px; box-sizing: border-box; padding: 8px 0 16px 24px; display: flex; flex-direction: column; gap: 16px; height: 1073px; overflow: hidden;">
+<x-import component-from-global-scope="YDS.SearchField" label="Rechercher une question" placeholder="Question, compte ou #hashtag"></x-import>
+
+<section style="background: #4f46e5; border-radius: 24px; box-shadow: 0px 4px 8px -1px rgba(0, 0, 0, 0.1); padding: 24px; color: #ffffff;">
+<h2 style="margin: 0 0 4px; font-size: 20px; line-height: 26px; font-weight: 700;">Une expérience sociale concrète</h2>
+<p style="margin: 0 0 16px; font-size: 13px; line-height: 18px; color: rgba(255, 255, 255, 0.85);">Posez vos questions, donnez votre avis et réfléchissez ensemble.</p>
+<div style="background: #ffffff; border-radius: 16px; padding: 16px 16px; color: #1e293b;">
+<div style="font-size: 13px; line-height: 18px; font-weight: 700;">Au bout de 50&nbsp;Y, une conversation s’ouvre sous la question.</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
+<x-import component-from-global-scope="YDS.ReactionPill" kind="like" count="J’aime"></x-import>
+<x-import component-from-global-scope="YDS.ReactionPill" kind="dislike" count="Pas d’accord"></x-import>
+<x-import component-from-global-scope="YDS.ReactionPill" kind="y" count="Why&nbsp;?" active="{{yes}}"></x-import>
+</div>
+</div>
+</section>
+
+<section class="y-side-card">
+<h2>Tendances pour vous</h2>
+<a href="#" class="y-trend"><strong>#online_life</strong><span>2&nbsp;000&nbsp;réactions sur 24&nbsp;h</span></a>
+<a href="#" class="y-trend"><strong>#irl_vs_online</strong><span>1&nbsp;240&nbsp;réactions sur 24&nbsp;h</span></a>
+<a href="#" class="y-trend"><strong>#human_life</strong><span>864&nbsp;réactions sur 24&nbsp;h</span></a>
+<a href="#" class="y-trend"><strong>#communication</strong><span>512&nbsp;réactions sur 24&nbsp;h</span></a>
+</section>
+
+<section class="y-side-card">
+<h2>Suggestions</h2>
+<div class="y-user-row"><div style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="{{av}}"></x-import></div><div class="y-user-row-text"><strong>AliceY</strong><span>@AliceY</span></div><x-import component-from-global-scope="YDS.FollowButton"></x-import></div>
+<div class="y-user-row"><div style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Juliette_B" size="{{av}}"></x-import></div><div class="y-user-row-text"><strong>Juliette_B</strong><span>@Juliette_B</span></div><x-import component-from-global-scope="YDS.FollowButton"></x-import></div>
+<div class="y-user-row"><div style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{av}}"></x-import></div><div class="y-user-row-text"><strong>Robert44</strong><span>@Robert44</span></div><x-import component-from-global-scope="YDS.FollowButton"></x-import></div>
+</section>
+
+<x-import component-from-global-scope="YDS.Footer" variant="sidebar"></x-import>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1073}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+no: false,
+av: 40,
+avS: 28,
+reply: { body: 'Parce qu’en face, on voit le visage. En ligne, on remplit le silence avec nos propres doutes.', reactions: { like: 18, dislike: 2 } }
+};
+}
+}
+</script>
+</body>
+</html>

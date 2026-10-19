@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Messages — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-qpost{padding:16px 16px 16px}
+.y-qpost.is-compact{padding:12px 12px 12px}
+.y-qpost-who strong{font-size:14px}
+.y-qpost-who span{font-size:11px}
+.y-qpost-tags{font-size:11px}
+.y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost.is-compact .y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost-actions{gap:8px;flex-wrap:nowrap}
+.y-react{height:30px;padding:0 12px;font-size:12px;white-space:nowrap}
+.y-qpost-head{gap:12px;flex-wrap:wrap}
+.y-qpost-head .y-avatar{width:36px!important;height:36px!important;font-size:14px!important}
+.y-qpost-tags{width:100%;margin-left:48px;justify-content:flex-start}
+.y-follow{height:26px!important;font-size:11px!important}
+.y-save{width:30px;height:30px}
+.y-dm-list{flex:none;box-sizing:border-box;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;min-height:0}
+.y-dm-search{padding:16px 16px 12px}
+.y-dm-rows{margin:0;padding:0;list-style:none}
+.y-dm-row{display:flex;gap:12px;padding:12px 16px;background:#ffffff;color:#1e293b;text-decoration:none}
+.y-dm-row:hover{background:#f8fafc}
+.y-dm-row[aria-current]{background:#f8fafc;box-shadow:inset -2px 0 0 #4f46e5}
+.y-dm-av{flex:none;width:40px;height:40px;display:flex}
+.y-dm-text{flex:1;min-width:0}
+.y-dm-l1{display:flex;align-items:baseline;gap:4px;white-space:nowrap;line-height:20px}
+.y-dm-l1 strong{flex:none;font-size:15px;font-weight:700;color:#1e293b}
+.y-dm-handle{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:#6b7280}
+.y-dm-when{flex:none;font-size:13px;color:#6b7280}
+.y-dm-l2{display:flex;align-items:center;gap:8px}
+.y-dm-prev{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;line-height:20px;font-weight:400;color:#6b7280}
+.y-dm-row.is-unread .y-dm-prev{font-weight:600;color:#1e293b}
+.y-dm-dot{flex:none;width:8px;height:8px;border-radius:9999px;background:#4f46e5}
+.y-dm-search{display:flex;align-items:center;gap:8px;padding:16px 16px 12px}
+.y-dm-search > :first-child{flex:1;min-width:0}
+.y-dm-thread{gap:4px;padding:12px 16px;justify-content:flex-end}
+.y-dm-contact{padding:4px 0 16px;margin-bottom:12px}
+.y-dm-contact-av{width:56px;height:56px}
+.y-dm-contact p{max-width:296px}
+.y-dm-bubble{max-width:82%;padding:8px 12px;font-size:14px;line-height:20px}
+.y-dm-time{margin:0 4px 8px}
+.y-dm-time:last-child{margin-bottom:0}
+.y-dm-compose{padding:12px 16px 12px}
+.y-dm-input{height:40px;padding:9px 16px;font-size:14px}
+.y-dm-send{width:40px;height:40px}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar" title="Messages"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden;">
+<div class="y-dm-search">
+<div><x-import component-from-global-scope="YDS.SearchField" label="Rechercher dans les messages" size="sm"></x-import></div>
+<x-import component-from-global-scope="YDS.IconButton" icon="mail-plus" tone="ink" label="Nouveau message"></x-import>
+</div>
+<ul class="y-dm-rows" aria-label="Conversations">
+<li><a href="#" class="y-dm-row">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="MarkL" size="{{av}}"></x-import></span>
+<span class="y-dm-text"><span class="y-dm-l1"><strong>MarkL</strong><span class="y-dm-handle">@MarkL</span><span class="y-dm-when">· 09h33</span></span><span class="y-dm-l2"><span class="y-dm-prev">Vous : Poste-la ! Je mets le premier Y.</span></span></span>
+</a></li>
+<li><a href="#" class="y-dm-row is-unread">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="{{av}}"></x-import></span>
+<span class="y-dm-text"><span class="y-dm-l1"><strong>AliceY</strong><span class="y-dm-handle">@AliceY</span><span class="y-dm-when">· 08h52</span></span><span class="y-dm-l2"><span class="y-dm-prev">Tu as vu les réponses sous ma question #human_life ? Il y en a une qui m’a fait changer d’avis.</span><span class="y-dm-dot" role="img" aria-label="Non lu"></span></span></span>
+</a></li>
+<li><a href="#" class="y-dm-row is-unread">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{av}}"></x-import></span>
+<span class="y-dm-text"><span class="y-dm-l1"><strong>Robert44</strong><span class="y-dm-handle">@Robert44</span><span class="y-dm-when">· 08h10</span></span><span class="y-dm-l2"><span class="y-dm-prev">Bon, bananes ou pommes, il faut trancher. J’attends ton avis.</span><span class="y-dm-dot" role="img" aria-label="Non lu"></span></span></span>
+</a></li>
+<li><a href="#" class="y-dm-row">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="RizaHawkeye" size="{{av}}"></x-import></span>
+<span class="y-dm-text"><span class="y-dm-l1"><strong>RizaHawkeye</strong><span class="y-dm-handle">@RizaHawkeye</span><span class="y-dm-when">· 14/10</span></span><span class="y-dm-l2"><span class="y-dm-prev">Merci pour ta réponse, je la garde en signet.</span></span></span>
+</a></li>
+<li><a href="#" class="y-dm-row">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="AntonyGille" size="{{av}}"></x-import></span>
+<span class="y-dm-text"><span class="y-dm-l1"><strong>AntonyGille</strong><span class="y-dm-handle">@AntonyGille</span><span class="y-dm-when">· 13/10</span></span><span class="y-dm-l2"><span class="y-dm-prev">Vous : On en reparle demain, je réfléchis encore à ta question.</span></span></span>
+</a></li>
+</ul>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 40
+};
+}
+}
+</script>
+</body>
+</html>

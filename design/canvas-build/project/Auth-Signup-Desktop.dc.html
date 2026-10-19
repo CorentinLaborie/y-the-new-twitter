@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Inscription — Desktop</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-back{position:absolute;top:36px;left:336px;box-sizing:border-box;min-height:32px;padding:4px 0;display:inline-flex;align-items:center;gap:8px;font-size:18px;line-height:24px;font-weight:600;color:#4f46e5;text-decoration:none}
+.y-back:hover{color:#4338ca}
+.y-title{margin:0;font-size:40px;line-height:48px;font-weight:600;color:#1e293b;text-align:center;white-space:nowrap}
+.y-accent{margin:0;font-size:54px;line-height:64px;font-weight:700;color:#4f46e5;text-align:center}
+.y-accent span{text-decoration:underline;text-decoration-thickness:4px;text-underline-offset:9px;text-decoration-skip-ink:none}
+.y-auth{display:flex;flex-direction:column}
+.y-auth-form{display:flex;flex-direction:column;gap:24px;margin:0}
+.y-auth-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;row-gap:24px;align-items:start}
+.y-auth-divider{align-self:center;width:360px;height:4px;border-radius:2px;background:#4f46e5;margin:8px 0}
+.y-span-2{grid-column:1/-1}
+.y-legal{margin:0;font-size:12px;line-height:18px;color:#6b7280;text-align:center}
+.y-legal-link,.y-legal-link:hover{color:#1e293b;font-weight:600;text-decoration:underline;white-space:nowrap}
+.y-check .y-legal-link{white-space:normal}
+.y-auth-footer{position:absolute;left:0;right:0;bottom:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1040px; box-sizing: border-box; position: relative; overflow: hidden; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif;">
+  <a href="#" class="y-back"><x-import component-from-global-scope="YDS.Icon" name="arrow-left" size="20"></x-import>Retour</a>
+  <h1 class="y-title" style="position:absolute;left:336px;top:112px;width:768px;">Nous rejoindre&nbsp;?</h1>
+  <p class="y-accent" style="position:absolute;left:336px;top:168px;width:768px;"><span>Why not&nbsp;?</span></p>
+  <div class="y-auth" style="position:absolute;left:336px;top:288px;width:768px;gap:24px;">
+    <form class="y-auth-form" onsubmit="return false">
+      <div class="y-auth-grid">
+        <div class="y-span-2"><x-import component-from-global-scope="YDS.TextField" label="Nom affiché (obligatoire)" hint="50 caractères maximum." placeholder="Ex.&nbsp;: Jeannot Dupont" auto-complete="name"></x-import></div>
+        <x-import component-from-global-scope="YDS.TextField" label="Identifiant" placeholder="Ex.&nbsp;: Jeannot45" auto-complete="username"></x-import>
+        <x-import component-from-global-scope="YDS.TextField" label="Date de naissance" placeholder="JJ/MM/AAAA" auto-complete="bday" icon="calendar"></x-import>
+        <x-import component-from-global-scope="YDS.TextField" label="E-mail" placeholder="nom@exemple.fr" auto-complete="email" type="email"></x-import>
+        <x-import component-from-global-scope="YDS.TextField" label="Téléphone (facultatif)" placeholder="Ex.&nbsp;: 06&nbsp;12&nbsp;34&nbsp;56&nbsp;78" auto-complete="tel" type="tel"></x-import>
+        <x-import component-from-global-scope="YDS.TextField" label="Mot de passe" placeholder="8&nbsp;caractères minimum" auto-complete="new-password" type="password"></x-import>
+        <x-import component-from-global-scope="YDS.TextField" label="Confirmer le mot de passe" placeholder="Retapez votre mot de passe" auto-complete="new-password" type="password"></x-import>
+      </div>
+      <x-import component-from-global-scope="YDS.Checkbox" label="{{terms}}"></x-import>
+      <x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" block="{{yes}}" type="submit">Créer mon compte</x-import>
+    </form>
+    <div class="y-auth-divider" aria-hidden="true"></div>
+    <p class="y-legal">En vous inscrivant, vous acceptez nos <a href="#" class="y-legal-link">Conditions d’utilisation</a>, notre <a href="#" class="y-legal-link">Politique de confidentialité</a> et notre <a href="#" class="y-legal-link">Utilisation des cookies</a>.</p>
+  </div>
+  <div class="y-auth-footer"><x-import component-from-global-scope="YDS.Footer" variant="page"></x-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+renderVals() {
+const e = React.createElement;
+return { yes: true, terms: e(React.Fragment, null, 'J’accepte les ', e('a', { href: '#', className: 'y-legal-link' }, 'Conditions d’utilisation'), ' de Y') };
+}
+}
+</script>
+</body>
+</html>

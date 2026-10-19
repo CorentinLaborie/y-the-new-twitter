@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Administration — Détail du signalement</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.a-shell{width:1440px;height:900px;box-sizing:border-box;display:flex;background:#ffffff;color:#1e293b;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.a-side{flex:none;width:280px;box-sizing:border-box;padding:16px;background:#ffffff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;gap:8px}
+.a-brand{display:flex;align-items:center;gap:12px;padding:8px 12px 16px}
+.a-brand strong{font-size:16px;line-height:24px;font-weight:700;color:#4f46e5}
+.a-nav{display:flex;flex-direction:column;gap:4px}
+.a-side-foot{margin-top:auto;display:flex;align-items:center;gap:12px;padding:12px}
+.a-side-foot div{flex:1;min-width:0;line-height:18px}
+.a-side-foot strong{display:block;font-size:15px;font-weight:700}
+.a-side-foot span{display:block;font-size:12px;color:#6b7280}
+.a-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.a-head{flex:none;height:53px;box-sizing:border-box;padding:0 32px;display:flex;align-items:center;gap:24px;background:#ffffff;border-bottom:1px solid #e2e8f0}
+.a-head h1{margin:0;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.a-head-note{margin-left:auto;font-size:12px;line-height:16px;color:#6b7280}
+.a-body{flex:1;min-height:0;box-sizing:border-box;padding:32px 48px;display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.a-back{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:none}
+.a-split{flex:1;min-height:0;display:flex;align-items:flex-start;gap:48px}
+.a-col{display:flex;flex-direction:column;gap:24px;min-width:0}
+.a-col-main{flex:1}
+.a-col-side{flex:none;width:400px}
+.a-h2{margin:0;font-size:18px;line-height:24px;font-weight:700;color:#1e293b}
+.a-card{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);padding:24px;display:flex;flex-direction:column;gap:16px}
+.a-card-sub{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.a-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column}
+.a-list li{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid #e2e8f0}
+.a-list li:last-child{border-bottom:0}
+.a-list time{font-size:12px;line-height:16px;color:#6b7280}
+.a-list strong{font-size:14px;line-height:20px;font-weight:600;color:#1e293b}
+.a-list span{font-size:14px;line-height:20px;color:#6b7280}
+.a-divider{height:1px;background:#e2e8f0}
+.a-status{display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;white-space:nowrap}
+.a-status::before{content:"";flex:none;width:8px;height:8px;border-radius:9999px;background:currentColor}
+.a-status.is-open{color:#92400e}
+.a-status.is-neutral{color:#6b7280}
+.a-internal{font-size:12px;line-height:16px;font-weight:600;color:#92400e}
+.y-navitem-label{white-space:normal;line-height:24px}
+.y-avatar{display:inline-flex!important;color:#4f46e5!important;font-weight:600!important;line-height:1!important;align-items:center!important;justify-content:center!important}
+</style>
+</helmet>
+<div class="a-shell">
+  <aside class="a-side">
+    <div class="a-brand"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import><strong>Administration</strong></div>
+    <nav class="a-nav" aria-label="Sections d’administration">
+      <x-import component-from-global-scope="YDS.NavItem" icon="home" label="Tableau de bord" href="Admin-Dashboard-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="flag" label="Signalements" href="Admin-Reports-Desktop.dc.html" active="{{yes}}"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Tribunal des bannis" href="Admin-Support-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="user" label="Comptes" href="Admin-Users-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="trash-2" label="Suppressions" href="Admin-Deletions-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="shield" label="Journal d’audit" href="Admin-Audit-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="log-out" label="Déconnexion" href="Admin-Login-Desktop.dc.html"></x-import>
+    </nav>
+    <div class="a-side-foot"><x-import component-from-global-scope="YDS.Avatar" name="Administrateur" size="40"></x-import><div><strong>Administrateur</strong><span>@admin</span></div></div>
+  </aside>
+  <main class="a-main">
+    <header class="a-head">
+      <h1>Examen du signalement</h1>
+      <span class="a-head-note">Accès réservé à l’administrateur</span>
+    </header>
+    <div class="a-body">
+      <a class="a-back" href="Admin-Reports-Desktop.dc.html"><span style="display:inline-flex;line-height:0"><x-import component-from-global-scope="YDS.Icon" name="arrow-left" size="18" color="#4f46e5"></x-import></span>Retour à la file des signalements</a>
+      <div class="a-split">
+        <div class="a-col a-col-main">
+          <h2 class="a-h2">Contenu signalé</h2>
+          <x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="14/10/2026 10h41" tags="{{post.tags}}" body="{{post.body}}" reactions="{{post.reactions}}" hide-menu="{{yes}}" hide-follow="{{yes}}"></x-import>
+          <section class="a-card">
+            <h2 class="a-h2">Historique du signalement</h2>
+            <ol class="a-list">
+              <li><time>14/10/2026 10h41</time><strong>Signalement ouvert</strong><span>Motif : spam · signalé par un utilisateur (identité non affichée)</span></li>
+              <li><time>15/10/2026 16h48</time><strong>Contenu masqué</strong><span>Décision de @admin · motif enregistré dans le journal d’audit</span></li>
+            </ol>
+          </section>
+        </div>
+        <div class="a-col a-col-side">
+          <section class="a-card" aria-labelledby="decision-title">
+            <h2 class="a-h2" id="decision-title">Décision</h2>
+            <p class="a-card-sub">Statut : <span class="a-status is-neutral">Contenu masqué</span></p>
+            <x-import component-from-global-scope="YDS.TextField" label="Motif (obligatoire)" hint="Requis pour chaque décision. Enregistré dans le journal d’audit." placeholder="Expliquez la décision" multiline="{{yes}}" rows="4"></x-import>
+            <x-import component-from-global-scope="YDS.Button" variant="outline" size="md" block="{{yes}}" disabled="{{yes}}">Rétablir le contenu</x-import>
+            <div class="a-divider" aria-hidden="true"></div>
+            <p class="a-card-sub">Action sur le compte de l’auteur du contenu.</p>
+            <x-import component-from-global-scope="YDS.Button" variant="destructive" size="md" block="{{yes}}" disabled="{{yes}}">Suspendre le compte</x-import>
+            <div class="a-divider" aria-hidden="true"></div>
+            <x-import component-from-global-scope="YDS.TextField" label="Note interne" hint="Visible uniquement par l’administrateur, jamais par l’utilisateur concerné." placeholder="Note de travail" multiline="{{yes}}" rows="3"></x-import>
+            <span class="a-internal">Note marquée interne</span>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+post: {
+tags: ['#online_life', '#irl_vs_online'],
+body: '« Pourquoi les gens préfèrent-ils les réponses rapides plutôt que les questions profondes ? »',
+reactions: { like: '—', dislike: '—', y: '—' }
+}
+};
+}
+}
+</script>
+</body>
+</html>

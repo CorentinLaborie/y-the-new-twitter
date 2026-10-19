@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Nouveau message — Tablet</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-account{margin-top:auto;display:flex;align-items:center;justify-content:center;width:50px;height:50px;padding:0;border:0;border-radius:9999px;background:transparent;cursor:pointer}
+.y-dm-list{flex:none;box-sizing:border-box;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;min-height:0}
+.y-dm-search{padding:16px 16px 8px}
+.y-dm-rows{margin:0;padding:0;list-style:none}
+.y-dm-av{flex:none;width:40px;height:40px;display:flex}
+.y-sugg-title{margin:0;padding:16px 16px 8px;font-size:12px;line-height:16px;font-weight:700;color:#6b7280}
+.y-sugg{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 16px;border:0;background:#ffffff;font-family:inherit;text-align:left;cursor:pointer;color:#1e293b}
+.y-sugg:hover{background:#f8fafc}
+.y-sugg:focus-visible{outline:2px solid #4f46e5;outline-offset:-2px}
+.y-sugg-text{flex:1;min-width:0}
+.y-sugg-text strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#1e293b}
+.y-sugg-text span{display:block;font-size:12px;line-height:16px;color:#6b7280}
+.y-dm-pane{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
+.y-new-form{display:flex;flex-direction:column;gap:16px;padding:24px}
+.y-new-recipient{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.y-new-recipient strong{color:#1e293b}
+.y-new-count{display:flex;justify-content:flex-end}
+.y-new-actions{display:flex;justify-content:flex-end}
+</style>
+</helmet>
+<div style="width: 768px; height: 1024px; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif; display: flex; justify-content: flex-start; padding-left: 40px; overflow: hidden;">
+<div style="flex: none; width: 88px; height: 1024px; box-sizing: border-box; padding: 12px 0 16px; display: flex; flex-direction: column; align-items: center;">
+<div style="display: flex; padding: 8px 0;"><x-import component-from-global-scope="YDS.YLogo" size="36"></x-import></div>
+<nav aria-label="Navigation principale" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 4px;">
+<x-import component-from-global-scope="YDS.RailItem" icon="home" label="Accueil"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="search" label="Explorer"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="bell" label="Notifications" badge="3"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="mail" label="Messages" active="{{yes}}"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="bookmark" label="Signets"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="user" label="Profil"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="circle-ellipsis" label="Plus"></x-import>
+</nav>
+<div style="margin-top: 16px;"><x-import component-from-global-scope="YDS.RailPoster"></x-import></div>
+<button type="button" class="y-account" aria-label="Options du compte Corentin Laborie"><span style="width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="{{av}}"></x-import></span></button>
+</div>
+<main style="flex: none; width: 640px; height: 1024px; box-sizing: border-box; border-left: 1px solid #e2e8f0; overflow: hidden; background: #ffffff; display: flex;">
+<section aria-label="Destinataires" class="y-dm-list" style="width: 300px;">
+<x-import component-from-global-scope="YDS.PageHeader" back="{{yes}}" backLabel="Retour aux messages" title="Nouveau message"></x-import>
+<div class="y-dm-search"><x-import component-from-global-scope="YDS.SearchField" show-label="{{yes}}" label="Rechercher une personne" placeholder="Nom ou @pseudo"></x-import></div>
+<h2 class="y-sugg-title">Suggestions</h2>
+<ul class="y-dm-rows" aria-label="Personnes suggérées">
+<li><button type="button" class="y-sugg">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="MarkL" size="{{av}}"></x-import></span>
+<span class="y-sugg-text"><strong>MarkL</strong><span>@MarkL</span></span>
+</button></li>
+<li><button type="button" class="y-sugg">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="RizaHawkeye" size="{{av}}"></x-import></span>
+<span class="y-sugg-text"><strong>RizaHawkeye</strong><span>@RizaHawkeye</span></span>
+</button></li>
+</ul>
+</section>
+
+<section aria-label="Rédiger un message" class="y-dm-pane">
+<form class="y-new-form">
+<p class="y-new-recipient">Destinataire : <strong>aucun destinataire sélectionné</strong></p>
+<x-import component-from-global-scope="YDS.TextField" label="Message" placeholder="Écrivez votre message" multiline="{{yes}}" rows="6"></x-import>
+<div class="y-new-count"><x-import component-from-global-scope="YDS.CharCounter" value="0" max="1000"></x-import></div>
+<div class="y-new-actions"><x-import component-from-global-scope="YDS.Button" variant="primary" size="md" shape="pill" icon="send" disabled="{{yes}}">Envoyer</x-import></div>
+</form>
+</section>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":768,"height":1024}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 40
+};
+}
+}
+</script>
+</body>
+</html>

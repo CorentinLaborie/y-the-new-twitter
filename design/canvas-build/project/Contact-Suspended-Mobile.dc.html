@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Contacter l’administrateur</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+:root{--ring:#4f46e5}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-account{margin-top:auto;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 12px 12px 8px;border:0;border-radius:9999px;background:transparent;font-family:inherit;text-align:left;cursor:pointer}
+.y-account:hover{background:#f3f4f6}
+.y-set{display:flex;flex-direction:column;gap:16px;padding:16px}
+.y-form{display:flex;flex-direction:column;gap:24px;margin:0}
+.y-note-card{display:flex;align-items:flex-start;gap:12px;padding:16px;border-radius:16px;background:#e0e7ff;color:#1e293b;font-size:14px;line-height:20px}
+.y-note-card p{margin:0}
+.y-note-ico{flex:none;display:flex}
+
+.y-note{display:block;margin:0;font-size:12px;line-height:16px;color:#6b7280}
+.y-sent{display:flex;flex-direction:column;align-items:center;gap:12px;padding:32px 16px 8px;text-align:center}
+.y-sent-ico{width:56px;height:56px;border-radius:9999px;background:#dcfce7;display:flex;align-items:center;justify-content:center}
+.y-sent-title{margin:0;font-size:20px;line-height:26px;font-weight:700;color:#1e293b}
+.y-sent-text{margin:0;font-size:15px;line-height:21px;color:#6b7280}
+.y-ref{margin:0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;color:#6b7280}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar" title="Contacter l’administrateur" back="{{yes}}" back-label="Retour à l’accueil"></x-import></div>
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden;">
+<div class="y-set">
+<div class="y-note-card" role="note"><span class="y-note-ico"><x-import component-from-global-scope="YDS.Icon" name="info" size="18" color="#4f46e5"></x-import></span><p>Votre compte est suspendu depuis le 13/10/2026. Expliquez votre situation : l’administrateur vous répond par e-mail, à l’adresse de votre compte.</p></div>
+<form class="y-form" onsubmit="return false">
+<x-import component-from-global-scope="YDS.TextField" label="Votre message" hint="1 000 caractères maximum." placeholder="Expliquez votre situation" multiline="{{yes}}" rows="8"></x-import>
+<x-import component-from-global-scope="YDS.CharCounter" value="{{zero}}" max="{{maxChars}}"></x-import>
+<x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" block="{{yes}}" type="submit" disabled="{{yes}}">Envoyer le message</x-import>
+</form>
+<p class="y-note">Un seul message peut être ouvert à la fois. Vous pourrez écrire à nouveau après la réponse de l’administrateur.</p>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return { yes: true, zero: 0, maxChars: 1000 };
+}
+}
+</script>
+</body>
+</html>

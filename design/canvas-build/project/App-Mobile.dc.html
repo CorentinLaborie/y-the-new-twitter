@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>App — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-qpost{padding:16px 16px 16px}
+.y-qpost.is-compact{padding:12px 12px 12px}
+.y-qpost-who strong{font-size:14px}
+.y-qpost-who span{font-size:11px}
+.y-qpost-tags{font-size:11px}
+.y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost.is-compact .y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost-actions{gap:8px;flex-wrap:nowrap}
+.y-react{height:30px;padding:0 12px;font-size:12px;white-space:nowrap}
+.y-qpost-head{gap:12px;flex-wrap:wrap}
+.y-qpost-head .y-avatar{width:36px!important;height:36px!important;font-size:14px!important}
+.y-qpost-tags{width:100%;margin-left:48px;justify-content:flex-start}
+.y-follow{height:26px!important;font-size:11px!important}
+.y-save{width:30px;height:30px}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden;">
+<div role="tablist" style="display: flex; border-bottom: 1px solid #e2e8f0; height: 48px; box-sizing: border-box; background: #ffffff;">
+<x-import component-from-global-scope="YDS.Tab" label="Pour vous" active="{{yes}}" style="flex: 1;"></x-import>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #ffffff;">
+
+<section style="background: #f8fafc; border-radius: 16px; padding: 12px; display: flex; gap: 12px;">
+<div style="flex: none; width: 32px; height: 32px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="{{av}}"></x-import></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
+<label for="ask" style="font-size: 13px; font-weight: 700; color: #1e293b;">Posez votre question</label>
+<textarea id="ask" placeholder="Quelle est votre question&nbsp;?" style="display: block; width: 100%; height: 56px; box-sizing: border-box; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; font-family: inherit; font-size: 14px; color: #1e293b; resize: none;"></textarea>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+<div style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #4f46e5; white-space: normal; min-width: 0;"><x-import component-from-global-scope="YDS.Icon" name="globe" size="14" color="#4f46e5"></x-import><span>Tout le monde peut répondre</span></div>
+<div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="YDS.CharCounter" value="0" max="280"></x-import><x-import component-from-global-scope="YDS.Button" variant="primary" size="sm" disabled="{{yes}}">Poster</x-import></div>
+</div>
+</div>
+</section>
+
+<button type="button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 32px; flex: none; border: 1px solid #4f46e5; border-radius: 9999px; background: #ffffff; color: #4f46e5; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;"><x-import component-from-global-scope="YDS.Icon" name="plus" size="14" color="#4f46e5"></x-import>Afficher 12 nouvelles questions</button>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="14/10/2026 10h41" tags="{{postA.tags}}" body="{{postA.body}}" reactions="{{postA.reactions}}" bookmarkable="{{yes}}"></x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="Juliette_B" date="14/10/2026 09h12" tags="{{postB.tags}}" body="{{postB.body}}" reactions="{{postB.reactions}}" followed="{{yes}}" y-active="{{yes}}" bookmarkable="{{yes}}" saved="{{yes}}">
+<x-import component-from-global-scope="YDS.ConversationBox" reply-to="Juliette_B" size="sm">
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="14/10/2026 09h41" body="{{replyA.body}}" reactions="{{replyA.reactions}}" compact="{{yes}}"></x-import>
+</x-import>
+</x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="13/10/2026 18h44" tags="{{postC.tags}}" body="{{postC.body}}" reactions="{{postC.reactions}}" bookmarkable="{{yes}}"></x-import>
+
+</div>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 32,
+av40: 40,
+postA: { tags: ['#online_life', '#irl_vs_online'], body: '«\u00a0Pourquoi les gens préfèrent-ils les réponses rapides plutôt que les questions profondes ?\u00a0»', reactions: { like: 124, dislike: 12, y: 49 } },
+postB: { tags: ['#online_life', '#irl_vs_online'], body: '«\u00a0Qu’est-ce qui fait qu’une conversation en ligne peut être plus sincère qu’une rencontre en personne ?\u00a0»', reactions: { like: 2000, dislike: 450, y: 89 } },
+replyA: { body: 'Peut-être que les gens ont envie de se protéger derrière un écran ? La sécurité d’abord !', reactions: { like: 124, dislike: 12 } },
+postC: { tags: ['#online_life', '#irl_vs_online'], body: '«\u00a0Like pour les bananes, dislike pour les pommes : quel est le meilleur fruit ?\u00a0»', reactions: { like: 500, dislike: 480, y: 47 } }
+};
+}
+}
+</script>
+</body>
+</html>

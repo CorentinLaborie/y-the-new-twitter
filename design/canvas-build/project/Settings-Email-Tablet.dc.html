@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Changer mon adresse e-mail — Tablet</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+:root{--ring:#4f46e5}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-account{margin-top:auto;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 12px 12px 8px;border:0;border-radius:9999px;background:transparent;font-family:inherit;text-align:left;cursor:pointer}
+.y-account:hover{background:#f3f4f6}
+.y-set{display:flex;flex-direction:column;gap:16px;padding:16px}
+.y-form{display:flex;flex-direction:column;gap:24px;margin:0}
+.y-note-card{display:flex;align-items:flex-start;gap:12px;padding:16px;border-radius:16px;background:#e0e7ff;color:#1e293b;font-size:14px;line-height:20px}
+.y-note-card p{margin:0}
+.y-note-ico{flex:none;display:flex}
+
+</style>
+</helmet>
+<div style="width: 768px; height: 1024px; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif; display: flex; justify-content: center; overflow: hidden;">
+<div style="flex: none; width: 88px; height: 1024px; box-sizing: border-box; padding: 12px 0 16px; display: flex; flex-direction: column; align-items: center;">
+<div style="display: flex; padding: 8px 0;"><x-import component-from-global-scope="YDS.YLogo" size="36"></x-import></div>
+<nav aria-label="Navigation principale" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 4px;">
+<x-import component-from-global-scope="YDS.RailItem" icon="home" label="Accueil"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="search" label="Explorer"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="bell" label="Notifications" badge="3"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="mail" label="Messages"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="bookmark" label="Signets"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="user" label="Profil"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="circle-ellipsis" label="Plus" active="{{yes}}"></x-import>
+</nav>
+<div style="margin-top: 16px;"><x-import component-from-global-scope="YDS.RailPoster"></x-import></div>
+<button type="button" aria-label="Options du compte Corentin Laborie" style="margin-top: auto; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 9999px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer;"><span style="width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="{{av}}"></x-import></span></button>
+</div>
+<main style="flex: none; width: 600px; height: 1024px; box-sizing: border-box; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;">
+<x-import component-from-global-scope="YDS.PageHeader" title="Changer mon adresse e-mail" subtitle="Paramètres du compte" back="{{yes}}" back-label="Retour aux paramètres"></x-import>
+<div class="y-set">
+<form class="y-form" onsubmit="return false">
+<x-import component-from-global-scope="YDS.TextField" label="Nouvelle adresse e-mail" type="email" placeholder="nom@exemple.fr" auto-complete="email"></x-import>
+<div class="y-note-card" role="note"><span class="y-note-ico"><x-import component-from-global-scope="YDS.Icon" name="info" size="18" color="#4f46e5"></x-import></span><p>Un code de confirmation sera envoyé à la nouvelle adresse. Votre adresse actuelle recevra aussi un e-mail pour l’informer de ce changement.</p></div>
+<x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" block="{{yes}}" type="submit">Envoyer le code</x-import>
+</form>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":768,"height":1024}}'>
+class Component extends DCLogic {
+renderVals() {
+return { yes: true, av: 40 };
+}
+}
+</script>
+</body>
+</html>

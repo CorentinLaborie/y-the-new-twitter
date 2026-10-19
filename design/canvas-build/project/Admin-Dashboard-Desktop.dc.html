@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Administration — Tableau de bord</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.a-shell{width:1440px;height:900px;box-sizing:border-box;display:flex;background:#ffffff;color:#1e293b;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.a-side{flex:none;width:280px;box-sizing:border-box;padding:16px;background:#ffffff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;gap:8px}
+.a-brand{display:flex;align-items:center;gap:12px;padding:8px 12px 16px}
+.a-brand strong{font-size:16px;line-height:24px;font-weight:700;color:#4f46e5}
+.a-nav{display:flex;flex-direction:column;gap:4px}
+.a-side-foot{margin-top:auto;display:flex;align-items:center;gap:12px;padding:12px}
+.a-side-foot div{flex:1;min-width:0;line-height:18px}
+.a-side-foot strong{display:block;font-size:15px;font-weight:700}
+.a-side-foot span{display:block;font-size:12px;color:#6b7280}
+.a-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.a-head{flex:none;height:53px;box-sizing:border-box;padding:0 32px;display:flex;align-items:center;gap:24px;background:#ffffff;border-bottom:1px solid #e2e8f0}
+.a-head h1{margin:0;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.a-head-note{margin-left:auto;font-size:12px;line-height:16px;color:#6b7280}
+.a-body{flex:1;min-height:0;box-sizing:border-box;padding:32px 48px;display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.a-intro{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.a-bar{display:flex;align-items:flex-end;gap:16px}
+.a-bar .y-searchfield{flex:1;min-width:0}
+.a-panel{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);overflow:hidden}
+.a-table{width:100%;border-collapse:collapse;font-size:14px;line-height:20px;color:#1e293b}
+.a-table caption{padding:16px 24px;text-align:left;font-size:16px;line-height:24px;font-weight:700;color:#1e293b;border-bottom:1px solid #e2e8f0}
+.a-table th{padding:12px 16px;text-align:left;font-size:12px;line-height:16px;font-weight:700;color:#1e293b;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.a-table td{padding:12px 16px;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+.a-table tbody tr:last-child td{border-bottom:0}
+.a-table a{font-weight:600;text-decoration:underline}
+.a-num{text-align:right;color:#6b7280}
+.a-mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px}
+.a-status{display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;white-space:nowrap}
+.a-status::before{content:"";flex:none;width:8px;height:8px;border-radius:9999px;background:currentColor}
+.a-status.is-open{color:#92400e}
+.a-status.is-ok{color:#166534}
+.a-status.is-danger{color:#dc2626}
+.a-status.is-neutral{color:#6b7280}
+.a-shell{position:relative}
+.a-h2{margin:0;font-size:18px;line-height:24px;font-weight:700;color:#1e293b}
+.a-back{display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:none}
+.a-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.a-kpi{box-sizing:border-box;padding:24px;background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:8px}
+.a-kpi-label{font-size:14px;line-height:20px;font-weight:600;color:#6b7280}
+.a-kpi-value{font-size:40px;line-height:48px;font-weight:800;color:#1e293b}
+.a-kpi-sub{font-size:13px;line-height:18px;color:#6b7280}
+.a-dash{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
+.a-dash-side{padding:24px;display:flex;flex-direction:column;gap:16px}
+.a-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.a-list li{display:flex;flex-direction:column;gap:2px}
+.a-list time{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;line-height:16px;color:#6b7280}
+.a-list strong{font-size:14px;line-height:20px;color:#1e293b}
+.a-list span{font-size:13px;line-height:18px;color:#6b7280}
+.a-scrim{position:absolute;inset:0;background:rgba(15,23,42,0.5);display:flex;align-items:center;justify-content:center}
+.a-dialog{box-sizing:border-box;width:560px;padding:32px;background:#ffffff;border-radius:16px;box-shadow:0px 20px 40px -10px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:20px;font-family:Inter,system-ui,sans-serif;color:#1e293b}
+.a-dialog h2{margin:0;font-size:24px;line-height:32px;font-weight:800}
+.a-dialog p{margin:0;font-size:15px;line-height:21px;color:#6b7280}
+.a-dialog-hint{font-size:13px !important;line-height:18px !important}
+.a-dialog-actions{display:flex;justify-content:flex-end;gap:12px}
+.a-divider{height:1px;background:#e2e8f0}
+.a-alert{box-sizing:border-box;display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:14px;line-height:20px}
+.a-alert div{display:flex;flex-direction:column;gap:4px}
+.a-alert strong{font-weight:700}
+.a-locked{display:flex;flex-direction:column;gap:24px;margin:0;padding:0;border:0;min-width:0;opacity:0.5}
+.y-navitem-label{white-space:normal;line-height:24px}
+.y-avatar{display:inline-flex!important;color:#4f46e5!important;font-weight:600!important;line-height:1!important;align-items:center!important;justify-content:center!important}
+</style>
+</helmet>
+<div class="a-shell">
+  <aside class="a-side">
+    <div class="a-brand"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import><strong>Administration</strong></div>
+    <nav class="a-nav" aria-label="Sections d’administration">
+      <x-import component-from-global-scope="YDS.NavItem" icon="home" label="Tableau de bord" href="Admin-Dashboard-Desktop.dc.html" active="{{yes}}"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="flag" label="Signalements" href="Admin-Reports-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Tribunal des bannis" href="Admin-Support-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="user" label="Comptes" href="Admin-Users-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="trash-2" label="Suppressions" href="Admin-Deletions-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="shield" label="Journal d’audit" href="Admin-Audit-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="log-out" label="Déconnexion" href="Admin-Login-Desktop.dc.html"></x-import>
+    </nav>
+    <div class="a-side-foot"><x-import component-from-global-scope="YDS.Avatar" name="Administrateur" size="40"></x-import><div><strong>Administrateur</strong><span>@admin</span></div></div>
+  </aside>
+  <main class="a-main">
+    <header class="a-head">
+      <h1>Tableau de bord</h1>
+      <span class="a-head-note">Accès réservé à l’administrateur</span>
+    </header>
+    <div class="a-body">
+      <p class="a-intro">Chiffres du jour. Les adresses e-mail restent masquées dans toutes les vues.</p>
+      <div class="a-kpis">
+        <section class="a-kpi"><span class="a-kpi-label">Signalements ouverts</span><strong class="a-kpi-value">4</strong><span class="a-kpi-sub">Sans décision à ce jour</span></section>
+        <section class="a-kpi"><span class="a-kpi-label">Plus ancien signalement ouvert</span><strong class="a-kpi-value">6 j</strong><span class="a-kpi-sub">Ouvert le 13/10/2026 à 11h07</span></section>
+        <section class="a-kpi"><span class="a-kpi-label">Délai moyen de traitement</span><strong class="a-kpi-value">1 j 4 h</strong><span class="a-kpi-sub">Moyenne sur les 30 derniers jours</span></section>
+        <section class="a-kpi"><span class="a-kpi-label">Comptes en attente de suppression</span><strong class="a-kpi-value">1</strong><span class="a-kpi-sub">Prochaine purge le 31/12/2026</span></section>
+      </div>
+      <div class="a-dash">
+        <section class="a-panel">
+          <table class="a-table">
+            <caption>Les signalements les plus anciens</caption>
+            <thead><tr><th scope="col">Ouvert le</th><th scope="col">Motif</th><th scope="col">Contenu</th><th scope="col" class="a-num">Signalements</th><th scope="col">Statut</th></tr></thead>
+            <tbody>
+<tr><td class="a-mono">13/10/2026 11h07</td><td>Haine</td><td>Réponse · Robert44</td><td class="a-num">1</td><td><span class="a-status is-open">Ouvert</span></td></tr>
+<tr><td class="a-mono">13/10/2026 18h44</td><td>Désinformation</td><td>Question · RizaHawkeye</td><td class="a-num">1</td><td><span class="a-status is-open">Ouvert</span></td></tr>
+<tr><td class="a-mono">14/10/2026 09h12</td><td>Harcèlement</td><td>Réponse · MarkL</td><td class="a-num">1</td><td><span class="a-status is-open">Ouvert</span></td></tr>
+<tr><td class="a-mono">14/10/2026 10h41</td><td>Spam</td><td>Question · AliceY</td><td class="a-num">1</td><td><span class="a-status is-open">Ouvert</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+        <section class="a-panel a-dash-side">
+          <h2 class="a-h2">Dernières actions</h2>
+          <ol class="a-list">
+            <li><time>16/10/2026 08h12</time><strong>Connexion administrateur</strong><span>Vérification à deux facteurs réussie</span></li>
+            <li><time>15/10/2026 17h31</time><strong>Contenu masqué</strong><span>Réponse de MarkL · @admin</span></li>
+            <li><time>15/10/2026 17h30</time><strong>Signalement rejeté</strong><span>Question · contenu conforme aux règles · @admin</span></li>
+            <li><time>14/10/2026 10h02</time><strong>Adresse e-mail révélée</strong><span>Compte RizaHawkeye · @admin</span></li>
+          </ol>
+        </section>
+      </div>
+    </div>
+  </main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true
+};
+}
+}
+</script>
+</body>
+</html>

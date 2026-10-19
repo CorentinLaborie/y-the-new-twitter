@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Administration — Connexion</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.a-login{width:1440px;height:900px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:64px;background:#ffffff;color:#1e293b;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.a-login-brand{flex:none;line-height:0}
+.a-login-col{flex:none;width:576px;display:flex;flex-direction:column;gap:24px}
+.a-login-kicker{margin:0;font-size:18px;line-height:24px;font-weight:600;color:#4f46e5}
+.a-login-title{margin:0;font-size:40px;line-height:48px;font-weight:600;color:#1e293b}
+.a-login-form{display:flex;flex-direction:column;gap:24px;margin:0}
+.a-login-alt{align-self:center;font-size:14px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:underline}
+.a-login-note{margin:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;line-height:20px;color:#6b7280;text-align:center}
+</style>
+</helmet>
+<div class="a-login">
+  <div class="a-login-brand" aria-hidden="true"><x-import component-from-global-scope="YDS.YLogo" size="480"></x-import></div>
+  <div class="a-login-col">
+    <p class="a-login-kicker">Administration</p>
+    <h1 class="a-login-title">Connexion au back-office</h1>
+    <form class="a-login-form" onsubmit="return false">
+      <x-import component-from-global-scope="YDS.TextField" label="Adresse e-mail" placeholder="Votre adresse e-mail" type="email" auto-complete="username"></x-import>
+      <x-import component-from-global-scope="YDS.TextField" label="Mot de passe" placeholder="Votre mot de passe" type="password" revealable="{{yes}}" auto-complete="current-password"></x-import>
+      <x-import component-from-global-scope="YDS.TextField" label="Code de vérification à 6 chiffres" hint="Code à usage unique de votre application d’authentification." placeholder="000000" auto-complete="one-time-code"></x-import>
+      <x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" block="{{yes}}" type="submit">Se connecter</x-import>
+      <a class="a-login-alt" href="#">Utiliser un code de secours</a>
+    </form>
+    <p class="a-login-note"><span style="display:inline-flex;line-height:0"><x-import component-from-global-scope="YDS.Icon" name="lock" size="16" color="#6b7280"></x-import></span>Connexion réservée à l’administrateur</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { yes: true };
+}
+}
+</script>
+</body>
+</html>

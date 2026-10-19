@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Profil — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-qpost{padding:16px 16px 16px}
+.y-qpost.is-compact{padding:12px 12px 12px}
+.y-qpost-who strong{font-size:14px}
+.y-qpost-who span{font-size:11px}
+.y-qpost-tags{font-size:11px}
+.y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost.is-compact .y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost-actions{gap:8px;flex-wrap:nowrap}
+.y-react{height:30px;padding:0 12px;font-size:12px;white-space:nowrap}
+.y-qpost-head{gap:12px;flex-wrap:wrap}
+.y-qpost-head .y-avatar{width:36px!important;height:36px!important;font-size:14px!important}
+.y-qpost-tags{width:100%;margin-left:48px;justify-content:flex-start}
+.y-follow{height:26px!important;font-size:11px!important}
+.y-save{width:30px;height:30px}
+.y-prof-cover{height:150px;flex:none;background:#e0e7ff}
+.y-prof{position:relative;flex:none;padding:112px 16px 16px;border-bottom:1px solid #e2e8f0}
+.y-prof-avatar{position:absolute;top:16px;left:16px;width:120px;height:120px;box-sizing:border-box;border:4px solid #ffffff;border-radius:9999px;background:#ffffff;display:flex}
+.y-prof-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;height:40px}
+.y-prof-msg{width:40px;padding:0}
+.y-prof-name{margin:24px 0 0;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.y-prof-handle{margin:0;font-size:15px;line-height:20px;color:#6b7280}
+.y-prof-bio{margin:12px 0 0;font-size:15px;line-height:20px;color:#1e293b}
+.y-prof-meta{display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:15px;line-height:20px;color:#6b7280}
+.y-prof-counts{display:flex;flex-wrap:wrap;gap:24px;margin-top:12px;font-size:15px;line-height:20px}
+.y-prof-counts a{color:#6b7280;text-decoration:none}
+.y-prof-counts a:hover{text-decoration:underline}
+.y-prof-counts strong{font-weight:700;color:#1e293b}
+
+.y-prof-avatar{top:16px;width:80px;height:80px}
+.y-prof-name{margin-top:12px}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar" back="{{yes}}" title="AliceY" subtitle="38 questions"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden;">
+
+
+<section class="y-prof" aria-label="Profil d’AliceY">
+<div class="y-prof-avatar"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="{{avBig}}"></x-import></div>
+<div class="y-prof-actions">
+<x-import component-from-global-scope="YDS.Button" variant="outline" size="md" shape="pill" icon="mail" class-name="y-prof-msg" aria-label="Envoyer un message à AliceY"></x-import>
+<x-import component-from-global-scope="YDS.Button" variant="primary" size="md" shape="pill" icon="user-plus" aria-pressed="false">Suivre</x-import>
+</div>
+<h2 class="y-prof-name">AliceY</h2>
+<p class="y-prof-handle">@AliceY</p>
+<p class="y-prof-bio">Curieuse de tout, je pose les questions que personne n’ose poser. Ici pour réfléchir ensemble, pas pour avoir raison.</p>
+<p class="y-prof-meta"><x-import component-from-global-scope="YDS.Icon" name="calendar" size="18" color="#6b7280"></x-import>A rejoint Y en mars 2026</p>
+<div class="y-prof-counts">
+<a href="#"><strong>182</strong> abonnements</a>
+<a href="#"><strong>2&nbsp;340</strong> abonnés</a>
+</div>
+</section>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #ffffff;">
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="15/10/2026 08h30" tags="{{pA.tags}}" body="{{pA.body}}" reactions="{{pA.reactions}}" hide-follow="{{yes}}" y-active="{{yes}}" bookmarkable="{{yes}}" saved="{{yes}}">
+<x-import component-from-global-scope="YDS.ConversationBox" reply-to="AliceY" size="sm">
+<x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="15/10/2026 09h02" followed="{{yes}}" body="{{replyA.body}}" reactions="{{replyA.reactions}}" compact="{{yes}}"></x-import>
+</x-import>
+</x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="14/10/2026 10h41" tags="{{pB.tags}}" body="{{pB.body}}" reactions="{{pB.reactions}}" hide-follow="{{yes}}" bookmarkable="{{yes}}"></x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="13/10/2026 19h20" tags="{{pC.tags}}" body="{{pC.body}}" reactions="{{pC.reactions}}" hide-follow="{{yes}}" bookmarkable="{{yes}}"></x-import>
+</div>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 32,
+avBig: 72,
+pA: { tags: ['#human_life'], body: '« Est-ce qu’on change vraiment d’avis, ou est-ce qu’on trouve juste de meilleures raisons de penser la même chose ? »', reactions: { like: 860, dislike: 95, y: 64 } },
+replyA: { body: 'Je crois qu’on change d’avis quand on arrête de vouloir gagner la discussion.', reactions: { like: 58, dislike: 4 } },
+pB: { tags: ['#online_life', '#irl_vs_online'], body: '« Pourquoi les gens préfèrent-ils les réponses rapides plutôt que les questions profondes ? »', reactions: { like: 124, dislike: 12, y: 49 } },
+pC: { tags: ['#human_life', '#irl_vs_online'], body: '« Quel est le dernier échange en ligne qui vous a donné envie d’appeler quelqu’un en vrai ? »', reactions: { like: 516, dislike: 23, y: 34 } }
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Administration — Comptes</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.a-shell{width:1440px;height:900px;box-sizing:border-box;display:flex;background:#ffffff;color:#1e293b;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.a-side{flex:none;width:280px;box-sizing:border-box;padding:16px;background:#ffffff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;gap:8px}
+.a-brand{display:flex;align-items:center;gap:12px;padding:8px 12px 16px}
+.a-brand strong{font-size:16px;line-height:24px;font-weight:700;color:#4f46e5}
+.a-nav{display:flex;flex-direction:column;gap:4px}
+.a-side-foot{margin-top:auto;display:flex;align-items:center;gap:12px;padding:12px}
+.a-side-foot div{flex:1;min-width:0;line-height:18px}
+.a-side-foot strong{display:block;font-size:15px;font-weight:700}
+.a-side-foot span{display:block;font-size:12px;color:#6b7280}
+.a-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.a-head{flex:none;height:53px;box-sizing:border-box;padding:0 32px;display:flex;align-items:center;gap:24px;background:#ffffff;border-bottom:1px solid #e2e8f0}
+.a-head h1{margin:0;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.a-head-note{margin-left:auto;font-size:12px;line-height:16px;color:#6b7280}
+.a-body{flex:1;min-height:0;box-sizing:border-box;padding:32px 48px;display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.a-intro{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.a-bar{display:flex;align-items:flex-end;gap:16px}
+.a-bar .y-searchfield{flex:1;min-width:0}
+.a-panel{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);overflow:hidden}
+.a-table{width:100%;border-collapse:collapse;font-size:14px;line-height:20px;color:#1e293b}
+.a-table caption{padding:16px 24px;text-align:left;font-size:16px;line-height:24px;font-weight:700;color:#1e293b;border-bottom:1px solid #e2e8f0}
+.a-table th{padding:12px 16px;text-align:left;font-size:12px;line-height:16px;font-weight:700;color:#1e293b;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.a-table td{padding:12px 16px;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+.a-table tbody tr:last-child td{border-bottom:0}
+.a-table a{font-weight:600;text-decoration:underline}
+.a-num{text-align:right;color:#6b7280}
+.a-mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px}
+.a-status{display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;white-space:nowrap}
+.a-status::before{content:"";flex:none;width:8px;height:8px;border-radius:9999px;background:currentColor}
+.a-status.is-open{color:#92400e}
+.a-status.is-ok{color:#166534}
+.a-status.is-danger{color:#dc2626}
+.a-status.is-neutral{color:#6b7280}
+.y-navitem-label{white-space:normal;line-height:24px}
+.y-avatar{display:inline-flex!important;color:#4f46e5!important;font-weight:600!important;line-height:1!important;align-items:center!important;justify-content:center!important}
+</style>
+</helmet>
+<div class="a-shell">
+  <aside class="a-side">
+    <div class="a-brand"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import><strong>Administration</strong></div>
+    <nav class="a-nav" aria-label="Sections d’administration">
+      <x-import component-from-global-scope="YDS.NavItem" icon="home" label="Tableau de bord" href="Admin-Dashboard-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="flag" label="Signalements" href="Admin-Reports-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Tribunal des bannis" href="Admin-Support-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="user" label="Comptes" href="Admin-Users-Desktop.dc.html" active="{{yes}}"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="trash-2" label="Suppressions" href="Admin-Deletions-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="shield" label="Journal d’audit" href="Admin-Audit-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="log-out" label="Déconnexion" href="Admin-Login-Desktop.dc.html"></x-import>
+    </nav>
+    <div class="a-side-foot"><x-import component-from-global-scope="YDS.Avatar" name="Administrateur" size="40"></x-import><div><strong>Administrateur</strong><span>@admin</span></div></div>
+  </aside>
+  <main class="a-main">
+    <header class="a-head">
+      <h1>Comptes</h1>
+      <span class="a-head-note">Accès réservé à l’administrateur</span>
+    </header>
+    <div class="a-body">
+      <p class="a-intro">Les adresses e-mail sont masquées. Leur révélation est enregistrée dans le journal d’audit.</p>
+      <div class="a-bar">
+        <x-import component-from-global-scope="YDS.SearchField" label="Rechercher un compte" show-label="{{yes}}" placeholder="Identifiant ou nom affiché"></x-import>
+        <x-import component-from-global-scope="YDS.Select" label="Statut" options="{{statusOptions}}"></x-import>
+      </div>
+      <section class="a-panel">
+        <table class="a-table">
+          <caption>Comptes</caption>
+          <thead>
+            <tr>
+              <th scope="col">Identifiant</th>
+              <th scope="col">Nom affiché</th>
+              <th scope="col">E-mail</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Rôle</th>
+              <th scope="col">Inscription</th>
+              <th scope="col">Signalements</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="Admin-User-Detail-Desktop.dc.html">AliceY</a></td>
+              <td>Alice</td>
+              <td class="a-mono">a***@d***.fr</td>
+              <td><span class="a-status is-ok">Actif</span></td>
+              <td>Utilisateur</td>
+              <td>03/09/2026</td>
+              <td class="a-num">—</td>
+            </tr>
+            <tr>
+              <td><a href="Admin-User-Detail-Desktop.dc.html">MarkL</a></td>
+              <td>Mark</td>
+              <td class="a-mono">m***@d***.fr</td>
+              <td><span class="a-status is-danger">Suspendu</span></td>
+              <td>Utilisateur</td>
+              <td>21/08/2026</td>
+              <td class="a-num">—</td>
+            </tr>
+            <tr>
+              <td><a href="Admin-User-Detail-Desktop.dc.html">RizaHawkeye</a></td>
+              <td>Riza</td>
+              <td class="a-mono">r***@d***.fr</td>
+              <td><span class="a-status is-open">En attente de suppression</span></td>
+              <td>Utilisateur</td>
+              <td>12/06/2026</td>
+              <td class="a-num">—</td>
+            </tr>
+            <tr>
+              <td><a href="Admin-User-Detail-Desktop.dc.html">Robert44</a></td>
+              <td>Robert</td>
+              <td class="a-mono">j***@d***.fr</td>
+              <td><span class="a-status is-ok">Actif</span></td>
+              <td>Utilisateur</td>
+              <td>30/05/2026</td>
+              <td class="a-num">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+statusOptions: [
+{ value: 'tous', label: 'Tous les statuts' },
+{ value: 'actif', label: 'Actif' },
+{ value: 'en-attente-de-verification', label: 'En attente de vérification' },
+{ value: 'suspendu', label: 'Suspendu' },
+{ value: 'en-attente-de-suppression', label: 'En attente de suppression' },
+{ value: 'supprime', label: 'Supprimé' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

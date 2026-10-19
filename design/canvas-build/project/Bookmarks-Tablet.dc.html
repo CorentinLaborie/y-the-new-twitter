@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Signets — Tablet</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-qpost{padding:24px 24px 22px}
+.y-qpost.is-compact{padding:18px 24px 16px}
+.y-qpost-who strong{font-size:15px}
+.y-qpost-who span{font-size:11px}
+.y-qpost-tags{font-size:11px}
+.y-qpost-body{font-size:16px;line-height:22px;margin:17px 0 18px}
+.y-qpost.is-compact .y-qpost-body{font-size:16px;line-height:22px;margin:15px 0 16px}
+.y-qpost-actions{gap:12px}
+.y-react{height:32px;padding:0 16px;font-size:14px}
+.y-qpost-head{gap:12px}
+.y-qpost-head .y-avatar{width:40px!important;height:40px!important;font-size:16px!important}
+.y-follow{height:26px!important;font-size:11px!important}
+.y-react{white-space:nowrap}
+.y-save{width:32px;height:32px}
+.y-side-card{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);padding:16px 24px}
+.y-side-card h2{margin:0 0 8px;font-size:20px;line-height:26px;font-weight:700;color:#1e293b}
+.y-trend{display:block;padding:8px 0;border-bottom:1px solid #e2e8f0;text-decoration:none}
+.y-trend:last-child{border-bottom:0;padding-bottom:0}
+.y-trend strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#4f46e5}
+.y-trend span{display:block;font-size:12px;line-height:16px;color:#6b7280}
+.y-user-row{display:flex;align-items:center;gap:12px;padding:8px 0}
+.y-user-row:last-child{padding-bottom:0}
+.y-user-row-text{flex:1;min-width:0;line-height:18px}
+.y-user-row-text strong{display:block;font-size:15px;font-weight:700;color:#1e293b}
+.y-user-row-text span{display:block;font-size:12px;color:#6b7280}
+.y-account{margin-top:auto;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 12px 12px 12px;border:0;border-radius:9999px;background:transparent;font-family:inherit;text-align:left;cursor:pointer}
+.y-account:hover{background:#f3f4f6}
+</style>
+</helmet>
+<div style="width: 768px; height: 1024px; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif; display: flex; justify-content: center; overflow: hidden;">
+<div style="flex: none; width: 88px; height: 1024px; box-sizing: border-box; padding: 12px 0 16px; display: flex; flex-direction: column; align-items: center;">
+<div style="display: flex; padding: 7px 0;"><x-import component-from-global-scope="YDS.YLogo" size="36"></x-import></div>
+<nav aria-label="Navigation principale" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 4px;">
+<x-import component-from-global-scope="YDS.RailItem" icon="home" label="Accueil"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="search" label="Explorer"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="bell" label="Notifications" badge="3"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="mail" label="Messages"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="bookmark" label="Signets" active="{{yes}}"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="user" label="Profil"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="circle-ellipsis" label="Plus"></x-import>
+</nav>
+<div style="margin-top: 16px;"><x-import component-from-global-scope="YDS.RailPoster"></x-import></div>
+<button type="button" aria-label="Options du compte Corentin Laborie" style="margin-top: auto; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 9999px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer;"><span style="width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="{{av}}"></x-import></span></button>
+</div>
+<main style="flex: none; width: 600px; height: 1024px; box-sizing: border-box; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;">
+<x-import component-from-global-scope="YDS.PageHeader" title="Signets" subtitle="@corentin · 5 questions enregistrées"></x-import>
+
+<div style="display: flex; flex-direction: column; align-items: stretch; gap: 12px; padding: 16px 16px 0;">
+<x-import component-from-global-scope="YDS.SearchField" label="Rechercher dans vos signets"></x-import>
+<x-import component-from-global-scope="YDS.Select" inline="{{yes}}" label="Trier par" options="{{sortOptions}}" value="{{sortValue}}"></x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="15/10/2026 08h30" tags="{{pA.tags}}" body="{{pA.body}}" reactions="{{pA.reactions}}" y-active="{{yes}}" bookmarkable="{{yes}}" saved="{{yes}}">
+<x-import component-from-global-scope="YDS.ConversationBox" reply-to="AliceY">
+<x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="15/10/2026 09h02" followed="{{yes}}" body="{{replyA.body}}" reactions="{{replyA.reactions}}" compact="{{yes}}"></x-import>
+</x-import>
+</x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="14/10/2026 16h32" tags="{{pE.tags}}" body="{{pE.body}}" reactions="{{pE.reactions}}" followed="{{yes}}" bookmarkable="{{yes}}" saved="{{yes}}"></x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="Juliette_B" date="14/10/2026 09h12" tags="{{pB.tags}}" body="{{pB.body}}" reactions="{{pB.reactions}}" followed="{{yes}}" y-active="{{yes}}" bookmarkable="{{yes}}" saved="{{yes}}">
+<x-import component-from-global-scope="YDS.ConversationBox" reply-to="Juliette_B">
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="14/10/2026 09h41" body="{{replyB.body}}" reactions="{{replyB.reactions}}" compact="{{yes}}"></x-import>
+</x-import>
+</x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="14/10/2026 07h55" tags="{{pC.tags}}" body="{{pC.body}}" reactions="{{pC.reactions}}" bookmarkable="{{yes}}" saved="{{yes}}"></x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="13/10/2026 21h10" tags="{{pD.tags}}" body="{{pD.body}}" reactions="{{pD.reactions}}" bookmarkable="{{yes}}" saved="{{yes}}"></x-import>
+
+</div>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":768,"height":1024}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 40,
+sortOptions: ['Date d’enregistrement', 'Date de la question'],
+sortValue: 'Date d’enregistrement',
+pA: { tags: ['#human_life'], body: '« Est-ce qu’on change vraiment d’avis, ou est-ce qu’on trouve juste de meilleures raisons de penser la même chose ? »', reactions: { like: 860, dislike: 95, y: 64 } },
+replyA: { body: 'Je crois qu’on change d’avis quand on arrête de vouloir gagner la discussion.', reactions: { like: 58, dislike: 4 } },
+pE: { tags: ['#slow_social', '#online_life'], body: '« Si on ne pouvait poster qu’une question par jour, est-ce qu’on réfléchirait davantage avant d’écrire ? »', reactions: { like: 842, dislike: 97, y: 41 } },
+pB: { tags: ['#online_life', '#irl_vs_online'], body: '« Qu’est-ce qui fait qu’une conversation en ligne peut être plus sincère qu’une rencontre en personne ? »', reactions: { like: 2000, dislike: 450, y: 89 } },
+replyB: { body: 'Peut-être que les gens ont envie de se protéger derrière un écran ? La sécurité d’abord !', reactions: { like: 124, dislike: 12 } },
+pC: { tags: ['#communication', '#online_life'], body: '« Pourquoi ose-t-on dire à un inconnu en ligne ce qu’on ne dit pas à ses proches ? »', reactions: { like: 410, dislike: 38, y: 32 } },
+pD: { tags: ['#human_life', '#online_life'], body: '« Se connaît-on mieux depuis qu’on se raconte en ligne, ou juste mieux la version qu’on montre ? »', reactions: { like: 198, dislike: 61, y: 17 } }
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Accueil — chargement — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+a.y-btn{text-decoration:none}
+a.y-btn-primary,a.y-btn-primary:hover{color:#ffffff}
+.y-account{margin-top:auto;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px;border:0;border-radius:9999px;background:transparent;font-family:inherit;text-align:left;cursor:pointer}
+.y-account:hover{background:#f3f4f6}
+.y-side-card{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);padding:16px}
+.y-side-card h2{margin:0 0 8px;font-size:20px;line-height:24px;font-weight:700;color:#1e293b}
+.y-trend{display:block;padding:8px 0;border-bottom:1px solid #e2e8f0;text-decoration:none}
+.y-trend:last-child{border-bottom:0}
+.y-trend strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#4f46e5}
+.y-trend span{display:block;font-size:12px;line-height:16px;color:#6b7280}
+.y-user-row{display:flex;align-items:center;gap:12px;padding:8px 0}
+.y-user-row:last-child{padding-bottom:0}
+.y-user-row-text{flex:1;min-width:0;line-height:20px}
+.y-user-row-text strong{display:block;font-size:15px;font-weight:700;color:#1e293b}
+.y-user-row-text span{display:block;font-size:12px;color:#6b7280}
+.y-banner{display:flex;flex-direction:column;gap:8px;box-sizing:border-box;padding:16px;border-radius:16px;color:#1e293b}
+.y-banner-danger{background:#ffffff;border:1px solid #dc2626}
+.y-banner-info{background:#eef2ff}
+.y-banner-row{display:flex;gap:12px;align-items:flex-start}
+.y-banner-text{flex:1;min-width:0}
+.y-banner-title{margin:0;font-size:15px;line-height:20px;font-weight:700;color:#1e293b}
+.y-banner-danger .y-banner-title{color:#dc2626}
+.y-banner-meta{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.y-banner-link{align-self:flex-start;font-size:14px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:underline}
+.y-banner-action{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.y-state-card{box-sizing:border-box;width:100%;max-width:480px;padding:16px;background:#ffffff;border-radius:24px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1)}
+.y-note{display:block;font-size:12px;line-height:16px;color:#6b7280}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar"></x-import></div><main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden; background: #ffffff;"><div role="tablist" style="display: flex; border-bottom: 1px solid #e2e8f0; height: 48px; box-sizing: border-box; background: #ffffff; flex: none;"><x-import component-from-global-scope="YDS.Tab" label="Pour vous" active="{{yes}}" style="flex: 1;"></x-import></div><div style="display: flex; flex-direction: column; gap: 16px; padding: 16px; background: #ffffff;"><section style="background: #f8fafc; border-radius: 16px; padding: 12px; display: flex; gap: 8px;"><div style="flex: none; width: 32px; height: 32px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="32"></x-import></div><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;"><label for="ask" style="font-size: 14px; font-weight: 700; color: #1e293b;">Posez votre question</label><textarea id="ask" placeholder="Quelle est votre question&nbsp;?" style="display: block; width: 100%; height: 56px; box-sizing: border-box; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; font-family: inherit; font-size: 14px; color: #1e293b; resize: none;"></textarea><div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;"><div style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #4f46e5; white-space: normal; min-width: 0;"><x-import component-from-global-scope="YDS.Icon" name="globe" size="16" color="#4f46e5"></x-import><span>Tout le monde peut répondre</span></div><x-import component-from-global-scope="YDS.Button" variant="primary" size="sm" disabled="{{yes}}">Poster</x-import></div></div></section><div aria-busy="true" style="display: flex; flex-direction: column; gap: 16px;"><x-import component-from-global-scope="YDS.Skeleton" variant="card"></x-import><x-import component-from-global-scope="YDS.Skeleton" variant="card"></x-import><x-import component-from-global-scope="YDS.Skeleton" variant="card"></x-import></div></div></main></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+no: false,
+av: 32,
+postA: { tags: ['#online_life', '#irl_vs_online'], body: '« Pourquoi les gens préfèrent-ils les réponses rapides plutôt que les questions profondes ? »', reactions: { like: 124, dislike: 12, y: 49 } },
+postC: { tags: ['#online_life', '#irl_vs_online'], body: '« Like pour les bananes, dislike pour les pommes : quel est le meilleur fruit ? »', reactions: { like: 500, dislike: 480, y: 47 } }
+};
+}
+}
+</script>
+</body>
+</html>

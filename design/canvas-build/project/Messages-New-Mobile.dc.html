@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Nouveau message — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-dm-search{padding:16px 16px 8px}
+.y-dm-rows{margin:0;padding:0;list-style:none}
+.y-dm-av{flex:none;width:40px;height:40px;display:flex}
+.y-sugg-title{margin:0;padding:12px 16px 8px;font-size:12px;line-height:16px;font-weight:700;color:#6b7280}
+.y-sugg{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 16px;border:0;background:#ffffff;font-family:inherit;text-align:left;cursor:pointer;color:#1e293b}
+.y-sugg:hover{background:#f8fafc}
+.y-sugg:focus-visible{outline:2px solid #4f46e5;outline-offset:-2px}
+.y-sugg-text{flex:1;min-width:0}
+.y-sugg-text strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#1e293b}
+.y-sugg-text span{display:block;font-size:12px;line-height:16px;color:#6b7280}
+.y-new-form{display:flex;flex-direction:column;gap:12px;padding:16px;border-top:1px solid #e2e8f0}
+.y-new-recipient{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.y-new-recipient strong{color:#1e293b}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar" back="{{yes}}" backLabel="Retour aux messages" title="Nouveau message"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden;">
+<div class="y-dm-search"><x-import component-from-global-scope="YDS.SearchField" show-label="{{yes}}" label="Rechercher une personne" placeholder="Nom ou @pseudo" size="sm"></x-import></div>
+<h2 class="y-sugg-title">Suggestions</h2>
+<ul class="y-dm-rows" aria-label="Personnes suggérées">
+<li><button type="button" class="y-sugg">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="MarkL" size="{{av}}"></x-import></span>
+<span class="y-sugg-text"><strong>MarkL</strong><span>@MarkL</span></span>
+</button></li>
+<li><button type="button" class="y-sugg">
+<span class="y-dm-av"><x-import component-from-global-scope="YDS.Avatar" name="RizaHawkeye" size="{{av}}"></x-import></span>
+<span class="y-sugg-text"><strong>RizaHawkeye</strong><span>@RizaHawkeye</span></span>
+</button></li>
+</ul>
+
+<form class="y-new-form">
+<p class="y-new-recipient">Destinataire : <strong>aucun destinataire sélectionné</strong></p>
+<x-import component-from-global-scope="YDS.TextField" label="Message" placeholder="Écrivez votre message" multiline="{{yes}}" rows="4"></x-import>
+<div style="display: flex; justify-content: flex-end;"><x-import component-from-global-scope="YDS.CharCounter" value="0" max="1000"></x-import></div>
+<x-import component-from-global-scope="YDS.Button" variant="primary" size="md" shape="pill" icon="send" block="{{yes}}" disabled="{{yes}}">Envoyer</x-import>
+</form>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 40
+};
+}
+}
+</script>
+</body>
+</html>

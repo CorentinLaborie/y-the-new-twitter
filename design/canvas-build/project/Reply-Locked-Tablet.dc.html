@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Réponses fermées</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-rp-composer{display:flex;gap:12px;padding:16px 24px;border-radius:16px;background:#f8fafc}
+.y-rp-composer-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+.y-rp-label{font-size:13px;line-height:18px;font-weight:700;color:#1e293b}
+.y-rp-input{display:block;width:100%;height:96px;box-sizing:border-box;padding:12px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff;font-family:inherit;font-size:15px;line-height:20px;color:#1e293b;resize:none}
+.y-rp-input::placeholder{color:#6b7280}
+.y-rp-foot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.y-rp-scope{display:flex;align-items:center;gap:4px;font-size:13px;line-height:18px;font-weight:600;color:#4f46e5}
+.y-rp-actions{display:flex;align-items:center;gap:12px}
+.y-rl-card{display:flex;flex-direction:column;gap:16px;padding:24px;border-radius:16px;background:#f8fafc} .y-rl-title{display:flex;align-items:center;gap:12px} .y-rl-title h2{margin:0;font-size:18px;line-height:24px;font-weight:700;color:#1e293b} .y-rl-card p{margin:0;font-size:15px;line-height:21px;color:#6b7280}
+</style>
+</helmet>
+
+<div style="width: 768px; height: 1024px; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif; display: flex; justify-content: center; overflow: hidden;">
+
+<div style="flex: none; width: 88px; height: 1024px; box-sizing: border-box; padding: 12px 0 16px; display: flex; flex-direction: column; align-items: center;">
+<div style="display: flex; padding: 7px 0;"><x-import component-from-global-scope="YDS.YLogo" size="36"></x-import></div>
+<nav aria-label="Navigation principale" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 4px;">
+<x-import component-from-global-scope="YDS.RailItem" icon="home" label="Accueil" active="{{yes}}"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="search" label="Explorer"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="bell" label="Notifications" badge="3"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="mail" label="Messages"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="bookmark" label="Signets"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="user" label="Profil"></x-import>
+<x-import component-from-global-scope="YDS.RailItem" icon="circle-ellipsis" label="Plus"></x-import>
+</nav>
+<div style="margin-top: 16px;"><x-import component-from-global-scope="YDS.RailPoster"></x-import></div>
+<button type="button" aria-label="Options du compte Corentin Laborie" style="margin-top: auto; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 9999px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer;"><span style="width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="{{av}}"></x-import></span></button>
+</div>
+
+<main style="flex: none; width: 600px; height: 1024px; box-sizing: border-box; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;">
+<x-import component-from-global-scope="YDS.PageHeader" title="Question" back="{{yes}}" back-label="Retour au fil"></x-import>
+
+<div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 0;">
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="15/10/2026 08h30" tags="{{pA.tags}}" body="{{pA.body}}" reactions="{{pA.reactions}}" hide-follow="{{yes}}" y-active="{{yes}}" bookmarkable="{{yes}}"></x-import>
+
+<section class="y-rl-card" aria-label="Réponses fermées pour cette question">
+<div class="y-rl-title"><x-import component-from-global-scope="YDS.Icon" name="lock" size="24" color="#4f46e5"></x-import><h2>Les réponses s’ouvrent à 50 Y</h2></div>
+<p>Une conversation s’ouvre sous la question dès qu’elle atteint 50 Y. Il manque encore 18 Y.</p>
+<x-import component-from-global-scope="YDS.YProgress" count="32" threshold="50" bar="{{yes}}"></x-import>
+</section>
+
+</div>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":768,"height":1024}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 40,
+pA: { tags: ['#human_life'], body: '« Est-ce qu’on change vraiment d’avis, ou est-ce qu’on trouve juste de meilleures raisons de penser la même chose ? »', reactions: { like: 860, dislike: 95, y: 64 } },
+replyA: { body: 'Je crois qu’on change d’avis quand on arrête de vouloir gagner la discussion.', reactions: { like: 58, dislike: 4 } },
+replyB: { body: 'On change surtout d’avis quand on se sent écouté, pas quand on perd l’argument.', reactions: { like: 21, dislike: 2 } }
+};
+}
+}
+</script>
+</body>
+</html>

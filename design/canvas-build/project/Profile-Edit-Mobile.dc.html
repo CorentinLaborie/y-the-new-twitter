@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Modifier le profil — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-pe-note{display:flex;align-items:flex-start;gap:8px;padding:12px;border-radius:16px;background:#e0e7ff;color:#1e293b;font-size:13px;line-height:18px}
+.y-pe-note p{margin:0}
+.y-pe-ico{flex:none;display:flex}
+.y-pe-field{display:flex;flex-direction:column;gap:4px}
+.y-pe-count{display:flex;justify-content:flex-end}
+.y-pe-at{position:absolute;left:12px;top:0;height:56px;display:flex;align-items:center;font-size:15px;color:#6b7280;pointer-events:none}
+.y-pe-avatar-row{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:12px}
+.y-pe-avatar{width:80px;height:80px;flex:none;box-sizing:border-box;padding:4px;border-radius:9999px;background:#ffffff;display:flex}
+.y-pe-avatar-btn{display:flex;border-radius:9999px;background:#ffffff}
+</style>
+</helmet>
+
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar" title="Modifier le profil" back="{{yes}}" back-label="Retour au profil"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; background: #ffffff;">
+<form onsubmit="return false" style="flex: 1; min-height: 0; display: flex; flex-direction: column; margin: 0;">
+
+<div style="flex: 1; min-height: 0; overflow: auto; box-sizing: border-box; padding: 16px 16px 16px; display: flex; flex-direction: column;">
+
+<div style="display: flex; flex-direction: column;">
+<div class="y-pe-avatar-row">
+<div class="y-pe-avatar"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="72"></x-import></div>
+<span class="y-pe-avatar-btn"><x-import component-from-global-scope="YDS.Button" variant="outline" size="sm" icon="image">Changer la photo</x-import></span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px; margin-top: 20px;">
+
+<div class="y-pe-field">
+<x-import component-from-global-scope="YDS.TextField" label="Nom affiché" hint="Affiché sur votre profil et sous vos réponses." value="Corentin Laborie"></x-import>
+<div class="y-pe-count"><x-import component-from-global-scope="YDS.CharCounter" value="16" max="50"></x-import></div>
+</div>
+
+<div class="y-pe-field">
+<div class="y-field">
+<label class="y-field-label" for="pe-handle">Identifiant</label>
+<span class="y-field-hint">Unique, sans distinction de casse.</span>
+<span class="y-field-control">
+<span class="y-pe-at" aria-hidden="true">@</span>
+<input id="pe-handle" type="text" value="corentin" autocomplete="username" style="padding-left: 28px;">
+</span>
+</div>
+<div class="y-pe-count"><x-import component-from-global-scope="YDS.CharCounter" value="8" max="30"></x-import></div>
+</div>
+
+<div class="y-pe-field">
+<x-import component-from-global-scope="YDS.TextField" label="Bio" multiline="{{yes}}" rows="3" value="Curieux des usages du numérique, je pose les questions qu’on oublie de se poser en ligne."></x-import>
+<div class="y-pe-count"><x-import component-from-global-scope="YDS.CharCounter" value="89" max="160"></x-import></div>
+</div>
+
+<div class="y-pe-note" role="note"><span class="y-pe-ico"><x-import component-from-global-scope="YDS.Icon" name="info" size="16" color="#4f46e5"></x-import></span><p>Le numéro de téléphone ne peut pas être modifié pour le moment.</p></div>
+
+</div>
+</div>
+
+<footer style="flex: none; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 12px 16px 16px; border-top: 1px solid #e2e8f0; background: #ffffff;">
+<x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" block="{{yes}}" type="submit">Enregistrer</x-import>
+<x-import component-from-global-scope="YDS.Button" variant="outline" size="lg" block="{{yes}}">Annuler</x-import>
+</footer>
+</form>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return { yes: true };
+}
+}
+</script>
+</body>
+</html>

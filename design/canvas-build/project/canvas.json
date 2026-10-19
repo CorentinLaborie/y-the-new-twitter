@@ -1,0 +1,463 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "App-Components.dc.html": {
+      "h": 19032,
+      "title": "Z · Composants de l'app",
+      "w": 1960,
+      "x": -2120,
+      "y": 300
+    },
+    "App-Desktop.dc.html": {
+      "h": 1073,
+      "title": "03 · Accueil — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 10713
+    },
+    "App-Mobile-Menu.dc.html": {
+      "h": 667,
+      "title": "03 · Menu ouvert — Mobile",
+      "w": 360,
+      "x": 2808,
+      "y": 10713
+    },
+    "App-Mobile.dc.html": {
+      "h": 667,
+      "title": "03 · Accueil — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 10713
+    },
+    "App-Tablet.dc.html": {
+      "h": 1024,
+      "title": "03 · Accueil — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 10713
+    },
+    "Auth-Code-Desktop.dc.html": {
+      "h": 900,
+      "title": "02 · Code e-mail — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 8249
+    },
+    "Auth-Code-Error-Desktop.dc.html": {
+      "h": 900,
+      "title": "02 · Code e-mail (erreur) — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 9269
+    },
+    "Auth-Code-Error-Mobile.dc.html": {
+      "h": 667,
+      "title": "02 · Code e-mail (erreur) — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 9269
+    },
+    "Auth-Code-Error-Tablet.dc.html": {
+      "h": 1024,
+      "title": "02 · Code e-mail (erreur) — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 9269
+    },
+    "Auth-Login-Desktop.dc.html": {
+      "h": 950,
+      "title": "02 · Connexion — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 4807
+    },
+    "Auth-Login-Mobile.dc.html": {
+      "h": 700,
+      "title": "02 · Connexion — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 4807
+    },
+    "Auth-Login-Tablet.dc.html": {
+      "h": 1024,
+      "title": "02 · Connexion — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 4807
+    },
+    "Auth-Signup-Desktop.dc.html": {
+      "h": 900,
+      "title": "02 · Inscription — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 5951
+    },
+    "Auth-Signup-Errors-Desktop.dc.html": {
+      "h": 969,
+      "title": "02 · Inscription (erreurs) — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 6971
+    },
+    "Auth-Signup-Errors-Mobile.dc.html": {
+      "h": 1209,
+      "title": "02 · Inscription (erreurs) — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 6971
+    },
+    "Auth-Signup-Errors-Tablet.dc.html": {
+      "h": 1024,
+      "title": "02 · Inscription (erreurs) — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 6971
+    },
+    "Auth-Welcome-Mobile.dc.html": {
+      "h": 667,
+      "title": "02 · Bienvenue — Mobile",
+      "w": 360,
+      "x": 2808,
+      "y": 4807
+    },
+    "Bookmarks-Desktop.dc.html": {
+      "h": 1073,
+      "title": "08 · Signets — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 18178
+    },
+    "Bookmarks-Mobile.dc.html": {
+      "h": 667,
+      "title": "08 · Signets — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 18178
+    },
+    "Bookmarks-Tablet.dc.html": {
+      "h": 1024,
+      "title": "08 · Signets — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 18178
+    },
+    "Explore-Desktop.dc.html": {
+      "h": 1073,
+      "title": "05 · Explorer — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 13699
+    },
+    "Explore-Mobile.dc.html": {
+      "h": 667,
+      "title": "05 · Explorer — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 13699
+    },
+    "Explore-Tablet.dc.html": {
+      "h": 1024,
+      "title": "05 · Explorer — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 13699
+    },
+    "Landing-Mobile.dc.html": {
+      "h": 2584,
+      "title": "01 · Landing — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 1436
+    },
+    "Landing-Tablet.dc.html": {
+      "h": 2765,
+      "title": "01 · Landing — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 1436
+    },
+    "Logos.dc.html": {
+      "h": 716,
+      "title": "00 · Logos",
+      "w": 1320,
+      "x": 0,
+      "y": 300
+    },
+    "Main.dc.html": {
+      "h": 2671,
+      "title": "01 · Landing — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 1436
+    },
+    "Messages-Desktop.dc.html": {
+      "h": 1073,
+      "title": "07 · Messages — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 16685
+    },
+    "Messages-Mobile-Conversation.dc.html": {
+      "h": 667,
+      "title": "07 · Conversation — Mobile",
+      "w": 360,
+      "x": 2808,
+      "y": 16685
+    },
+    "Messages-Mobile.dc.html": {
+      "h": 667,
+      "title": "07 · Messages — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 16685
+    },
+    "Messages-Tablet.dc.html": {
+      "h": 1024,
+      "title": "07 · Messages — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 16685
+    },
+    "Notifications-Desktop.dc.html": {
+      "h": 1073,
+      "title": "06 · Notifications — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 15192
+    },
+    "Notifications-Mobile.dc.html": {
+      "h": 667,
+      "title": "06 · Notifications — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 15192
+    },
+    "Notifications-Tablet.dc.html": {
+      "h": 1024,
+      "title": "06 · Notifications — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 15192
+    },
+    "Profile-Desktop.dc.html": {
+      "h": 1073,
+      "title": "04 · Profil — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 12206
+    },
+    "Profile-Mobile.dc.html": {
+      "h": 667,
+      "title": "04 · Profil — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 12206
+    },
+    "Profile-Tablet.dc.html": {
+      "h": 1024,
+      "title": "04 · Profil — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 12206
+    },
+    "Settings-Desktop.dc.html": {
+      "h": 1073,
+      "title": "09 · Plus — Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 19671
+    },
+    "Settings-Mobile.dc.html": {
+      "h": 667,
+      "title": "09 · Plus — Mobile",
+      "w": 360,
+      "x": 2368,
+      "y": 19671
+    },
+    "Settings-Tablet.dc.html": {
+      "h": 1024,
+      "title": "09 · Plus — Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 19671
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-14T14:50:20Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "https://claude.ai/artifact/ThcELTvZVgW38ZfLSAdTHY",
+      "copiedAt": "2026-10-16T03:30:00Z",
+      "namespace": "yds",
+      "title": "Clean Slate — Y",
+      "version": null
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "n_auth": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "02 · Authentification",
+      "w": 240,
+      "x": 0,
+      "y": 4507
+    },
+    "n_bookmarks": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "08 · Signets",
+      "w": 240,
+      "x": 0,
+      "y": 17878
+    },
+    "n_col_desktop": {
+      "color": "purple",
+      "kind": "title1",
+      "maxW": 1440,
+      "text": "Desktop",
+      "w": 240,
+      "x": 0,
+      "y": -420
+    },
+    "n_col_mobile": {
+      "color": "purple",
+      "kind": "title1",
+      "maxW": 1240,
+      "text": "Mobile",
+      "w": 240,
+      "x": 2368,
+      "y": -420
+    },
+    "n_col_tablet": {
+      "color": "purple",
+      "kind": "title1",
+      "maxW": 800,
+      "text": "Tablet",
+      "w": 240,
+      "x": 1520,
+      "y": -420
+    },
+    "n_components": {
+      "kind": "title1",
+      "maxW": 1960,
+      "text": "Composants",
+      "w": 240,
+      "x": -2120,
+      "y": 0
+    },
+    "n_explore": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "05 · Explorer",
+      "w": 240,
+      "x": 0,
+      "y": 13399
+    },
+    "n_home": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "03 · Accueil",
+      "w": 240,
+      "x": 0,
+      "y": 10413
+    },
+    "n_landing": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "01 · Landing page",
+      "w": 240,
+      "x": 0,
+      "y": 1136
+    },
+    "n_logos": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "Y — Logos",
+      "w": 240,
+      "x": 0,
+      "y": 0
+    },
+    "n_messages": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "07 · Messages",
+      "w": 240,
+      "x": 0,
+      "y": 16385
+    },
+    "n_notifs": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "06 · Notifications",
+      "w": 240,
+      "x": 0,
+      "y": 14892
+    },
+    "n_profile": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "04 · Profil",
+      "w": 240,
+      "x": 0,
+      "y": 11906
+    },
+    "n_settings": {
+      "kind": "title1",
+      "maxW": 3608,
+      "text": "09 · Plus",
+      "w": 240,
+      "x": 0,
+      "y": 19371
+    }
+  },
+  "order": [
+    "App-Components.dc.html",
+    "Logos.dc.html",
+    "Main.dc.html",
+    "Landing-Tablet.dc.html",
+    "Landing-Mobile.dc.html",
+    "Auth-Login-Desktop.dc.html",
+    "Auth-Login-Tablet.dc.html",
+    "Auth-Login-Mobile.dc.html",
+    "Auth-Welcome-Mobile.dc.html",
+    "Auth-Signup-Desktop.dc.html",
+    "Auth-Signup-Errors-Desktop.dc.html",
+    "Auth-Signup-Errors-Tablet.dc.html",
+    "Auth-Signup-Errors-Mobile.dc.html",
+    "Auth-Code-Desktop.dc.html",
+    "Auth-Code-Error-Desktop.dc.html",
+    "Auth-Code-Error-Tablet.dc.html",
+    "Auth-Code-Error-Mobile.dc.html",
+    "App-Desktop.dc.html",
+    "App-Tablet.dc.html",
+    "App-Mobile.dc.html",
+    "App-Mobile-Menu.dc.html",
+    "Profile-Desktop.dc.html",
+    "Profile-Tablet.dc.html",
+    "Profile-Mobile.dc.html",
+    "Explore-Desktop.dc.html",
+    "Explore-Tablet.dc.html",
+    "Explore-Mobile.dc.html",
+    "Notifications-Desktop.dc.html",
+    "Notifications-Tablet.dc.html",
+    "Notifications-Mobile.dc.html",
+    "Messages-Desktop.dc.html",
+    "Messages-Tablet.dc.html",
+    "Messages-Mobile.dc.html",
+    "Messages-Mobile-Conversation.dc.html",
+    "Bookmarks-Desktop.dc.html",
+    "Bookmarks-Tablet.dc.html",
+    "Bookmarks-Mobile.dc.html",
+    "Settings-Desktop.dc.html",
+    "Settings-Tablet.dc.html",
+    "Settings-Mobile.dc.html"
+  ],
+  "pages": [],
+  "title": "Y — The new Twitter"
+}

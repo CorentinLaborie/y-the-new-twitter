@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Réponses fermées</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-rp-input{display:block;width:100%;height:64px;box-sizing:border-box;padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;font-family:inherit;font-size:15px;line-height:20px;color:#1e293b;resize:none}
+.y-rp-input::placeholder{color:#6b7280}
+.y-rp-input:focus{border-color:#4f46e5;background:#ffffff;outline:none}
+.y-qpost{padding:16px 16px 16px}
+.y-qpost.is-compact{padding:12px 12px 12px}
+.y-qpost-who strong{font-size:14px}
+.y-qpost-who span{font-size:11px}
+.y-qpost-tags{font-size:11px}
+.y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost.is-compact .y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost-actions{gap:8px;flex-wrap:nowrap}
+.y-react{height:30px;padding:0 12px;font-size:12px;white-space:nowrap}
+.y-qpost-head{gap:12px;flex-wrap:wrap}
+.y-qpost-head .y-avatar{width:36px!important;height:36px!important;font-size:14px!important}
+.y-qpost-tags{width:100%;margin-left:48px;justify-content:flex-start}
+.y-rl-card{display:flex;flex-direction:column;gap:16px;padding:24px;border-radius:16px;background:#f8fafc} .y-rl-title{display:flex;align-items:center;gap:12px} .y-rl-title h2{margin:0;font-size:18px;line-height:24px;font-weight:700;color:#1e293b} .y-rl-card p{margin:0;font-size:15px;line-height:21px;color:#6b7280}
+.y-rl-card{margin:12px 16px 0 !important}
+</style>
+</helmet>
+
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar" title="Question" back="{{yes}}" back-label="Retour au fil"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; background: #ffffff;">
+
+<div style="flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; padding: 0 0 8px;">
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="15/10/2026 08h30" tags="{{pA.tags}}" body="{{pA.body}}" reactions="{{pA.reactions}}" hide-follow="{{yes}}" y-active="{{yes}}" bookmarkable="{{yes}}"></x-import>
+
+<section class="y-rl-card" aria-label="Réponses fermées pour cette question">
+<div class="y-rl-title"><x-import component-from-global-scope="YDS.Icon" name="lock" size="24" color="#4f46e5"></x-import><h2>Les réponses s’ouvrent à 50 Y</h2></div>
+<p>Une conversation s’ouvre sous la question dès qu’elle atteint 50 Y. Il manque encore 18 Y.</p>
+<x-import component-from-global-scope="YDS.YProgress" count="32" threshold="50" bar="{{yes}}"></x-import>
+</section>
+</div>
+
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+pA: { tags: ['#human_life'], body: '« Est-ce qu’on change vraiment d’avis, ou est-ce qu’on trouve juste de meilleures raisons de penser la même chose ? »', reactions: { like: 860, dislike: 95, y: 64 } },
+replyA: { body: 'Je crois qu’on change d’avis quand on arrête de vouloir gagner la discussion.', reactions: { like: 58, dislike: 4 } },
+replyB: { body: 'On change surtout d’avis quand on se sent écouté, pas quand on perd l’argument.', reactions: { like: 21, dislike: 2 } }
+};
+}
+}
+</script>
+</body>
+</html>

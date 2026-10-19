@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Compte suspendu — Desktop</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+a.y-btn{text-decoration:none}
+a.y-btn-primary,a.y-btn-primary:hover{color:#ffffff}
+.y-account{margin-top:auto;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px;border:0;border-radius:9999px;background:transparent;font-family:inherit;text-align:left;cursor:pointer}
+.y-account:hover{background:#f3f4f6}
+.y-side-card{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);padding:16px}
+.y-side-card h2{margin:0 0 8px;font-size:20px;line-height:24px;font-weight:700;color:#1e293b}
+.y-trend{display:block;padding:8px 0;border-bottom:1px solid #e2e8f0;text-decoration:none}
+.y-trend:last-child{border-bottom:0}
+.y-trend strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#4f46e5}
+.y-trend span{display:block;font-size:12px;line-height:16px;color:#6b7280}
+.y-user-row{display:flex;align-items:center;gap:12px;padding:8px 0}
+.y-user-row:last-child{padding-bottom:0}
+.y-user-row-text{flex:1;min-width:0;line-height:20px}
+.y-user-row-text strong{display:block;font-size:15px;font-weight:700;color:#1e293b}
+.y-user-row-text span{display:block;font-size:12px;color:#6b7280}
+.y-banner{display:flex;flex-direction:column;gap:8px;box-sizing:border-box;padding:16px;border-radius:16px;color:#1e293b}
+.y-banner-danger{background:#ffffff;border:1px solid #dc2626}
+.y-banner-info{background:#eef2ff}
+.y-banner-row{display:flex;gap:12px;align-items:flex-start}
+.y-banner-text{flex:1;min-width:0}
+.y-banner-title{margin:0;font-size:15px;line-height:20px;font-weight:700;color:#1e293b}
+.y-banner-danger .y-banner-title{color:#dc2626}
+.y-banner-meta{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.y-banner-link{align-self:flex-start;font-size:14px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:underline}
+.y-banner-action{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.y-state-card{box-sizing:border-box;width:100%;max-width:480px;padding:16px;background:#ffffff;border-radius:24px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1)}
+.y-note{display:block;font-size:12px;line-height:16px;color:#6b7280}
+[inert] .y-react,[inert] .y-follow,[inert] .y-save,[inert] .y-qpost-more{opacity:.5}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1073px; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif; display: flex; justify-content: flex-start; overflow: hidden;"><div style="flex: none; width: 108px;"></div><div style="flex: none; width: 275px; box-sizing: border-box; padding: 8px 24px 16px 8px; display: flex; flex-direction: column; height: 1073px;"><div style="padding: 4px 8px 8px;"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import></div><nav aria-label="Navigation principale" style="display: flex; flex-direction: column; gap: 8px; margin-left: -8px;"><x-import component-from-global-scope="YDS.NavItem" icon="home" label="Accueil" active="{{yes}}"></x-import><x-import component-from-global-scope="YDS.NavItem" icon="search" label="Explorer"></x-import><x-import component-from-global-scope="YDS.NavItem" icon="bell" label="Notifications" badge="3"></x-import><x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Messages"></x-import><x-import component-from-global-scope="YDS.NavItem" icon="bookmark" label="Signets"></x-import><x-import component-from-global-scope="YDS.NavItem" icon="user" label="Profil"></x-import><x-import component-from-global-scope="YDS.NavItem" icon="circle-ellipsis" label="Plus"></x-import></nav><div style="margin-top: 24px;"><x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" shape="pill" block="{{yes}}" disabled="{{yes}}">Poster</x-import></div><button type="button" class="y-account" aria-label="Options du compte Corentin Laborie"><span style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="40"></x-import></span><span style="flex: 1; min-width: 0; line-height: 20px;"><span style="display: block; font-size: 15px; font-weight: 700; color: #1e293b;">Corentin Laborie</span><span style="display: block; font-size: 15px; color: #6b7280;">@corentin</span></span><x-import component-from-global-scope="YDS.Icon" name="ellipsis" size="18" color="#1e293b"></x-import></button></div><main style="flex: none; width: 600px; height: 1073px; box-sizing: border-box; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;"><div style="padding: 16px 16px 0;"><section class="y-banner y-banner-danger"><div class="y-banner-row"><x-import component-from-global-scope="YDS.Icon" name="triangle-alert" size="20" color="#dc2626"></x-import><div class="y-banner-text"><p class="y-banner-title">Votre compte est suspendu. Vous ne pouvez plus publier, réagir, répondre, suivre ni enregistrer.</p><p class="y-banner-meta">Raison : Non-respect des règles de la communauté</p><p class="y-banner-meta">Pour toute question, contactez-nous à l’adresse indiquée dans les mentions légales.</p></div></div><a href="Contact-Suspended-Desktop.dc.html" class="y-banner-link">Contacter l’administrateur</a></section></div><div role="tablist" style="display: flex; border-bottom: 1px solid #e2e8f0; height: 53px; box-sizing: border-box; background: #ffffff; flex: none;"><x-import component-from-global-scope="YDS.Tab" label="Pour vous" active="{{yes}}" style="flex: 1;"></x-import></div><div style="display: flex; flex-direction: column; gap: 16px; padding: 16px 16px 0;"><section style="background: #f8fafc; border-radius: 16px; padding: 16px; display: flex; gap: 12px;"><div style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="40"></x-import></div><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px;"><label for="ask" style="font-size: 14px; font-weight: 700; color: #1e293b;">Posez votre question</label><textarea id="ask" placeholder="Quelle est votre question&nbsp;?" disabled style="display: block; width: 100%; height: 72px; box-sizing: border-box; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f1f5f9; font-family: inherit; font-size: 15px; color: #1e293b; resize: none;"></textarea><div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;"><div style="display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: #4f46e5; white-space: nowrap;"><x-import component-from-global-scope="YDS.Icon" name="globe" size="16" color="#4f46e5"></x-import><span>Tout le monde peut répondre</span></div><x-import component-from-global-scope="YDS.Button" variant="primary" size="md" disabled="{{yes}}">Poster</x-import></div></div></section><div inert=""><x-import component-from-global-scope="YDS.QuestionPost" author="Juliette_B" date="14/10/2026 21h06" tags="{{postA.tags}}" body="{{postA.body}}" reactions="{{postA.reactions}}" bookmarkable="{{yes}}"></x-import><x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="13/10/2026 18h44" tags="{{postC.tags}}" body="{{postC.body}}" reactions="{{postC.reactions}}" bookmarkable="{{yes}}"></x-import></div></div></main><div style="flex: none; width: 350px; box-sizing: border-box; padding: 8px 0 16px 24px; display: flex; flex-direction: column; gap: 16px; height: 1073px; overflow: hidden;"><x-import component-from-global-scope="YDS.SearchField" label="Rechercher une question"></x-import><section style="background: #4f46e5; border-radius: 24px; box-shadow: 0px 4px 8px -1px rgba(0, 0, 0, 0.1); padding: 24px; color: #ffffff;"><h2 style="margin: 0 0 8px; font-size: 20px; line-height: 24px; font-weight: 700;">Une expérience sociale concrète</h2><p style="margin: 0 0 16px; font-size: 14px; line-height: 20px; color: rgba(255, 255, 255, 0.85);">Posez vos questions, donnez votre avis et réfléchissez ensemble.</p><div style="background: #ffffff; border-radius: 16px; padding: 16px; color: #1e293b;"><div style="font-size: 14px; line-height: 20px; font-weight: 700;">Au bout de 50 Y, une conversation s’ouvre sous la question.</div><div inert="" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"><x-import component-from-global-scope="YDS.ReactionPill" kind="like" count="J’aime"></x-import><x-import component-from-global-scope="YDS.ReactionPill" kind="dislike" count="Pas d’accord"></x-import><x-import component-from-global-scope="YDS.ReactionPill" kind="y" count="Why ?" active="{{yes}}"></x-import></div></div></section><section class="y-side-card"><h2>Tendances pour vous</h2><a href="#" class="y-trend"><strong>#online_life</strong><span>2 000 questions</span></a><a href="#" class="y-trend"><strong>#irl_vs_online</strong><span>1 240 questions</span></a><a href="#" class="y-trend"><strong>#human_life</strong><span>864 questions</span></a><a href="#" class="y-trend"><strong>#communication</strong><span>512 questions</span></a></section><section class="y-side-card" inert=""><h2>Suggestions</h2><div class="y-user-row"><div style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Juliette_B" size="40"></x-import></div><div class="y-user-row-text"><strong>Juliette_B</strong><span>@Juliette_B</span></div><x-import component-from-global-scope="YDS.FollowButton"></x-import></div><div class="y-user-row"><div style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="40"></x-import></div><div class="y-user-row-text"><strong>AliceY</strong><span>@AliceY</span></div><x-import component-from-global-scope="YDS.FollowButton"></x-import></div><div class="y-user-row"><div style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="40"></x-import></div><div class="y-user-row-text"><strong>Robert44</strong><span>@Robert44</span></div><x-import component-from-global-scope="YDS.FollowButton"></x-import></div></section><x-import component-from-global-scope="YDS.Footer" variant="sidebar"></x-import></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1073}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+no: false,
+av: 40,
+postA: { tags: ['#online_life', '#irl_vs_online'], body: '« Pourquoi les gens préfèrent-ils les réponses rapides plutôt que les questions profondes ? »', reactions: { like: 124, dislike: 12, y: 49 } },
+postC: { tags: ['#online_life', '#irl_vs_online'], body: '« Like pour les bananes, dislike pour les pommes : quel est le meilleur fruit ? »', reactions: { like: 500, dislike: 480, y: 47 } }
+};
+}
+}
+</script>
+</body>
+</html>

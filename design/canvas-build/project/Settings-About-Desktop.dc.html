@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>À propos de Y — Desktop</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-account{margin-top:auto;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 12px 12px 12px;border:0;border-radius:9999px;background:transparent;font-family:inherit;text-align:left;cursor:pointer}
+.y-account:hover{background:#f3f4f6}
+.y-set{display:flex;flex-direction:column;gap:16px;padding:16px}
+.y-set-section{display:flex;flex-direction:column;gap:8px}
+.y-set-section h2{margin:0;padding:0;font-size:18px;line-height:24px;font-weight:700;color:#1e293b}
+.y-set-card{background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden}
+.y-set-row{display:flex;align-items:center;gap:12px;min-height:62px;box-sizing:border-box;padding:12px 16px;text-decoration:none;color:#1e293b}
+.y-set-row + .y-set-row{box-shadow:inset 0 1px 0 #e2e8f0}
+.y-set-row:hover{color:#1e293b;background:#f8fafc}
+.y-set-ico{flex:none;width:36px;height:36px;border-radius:9999px;background:#e0e7ff;display:flex;align-items:center;justify-content:center}
+.y-set-text{flex:1;min-width:0}
+.y-set-text strong{display:block;font-size:15px;line-height:20px;font-weight:600;color:#1e293b}
+.y-set-text span{display:block;font-size:13px;line-height:18px;color:#6b7280}
+.y-set-chev{flex:none;display:flex}
+.y-blk-av{flex:none;display:flex;width:40px;height:40px}
+.y-switch{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:40px;height:24px;margin:0;border-radius:9999px;background:#6b7280;cursor:pointer;transition:background-color .15s}
+.y-switch::after{content:"";position:absolute;top:4px;left:4px;width:16px;height:16px;border-radius:9999px;background:#ffffff;transition:transform .15s}
+.y-switch:checked{background:#4f46e5}
+.y-switch:checked::after{transform:translateX(16px)}
+.y-switch:focus-visible{outline:2px solid #4f46e5;outline-offset:2px}
+.y-empty{padding:32px 24px}
+.y-variant{margin:0;font-size:13px;line-height:18px;color:#6b7280}
+.y-about{padding:16px;display:flex;flex-direction:column;gap:12px}
+.y-about p{margin:0;font-size:15px;line-height:22px;color:#1e293b}
+.y-steps{margin:0;padding:16px 16px 16px 32px;display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:22px;color:#1e293b}
+.y-steps li{padding-left:4px}
+.y-field-stack{display:flex;flex-direction:column;gap:16px}
+.y-set-section h2{font-size:18px;line-height:24px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1073px; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif; display: flex; justify-content: flex-start; padding-left: 108px; overflow: hidden;">
+
+<div style="flex: none; width: 275px; box-sizing: border-box; padding: 8px 23px 16px 8px; display: flex; flex-direction: column; height: 1073px;">
+<div style="padding: 4px 12px 8px;"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import></div>
+<nav aria-label="Navigation principale" style="display: flex; flex-direction: column; gap: 8px; margin-left: -6px;">
+<x-import component-from-global-scope="YDS.NavItem" icon="home" label="Accueil"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="search" label="Explorer"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="bell" label="Notifications" badge="3"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Messages"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="bookmark" label="Signets"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="user" label="Profil"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="circle-ellipsis" label="Plus" active="{{yes}}"></x-import>
+</nav>
+<div style="margin-top: 24px;"><x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" shape="pill" block="{{yes}}">Poster</x-import></div>
+<button type="button" class="y-account" aria-label="Options du compte Corentin Laborie">
+<span style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="{{av}}"></x-import></span>
+<span style="flex: 1; min-width: 0; line-height: 18px;"><span style="display: block; font-size: 15px; font-weight: 700; color: #1e293b;">Corentin Laborie</span><span style="display: block; font-size: 15px; color: #6b7280;">@corentin</span></span>
+<x-import component-from-global-scope="YDS.Icon" name="ellipsis" size="18" color="#1e293b"></x-import>
+</button>
+</div>
+
+<main style="flex: none; width: 600px; height: 1073px; box-sizing: border-box; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;">
+<x-import component-from-global-scope="YDS.PageHeader" title="À propos de Y" subtitle="Réseau social de questions" back="{{yes}}" backLabel="Retour aux paramètres"></x-import>
+<div class="y-set">
+<section class="y-set-section" aria-labelledby="sec-y"><h2 id="sec-y">Y en quelques mots</h2><div class="y-set-card y-about">
+<p>Y est un réseau social construit autour de la question. Chaque publication est une question, rédigée en 280 caractères au maximum.</p>
+<p>Quand une question atteint 50 Y, une conversation s’ouvre sous la question.</p>
+<p>Y est un prototype à but non lucratif créé dans le cadre d’un portfolio.</p>
+</div></section>
+<section class="y-set-section" aria-labelledby="sec-legal"><h2 id="sec-legal">Informations légales</h2><div class="y-set-card">
+<a href="#" class="y-set-row"><span class="y-set-ico"><x-import component-from-global-scope="YDS.Icon" name="info" size="18" color="#4f46e5"></x-import></span><span class="y-set-text"><strong>Mentions légales</strong></span><span class="y-set-chev"><x-import component-from-global-scope="YDS.Icon" name="chevron-right" size="18" color="#6b7280"></x-import></span></a>
+<a href="#" class="y-set-row"><span class="y-set-ico"><x-import component-from-global-scope="YDS.Icon" name="lock" size="18" color="#4f46e5"></x-import></span><span class="y-set-text"><strong>Politique de confidentialité</strong></span><span class="y-set-chev"><x-import component-from-global-scope="YDS.Icon" name="chevron-right" size="18" color="#6b7280"></x-import></span></a>
+</div></section>
+</div>
+</main>
+
+<div style="flex: none; width: 350px; box-sizing: border-box; padding: 8px 0 16px 24px; display: flex; flex-direction: column; gap: 16px; height: 1073px; overflow: hidden;">
+<x-import component-from-global-scope="YDS.SearchField" label="Rechercher une question"></x-import>
+<x-import component-from-global-scope="YDS.Footer" variant="sidebar"></x-import>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1073}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 40
+};
+}
+}
+</script>
+</body>
+</html>

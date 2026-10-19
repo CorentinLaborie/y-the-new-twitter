@@ -1,0 +1,650 @@
+// Y database schema, derived from docs/database/y-database.dbml (version 0.8).
+// CHECK constraints, expression (lower(handle)) and GIN indexes are not expressible
+// here and live in the migration folder named *_constraints.
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountStatus {
+  pending_verification
+  active
+  suspended
+  pending_deletion
+  deleted
+
+  @@map("account_status")
+}
+
+enum ModerationStatus {
+  visible
+  hidden
+  removed
+
+  @@map("moderation_status")
+}
+
+enum ReportDecision {
+  no_action
+  content_hidden
+  content_removed
+  account_suspended
+
+  @@map("report_decision")
+}
+
+enum UserRole {
+  user
+  moderator
+  admin
+
+  @@map("user_role")
+}
+
+enum AgeCheckStatus {
+  pending
+  verified
+  failed
+
+  @@map("age_check_status")
+}
+
+enum LoginResult {
+  success
+  failure
+
+  @@map("login_result")
+}
+
+enum ReactionKind {
+  like
+  dislike
+  y
+
+  @@map("reaction_kind")
+}
+
+enum ReplyReactionKind {
+  like
+  dislike
+
+  @@map("reply_reaction_kind")
+}
+
+enum RequestStatus {
+  pending
+  accepted
+  declined
+
+  @@map("request_status")
+}
+
+enum NotificationType {
+  reply_to_question
+  conversation_opened
+  reaction_like
+  reaction_dislike
+  reaction_y
+  follow
+  mention
+
+  @@map("notification_type")
+}
+
+enum ReportStatus {
+  open
+  resolved
+  dismissed
+
+  @@map("report_status")
+}
+
+enum ReportReason {
+  spam
+  harassment
+  hate
+  illegal_content
+  misinformation
+  other
+
+  @@map("report_reason")
+}
+
+enum SupportStatus {
+  new
+  replied
+  closed
+
+  @@map("support_status")
+}
+
+enum SupportAuthorType {
+  user
+  admin
+
+  @@map("support_author_type")
+}
+
+enum SupportChannel {
+  email
+  none
+
+  @@map("support_channel")
+}
+
+model User {
+  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  handle              String        @map("handle") @db.VarChar(30)
+  displayName         String        @map("display_name") @db.VarChar(50)
+  email               String        @unique @map("email") @db.VarChar(254)
+  phone               String?       @unique @map("phone") @db.VarChar(20)
+  passwordHash        String        @map("password_hash") @db.VarChar(255)
+  birthDate           DateTime?     @map("birth_date") @db.Date
+  bio                 String?       @map("bio") @db.VarChar(160)
+  avatarUrl           String?       @map("avatar_url") @db.VarChar(2048)
+  status              AccountStatus @default(pending_verification) @map("status")
+  role                UserRole      @default(user) @map("role")
+  termsAcceptedAt     DateTime      @map("terms_accepted_at") @db.Timestamptz(3)
+  termsVersion        String        @map("terms_version") @db.VarChar(20)
+  emailVerifiedAt     DateTime?     @map("email_verified_at") @db.Timestamptz(3)
+  statusChangedAt     DateTime?     @map("status_changed_at") @db.Timestamptz(3)
+  suspensionReason    String?       @map("suspension_reason") @db.VarChar(500)
+  failedLoginCount    Int           @default(0) @map("failed_login_count")
+  lockedUntil         DateTime?     @map("locked_until") @db.Timestamptz(3)
+  deletionRequestedAt DateTime?     @map("deletion_requested_at") @db.Timestamptz(3)
+  deletionPurgeAt     DateTime?     @map("deletion_purge_at") @db.Timestamptz(3)
+  deletedAt           DateTime?     @map("deleted_at") @db.Timestamptz(3)
+  followerCount       Int           @default(0) @map("follower_count")
+  followingCount      Int           @default(0) @map("following_count")
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  signupCodes              SignupCode[]
+  passwordResetCodes       PasswordResetCode[]
+  emailChangeCodes         EmailChangeCode[]
+  ageVerification          AgeVerification?
+  loginEvents              LoginEvent[]
+  sessions                 Session[]
+  follows                  Follow[]                  @relation("FollowsAsFollower")
+  followedBy               Follow[]                  @relation("FollowsAsFollowee")
+  blocks                   Block[]                   @relation("BlocksAsBlocker")
+  blockedBy                Block[]                   @relation("BlocksAsBlocked")
+  questions                Question[]
+  replies                  Reply[]
+  questionReactions        QuestionReaction[]
+  replyReactions           ReplyReaction[]
+  mentions                 Mention[]
+  bookmarks                Bookmark[]
+  initiatedConversations   Conversation[]
+  conversationParticipants ConversationParticipant[]
+  sentMessages             Message[]
+  receivedNotifications    Notification[]            @relation("NotificationRecipient")
+  triggeredNotifications   Notification[]            @relation("NotificationActor")
+  notificationPreferences  NotificationPreference[]
+  filedReports             Report[]                  @relation("ReportReporter")
+  reviewedReports          Report[]                  @relation("ReportReviewer")
+  adminMfa                 AdminMfa?
+  adminBackupCodes         AdminBackupCode[]
+  auditLogEntries          AdminAuditLog[]
+  supportThreads           SupportThread[]           @relation("SupportThreadUser")
+  closedSupportThreads     SupportThread[]           @relation("SupportThreadCloser")
+  supportMessages          SupportMessage[]
+
+  @@index([status])
+  @@index([status, deletionPurgeAt])
+  @@map("users")
+}
+
+model SignupCode {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  codeHash   String    @map("code_hash") @db.VarChar(255)
+  attempts   Int       @default(0) @map("attempts")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId, createdAt])
+  @@map("signup_codes")
+}
+
+model PasswordResetCode {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  codeHash   String    @map("code_hash") @db.VarChar(255)
+  attempts   Int       @default(0) @map("attempts")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId, createdAt])
+  @@map("password_reset_codes")
+}
+
+model EmailChangeCode {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  newEmail   String    @map("new_email") @db.VarChar(254)
+  codeHash   String    @map("code_hash") @db.VarChar(255)
+  attempts   Int       @default(0) @map("attempts")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId, createdAt])
+  @@map("email_change_codes")
+}
+
+model AgeVerification {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  userId            String         @unique @map("user_id") @db.Uuid
+  provider          String         @default("VerifAge") @map("provider") @db.VarChar(50)
+  providerReference String?        @map("provider_reference") @db.VarChar(255)
+  status            AgeCheckStatus @default(pending) @map("status")
+  checkedAt         DateTime?      @map("checked_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("age_verifications")
+}
+
+model LoginEvent {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  userId    String?     @map("user_id") @db.Uuid
+  result    LoginResult @map("result")
+  ipHash    String      @map("ip_hash") @db.Char(64)
+  userAgent String?     @map("user_agent") @db.VarChar(255)
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("login_events")
+}
+
+model Session {
+  id           String   @id @map("id") @db.VarChar(128)
+  userId       String?  @map("user_id") @db.Uuid
+  data         Json     @map("data") @db.Json
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastAccessAt DateTime @default(now()) @map("last_access_at") @db.Timestamptz(3)
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Follow {
+  followerId String   @map("follower_id") @db.Uuid
+  followeeId String   @map("followee_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  follower User @relation("FollowsAsFollower", fields: [followerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  followee User @relation("FollowsAsFollowee", fields: [followeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([followerId, followeeId])
+  @@index([followeeId])
+  @@map("follows")
+}
+
+model Block {
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  blocker User @relation("BlocksAsBlocker", fields: [blockerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  blocked User @relation("BlocksAsBlocked", fields: [blockedId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("blocks")
+}
+
+model Question {
+  id                   String           @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  authorId             String           @map("author_id") @db.Uuid
+  body                 String           @map("body") @db.VarChar(280)
+  likeCount            Int              @default(0) @map("like_count")
+  dislikeCount         Int              @default(0) @map("dislike_count")
+  yCount               Int              @default(0) @map("y_count")
+  replyCount           Int              @default(0) @map("reply_count")
+  conversationOpenedAt DateTime?        @map("conversation_opened_at") @db.Timestamptz(3)
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  deletedAt            DateTime?        @map("deleted_at") @db.Timestamptz(3)
+  moderationStatus     ModerationStatus @default(visible) @map("moderation_status")
+  moderatedAt          DateTime?        @map("moderated_at") @db.Timestamptz(3)
+
+  author           User               @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies          Reply[]
+  reactions        QuestionReaction[]
+  hashtags         QuestionHashtag[]
+  bookmarks        Bookmark[]
+  sharedInMessages Message[]
+  notifications    Notification[]
+  mentions         Mention[]
+  reports          Report[]
+
+  @@index([authorId, createdAt])
+  @@index([createdAt])
+  @@index([yCount])
+  @@index([moderationStatus, createdAt])
+  @@map("questions")
+}
+
+model Reply {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  questionId       String           @map("question_id") @db.Uuid
+  authorId         String           @map("author_id") @db.Uuid
+  body             String           @map("body") @db.VarChar(280)
+  likeCount        Int              @default(0) @map("like_count")
+  dislikeCount     Int              @default(0) @map("dislike_count")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  deletedAt        DateTime?        @map("deleted_at") @db.Timestamptz(3)
+  moderationStatus ModerationStatus @default(visible) @map("moderation_status")
+  moderatedAt      DateTime?        @map("moderated_at") @db.Timestamptz(3)
+
+  question      Question        @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  author        User            @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reactions     ReplyReaction[]
+  mentions      Mention[]
+  notifications Notification[]
+  reports       Report[]
+
+  @@index([questionId, createdAt])
+  @@index([authorId])
+  @@index([moderationStatus, createdAt])
+  @@map("replies")
+}
+
+model QuestionReaction {
+  userId     String       @map("user_id") @db.Uuid
+  questionId String       @map("question_id") @db.Uuid
+  kind       ReactionKind @map("kind")
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question Question @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([userId, questionId])
+  @@index([questionId, kind])
+  @@index([createdAt, questionId])
+  @@map("question_reactions")
+}
+
+model ReplyReaction {
+  userId    String            @map("user_id") @db.Uuid
+  replyId   String            @map("reply_id") @db.Uuid
+  kind      ReplyReactionKind @map("kind")
+  createdAt DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reply Reply @relation(fields: [replyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([userId, replyId, kind])
+  @@index([replyId, kind])
+  @@map("reply_reactions")
+}
+
+model Mention {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  questionId      String? @map("question_id") @db.Uuid
+  replyId         String? @map("reply_id") @db.Uuid
+  mentionedUserId String  @map("mentioned_user_id") @db.Uuid
+
+  question      Question? @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reply         Reply?    @relation(fields: [replyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  mentionedUser User      @relation(fields: [mentionedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([questionId, mentionedUserId])
+  @@unique([replyId, mentionedUserId])
+  @@index([mentionedUserId])
+  @@map("mentions")
+}
+
+model Hashtag {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  name String @unique @map("name") @db.VarChar(50)
+
+  questions QuestionHashtag[]
+
+  @@index([name(ops: raw("text_pattern_ops"))])
+  @@map("hashtags")
+}
+
+model QuestionHashtag {
+  questionId String   @map("question_id") @db.Uuid
+  hashtagId  String   @map("hashtag_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hashtag  Hashtag  @relation(fields: [hashtagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([questionId, hashtagId])
+  @@index([hashtagId, createdAt])
+  @@map("question_hashtags")
+}
+
+model Bookmark {
+  userId     String   @map("user_id") @db.Uuid
+  questionId String   @map("question_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question Question @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([userId, questionId])
+  @@index([userId, createdAt])
+  @@index([questionId])
+  @@map("bookmarks")
+}
+
+model Conversation {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastMessageAt DateTime? @map("last_message_at") @db.Timestamptz(3)
+  initiatedById String?   @map("initiated_by_id") @db.Uuid
+  directKey     String?   @unique @map("direct_key") @db.VarChar(80)
+
+  initiatedBy  User?                     @relation(fields: [initiatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([lastMessageAt])
+  @@index([initiatedById])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  conversationId String        @map("conversation_id") @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  requestStatus  RequestStatus @default(accepted) @map("request_status")
+  lastReadAt     DateTime?     @map("last_read_at") @db.Timestamptz(3)
+  mutedAt        DateTime?     @map("muted_at") @db.Timestamptz(3)
+  archivedAt     DateTime?     @map("archived_at") @db.Timestamptz(3)
+  joinedAt       DateTime      @default(now()) @map("joined_at") @db.Timestamptz(3)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user         User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([conversationId, userId])
+  @@index([userId, lastReadAt])
+  @@index([userId, requestStatus, archivedAt])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  conversationId   String   @map("conversation_id") @db.Uuid
+  senderId         String   @map("sender_id") @db.Uuid
+  body             String   @map("body") @db.VarChar(1000)
+  sharedQuestionId String?  @map("shared_question_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sharedQuestion Question?    @relation(fields: [sharedQuestionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([sharedQuestionId])
+  @@map("messages")
+}
+
+model Notification {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  recipientId String           @map("recipient_id") @db.Uuid
+  actorId     String?          @map("actor_id") @db.Uuid
+  type        NotificationType @map("type")
+  questionId  String?          @map("question_id") @db.Uuid
+  replyId     String?          @map("reply_id") @db.Uuid
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  readAt      DateTime?        @map("read_at") @db.Timestamptz(3)
+
+  recipient User      @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actor     User?     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question  Question? @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reply     Reply?    @relation(fields: [replyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([recipientId, createdAt])
+  @@index([recipientId, readAt])
+  @@index([recipientId, type, questionId, createdAt])
+  @@index([actorId])
+  @@index([questionId])
+  @@index([replyId])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId  String           @map("user_id") @db.Uuid
+  type    NotificationType @map("type")
+  enabled Boolean          @default(true) @map("enabled")
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([userId, type])
+  @@map("notification_preferences")
+}
+
+model Report {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  reporterId   String          @map("reporter_id") @db.Uuid
+  questionId   String?         @map("question_id") @db.Uuid
+  replyId      String?         @map("reply_id") @db.Uuid
+  reason       ReportReason    @map("reason")
+  details      String?         @map("details") @db.VarChar(280)
+  status       ReportStatus    @default(open) @map("status")
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  reviewedAt   DateTime?       @map("reviewed_at") @db.Timestamptz(3)
+  reviewedById String?         @map("reviewed_by_id") @db.Uuid
+  decision     ReportDecision? @map("decision")
+  decisionNote String?         @map("decision_note") @db.VarChar(1000)
+
+  reporter   User      @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reply      Reply?    @relation(fields: [replyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewedBy User?     @relation("ReportReviewer", fields: [reviewedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([questionId, status])
+  @@index([replyId, status])
+  @@index([status, createdAt])
+  @@index([reporterId])
+  @@index([reviewedById])
+  @@map("reports")
+}
+
+model AdminMfa {
+  userId              String   @id @map("user_id") @db.Uuid
+  totpSecretEncrypted String   @map("totp_secret_encrypted") @db.VarChar(255)
+  enabledAt           DateTime @default(now()) @map("enabled_at") @db.Timestamptz(3)
+  lastUsedStep        BigInt?  @map("last_used_step")
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("admin_mfa")
+}
+
+model AdminBackupCode {
+  id       String    @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  userId   String    @map("user_id") @db.Uuid
+  codeHash String    @map("code_hash") @db.Char(64)
+  usedAt   DateTime? @map("used_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId])
+  @@map("admin_backup_codes")
+}
+
+model AdminAuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String   @map("action") @db.VarChar(60)
+  result     String   @default("ok") @map("result") @db.VarChar(20)
+  targetType String   @map("target_type") @db.VarChar(30)
+  targetId   String   @map("target_id") @db.Uuid
+  reason     String?  @map("reason") @db.VarChar(500)
+  details    Json?    @map("details") @db.Json
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  prevHash   String   @map("prev_hash") @db.Char(64)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@map("admin_audit_log")
+}
+
+model SupportThread {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  reference    String        @unique @map("reference") @db.VarChar(20)
+  userId       String        @map("user_id") @db.Uuid
+  status       SupportStatus @default(new) @map("status")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  closedAt     DateTime?     @map("closed_at") @db.Timestamptz(3)
+  closedById   String?       @map("closed_by_id") @db.Uuid
+  closedByLift Boolean       @default(false) @map("closed_by_lift")
+  openUserId   String?       @unique @map("open_user_id") @db.Uuid
+
+  user     User             @relation("SupportThreadUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  closedBy User?            @relation("SupportThreadCloser", fields: [closedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messages SupportMessage[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([closedById])
+  @@map("support_threads")
+}
+
+model SupportMessage {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  threadId     String            @map("thread_id") @db.Uuid
+  authorType   SupportAuthorType @map("author_type")
+  authorUserId String?           @map("author_user_id") @db.Uuid
+  body         String            @map("body") @db.VarChar(1000)
+  sentAt       DateTime          @default(now()) @map("sent_at") @db.Timestamptz(3)
+  channel      SupportChannel    @default(none) @map("channel")
+
+  thread     SupportThread @relation(fields: [threadId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  authorUser User?         @relation(fields: [authorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([threadId, sentAt])
+  @@index([authorUserId])
+  @@map("support_messages")
+}

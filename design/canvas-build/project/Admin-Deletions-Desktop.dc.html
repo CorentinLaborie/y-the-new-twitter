@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Administration — Suppressions en attente</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.a-shell{width:1440px;height:900px;box-sizing:border-box;display:flex;background:#ffffff;color:#1e293b;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.a-side{flex:none;width:280px;box-sizing:border-box;padding:16px;background:#ffffff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;gap:8px}
+.a-brand{display:flex;align-items:center;gap:12px;padding:8px 12px 16px}
+.a-brand strong{font-size:16px;line-height:24px;font-weight:700;color:#4f46e5}
+.a-nav{display:flex;flex-direction:column;gap:4px}
+.a-side-foot{margin-top:auto;display:flex;align-items:center;gap:12px;padding:12px}
+.a-side-foot div{flex:1;min-width:0;line-height:18px}
+.a-side-foot strong{display:block;font-size:15px;font-weight:700}
+.a-side-foot span{display:block;font-size:12px;color:#6b7280}
+.a-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.a-head{flex:none;height:53px;box-sizing:border-box;padding:0 32px;display:flex;align-items:center;gap:24px;background:#ffffff;border-bottom:1px solid #e2e8f0}
+.a-head h1{margin:0;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.a-head-note{margin-left:auto;font-size:12px;line-height:16px;color:#6b7280}
+.a-body{flex:1;min-height:0;box-sizing:border-box;padding:32px 48px;display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.a-intro{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.a-panel{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);overflow:hidden}
+.a-window{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);padding:24px;display:flex;align-items:flex-start;gap:16px}
+.a-window-text{display:flex;flex-direction:column;gap:4px;min-width:0}
+.a-window-text strong{font-size:16px;line-height:24px;font-weight:700;color:#1e293b}
+.a-window-text span{font-size:14px;line-height:20px;color:#6b7280}
+.a-table{width:100%;border-collapse:collapse;font-size:14px;line-height:20px;color:#1e293b}
+.a-table caption{padding:16px 24px;text-align:left;font-size:16px;line-height:24px;font-weight:700;color:#1e293b;border-bottom:1px solid #e2e8f0}
+.a-table th{padding:12px 16px;text-align:left;font-size:12px;line-height:16px;font-weight:700;color:#1e293b;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.a-table td{padding:12px 16px;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+.a-table tbody tr:last-child td{border-bottom:0}
+.a-table a{font-weight:600;text-decoration:underline}
+.a-placeholder{color:#6b7280;font-style:italic}
+.a-status{display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;white-space:nowrap}
+.a-status::before{content:"";flex:none;width:8px;height:8px;border-radius:9999px;background:currentColor}
+.a-status.is-open{color:#92400e}
+.y-navitem-label{white-space:normal;line-height:24px}
+.y-avatar{display:inline-flex!important;color:#4f46e5!important;font-weight:600!important;line-height:1!important;align-items:center!important;justify-content:center!important}
+</style>
+</helmet>
+<div class="a-shell">
+  <aside class="a-side">
+    <div class="a-brand"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import><strong>Administration</strong></div>
+    <nav class="a-nav" aria-label="Sections d’administration">
+      <x-import component-from-global-scope="YDS.NavItem" icon="home" label="Tableau de bord" href="Admin-Dashboard-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="flag" label="Signalements" href="Admin-Reports-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Tribunal des bannis" href="Admin-Support-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="user" label="Comptes" href="Admin-Users-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="trash-2" label="Suppressions" href="Admin-Deletions-Desktop.dc.html" active="{{yes}}"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="shield" label="Journal d’audit" href="Admin-Audit-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="log-out" label="Déconnexion" href="Admin-Login-Desktop.dc.html"></x-import>
+    </nav>
+    <div class="a-side-foot"><x-import component-from-global-scope="YDS.Avatar" name="Administrateur" size="40"></x-import><div><strong>Administrateur</strong><span>@admin</span></div></div>
+  </aside>
+  <main class="a-main">
+    <header class="a-head">
+      <h1>Suppressions en attente</h1>
+      <span class="a-head-note">Accès réservé à l’administrateur</span>
+    </header>
+    <div class="a-body">
+      <section class="a-window" aria-labelledby="window-title">
+        <span style="display:inline-flex;line-height:0"><x-import component-from-global-scope="YDS.Icon" name="info" size="20" color="#4f46e5"></x-import></span>
+        <div class="a-window-text">
+          <strong id="window-title">Fenêtre de 90 jours</strong>
+          <span>Un compte en attente de suppression est purgé à la date de purge indiquée, 90 jours après la demande de suppression.</span>
+        </div>
+      </section>
+      <section class="a-panel">
+        <table class="a-table">
+          <caption>Comptes en attente de suppression</caption>
+          <thead>
+            <tr>
+              <th scope="col">Identifiant</th>
+              <th scope="col">Nom affiché</th>
+              <th scope="col">Demande de suppression</th>
+              <th scope="col">Date de purge</th>
+              <th scope="col">Statut</th>
+              <th scope="col"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Action</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>RizaHawkeye</td>
+              <td>Riza</td>
+              <td>02/10/2026</td>
+              <td>31/12/2026</td>
+              <td><span class="a-status is-open">En attente de suppression</span></td>
+              <td><a href="Admin-User-Detail-Desktop.dc.html">Ouvrir la fiche<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"> de RizaHawkeye</span></a></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { yes: true };
+}
+}
+</script>
+</body>
+</html>

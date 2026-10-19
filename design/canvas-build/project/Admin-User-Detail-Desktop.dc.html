@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Administration — Fiche du compte</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.a-shell{width:1440px;height:900px;box-sizing:border-box;display:flex;background:#ffffff;color:#1e293b;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.a-side{flex:none;width:280px;box-sizing:border-box;padding:16px;background:#ffffff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;gap:8px}
+.a-brand{display:flex;align-items:center;gap:12px;padding:8px 12px 16px}
+.a-brand strong{font-size:16px;line-height:24px;font-weight:700;color:#4f46e5}
+.a-nav{display:flex;flex-direction:column;gap:4px}
+.a-side-foot{margin-top:auto;display:flex;align-items:center;gap:12px;padding:12px}
+.a-side-foot div{flex:1;min-width:0;line-height:18px}
+.a-side-foot strong{display:block;font-size:15px;font-weight:700}
+.a-side-foot span{display:block;font-size:12px;color:#6b7280}
+.a-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.a-head{flex:none;height:53px;box-sizing:border-box;padding:0 32px;display:flex;align-items:center;gap:24px;background:#ffffff;border-bottom:1px solid #e2e8f0}
+.a-head h1{margin:0;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.a-head-note{margin-left:auto;font-size:12px;line-height:16px;color:#6b7280}
+.a-body{flex:1;min-height:0;box-sizing:border-box;padding:32px 48px;display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.a-back{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:none}
+.a-split{flex:1;min-height:0;display:flex;align-items:flex-start;gap:48px}
+.a-col{display:flex;flex-direction:column;gap:24px;min-width:0}
+.a-col-main{flex:1}
+.a-col-side{flex:none;width:400px}
+.a-card{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);padding:24px;display:flex;flex-direction:column;gap:16px}
+.a-h2{margin:0;font-size:18px;line-height:24px;font-weight:700;color:#1e293b}
+.a-card-sub{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.a-profile{display:flex;align-items:center;gap:16px}
+.a-profile strong{display:block;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.a-profile span{display:block;font-size:14px;line-height:20px;color:#6b7280}
+.a-dl{margin:0;display:grid;grid-template-columns:auto 1fr;column-gap:24px;row-gap:12px;align-items:center;font-size:14px;line-height:20px}
+.a-dl dt{color:#6b7280}
+.a-dl dd{margin:0;font-weight:600;color:#1e293b}
+.a-mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px}
+.a-reveal{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.a-counts{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.a-count{padding:16px;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:4px}
+.a-count dt{font-size:12px;line-height:16px;color:#6b7280}
+.a-count dd{margin:0;font-size:24px;line-height:32px;font-weight:700;color:#1e293b}
+.a-actions{display:flex;flex-direction:column;gap:12px}
+.a-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column}
+.a-list li{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid #e2e8f0}
+.a-list li:last-child{border-bottom:0}
+.a-list time{font-size:12px;line-height:16px;color:#6b7280}
+.a-list code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;line-height:20px;font-weight:500;color:#1e293b}
+.a-list span{font-size:14px;line-height:20px;color:#6b7280}
+.a-status{display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;white-space:nowrap}
+.a-status::before{content:"";flex:none;width:8px;height:8px;border-radius:9999px;background:currentColor}
+.a-status.is-ok{color:#166534}
+.a-status.is-danger{color:#dc2626}
+.y-navitem-label{white-space:normal;line-height:24px}
+.y-avatar{display:inline-flex!important;color:#4f46e5!important;font-weight:600!important;line-height:1!important;align-items:center!important;justify-content:center!important}
+</style>
+</helmet>
+<div class="a-shell">
+  <aside class="a-side">
+    <div class="a-brand"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import><strong>Administration</strong></div>
+    <nav class="a-nav" aria-label="Sections d’administration">
+      <x-import component-from-global-scope="YDS.NavItem" icon="home" label="Tableau de bord" href="Admin-Dashboard-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="flag" label="Signalements" href="Admin-Reports-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Tribunal des bannis" href="Admin-Support-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="user" label="Comptes" href="Admin-Users-Desktop.dc.html" active="{{yes}}"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="trash-2" label="Suppressions" href="Admin-Deletions-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="shield" label="Journal d’audit" href="Admin-Audit-Desktop.dc.html"></x-import>
+      <x-import component-from-global-scope="YDS.NavItem" icon="log-out" label="Déconnexion" href="Admin-Login-Desktop.dc.html"></x-import>
+    </nav>
+    <div class="a-side-foot"><x-import component-from-global-scope="YDS.Avatar" name="Administrateur" size="40"></x-import><div><strong>Administrateur</strong><span>@admin</span></div></div>
+  </aside>
+  <main class="a-main">
+    <header class="a-head">
+      <h1>Fiche du compte</h1>
+      <span class="a-head-note">Accès réservé à l’administrateur</span>
+    </header>
+    <div class="a-body">
+      <a class="a-back" href="Admin-Users-Desktop.dc.html"><span style="display:inline-flex;line-height:0"><x-import component-from-global-scope="YDS.Icon" name="arrow-left" size="18" color="#4f46e5"></x-import></span>Retour aux comptes</a>
+      <div class="a-split">
+        <div class="a-col a-col-main">
+          <section class="a-card" aria-labelledby="summary-title">
+            <h2 class="a-h2" id="summary-title">Résumé du compte</h2>
+            <div class="a-profile">
+              <x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="64"></x-import>
+              <div><strong>Alice</strong><span>@AliceY</span></div>
+            </div>
+            <dl class="a-dl">
+              <dt>Statut</dt><dd><span class="a-status is-ok">Actif</span></dd>
+              <dt>Rôle</dt><dd>Utilisateur</dd>
+              <dt>Inscription</dt><dd>03/09/2026</dd>
+              <dt>E-mail</dt><dd class="a-mono">a***@d***.fr</dd>
+              <dt>Dernière connexion</dt><dd>16/10/2026 08h12</dd>
+              <dt>Sessions actives</dt><dd>2</dd>
+            </dl>
+            <div class="a-reveal">
+              <x-import component-from-global-scope="YDS.Button" variant="outline" size="md">Révéler l’e-mail (action journalisée)</x-import>
+            </div>
+            <p class="a-card-sub">Chaque révélation est enregistrée dans le journal d’audit (data.reveal_email).</p>
+          </section>
+          <section class="a-card" aria-labelledby="counts-title">
+            <h2 class="a-h2" id="counts-title">Contenus de ce compte</h2>
+            <dl class="a-counts">
+              <div class="a-count"><dt>Contenus signalés</dt><dd>—</dd></div>
+              <div class="a-count"><dt>Contenus masqués</dt><dd>—</dd></div>
+              <div class="a-count"><dt>Contenus retirés</dt><dd>—</dd></div>
+            </dl>
+          </section>
+        </div>
+        <div class="a-col a-col-side">
+          <section class="a-card" aria-labelledby="actions-title">
+            <h2 class="a-h2" id="actions-title">Actions sur le compte</h2>
+            <div class="a-actions">
+              <x-import component-from-global-scope="YDS.Button" variant="outline" size="md" block="{{yes}}">Suspendre</x-import>
+              <x-import component-from-global-scope="YDS.Button" variant="destructive" size="md" block="{{yes}}">Lancer la suppression</x-import>
+            </div>
+            <p class="a-card-sub">La suppression ouvre une fenêtre de 90 jours avant la purge du compte.</p>
+          </section>
+          <section class="a-card" aria-labelledby="history-title">
+            <h2 class="a-h2" id="history-title">Historique des actions</h2>
+            <ol class="a-list">
+              <li><time>10/10/2026 14h22</time><code>content.hide</code><span>Question masquée après signalement</span></li>
+              <li><time>13/10/2026 09h05</time><code>report.decide</code><span>Signalement rejeté</span></li>
+              <li><time>12/10/2026 16h20</time><code>data.reveal_email</code><span>Adresse e-mail révélée</span></li>
+            </ol>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { yes: true };
+}
+}
+</script>
+</body>
+</html>

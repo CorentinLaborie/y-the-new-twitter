@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Signets — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-qpost{padding:16px 16px 16px}
+.y-qpost.is-compact{padding:12px 12px 12px}
+.y-qpost-who strong{font-size:14px}
+.y-qpost-who span{font-size:11px}
+.y-qpost-tags{font-size:11px}
+.y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost.is-compact .y-qpost-body{font-size:14px;line-height:20px;margin:12px 0}
+.y-qpost-actions{gap:8px;flex-wrap:nowrap}
+.y-react{height:30px;padding:0 12px;font-size:12px;white-space:nowrap}
+.y-qpost-head{gap:12px;flex-wrap:wrap}
+.y-qpost-head .y-avatar{width:36px!important;height:36px!important;font-size:14px!important}
+.y-qpost-tags{width:100%;margin-left:48px;justify-content:flex-start}
+.y-follow{height:26px!important;font-size:11px!important}
+.y-save{width:30px;height:30px}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar" title="Signets" subtitle="@corentin · 5 questions enregistrées"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden;">
+<div style="display: flex; flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; background: #ffffff;">
+<x-import component-from-global-scope="YDS.SearchField" label="Rechercher dans vos signets" size="sm"></x-import>
+<x-import component-from-global-scope="YDS.Select" inline="{{yes}}" label="Trier par" options="{{sortOptions}}" value="{{sortValue}}"></x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="15/10/2026 08h30" tags="{{pA.tags}}" body="{{pA.body}}" reactions="{{pA.reactions}}" y-active="{{yes}}" bookmarkable="{{yes}}" saved="{{yes}}">
+<x-import component-from-global-scope="YDS.ConversationBox" reply-to="AliceY" size="sm">
+<x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="15/10/2026 09h02" followed="{{yes}}" body="{{replyA.body}}" reactions="{{replyA.reactions}}" compact="{{yes}}"></x-import>
+</x-import>
+</x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="14/10/2026 16h32" tags="{{pE.tags}}" body="{{pE.body}}" reactions="{{pE.reactions}}" followed="{{yes}}" bookmarkable="{{yes}}" saved="{{yes}}"></x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="Juliette_B" date="14/10/2026 09h12" tags="{{pB.tags}}" body="{{pB.body}}" reactions="{{pB.reactions}}" followed="{{yes}}" y-active="{{yes}}" bookmarkable="{{yes}}" saved="{{yes}}">
+<x-import component-from-global-scope="YDS.ConversationBox" reply-to="Juliette_B" size="sm">
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="14/10/2026 09h41" body="{{replyB.body}}" reactions="{{replyB.reactions}}" compact="{{yes}}"></x-import>
+</x-import>
+</x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="AliceY" date="14/10/2026 07h55" tags="{{pC.tags}}" body="{{pC.body}}" reactions="{{pC.reactions}}" bookmarkable="{{yes}}" saved="{{yes}}"></x-import>
+
+<x-import component-from-global-scope="YDS.QuestionPost" author="Robert44" date="13/10/2026 21h10" tags="{{pD.tags}}" body="{{pD.body}}" reactions="{{pD.reactions}}" bookmarkable="{{yes}}" saved="{{yes}}"></x-import>
+
+</div>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 32,
+sortOptions: ['Date d’enregistrement', 'Date de la question'],
+sortValue: 'Date d’enregistrement',
+pA: { tags: ['#human_life'], body: '« Est-ce qu’on change vraiment d’avis, ou est-ce qu’on trouve juste de meilleures raisons de penser la même chose ? »', reactions: { like: 860, dislike: 95, y: 64 } },
+replyA: { body: 'Je crois qu’on change d’avis quand on arrête de vouloir gagner la discussion.', reactions: { like: 58, dislike: 4 } },
+pE: { tags: ['#slow_social', '#online_life'], body: '« Si on ne pouvait poster qu’une question par jour, est-ce qu’on réfléchirait davantage avant d’écrire ? »', reactions: { like: 842, dislike: 97, y: 41 } },
+pB: { tags: ['#online_life', '#irl_vs_online'], body: '« Qu’est-ce qui fait qu’une conversation en ligne peut être plus sincère qu’une rencontre en personne ? »', reactions: { like: 2000, dislike: 450, y: 89 } },
+replyB: { body: 'Peut-être que les gens ont envie de se protéger derrière un écran ? La sécurité d’abord !', reactions: { like: 124, dislike: 12 } },
+pC: { tags: ['#communication', '#online_life'], body: '« Pourquoi ose-t-on dire à un inconnu en ligne ce qu’on ne dit pas à ses proches ? »', reactions: { like: 410, dislike: 38, y: 32 } },
+pD: { tags: ['#human_life', '#online_life'], body: '« Se connaît-on mieux depuis qu’on se raconte en ligne, ou juste mieux la version qu’on montre ? »', reactions: { like: 198, dislike: 61, y: 17 } }
+};
+}
+}
+</script>
+</body>
+</html>

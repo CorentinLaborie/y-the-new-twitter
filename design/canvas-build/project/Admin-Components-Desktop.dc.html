@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Administration — Composants</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.a-shell{width:1440px;height:900px;box-sizing:border-box;display:flex;background:#ffffff;color:#1e293b;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.a-side{flex:none;width:280px;box-sizing:border-box;padding:16px;background:#ffffff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;gap:8px}
+.a-brand{display:flex;align-items:center;gap:12px;padding:8px 12px 16px}
+.a-brand strong{font-size:16px;line-height:24px;font-weight:700;color:#4f46e5}
+.a-nav{display:flex;flex-direction:column;gap:4px}
+.a-side-foot{margin-top:auto;display:flex;align-items:center;gap:12px;padding:12px}
+.a-side-foot div{flex:1;min-width:0;line-height:18px}
+.a-side-foot strong{display:block;font-size:15px;font-weight:700}
+.a-side-foot span{display:block;font-size:12px;color:#6b7280}
+.a-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.a-head{flex:none;height:53px;box-sizing:border-box;padding:0 32px;display:flex;align-items:center;gap:24px;background:#ffffff;border-bottom:1px solid #e2e8f0}
+.a-head h1{margin:0;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.a-head-note{margin-left:auto;font-size:12px;line-height:16px;color:#6b7280}
+.a-body{flex:1;min-height:0;box-sizing:border-box;padding:32px 48px;display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.a-intro{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.a-bar{display:flex;align-items:flex-end;gap:16px}
+.a-bar .y-searchfield{flex:1;min-width:0}
+.a-panel{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);overflow:hidden}
+.a-table{width:100%;border-collapse:collapse;font-size:14px;line-height:20px;color:#1e293b}
+.a-table caption{padding:16px 24px;text-align:left;font-size:16px;line-height:24px;font-weight:700;color:#1e293b;border-bottom:1px solid #e2e8f0}
+.a-table th{padding:12px 16px;text-align:left;font-size:12px;line-height:16px;font-weight:700;color:#1e293b;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.a-table td{padding:12px 16px;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+.a-table tbody tr:last-child td{border-bottom:0}
+.a-table a{font-weight:600;text-decoration:underline}
+.a-num{text-align:right;color:#6b7280}
+.a-mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px}
+.a-status{display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;white-space:nowrap}
+.a-status::before{content:"";flex:none;width:8px;height:8px;border-radius:9999px;background:currentColor}
+.a-status.is-open{color:#92400e}
+.a-status.is-ok{color:#166534}
+.a-status.is-danger{color:#dc2626}
+.a-status.is-neutral{color:#6b7280}
+.a-shell{position:relative}
+.a-h2{margin:0;font-size:18px;line-height:24px;font-weight:700;color:#1e293b}
+.a-back{display:inline-flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:none}
+.a-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.a-kpi{box-sizing:border-box;padding:24px;background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:8px}
+.a-kpi-label{font-size:14px;line-height:20px;font-weight:600;color:#6b7280}
+.a-kpi-value{font-size:40px;line-height:48px;font-weight:800;color:#1e293b}
+.a-kpi-sub{font-size:13px;line-height:18px;color:#6b7280}
+.a-dash{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
+.a-dash-side{padding:24px;display:flex;flex-direction:column;gap:16px}
+.a-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.a-list li{display:flex;flex-direction:column;gap:2px}
+.a-list time{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;line-height:16px;color:#6b7280}
+.a-list strong{font-size:14px;line-height:20px;color:#1e293b}
+.a-list span{font-size:13px;line-height:18px;color:#6b7280}
+.a-scrim{position:absolute;inset:0;background:rgba(15,23,42,0.5);display:flex;align-items:center;justify-content:center}
+.a-dialog{box-sizing:border-box;width:560px;padding:32px;background:#ffffff;border-radius:16px;box-shadow:0px 20px 40px -10px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:20px;font-family:Inter,system-ui,sans-serif;color:#1e293b}
+.a-dialog h2{margin:0;font-size:24px;line-height:32px;font-weight:800}
+.a-dialog p{margin:0;font-size:15px;line-height:21px;color:#6b7280}
+.a-dialog-hint{font-size:13px !important;line-height:18px !important}
+.a-dialog-actions{display:flex;justify-content:flex-end;gap:12px}
+.a-divider{height:1px;background:#e2e8f0}
+.a-alert{box-sizing:border-box;display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:14px;line-height:20px}
+.a-alert div{display:flex;flex-direction:column;gap:4px}
+.a-alert strong{font-weight:700}
+.a-locked{display:flex;flex-direction:column;gap:24px;margin:0;padding:0;border:0;min-width:0;opacity:0.5}
+.a-split{flex:1;min-height:0;display:flex;align-items:flex-start;gap:48px}
+.a-col{display:flex;flex-direction:column;gap:24px;min-width:0}
+.a-col-main{flex:1}
+.a-col-side{flex:none;width:400px}
+.a-card{background:#ffffff;border-radius:16px;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1);padding:24px;display:flex;flex-direction:column;gap:16px}
+.a-card-sub{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.a-divider{height:1px;background:#e2e8f0}
+.a-dl{margin:0;display:grid;grid-template-columns:auto 1fr;column-gap:24px;row-gap:12px;align-items:center;font-size:14px;line-height:20px}
+.a-dl dt{color:#6b7280}
+.a-dl dd{margin:0;font-weight:600;color:#1e293b}
+.a-profile{display:flex;align-items:center;gap:16px}
+.a-profile strong{display:block;font-size:20px;line-height:26px;font-weight:800;color:#1e293b}
+.a-profile span{display:block;font-size:14px;line-height:20px;color:#6b7280}
+.a-reveal{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.a-clip{max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b}
+.a-link{font-size:14px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:underline}
+.a-msg-head{display:flex;align-items:center;gap:12px}
+.a-msg-head div{flex:1;min-width:0}
+.a-msg-head strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#1e293b}
+.a-msg-head span{display:block;font-size:12px;line-height:16px;color:#6b7280}
+.a-msg-body{font-size:15px;line-height:22px;color:#1e293b}
+.a-msg-body p{margin:0 0 12px}
+.a-msg-body p:last-child{margin:0}
+.a-scrim{position:absolute;inset:0;background:rgba(15,23,42,0.5);display:flex;align-items:center;justify-content:center}
+.a-dialog{box-sizing:border-box;width:560px;padding:32px;background:#ffffff;border-radius:16px;box-shadow:0px 20px 40px -10px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:20px;font-family:Inter,system-ui,sans-serif;color:#1e293b}
+.a-dialog h2{margin:0;font-size:24px;line-height:32px;font-weight:800}
+.a-dialog p{margin:0;font-size:15px;line-height:21px;color:#6b7280}
+.a-dialog-hint{font-size:13px !important;line-height:18px !important}
+.a-dialog-actions{display:flex;justify-content:flex-end;gap:12px}
+.a-sheet{position:relative;width:1440px;height:1580px;box-sizing:border-box;padding:48px;background:#f8fafc;color:#1e293b;font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.a-sheet-head{display:flex;flex-direction:column;gap:4px}
+.a-sheet-head strong{font-size:24px;line-height:32px;font-weight:800}
+.a-sheet-head span{font-size:14px;line-height:20px;color:#6b7280}
+.a-sheet-grid{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-content:start}
+.a-sheet-grid .a-card{gap:12px}
+.a-sheet-label{margin:0;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#6b7280}
+.a-chips{display:flex;flex-wrap:wrap;gap:12px 24px}
+.a-btns{display:flex;flex-wrap:wrap;gap:12px}
+.a-dialog.is-static{width:100%;box-sizing:border-box;box-shadow:0px 4px 8px -1px rgba(0,0,0,0.1)}
+.a-alert.is-warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
+.a-sheet .y-toast{position:relative}
+</style>
+</helmet>
+<div class="a-sheet">
+  <header class="a-sheet-head">
+    <strong>Composants d’administration</strong>
+    <span>Non publics : utilisés uniquement dans /admin, desktop seulement. Même style que l’application, sans les éléments de l’application.</span>
+  </header>
+  <div class="a-sheet-grid">
+    <section class="a-card"><p class="a-sheet-label">Statuts</p><div class="a-chips">
+      <span class="a-status is-ok">Actif</span>
+      <span class="a-status is-danger">Suspendu</span>
+      <span class="a-status is-open">En attente de suppression</span>
+      <span class="a-status is-open">Nouveau</span>
+      <span class="a-status is-neutral">Répondu</span>
+      <span class="a-status is-ok">Traité</span>
+      <span class="a-status is-open">Ouvert</span>
+      <span class="a-status is-ok">Résolu</span>
+      <span class="a-status is-neutral">Rejeté</span>
+    </div>
+    <p class="a-card-sub">Vert : terminé ou actif. Ambre : à traiter. Rouge : suspendu. Gris : clos sans action.</p></section>
+    <section class="a-card"><p class="a-sheet-label">Boutons</p><div class="a-btns">
+      <x-import component-from-global-scope="YDS.Button" variant="primary" size="md">Envoyer la réponse</x-import>
+      <x-import component-from-global-scope="YDS.Button" variant="outline" size="md">Lever la suspension</x-import>
+      <x-import component-from-global-scope="YDS.Button" variant="ghost" size="md">Marquer comme traité</x-import>
+      <x-import component-from-global-scope="YDS.Button" variant="destructive" size="md">Retirer la question</x-import>
+      <x-import component-from-global-scope="YDS.Button" variant="outline" size="sm">Révéler l’e-mail</x-import>
+      <x-import component-from-global-scope="YDS.Button" variant="primary" size="md" disabled="{{yes}}">Désactivé</x-import>
+    </div>
+    <p class="a-card-sub">Action sensible : bouton destructif, motif obligatoire. Désactivé tant que le motif est vide.</p></section>
+    <section class="a-card"><p class="a-sheet-label">Champs</p><x-import component-from-global-scope="YDS.TextField" label="Motif (obligatoire)" hint="Enregistré dans le journal d’audit." placeholder="Expliquez la décision" multiline="{{yes}}" rows="3" errors="{{errs}}"></x-import>
+    <div class="a-reveal"><span class="a-mono">m***@d***.fr</span><x-import component-from-global-scope="YDS.Button" variant="outline" size="sm">Révéler l’e-mail</x-import></div>
+    <p class="a-card-sub">E-mail masqué par défaut. La révélation demande une confirmation.</p></section>
+    <div style="display:flex;flex-direction:column;gap:24px"><section class="a-card"><p class="a-sheet-label">Carte de chiffres</p><div class="a-kpi" style="box-shadow:none;border:1px solid #e2e8f0;padding:16px"><span class="a-kpi-label">Signalements ouverts</span><strong class="a-kpi-value">4</strong><span class="a-kpi-sub">Sans décision à ce jour</span></div></section>
+<section class="a-card"><p class="a-sheet-label">Lignes de journal</p><ol class="a-list">
+      <li><time>16/10/2026 10h30 · auth.login_ok</time><strong>Réponse envoyée</strong><span>Message de contact · @MarkL · par e-mail</span></li>
+      <li><time>13/10/2026 09h40 · user.suspend</time><strong>Compte suspendu</strong><span>@MarkL · motif enregistré</span></li>
+    </ol></section></div>
+    <section class="a-card"><p class="a-sheet-label">Boîte de dialogue (motif obligatoire)</p><div class="a-dialog is-static" role="dialog" aria-labelledby="sd1">
+      <h2 id="sd1">Suspendre le compte de @MarkL ?</h2>
+      <p>Le compte ne pourra plus publier, réagir ni répondre. L’utilisateur reçoit un e-mail.</p>
+      <x-import component-from-global-scope="YDS.TextField" label="Motif (obligatoire)" placeholder="Expliquez la décision" multiline="{{yes}}" rows="2"></x-import>
+      <div class="a-dialog-actions">
+        <x-import component-from-global-scope="YDS.Button" variant="outline" size="md">Annuler</x-import>
+        <x-import component-from-global-scope="YDS.Button" variant="destructive" size="md" disabled="{{yes}}">Suspendre le compte</x-import>
+      </div>
+    </div></section>
+    <section class="a-card"><p class="a-sheet-label">Boîte de dialogue (confirmation d’identité)</p><div class="a-dialog is-static" role="dialog" aria-labelledby="sd2">
+      <h2 id="sd2">Confirmer votre identité</h2>
+      <p>Action demandée : afficher l’adresse e-mail de @MarkL. Cette action est enregistrée dans le journal d’audit.</p>
+      <x-import component-from-global-scope="YDS.TextField" label="Code à 6 chiffres" hint="Code de votre application, ou un code de secours." placeholder="000000" auto-complete="one-time-code"></x-import>
+      <div class="a-dialog-actions">
+        <x-import component-from-global-scope="YDS.Button" variant="outline" size="md">Annuler</x-import>
+        <x-import component-from-global-scope="YDS.Button" variant="primary" size="md">Confirmer</x-import>
+      </div>
+    </div></section>
+    <section class="a-card"><p class="a-sheet-label">Alertes</p><div class="a-alert" role="alert"><span style="display:inline-flex;line-height:0"><x-import component-from-global-scope="YDS.Icon" name="triangle-alert" size="20" color="#dc2626"></x-import></span><div><strong>Connexion bloquée</strong><span>Cinq échecs de connexion. Réessayez dans 14 min 52 s.</span></div></div>
+    <div class="a-alert is-warn" role="status"><span style="display:inline-flex;line-height:0"><x-import component-from-global-scope="YDS.Icon" name="info" size="20" color="#92400e"></x-import></span><div><strong>Motif manquant</strong><span>Le motif est obligatoire pour cette décision.</span></div></div></section>
+    <section class="a-card"><p class="a-sheet-label">Confirmation</p><x-import component-from-global-scope="YDS.Toast" message="Réponse envoyée par e-mail" action="Voir le journal"></x-import>
+    <p class="a-card-sub">Après chaque action sensible, une confirmation courte s’affiche. Le détail est dans le journal d’audit.</p></section>
+    <section class="a-card"><p class="a-sheet-label">États</p><x-import component-from-global-scope="YDS.EmptyState" icon="mail" title="Aucun message de contact" text="Les messages des comptes suspendus apparaîtront ici."></x-import>
+    <x-import component-from-global-scope="YDS.ErrorState" title="Impossible de charger les messages" message="Vérifiez votre connexion, puis réessayez." retry-label="Réessayer"></x-import>
+    <x-import component-from-global-scope="YDS.Skeleton" variant="line" width="80%"></x-import></section>
+    
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1580}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+errs: ['Le motif est obligatoire.']
+};
+}
+}
+</script>
+</body>
+</html>

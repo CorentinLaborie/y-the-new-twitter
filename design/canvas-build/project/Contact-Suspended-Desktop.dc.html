@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Contacter l’administrateur</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+:root{--ring:#4f46e5}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-account{margin-top:auto;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 12px 12px 8px;border:0;border-radius:9999px;background:transparent;font-family:inherit;text-align:left;cursor:pointer}
+.y-account:hover{background:#f3f4f6}
+.y-set{display:flex;flex-direction:column;gap:16px;padding:16px}
+.y-form{display:flex;flex-direction:column;gap:24px;margin:0}
+.y-note-card{display:flex;align-items:flex-start;gap:12px;padding:16px;border-radius:16px;background:#e0e7ff;color:#1e293b;font-size:14px;line-height:20px}
+.y-note-card p{margin:0}
+.y-note-ico{flex:none;display:flex}
+
+.y-note{display:block;margin:0;font-size:12px;line-height:16px;color:#6b7280}
+.y-sent{display:flex;flex-direction:column;align-items:center;gap:12px;padding:32px 16px 8px;text-align:center}
+.y-sent-ico{width:56px;height:56px;border-radius:9999px;background:#dcfce7;display:flex;align-items:center;justify-content:center}
+.y-sent-title{margin:0;font-size:20px;line-height:26px;font-weight:700;color:#1e293b}
+.y-sent-text{margin:0;font-size:15px;line-height:21px;color:#6b7280}
+.y-ref{margin:0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;color:#6b7280}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1073px; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif; display: flex; justify-content: flex-start; padding-left: 112px; overflow: hidden;">
+<div style="flex: none; width: 275px; box-sizing: border-box; padding: 8px 24px 16px 8px; display: flex; flex-direction: column; height: 1073px;">
+<div style="padding: 8px;"><x-import component-from-global-scope="YDS.YLogo" size="40"></x-import></div>
+<nav aria-label="Navigation principale" style="display: flex; flex-direction: column; gap: 8px; margin-left: -8px;">
+<x-import component-from-global-scope="YDS.NavItem" icon="home" label="Accueil"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="search" label="Explorer"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="bell" label="Notifications" badge="3"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="mail" label="Messages"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="bookmark" label="Signets"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="user" label="Profil"></x-import>
+<x-import component-from-global-scope="YDS.NavItem" icon="circle-ellipsis" label="Plus"></x-import>
+</nav>
+<div style="margin-top: 24px;"><x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" shape="pill" block="{{yes}}" disabled="{{yes}}">Poster</x-import></div>
+<button type="button" class="y-account" aria-label="Options du compte Corentin Laborie">
+<span style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="Corentin Laborie" size="{{av}}"></x-import></span>
+<span style="flex: 1; min-width: 0; line-height: 18px;"><span style="display: block; font-size: 15px; font-weight: 700; color: #1e293b;">Corentin Laborie</span><span style="display: block; font-size: 15px; color: #6b7280;">@corentin</span></span>
+</button>
+</div>
+<main style="flex: none; width: 600px; height: 1073px; box-sizing: border-box; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;">
+<x-import component-from-global-scope="YDS.PageHeader" title="Contacter l’administrateur" subtitle="Compte suspendu" back="{{yes}}" back-label="Retour à l’accueil"></x-import>
+<div class="y-set">
+<div class="y-note-card" role="note"><span class="y-note-ico"><x-import component-from-global-scope="YDS.Icon" name="info" size="18" color="#4f46e5"></x-import></span><p>Votre compte est suspendu depuis le 13/10/2026. Expliquez votre situation : l’administrateur vous répond par e-mail, à l’adresse de votre compte.</p></div>
+<form class="y-form" onsubmit="return false">
+<x-import component-from-global-scope="YDS.TextField" label="Votre message" hint="1 000 caractères maximum." placeholder="Expliquez votre situation" multiline="{{yes}}" rows="8"></x-import>
+<x-import component-from-global-scope="YDS.CharCounter" value="{{zero}}" max="{{maxChars}}"></x-import>
+<x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" block="{{yes}}" type="submit" disabled="{{yes}}">Envoyer le message</x-import>
+</form>
+<p class="y-note">Un seul message peut être ouvert à la fois. Vous pourrez écrire à nouveau après la réponse de l’administrateur.</p>
+</div>
+</main>
+<div style="flex: none; width: 350px; box-sizing: border-box; padding: 8px 0 16px 24px; display: flex; flex-direction: column; gap: 16px; height: 1073px; overflow: hidden;">
+<x-import component-from-global-scope="YDS.SearchField" label="Rechercher une question"></x-import>
+<div style="margin-top: auto;"><x-import component-from-global-scope="YDS.Footer" variant="sidebar"></x-import></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1073}}'>
+class Component extends DCLogic {
+renderVals() {
+return { yes: true, zero: 0, maxChars: 1000, av: 40 };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Connexion — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-back{position:absolute;top:10px;left:16px;box-sizing:border-box;min-height:32px;padding:8px 0;display:inline-flex;align-items:center;gap:8px;font-size:16px;line-height:20px;font-weight:600;color:#4f46e5;text-decoration:none}
+.y-back:hover{color:#4338ca}
+.y-title{margin:0;font-size:24px;line-height:32px;font-weight:600;color:#1e293b;text-align:center;white-space:nowrap;letter-spacing:-0.5px}
+.y-accent{margin:0;font-size:28px;line-height:36px;font-weight:700;color:#4f46e5;text-align:center}
+.y-accent span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px;text-decoration-skip-ink:none}
+.y-auth{display:flex;flex-direction:column}
+.y-auth-form{display:flex;flex-direction:column;gap:16px;margin:0}
+.y-auth-grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));column-gap:16px;row-gap:16px;align-items:start}
+.y-auth-divider{align-self:center;width:328px;height:4px;border-radius:2px;background:#4f46e5;margin:8px 0}
+.y-legal{margin:0;font-size:11px;line-height:16px;color:#6b7280;text-align:center}
+.y-legal-link,.y-legal-link:hover{color:#1e293b;font-weight:600;text-decoration:underline;white-space:nowrap}
+.y-check .y-legal-link{white-space:normal}
+.y-auth-footer{position:absolute;left:0;right:0;bottom:0}
+.y-field-label{font-size:16px}
+</style>
+</helmet>
+<div style="width: 360px; height: 700px; box-sizing: border-box; position: relative; overflow: hidden; background: #f8fafc; color: #1e293b; font-family: Inter, system-ui, sans-serif;">
+  <a href="#" class="y-back"><x-import component-from-global-scope="YDS.Icon" name="arrow-left" size="18"></x-import>Retour</a>
+  <h1 class="y-title" style="position:absolute;left:0px;top:64px;width:360px;">On ne demande jamais assez</h1>
+  <p class="y-accent" style="position:absolute;left:0px;top:104px;width:360px;"><span>why&nbsp;?</span></p>
+  <div class="y-auth" style="position:absolute;left:16px;top:172px;width:328px;gap:16px;">
+    <form class="y-auth-form" onsubmit="return false">
+      <x-import component-from-global-scope="YDS.TextField" label="Adresse e-mail" placeholder="Votre adresse e-mail" auto-complete="username"></x-import>
+      <x-import component-from-global-scope="YDS.TextField" label="Mot de passe" placeholder="Votre mot de passe" type="password" auto-complete="current-password"></x-import>
+      <x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" block="{{yes}}" type="submit">Se connecter</x-import>
+    </form>
+    <div class="y-auth-divider" aria-hidden="true"></div>
+    <x-import component-from-global-scope="YDS.Button" variant="secondary" size="lg" block="{{yes}}" icon-right="y">Rejoindre la communauté</x-import>
+    <p class="y-legal">En vous connectant, vous acceptez nos <a href="#" class="y-legal-link">Conditions d’utilisation</a>, notre <a href="#" class="y-legal-link">Politique de confidentialité</a> et notre <a href="#" class="y-legal-link">Utilisation des cookies</a>.</p>
+  </div>
+  <div class="y-auth-footer"><x-import component-from-global-scope="YDS.Footer" variant="page"></x-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":700}}'>
+class Component extends DCLogic {
+renderVals() {
+const e = React.createElement;
+return { yes: true, terms: e(React.Fragment, null, 'J’accepte les ', e('a', { href: '#', className: 'y-legal-link' }, 'Conditions d’utilisation'), ' de Y') };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Bloquer un compte — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.ph-post{display:flex;gap:12px;padding:16px 0;border-bottom:1px solid #e2e8f0}
+.ph-av{flex:none;width:36px;height:36px;border-radius:9999px;background:#f3f4f6}
+.ph-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.ph-bar{height:10px;border-radius:4px;background:#f3f4f6}
+.ph-bar.w40{width:40%}.ph-bar.w90{width:90%}.ph-bar.w70{width:70%}
+.scrim{position:absolute;inset:0;z-index:2;background:rgba(30,41,59,0.5)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:3;box-sizing:border-box;padding:6px 16px 16px;background:#ffffff;border-radius:16px 16px 0 0;box-shadow:0px -10px 30px -5px rgba(0,0,0,0.25);display:flex;flex-direction:column;gap:10px;font-family:Inter,system-ui,sans-serif;color:#1e293b}
+.grab{align-self:center;width:36px;height:4px;border-radius:9999px;background:#d1d5db}
+.sheet h2{margin:0;font-size:20px;line-height:26px;font-weight:800}
+.sheet p{margin:0;font-size:14px;line-height:20px;color:#6b7280}
+.acts{display:flex;gap:8px}
+.acts>div{flex:1;display:flex}
+.who{display:flex;align-items:center;gap:12px}
+.who strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#1e293b}
+.who > div > span{display:block;font-size:13px;line-height:18px;color:#6b7280}
+.dlg-note{font-size:13px !important;line-height:18px !important}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden;">
+<div role="tablist" style="display: flex; border-bottom: 1px solid #e2e8f0; height: 48px; box-sizing: border-box; background: #ffffff;">
+<x-import component-from-global-scope="YDS.Tab" label="Pour vous" active="{{yes}}" style="flex: 1;"></x-import>
+</div>
+<div style="display: flex; flex-direction: column; padding: 0 16px; background: #ffffff;">
+<div class="ph-post"><span class="ph-av"></span><div class="ph-col"><span class="ph-bar w40"></span><span class="ph-bar w90"></span><span class="ph-bar w70"></span></div></div>
+<div class="ph-post"><span class="ph-av"></span><div class="ph-col"><span class="ph-bar w40"></span><span class="ph-bar w90"></span><span class="ph-bar w70"></span></div></div>
+<div class="ph-post"><span class="ph-av"></span><div class="ph-col"><span class="ph-bar w40"></span><span class="ph-bar w90"></span></div></div>
+</div>
+</main>
+
+<div class="scrim"></div>
+<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+<span class="grab" aria-hidden="true"></span>
+<div class="who"><span style="flex: none; width: 40px; height: 40px; display: flex;"><x-import component-from-global-scope="YDS.Avatar" name="AliceY" size="40"></x-import></span><div><strong>AliceY</strong><span>@AliceY</span></div></div>
+<h2 id="dlg-title">Bloquer @AliceY&nbsp;?</h2>
+<p>@AliceY ne pourra plus voir vos publications ni vous contacter. Ce compte ne sera pas prévenu.</p>
+<p class="dlg-note">Vous pourrez le débloquer depuis Paramètres, dans Comptes bloqués.</p>
+<div class="acts">
+<div><x-import component-from-global-scope="YDS.Button" variant="outline" size="md" block="{{yes}}">Annuler</x-import></div>
+<div><x-import component-from-global-scope="YDS.Button" variant="destructive" size="md" block="{{yes}}">Bloquer</x-import></div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return { yes: true };
+}
+}
+</script>
+</body>
+</html>

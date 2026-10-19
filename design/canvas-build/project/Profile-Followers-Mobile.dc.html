@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Abonnés — Mobile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/yds/components/bundle.css">
+<script src="ds/yds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4f46e5}a:hover{color:#4338ca}
+.y-tabs{display:flex;flex:none;border-bottom:1px solid #e2e8f0;background:#ffffff}
+.y-people{list-style:none;margin:0;padding:0;flex:none}
+.y-person{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #e2e8f0}
+.y-person-av{flex:none;width:40px;height:40px;display:flex}
+.y-person-text{flex:1;min-width:0}
+.y-person-text strong{display:block;font-size:15px;line-height:20px;font-weight:700;color:#1e293b}
+.y-person-text span{display:block;font-size:12px;line-height:16px;color:#6b7280}
+.y-more{padding:16px}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 667px; box-sizing: border-box; background: #ffffff; color: #1e293b; font-family: Inter, system-ui, sans-serif; overflow: hidden;">
+
+<div style="position: absolute; top: 0; left: 0; right: 0; z-index: 1;"><x-import component-from-global-scope="YDS.MobileTopBar" back="{{yes}}" backLabel="Retour au profil" title="AliceY" subtitle="@AliceY"></x-import></div>
+
+<main style="position: absolute; top: 53px; left: 0; right: 0; bottom: 0; overflow: hidden; display: flex; flex-direction: column;">
+<div class="y-tabs" role="tablist" aria-label="Abonnés et abonnements">
+<x-import component-from-global-scope="YDS.Tab" label="Abonnés" active="{{yes}}"></x-import>
+<x-import component-from-global-scope="YDS.Tab" label="Abonnements"></x-import>
+</div>
+
+<ul class="y-people" aria-label="Abonnés d’AliceY">
+<li class="y-person">
+<span class="y-person-av"><x-import component-from-global-scope="YDS.Avatar" name="MarkL" size="{{av}}"></x-import></span>
+<span class="y-person-text"><strong>MarkL</strong><span>@MarkL</span></span>
+<x-import component-from-global-scope="YDS.FollowButton" followed="{{yes}}"></x-import>
+</li>
+<li class="y-person">
+<span class="y-person-av"><x-import component-from-global-scope="YDS.Avatar" name="RizaHawkeye" size="{{av}}"></x-import></span>
+<span class="y-person-text"><strong>RizaHawkeye</strong><span>@RizaHawkeye</span></span>
+<x-import component-from-global-scope="YDS.FollowButton"></x-import>
+</li>
+<li class="y-person">
+<span class="y-person-av"><x-import component-from-global-scope="YDS.Avatar" name="AntonyGille" size="{{av}}"></x-import></span>
+<span class="y-person-text"><strong>AntonyGille</strong><span>@AntonyGille</span></span>
+<x-import component-from-global-scope="YDS.FollowButton"></x-import>
+</li>
+<li class="y-person">
+<span class="y-person-av"><x-import component-from-global-scope="YDS.Avatar" name="Robert44" size="{{av}}"></x-import></span>
+<span class="y-person-text"><strong>Robert44</strong><span>@Robert44</span></span>
+<x-import component-from-global-scope="YDS.FollowButton"></x-import>
+</li>
+</ul>
+
+<div class="y-more"><x-import component-from-global-scope="YDS.LoadMore" label="Voir plus d’abonnés"></x-import></div>
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":667}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+yes: true,
+av: 40
+};
+}
+}
+</script>
+</body>
+</html>

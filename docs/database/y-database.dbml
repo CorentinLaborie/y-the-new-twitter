@@ -1,0 +1,689 @@
+// =============================================================================
+// Y — proposed database schema (PostgreSQL 18)
+// Derived from the app design boards (Landing, Auth, App feed, Explore,
+// Notifications, Messages, Bookmarks, Profile, Settings).
+// Version 0.9 — 2026-10-19: owner decisions DEC-119 to DEC-124 (foreign key indexes,
+// French full-text search, hashtag prefix index, updated_at set by the application).
+// Version 0.8 — 2026-10-19: closed_by_lift on support_threads (DEC-117).
+// Version 0.7 — 2026-10-19: contact messages (support_threads, support_messages),
+// admin two-factor authentication (admin_mfa, admin_backup_codes), suspension reason,
+// mentions in questions, audit log result (DEC-080 to DEC-092).
+// Version 0.6 — 2026-10-16: PostgreSQL instead of MySQL (DEC-070), NestJS backend
+// (DEC-069), sessions table replaces the Spring Session tables (DEC-071), handle
+// uniqueness through a unique index on lower(handle) (DEC-061, DEC-070).
+// Version 0.5 — 2026-10-16: single handle index, login_events table, terms
+// version, audit log purge account, audit hash chain, content erasure (DEC-059 to DEC-068).
+// Version 0.4 — 2026-10-16: step 4 (login counters in users, DEC-040).
+// Version 0.3 — 2026-10-16: decisions D1 to D13 applied, account deletion with
+// a 90-day window (DEC-024), moderation states and administration back-office
+// (DEC-025). Edited in place: the initial migration is not applied anywhere yet (DEC-028).
+// Decisions are tracked in docs/decisions/journal-decisions.md.
+//
+// PostgreSQL conventions used here:
+// - uuid           -> uuid, default gen_random_uuid() (built in since PostgreSQL 13)
+// - timestamptz    -> timestamptz(3), always stored in UTC by the application
+// - varchar        -> explicit lengths, kept for the length rules of the product (D3)
+// =============================================================================
+
+Project y {
+  database_type: 'PostgreSQL'
+  Note: '''
+  Y is a question-based, X/Twitter-like app in French.
+  - Posts are questions (text only, max 280 chars), no media.
+  - Reactions on questions: like (J'aime), dislike (Pas d'accord), y (Y).
+    One reaction per user and question (D1, R11).
+  - Reactions on replies: like and dislike only.
+  - When a question reaches 50 Y, its conversation opens (replies allowed).
+    The conversation stays open afterwards (R13).
+  - Questions are never archived or deleted automatically (R12).
+  - Only active accounts can post, react, reply, follow or bookmark (R13, R16, DEC-086).
+  - Content of non-active accounts is hidden from others by the central filter
+    (DEC-086, DEC-087). deleted_at is set only by the author or at purge.
+  - Sorting and grouping use hashtags only. No topic categories.
+  - Desktop, Tablet and Mobile share the same features.
+
+  CHECK constraints to write in the initial migration (not expressible in DBML):
+  - follows: follower_id <> followee_id
+  - blocks: blocker_id <> blocked_id
+  - reports: exactly one of question_id or reply_id is set
+  - mentions: exactly one of question_id or reply_id is set (DEC-089)
+  - reports: details is not null when reason = 'other'
+  - counters (like_count, dislike_count, y_count, reply_count, follower_count,
+    following_count): value >= 0
+  The number of questions of an account is not stored (DEC-084). It is counted from
+  its questions where deleted_at is null and moderation_status is visible.
+  Search covers questions, users and hashtags. GIN indexes on to_tsvector
+  expressions with the 'french' configuration (DEC-120), added by migration
+  20261019140000_owner_decisions: questions(body), users(handle, display_name).
+  Hashtags use a prefix match on a text_pattern_ops index on name (DEC-122).
+  Handle uniqueness is case-insensitive through a unique index on lower(handle)
+  (DEC-061, DEC-070). Handles are ASCII only, so no accent rule is needed.
+  '''
+}
+
+// -----------------------------------------------------------------------------
+// Enums
+// -----------------------------------------------------------------------------
+
+Enum account_status {
+  pending_verification [note: 'Signed up, email code not yet validated. Not active: cannot publish, react, reply, follow or bookmark (DEC-086).']
+  active
+  suspended            [note: 'Set by the administrator (reason in suspension_reason). Cannot publish, react, reply, follow or bookmark (DEC-086). Sessions revoked.']
+  pending_deletion     [note: 'Deletion requested. Cannot publish, react, reply, follow or bookmark (DEC-086). Content hidden from the request on (DEC-087). Data kept 90 days, then purged (DEC-024).']
+  deleted              [note: 'Purged account. Only a placeholder row remains: no personal data (DEC-024).']
+}
+
+Enum moderation_status {
+  visible
+  hidden   [note: 'Hidden from the public by the administrator. Reversible.']
+  removed  [note: 'Removed from the public by the administrator, with a reason. Restorable within 30 days.']
+}
+
+Enum report_decision {
+  no_action
+  content_hidden
+  content_removed
+  account_suspended
+}
+
+Enum user_role {
+  user
+  moderator
+  admin
+}
+
+Enum age_check_status {
+  pending
+  verified
+  failed
+}
+
+Enum login_result {
+  success
+  failure
+}
+
+Enum reaction_kind {
+  like      [note: 'J’aime' ]
+  dislike   [note: 'Pas d’accord' ]
+  y
+}
+
+Enum reply_reaction_kind {
+  like
+  dislike
+}
+
+Enum request_status {
+  pending   [note: 'Recipient side of a message request from a non-follower. The initiator side stays accepted.']
+  accepted
+  declined
+}
+
+Enum notification_type {
+  reply_to_question      [note: 'Actor replied to your question']
+  conversation_opened    [note: 'Your question reached 50 Y (actor_id is null)']
+  reaction_like          [note: 'Aggregated on read: "et 12 autres aiment votre question"']
+  reaction_dislike
+  reaction_y             [note: 'Aggregated on read: "et 12 autres ont reagi Y"']
+  follow                 [note: 'Actor now follows you']
+  mention                [note: 'Actor mentioned you in a reply or a question']
+}
+
+Enum report_status {
+  open
+  resolved
+  dismissed
+}
+
+Enum report_reason {
+  spam
+  harassment
+  hate
+  illegal_content  [note: 'Contenu illicite']
+  misinformation   [note: 'Désinformation']
+  other            [note: 'Requires details']
+}
+
+Enum support_status {
+  new      [note: 'Waiting for the administrator. One per account (see open_user_id, DEC-111). Set again when the user writes on a replied thread (DEC-116).']
+  replied  [note: 'The administrator has replied. The thread waits for the user.']
+  closed   [note: 'Marked as handled by the administrator, or closed when the suspension is lifted. No reason required (DEC-088, DEC-116). A closed thread never reopens, except after a new suspension when the lifting closed it (DEC-116).']
+}
+
+Enum support_author_type {
+  user
+  admin
+}
+
+Enum support_channel {
+  email    [note: 'The message was also sent by e-mail to the user.']
+  none     [note: 'Not sent by e-mail; the message is only in the thread.']
+}
+
+// -----------------------------------------------------------------------------
+// Accounts & authentication
+// -----------------------------------------------------------------------------
+
+Table users {
+  id uuid [pk, default: `gen_random_uuid()`]
+  handle varchar(30) [not null, note: 'Public identifier shown as @corentin. Unique regardless of case, through the lower(handle) index (DEC-061, DEC-070). ASCII letters, digits and underscore only.']
+  display_name varchar(50) [not null, note: 'Shown as "Corentin Laborie". Required at signup (DEC-083), editable later (DEC-105).']
+  email varchar(254) [unique, not null, note: 'Login by email and password (D2). Stored lowercase. At purge (DEC-024) replaced by a unique placeholder.']
+  phone varchar(20) [unique, note: 'Optional (D2). Stored normalised, shown as 0601020304. Not used for login in v1. Not editable in v1 (DEC-105).']
+  password_hash varchar(255) [not null, note: 'Never store plain text. Min 8 chars enforced at app level. Replaced by an unusable value at purge (DEC-024).']
+  birth_date date [note: 'Signup rejects under 18. Set to null at purge (DEC-024). Age check: VerifAge (DEC-019).']
+  bio varchar(160) [note: 'Maximum 160 characters (D3).']
+  avatar_url varchar(2048)
+  status account_status [not null, default: 'pending_verification', note: 'Only active accounts can post, react, reply, follow or bookmark (R13, DEC-086).']
+  role user_role [not null, default: 'user', note: 'Moderators handle reports (M7). Set by an admin, never by the user.']
+  terms_accepted_at timestamptz(3) [not null, note: 'Checkbox "J’accepte les termes d’utilisation de Y". Set at signup.']
+  terms_version varchar(20) [not null, note: 'Version of the terms accepted. 1.0 for the first texts (DEC-062).']
+  email_verified_at timestamptz(3)
+  status_changed_at timestamptz(3) [note: 'When the status was last changed (suspension, reactivation, deletion request).']
+  suspension_reason varchar(500) [note: 'Reason shown to the user in the banner. Required when status is suspended (application rule, DEC-081). The history stays in admin_audit_log.']
+  failed_login_count int [not null, default: 0, note: 'Consecutive failed logins. Reset on success. Stored in the database so it survives restarts and is shared between instances (DEC-040).']
+  locked_until timestamptz(3) [note: 'Login locked until this time after 5 failures (15 minutes, DEC-040).']
+  deletion_requested_at timestamptz(3) [note: 'Set when the user asks for deletion (DEC-024).']
+  deletion_purge_at timestamptz(3) [note: 'Date of the purge: deletion_requested_at + 90 days. Read by the daily purge job.']
+  deleted_at timestamptz(3) [note: 'Set when the account is purged.']
+  follower_count int [not null, default: 0, note: 'Denormalised counter for "2 340 abonnes".']
+  following_count int [not null, default: 0, note: 'Denormalised counter for "182 abonnements".']
+  created_at timestamptz(3) [not null, default: `now()`, note: 'Shown as "A rejoint Y en mars 2026".']
+  updated_at timestamptz(3) [not null, default: `now()`, note: 'Set by the application on every change (Prisma @updatedAt, DEC-123).']
+
+  indexes {
+    status
+    (status, deletion_purge_at)
+    (`lower(handle)`) [unique, name: 'users_handle_lower_key']
+  }
+}
+
+Table signup_codes {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > users.id, note: 'Account being verified (status pending_verification).']
+  code_hash varchar(255) [not null, note: '6-digit code, stored hashed.']
+  attempts int [not null, default: 0, note: 'Maximum 5 wrong attempts, then the code is invalidated (D8).']
+  expires_at timestamptz(3) [not null, note: 'Lifetime 15 minutes (D8).']
+  consumed_at timestamptz(3)
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (user_id, created_at)
+  }
+  Note: 'Code sent after signup on the "Code" screen. A resend invalidates all previous unconsumed codes of the same user (application rule) and creates a new row.'
+}
+
+Table password_reset_codes {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > users.id]
+  code_hash varchar(255) [not null, note: '6-digit code, stored hashed.']
+  attempts int [not null, default: 0, note: 'Maximum 5 wrong attempts (D8).']
+  expires_at timestamptz(3) [not null, note: 'Lifetime 15 minutes (D8).']
+  consumed_at timestamptz(3)
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (user_id, created_at)
+  }
+  Note: 'Code sent by "Mot de passe oublie" flow. Consumed once the password is changed. A new request invalidates previous unconsumed codes.'
+}
+
+Table email_change_codes {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > users.id]
+  new_email varchar(254) [not null, note: 'Address to switch to once the code is validated. Not yet on users.email.']
+  code_hash varchar(255) [not null, note: '6-digit code, stored hashed.']
+  attempts int [not null, default: 0, note: 'Maximum 5 wrong attempts (D8).']
+  expires_at timestamptz(3) [not null, note: 'Lifetime 15 minutes (D8).']
+  consumed_at timestamptz(3)
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (user_id, created_at)
+  }
+  Note: 'Code sent by "Modifier e-mail". On validation, users.email is set to new_email. The change is also announced to the old address (application rule, see the product doc, section 13).'
+}
+
+Table age_verifications {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [unique, not null, ref: - users.id]
+  provider varchar(50) [not null, default: 'VerifAge']
+  provider_reference varchar(255) [note: 'External id, never the raw identity data.']
+  status age_check_status [not null, default: 'pending']
+  checked_at timestamptz(3)
+  Note: 'Provider VerifAge chosen (DEC-019). The mechanism (callback with server-side confirmation, DEC-020) waits for the VerifAge API documentation. Structure ready.'
+}
+
+Table login_events {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [ref: > users.id, note: 'Null when the e-mail address matches no account.']
+  result login_result [not null]
+  ip_hash char(64) [not null, note: 'HMAC-SHA-256 of the IP address, with a server key kept out of Git (a different key from the audit chain, DEC-065). The raw address is never stored.']
+  user_agent varchar(255)
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (user_id, created_at)
+    created_at
+  }
+  Note: 'Login attempts of all users (DEC-060). Purged after 6 months by the maintenance account (DEC-059). Rows of a purged account are deleted (DEC-024).'
+}
+
+// -----------------------------------------------------------------------------
+// Sessions (express-session store written in the application, DEC-071)
+// -----------------------------------------------------------------------------
+
+Table sessions {
+  id varchar(128) [pk, note: 'Random session ID. The value kept in the HTTP-only cookie.']
+  user_id uuid [ref: > users.id, note: 'Null before login. Lets the application revoke every session of a user (suspension, DEC-031; purge, DEC-024). Rows are deleted with the user.']
+  data json [not null, note: 'Serialised session content, written by the session store. Never holds a password or a code. Administrator sessions also keep reauth_at here (DEC-082). Not a column.']
+  created_at timestamptz(3) [not null, default: `now()`]
+  last_access_at timestamptz(3) [not null, default: `now()`, note: 'Updated on each request.']
+  expires_at timestamptz(3) [not null, note: 'Sliding expiry: last_access_at + 30 days of inactivity (DEC-027). Expired rows are deleted by the daily job (DEC-068). Administrator sessions: the earlier of last_access_at + 30 minutes and created_at + 8 hours (DEC-082).']
+
+  indexes {
+    user_id
+    expires_at
+  }
+  Note: 'Replaces the Spring Session tables of version 0.5 (DEC-071). Sessions stored in PostgreSQL (product doc, section 4).'
+}
+
+// -----------------------------------------------------------------------------
+// Social graph
+// -----------------------------------------------------------------------------
+
+Table follows {
+  follower_id uuid [not null, ref: > users.id]
+  followee_id uuid [not null, ref: > users.id]
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (follower_id, followee_id) [pk]
+    followee_id
+  }
+  Note: '"Vous suit" is derived from the reverse row. follower_id <> followee_id (CHECK in the initial migration). Removed in both directions when a block is created (R14).'
+}
+
+Table blocks {
+  blocker_id uuid [not null, ref: > users.id]
+  blocked_id uuid [not null, ref: > users.id]
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (blocker_id, blocked_id) [pk]
+    blocked_id
+  }
+  Note: 'R14: blocked content is hidden both ways. Creating a block also deletes follows in both directions, in the same transaction. blocker_id <> blocked_id (CHECK in the initial migration).'
+}
+
+// -----------------------------------------------------------------------------
+// Content: questions, replies, reactions, hashtags
+// -----------------------------------------------------------------------------
+
+Table questions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  author_id uuid [not null, ref: > users.id]
+  body varchar(280) [not null, note: 'Text only. 280-char counter in the composer. GIN full-text index for search, 'french' configuration (DEC-120).']
+  like_count int [not null, default: 0]
+  dislike_count int [not null, default: 0]
+  y_count int [not null, default: 0, note: 'Progress shown as 49/50 Y. Only reactions from active accounts count (R13).']
+  reply_count int [not null, default: 0, note: 'Decreases on soft delete of a reply.']
+  conversation_opened_at timestamptz(3) [note: 'Set once when y_count reaches 50 (threshold in configuration). Stays set even if y_count drops (R13). Replies are only accepted after this.']
+  created_at timestamptz(3) [not null, default: `now()`, note: 'Shown as 14/10/2026 10h41.']
+  deleted_at timestamptz(3) [note: 'Soft delete by the author or at purge only (DEC-087). Questions are never archived automatically (R12). After 90 days the body and links are erased; the row stays as a placeholder (DEC-067).']
+  moderation_status moderation_status [not null, default: 'visible', note: 'Set by the administrator. Anything not visible is excluded from feed, trends, search, popular, notifications, bookmarks and shared cards (application rule, one central filter). The same filter excludes content of a non-active author (DEC-086, DEC-087).']
+  moderated_at timestamptz(3) [note: 'When the administrator last changed moderation_status.']
+
+  indexes {
+    (author_id, created_at)
+    created_at
+    y_count
+    (moderation_status, created_at)
+  }
+}
+
+Table replies {
+  id uuid [pk, default: `gen_random_uuid()`]
+  question_id uuid [not null, ref: > questions.id]
+  author_id uuid [not null, ref: > users.id]
+  body varchar(280) [not null, note: 'Maximum 280 characters (D3).']
+  like_count int [not null, default: 0]
+  dislike_count int [not null, default: 0]
+  created_at timestamptz(3) [not null, default: `now()`]
+  deleted_at timestamptz(3) [note: 'Soft delete by the author or at purge only (DEC-087). After 90 days the body and links are erased; the row stays as a placeholder (DEC-067).']
+  moderation_status moderation_status [not null, default: 'visible', note: 'Same rules as questions.moderation_status.']
+  moderated_at timestamptz(3)
+
+  indexes {
+    (question_id, created_at)
+    author_id
+    (moderation_status, created_at)
+  }
+  Note: 'Flat list under a question (no nested replies in the design). "Voir plus de reponses" = keyset pagination on (created_at, id).'
+}
+
+Table question_reactions {
+  user_id uuid [not null, ref: > users.id]
+  question_id uuid [not null, ref: > questions.id]
+  kind reaction_kind [not null]
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (user_id, question_id) [pk]
+    (question_id, kind)
+    (created_at, question_id)
+  }
+  Note: 'Trending for "Pour vous" (D17): reactions in the last 24 hours, served by (created_at, question_id). One reaction per user and question (D1, R11). Changing kind replaces the row, and both counters are updated in the same transaction. Only active accounts can react (R13). A user may react to their own question (R13).'
+}
+
+Table reply_reactions {
+  user_id uuid [not null, ref: > users.id]
+  reply_id uuid [not null, ref: > replies.id]
+  kind reply_reaction_kind [not null]
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (user_id, reply_id, kind) [pk]
+    (reply_id, kind)
+  }
+  Note: 'Like and dislike are independent on replies. No exclusivity rule (decided 2026-10-16).'
+}
+
+Table mentions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  question_id uuid [ref: > questions.id, note: 'Mention in a question. Exactly one of question_id or reply_id is set (CHECK in the initial migration, DEC-089).']
+  reply_id uuid [ref: > replies.id, note: 'Mention in a reply. Exactly one of question_id or reply_id is set (DEC-089).']
+  mentioned_user_id uuid [not null, ref: > users.id]
+
+  indexes {
+    (question_id, mentioned_user_id) [unique]
+    (reply_id, mentioned_user_id) [unique]
+    mentioned_user_id
+  }
+  Note: 'Unique indexes treat NULL values as distinct, so each kind of target has its own unique index (DEC-089).'
+}
+
+Table hashtags {
+  id uuid [pk, default: `gen_random_uuid()`]
+  name varchar(50) [unique, not null, note: 'Lowercase snake_case without #, e.g. online_life, irl_vs_online.']
+
+  indexes {
+    name [note: 'text_pattern_ops, for prefix search while typing (DEC-122).']
+  }
+}
+
+Table question_hashtags {
+  question_id uuid [not null, ref: > questions.id]
+  hashtag_id uuid [not null, ref: > hashtags.id]
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (question_id, hashtag_id) [pk]
+    (hashtag_id, created_at)
+  }
+  Note: 'Hashtags are the only grouping key for trends, search, and explore. Trends count reactions over the last 24 hours (DEC-091). (hashtag_id, created_at) serves one hashtag page.'
+}
+
+Table bookmarks {
+  user_id uuid [not null, ref: > users.id]
+  question_id uuid [not null, ref: > questions.id]
+  created_at timestamptz(3) [not null, default: `now()`, note: 'Saved-at date. Used by the Signets sort "Date d’enregistrement".']
+
+  indexes {
+    (user_id, question_id) [pk]
+    (user_id, created_at)
+    question_id
+  }
+  Note: 'Signets sort "Date de la question" joins questions.created_at.'
+}
+
+// -----------------------------------------------------------------------------
+// Messages
+// -----------------------------------------------------------------------------
+
+Table conversations {
+  id uuid [pk, default: `gen_random_uuid()`]
+  created_at timestamptz(3) [not null, default: `now()`]
+  last_message_at timestamptz(3) [note: 'Denormalised, sorts the inbox.']
+  initiated_by_id uuid [ref: > users.id, note: 'Who started the conversation. Tells which side of a message request is pending.']
+  direct_key varchar(80) [unique, note: 'One-to-one conversations only: the two user ids, sorted and joined. Prevents duplicates. Null otherwise.']
+
+  indexes {
+    last_message_at
+    initiated_by_id
+  }
+}
+
+Table conversation_participants {
+  conversation_id uuid [not null, ref: > conversations.id]
+  user_id uuid [not null, ref: > users.id]
+  request_status request_status [not null, default: 'accepted']
+  last_read_at timestamptz(3) [note: 'Unread badge = messages after this date. Read receipt "Vu" = other side last_read_at >= message.created_at.']
+  muted_at timestamptz(3) [note: 'Conversation mute (D5, included in v1).']
+  archived_at timestamptz(3) [note: 'Conversation archive (D5, included in v1).']
+  joined_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (conversation_id, user_id) [pk]
+    (user_id, last_read_at)
+    (user_id, request_status, archived_at)
+  }
+}
+
+Table messages {
+  id uuid [pk, default: `gen_random_uuid()`]
+  conversation_id uuid [not null, ref: > conversations.id]
+  sender_id uuid [not null, ref: > users.id]
+  body varchar(1000) [not null, note: 'Maximum 1000 characters (D3). Stored as UTF-8.']
+  shared_question_id uuid [ref: > questions.id, note: 'Shared question card. Null for plain text.']
+  created_at timestamptz(3) [not null, default: `now()`]
+
+  indexes {
+    (conversation_id, created_at)
+    sender_id
+    shared_question_id
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Notifications
+// -----------------------------------------------------------------------------
+
+Table notifications {
+  id uuid [pk, default: `gen_random_uuid()`]
+  recipient_id uuid [not null, ref: > users.id]
+  actor_id uuid [ref: > users.id, note: 'Null for system events (conversation_opened).']
+  type notification_type [not null]
+  question_id uuid [ref: > questions.id]
+  reply_id uuid [ref: > replies.id]
+  created_at timestamptz(3) [not null, default: `now()`, note: 'Shown as "il y a 12 min" (relative time).']
+  read_at timestamptz(3) [note: 'Unread badge = read_at is null. "Tout marquer comme lu" sets it on all rows.']
+
+  indexes {
+    (recipient_id, created_at)
+    (recipient_id, read_at)
+    (recipient_id, type, question_id, created_at)
+    actor_id
+    question_id
+    reply_id
+  }
+  Note: 'One row per event. The list is read by keyset on (created_at, id). "et 12 autres ont reagi Y" is grouped at read time by (recipient, type, question). Rows whose actor is not active are not shown (DEC-086).'
+}
+
+Table notification_preferences {
+  user_id uuid [not null, ref: > users.id]
+  type notification_type [not null]
+  enabled boolean [not null, default: true, note: 'Per notification type (D7).']
+
+  indexes {
+    (user_id, type) [pk]
+  }
+  Note: 'Seven types (D7). The «Réactions» settings screen groups reaction_like, reaction_dislike and reaction_y (DEC-090). The table keeps one row per type.'
+}
+
+// -----------------------------------------------------------------------------
+// Moderation
+// -----------------------------------------------------------------------------
+
+Table reports {
+  id uuid [pk, default: `gen_random_uuid()`]
+  reporter_id uuid [not null, ref: > users.id, note: 'Never shown to the reported user.']
+  question_id uuid [ref: > questions.id]
+  reply_id uuid [ref: > replies.id]
+  reason report_reason [not null, note: 'Fixed list (D6).']
+  details varchar(280) [note: 'Free text, required when reason is other.']
+  status report_status [not null, default: 'open']
+  created_at timestamptz(3) [not null, default: `now()`]
+  reviewed_at timestamptz(3)
+  reviewed_by_id uuid [ref: > users.id, note: 'Moderator who handled the report. The user must have role moderator or admin (application rule).']
+  decision report_decision [note: 'Decision taken on the report. Null until handled.']
+  decision_note varchar(1000) [note: 'Internal note. Never shown to the reporter or to the author. No e-mail address allowed (audit rule).']
+
+  indexes {
+    (question_id, status)
+    (reply_id, status)
+    (status, created_at)
+    reporter_id
+    reviewed_by_id
+  }
+  Note: 'Exactly one of question_id or reply_id is set (CHECK in the initial migration). Only questions and replies are reportable in v1. Entry points: "Signaler ce post" and the "..." menu.'
+}
+
+// -----------------------------------------------------------------------------
+// Administration (back-office, DEC-025)
+// -----------------------------------------------------------------------------
+
+Table admin_mfa {
+  user_id uuid [pk, ref: - users.id, note: 'Administrator with two-factor authentication. One row per administrator (DEC-082).']
+  totp_secret_encrypted varchar(255) [not null, note: 'TOTP secret, encrypted by the application. Never stored in plain text.']
+  enabled_at timestamptz(3) [not null, default: `now()`]
+  last_used_step bigint [note: 'Time step of the last accepted TOTP code, so that a code cannot be used twice. Null before the first use.']
+}
+
+Table admin_backup_codes {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > users.id]
+  code_hash char(64) [not null, note: 'HMAC-SHA-256 (hex, 64 characters) of one single-use backup code, keyed with BACKUP_CODE_HMAC_KEY, a server secret kept out of Git (DEC-114). Never stored in plain text.']
+  used_at timestamptz(3) [note: 'Empty until the code is used.']
+
+  indexes {
+    user_id
+  }
+  Note: 'Backup codes for administrator two-factor authentication (DEC-082). Each code works once.'
+}
+
+Table admin_audit_log {
+  id uuid [pk, default: `gen_random_uuid()`]
+  actor_id uuid [ref: > users.id, note: 'Administrator, or the account itself for user.delete_request and user.delete_cancel (DEC-113). Null for scheduled system jobs.']
+  action varchar(60) [not null, note: 'Fixed code, e.g. report.decide, content.hide, content.restore, content.remove, user.suspend, user.reactivate, user.purge, audit.purge, data.reveal_email, auth.login_ok, auth.login_fail (administrator logins only), contact.reply, contact.close, user.delete_request, user.delete_cancel.']
+  result varchar(20) [not null, default: 'ok', note: 'Outcome of the action: ok, failed or refused (DEC-085). Part of the canonical encoding (DEC-064).']
+  target_type varchar(30) [not null, note: 'question, reply, report, user or contact (support_threads, DEC-085). Administrator logins use user.']
+  target_id uuid [not null, note: 'No foreign key: the target may be purged.']
+  reason varchar(500) [note: 'Required for every administrator decision: reject, hide, remove, restore, suspend, reactivate (DEC-088). Not required for contact.close. Never an e-mail address.']
+  details json [note: 'Before and after values of the changed fields only. Never passwords, codes, session ids or full e-mail addresses.']
+  created_at timestamptz(3) [not null, default: `now()`]
+  prev_hash char(64) [not null, note: 'HMAC-SHA-256 (hex) of the previous entry, keyed with a server secret kept out of Git. 64 zeros for the first entry. Encoding: reference doc, admin_audit_log section (DEC-063, DEC-064).']
+
+  indexes {
+    created_at
+    (actor_id, created_at)
+    (target_type, target_id, created_at)
+  }
+  Note: 'Append-only for the application: its database user has INSERT and SELECT only (no UPDATE, no DELETE). The purge job uses a separate maintenance account with DELETE, which removes auth.* rows after 6 months and other rows after 12 months (DEC-027, DEC-059). Ordinary users' logins are in login_events (DEC-060). Entries form a hash chain through prev_hash; verification starts at the oldest kept entry (DEC-063).'
+}
+
+// -----------------------------------------------------------------------------
+// Contact (messages sent to the administrator, DEC-080)
+// -----------------------------------------------------------------------------
+
+Table support_threads {
+  id uuid [pk, default: `gen_random_uuid()`]
+  reference varchar(20) [unique, not null, note: 'Shown to the user. Format CNT-AAAAMMJJ-NNNN.']
+  user_id uuid [not null, ref: > users.id, note: 'Account that wrote to support. Only suspended accounts can open a thread (application rule, DEC-080).']
+  status support_status [not null, default: 'new']
+  created_at timestamptz(3) [not null, default: `now()`]
+  updated_at timestamptz(3) [not null, default: `now()`, note: 'Set by the application on every change (Prisma @updatedAt, DEC-123).']
+  closed_at timestamptz(3)
+  closed_by_id uuid [ref: > users.id, note: 'Administrator who marked the thread as handled.']
+  closed_by_lift boolean [not null, default: false, note: 'True when the suspension lifting closed the thread. A new suspension reopens it and clears the flag (DEC-117).']
+  open_user_id uuid [unique, note: 'Equals user_id while status is new, otherwise null. The unique index lets an account have at most one new thread (DEC-111). Kept up to date by the application on each status change.']
+
+  indexes {
+    (user_id, created_at)
+    status
+    closed_by_id
+  }
+  Note: 'Contact messages sent by suspended accounts (DEC-080). Deleted with the account at purge (DEC-024).'
+}
+
+Table support_messages {
+  id uuid [pk, default: `gen_random_uuid()`]
+  thread_id uuid [not null, ref: > support_threads.id]
+  author_type support_author_type [not null]
+  author_user_id uuid [ref: > users.id, note: 'The user (author_type user) or the administrator (author_type admin).']
+  body varchar(1000) [not null, note: 'Maximum 1000 characters (DEC-080).']
+  sent_at timestamptz(3) [not null, default: `now()`]
+  channel support_channel [not null, default: 'none', note: 'email when the message was also sent by e-mail (administrator replies).']
+
+  indexes {
+    (thread_id, sent_at)
+    author_user_id
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Groups (for the diagram)
+// -----------------------------------------------------------------------------
+
+TableGroup accounts {
+  users
+  signup_codes
+  password_reset_codes
+  email_change_codes
+  age_verifications
+  login_events
+}
+
+TableGroup sessions {
+  sessions
+}
+
+TableGroup social {
+  follows
+  blocks
+  bookmarks
+}
+
+TableGroup content {
+  questions
+  replies
+  question_reactions
+  reply_reactions
+  mentions
+  hashtags
+  question_hashtags
+}
+
+TableGroup messaging {
+  conversations
+  conversation_participants
+  messages
+}
+
+TableGroup activity {
+  notifications
+  notification_preferences
+  reports
+}
+
+TableGroup administration {
+  admin_mfa
+  admin_backup_codes
+  admin_audit_log
+}
+
+TableGroup support {
+  support_threads
+  support_messages
+}
