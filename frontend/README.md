@@ -10,6 +10,7 @@ npm run dev            # http://localhost:3000 (needs the backend on NEXT_PUBLIC
 npm run build && npm start
 npm run lint           # ESLint (flat config, eslint-config-next core-web-vitals + TypeScript)
 npm run typecheck      # tsc --noEmit, strict
+npm test               # Vitest and Testing Library (jsdom)
 npm run format:check   # Prettier (npm run format to write)
 npm run tokens         # regenerate styles/tokens.css from styles/tokens.json
 npm run tokens:check   # fails when tokens.css is out of date

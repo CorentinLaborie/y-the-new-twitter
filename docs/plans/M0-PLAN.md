@@ -103,7 +103,7 @@ These need your decision or your account. Nothing below can start until they're 
 | # | Task | Output | Done when |
 |---|---|---|---|
 | 7.1 | Backend tests | Jest for unit tests, Supertest for HTTP tests, Testcontainers for Node with the PostgreSQL module (DEC-073). `npm test` and `npm run test:e2e` run them. | One sample test per layer passes. |
-| 7.2 | Frontend tests | Vitest, Testing Library. One sample component test. | `npm test` passes. |
+| 7.2 | Frontend tests | Vitest, Testing Library. One sample component test. | `npm test` passes. Done 2026-10-19: Vitest 5.0.5 with Testing Library (React 16.3.3, DOM 10.4.2, jest-dom 7.0.1) and jsdom 30.1.3. Test: `frontend/components/health-status.test.tsx` (three states). `npm test` passes. |
 | 7.3 | End-to-end | Playwright on the three breakpoints (desktop, tablet, mobile). One smoke test (home page loads). | Smoke test passes on all three sizes. |
 | 7.4 | Accessibility | axe in the Playwright smoke test | axe reports no violation on the home page. |
 | 7.5 | E-mail capture | A test mail adapter that records messages instead of sending them (DEC-073). Brevo is never called in tests. | A test sends a message through the adapter and reads it back. No real e-mail is sent. Done 2026-10-19: `MailSender` contract and `CapturingMailSender` (test adapter, refuses production). Brevo not wired (DEC-110). Test: `capturing-mail-sender.spec.ts`. |
