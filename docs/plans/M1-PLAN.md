@@ -140,7 +140,7 @@ Status on 2026-10-19, after the merge of `m1-login` into `main` (fast-forward to
 | B21 purge job (codes expired for 24 hours, expired sessions) | Done: `PurgeModule` imported in `AuthModule`; the daily job is registered when the application starts (`purge-schedule.e2e-spec.ts`) | uncommitted |
 | B21 maintenance role may delete the purged tables | Done: `backend/database/roles.sql` grants DELETE on the four tables; checked with the maintenance role itself, not the superuser (`database-roles.e2e-spec.ts`) | uncommitted |
 | B22 Brevo sender, fails closed without `BREVO_API_KEY` or `MAIL_FROM_ADDRESS` | Partly: wired in production, not called against Brevo (no account yet, DEC-110) | 863979f |
-| B23 French e-mail texts, no code in logs | **Not done** | — |
+| B23 French e-mail texts, no code in logs | Done, tests written: the five account e-mails are French and carry the code and its validity (`mail-texts.spec.ts`); log redaction of `code` and `password` (`logging.options.spec.ts`); no account service or mail module calls a logger (`no-code-in-logs.spec.ts`, the purge job logs counts only). Flow-level log capture is not tested | uncommitted |
 | B24 `openapi.yaml` regenerated, check passes | Done (`openapi:check` OK) | 863979f |
 | B25 configuration keys in validation, `.env.example`, section 15.2 | Partly: `IP_HASH_KEY`, `Y_CODE_TTL_MINUTES` and the new `TRUST_PROXY_HOPS` (default 0, applied with `trust proxy`) are validated and documented; `BREVO_API_KEY` and `MAIL_FROM_ADDRESS` are not validated | uncommitted |
 | B26 unit tests of every service | Partly: 131 tests, but not checked service by service | 863979f |
