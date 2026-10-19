@@ -1,0 +1,63 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  color: var(--color-foreground);
+  font-size: var(--type-supporting-size);
+  line-height: var(--type-supporting-line-height);
+  cursor: pointer;
+}
+
+.box {
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  width: 18px;
+  height: 18px;
+  /* Aligns the box with the first line of the label. */
+  margin: 2px 0 0;
+  box-sizing: border-box;
+  appearance: none;
+  border: 1px solid var(--color-input);
+  border-radius: var(--radius-sm);
+  background: var(--color-card);
+  cursor: pointer;
+}
+
+.box:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.box:checked::after {
+  content: '';
+  width: 9px;
+  height: 5px;
+  margin-top: -2px;
+  border-left: 2px solid var(--color-primary-foreground);
+  border-bottom: 2px solid var(--color-primary-foreground);
+  transform: rotate(-45deg);
+}
+
+.box:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+.invalid .box {
+  border-color: var(--color-destructive);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-destructive-text);
+  font-size: var(--type-supporting-strong-size);
+  line-height: var(--type-supporting-strong-line-height);
+  font-weight: var(--type-supporting-strong-weight);
+}

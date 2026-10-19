@@ -21,13 +21,43 @@ export function readCsrfToken(cookieHeader: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<ApiResult<T>> {
+/**
+ * The token lives in a cookie that the API sets on its first safe (GET) answer. On a fresh visit no such
+ * answer has been received yet, so a safe request is sent first. A network failure here is left to the
+ * mutation itself, which reports it.
+ */
+async function csrfToken(): Promise<string | null> {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  const existing = readCsrfToken(document.cookie);
+  if (existing) {
+    return existing;
+  }
+  try {
+    await fetch(`${API_BASE_URL}/api/v1/status`, { credentials: 'include' });
+  } catch {
+    return null;
+  }
+  return readCsrfToken(document.cookie);
+}
+
+async function request<T>(
+  method: 'GET' | 'POST',
+  path: string,
+  body?: unknown,
+  cookie?: string,
+): Promise<ApiResult<T>> {
   const headers: Record<string, string> = {};
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json';
   }
+  // Server-side calls (the protected area) have no browser cookies: the caller passes the session cookie.
+  if (cookie) {
+    headers['Cookie'] = cookie;
+  }
   if (method !== 'GET') {
-    const token = typeof document === 'undefined' ? null : readCsrfToken(document.cookie);
+    const token = await csrfToken();
     if (token) {
       headers['X-CSRF-Token'] = token;
     }
@@ -82,7 +112,9 @@ export const resendSignupCode = (email: string) =>
 export const login = (email: string, password: string) =>
   request<{ user: ApiUser }>('POST', '/auth/login', { email, password });
 export const logout = () => request<Record<string, never>>('POST', '/auth/logout');
-export const getSession = () => request<{ user: ApiUser | null }>('GET', '/auth/session');
+/** `cookie` is the SESSION cookie of the visitor when the call is made on the server (see requireSession). */
+export const getSession = (cookie?: string) =>
+  request<{ user: ApiUser | null }>('GET', '/auth/session', undefined, cookie);
 export const requestPasswordReset = (email: string) =>
   request<Record<string, never>>('POST', '/auth/password-reset/request', { email });
 export const confirmPasswordReset = (email: string, code: string, password: string) =>

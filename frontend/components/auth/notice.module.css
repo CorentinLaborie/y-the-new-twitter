@@ -1,0 +1,26 @@
+.notice {
+  margin: 0;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-size: var(--type-supporting-size);
+  line-height: var(--type-supporting-line-height);
+}
+
+.notice a {
+  color: inherit;
+  font-weight: var(--type-supporting-strong-weight);
+  text-decoration: underline;
+}
+
+.error {
+  border-color: var(--color-destructive);
+  background: var(--color-card);
+  color: var(--color-destructive-text);
+}
+
+.success {
+  border-color: var(--color-primary);
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
