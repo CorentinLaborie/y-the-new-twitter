@@ -1,5 +1,5 @@
 import { plainToInstance, Type } from 'class-transformer';
-import { IsIn, IsInt, IsNotEmpty, IsString, IsUrl, Min, validateSync } from 'class-validator';
+import { IsEmail, IsIn, IsInt, IsNotEmpty, IsString, IsUrl, Min, ValidateIf, validateSync } from 'class-validator';
 
 export const PROFILES = ['local', 'staging', 'production'] as const;
 export type Profile = (typeof PROFILES)[number];
@@ -44,6 +44,17 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   Y_CODE_TTL_MINUTES!: number;
+
+  /** Brevo (DEC-018). Required in production only, where the Brevo adapter is selected (B22). */
+  @ValidateIf((config: EnvironmentVariables) => config.NODE_ENV === 'production')
+  @IsString()
+  @IsNotEmpty()
+  BREVO_API_KEY?: string;
+
+  /** Sender of every account e-mail. Required with the Brevo key, in production only. */
+  @ValidateIf((config: EnvironmentVariables) => config.NODE_ENV === 'production')
+  @IsEmail()
+  MAIL_FROM_ADDRESS?: string;
 
   /** Reverse proxies in front of the application. 0: no proxy, the socket address is the client (section 9.4). */
   @Type(() => Number)

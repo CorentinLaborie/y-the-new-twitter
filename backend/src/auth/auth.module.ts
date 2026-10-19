@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
 import { PurgeModule } from './purge/purge.module';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
@@ -51,19 +52,16 @@ import { EmailChangeService } from './email-change/email-change.service';
     { provide: APP_GUARD, useClass: SessionGuard },
     {
       provide: MAIL_SENDER,
-      useFactory: () => {
-        if (process.env.NODE_ENV !== 'production') {
+      inject: [ConfigService],
+      // The keys are checked at startup (env.validation.ts): here they are read, never checked again.
+      useFactory: (config: ConfigService) => {
+        if (config.get('NODE_ENV') !== 'production') {
           return new CapturingMailSender();
         }
-        const apiKey = process.env.BREVO_API_KEY;
-        if (!apiKey) {
-          throw new Error('No production mail sender is configured: BREVO_API_KEY is missing (DEC-018).');
-        }
-        const fromAddress = process.env.MAIL_FROM_ADDRESS;
-        if (!fromAddress) {
-          throw new Error('MAIL_FROM_ADDRESS is required when BREVO_API_KEY is set (DEC-018).');
-        }
-        return new BrevoMailSender({ apiKey, fromAddress });
+        return new BrevoMailSender({
+          apiKey: config.getOrThrow<string>('BREVO_API_KEY'),
+          fromAddress: config.getOrThrow<string>('MAIL_FROM_ADDRESS'),
+        });
       },
     },
     { provide: AGE_VERIFIER, useClass: MockAgeVerifier },
