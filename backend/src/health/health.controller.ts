@@ -1,5 +1,6 @@
 import { Controller, Get, UseFilters } from '@nestjs/common';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
+import { Public } from '../auth/session/access.decorators';
 import { DatabaseHealthIndicator } from './database.health';
 import { HealthCheckFilter } from './health-check.filter';
 
@@ -12,6 +13,7 @@ export class HealthController {
     private readonly database: DatabaseHealthIndicator,
   ) {}
 
+  @Public()
   @Get()
   @HealthCheck()
   check() {

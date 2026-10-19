@@ -1,0 +1,15 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../../database/generated/client/client';
+
+/**
+ * The Prisma client on the maintenance account (DATABASE_MAINTENANCE_URL). It is used only by the
+ * purges (section 15.2, DEC-059, DEC-065), and it connects on the first query.
+ */
+@Injectable()
+export class MaintenancePrismaService extends PrismaClient {
+  constructor(config: ConfigService) {
+    super({ adapter: new PrismaPg({ connectionString: config.getOrThrow<string>('DATABASE_MAINTENANCE_URL') }) });
+  }
+}

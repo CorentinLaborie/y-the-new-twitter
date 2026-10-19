@@ -52,6 +52,96 @@ paths:
         "202":
           description: ""
       tags: *a1
+  /api/v1/auth/login:
+    post:
+      operationId: LoginController_login
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginDto"
+      responses:
+        "200":
+          description: ""
+      tags:
+        - Login
+  /api/v1/auth/session:
+    get:
+      operationId: SessionController_current
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: &a2
+        - Session
+  /api/v1/auth/logout:
+    post:
+      operationId: SessionController_logout
+      parameters: []
+      responses:
+        "204":
+          description: ""
+      tags: *a2
+  /api/v1/auth/password-reset/request:
+    post:
+      operationId: PasswordResetController_request
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequestDto"
+      responses:
+        "202":
+          description: ""
+      tags: &a3
+        - PasswordReset
+  /api/v1/auth/password-reset/confirm:
+    post:
+      operationId: PasswordResetController_confirm
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetConfirmDto"
+      responses:
+        "200":
+          description: ""
+      tags: *a3
+  /api/v1/auth/email-change/request:
+    post:
+      operationId: EmailChangeController_request
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailChangeRequestDto"
+      responses:
+        "202":
+          description: ""
+      tags: &a4
+        - EmailChange
+  /api/v1/auth/email-change/confirm:
+    post:
+      operationId: EmailChangeController_confirm
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailChangeConfirmDto"
+      responses:
+        "200":
+          description: ""
+      tags: *a4
   /health:
     get:
       operationId: HealthController_check
@@ -69,7 +159,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a2
+                    example: &a5
                       database:
                         status: up
                     additionalProperties:
@@ -95,7 +185,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a2
+                    example: *a5
                     additionalProperties:
                       type: object
                       required:
@@ -117,7 +207,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a3
+                      database: &a6
                         status: up
                     additionalProperties:
                       type: object
@@ -131,7 +221,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a4
+                      redis: &a7
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -146,8 +236,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a3
-                      redis: *a4
+                      database: *a6
+                      redis: *a7
                     additionalProperties:
                       type: object
                       required:
@@ -174,5 +264,20 @@ components:
       type: object
       properties: {}
     ResendSignupDto:
+      type: object
+      properties: {}
+    LoginDto:
+      type: object
+      properties: {}
+    PasswordResetRequestDto:
+      type: object
+      properties: {}
+    PasswordResetConfirmDto:
+      type: object
+      properties: {}
+    EmailChangeRequestDto:
+      type: object
+      properties: {}
+    EmailChangeConfirmDto:
       type: object
       properties: {}

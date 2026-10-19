@@ -4,21 +4,27 @@ import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { Request } from 'express';
 import request from 'supertest';
 import { configureApp } from '../src/configure-app';
+import { Public } from '../src/auth/session/access.decorators';
 import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
 
 /** Test-only routes that log in, read and log out the session through the real session middleware. */
 @Controller('session-probe')
 class SessionProbeController {
+  @Public()
   @Post('login/:userId')
   login(@Req() req: Request, @Param('userId') userId: string): void {
     req.session.userId = userId;
   }
 
+  @Public()
   @Post('logout')
   logout(@Req() req: Request): Promise<void> {
-    return new Promise((resolve, reject) => req.session.destroy((error) => (error ? reject(error) : resolve())));
+    return new Promise((resolve, reject) =>
+      req.session.destroy((error) => (error ? reject(error) : resolve())),
+    );
   }
 
+  @Public()
   @Get('me')
   me(@Req() req: Request): { userId: string | null } {
     return { userId: req.session.userId ?? null };
@@ -60,7 +66,10 @@ describe('Sessions on the sessions table (e2e)', () => {
   }
 
   async function countSessionsOf(user: string): Promise<string> {
-    const result = await runAsSuperuser(container, `SELECT count(*) FROM sessions WHERE user_id = '${user}';`);
+    const result = await runAsSuperuser(
+      container,
+      `SELECT count(*) FROM sessions WHERE user_id = '${user}';`,
+    );
     return result.stdout.trim();
   }
 
@@ -87,9 +96,14 @@ describe('Sessions on the sessions table (e2e)', () => {
   it('a login creates one row in the sessions table, with an HTTP-only cookie', async () => {
     const token = await csrfToken();
 
-    const login = await agent.post(`/api/v1/session-probe/login/${userId}`).set('x-csrf-token', token).expect(201);
+    const login = await agent
+      .post(`/api/v1/session-probe/login/${userId}`)
+      .set('x-csrf-token', token)
+      .expect(201);
 
-    const cookie = (login.headers['set-cookie'] as unknown as string[]).find((value) => value.startsWith('SESSION='));
+    const cookie = (login.headers['set-cookie'] as unknown as string[]).find((value) =>
+      value.startsWith('SESSION='),
+    );
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('SameSite=Lax');
     expect(await countSessionsOf(userId)).toBe('1');

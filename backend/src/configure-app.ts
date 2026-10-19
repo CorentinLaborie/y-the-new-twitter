@@ -13,7 +13,12 @@ export function configureApp(app: INestApplication): void {
   const config = app.get(ConfigService);
 
   app.use(helmet());
-  app.enableCors({ origin: config.getOrThrow<string>('APP_PUBLIC_URL'), credentials: true });
+  // Retry-After must be readable by the browser to show the lock delay (section 9.4).
+  app.enableCors({
+    origin: config.getOrThrow<string>('APP_PUBLIC_URL'),
+    credentials: true,
+    exposedHeaders: ['Retry-After'],
+  });
   app.use(
     session({
       name: 'SESSION',
