@@ -142,13 +142,13 @@ Status on 2026-10-19, after the merge of `m1-login` into `main` (fast-forward to
 | B22 Brevo sender, fails closed without `BREVO_API_KEY` or `MAIL_FROM_ADDRESS` | Partly: wired in production, not called against Brevo (no account yet, DEC-110) | 863979f |
 | B23 French e-mail texts, no code in logs | Done, tests written: the five account e-mails are French and carry the code and its validity (`mail-texts.spec.ts`); log redaction of `code` and `password` (`logging.options.spec.ts`); no account service or mail module calls a logger (`no-code-in-logs.spec.ts`, the purge job logs counts only). Flow-level log capture is not tested | uncommitted |
 | B24 `openapi.yaml` regenerated, check passes | Done (`openapi:check` OK) | 863979f |
-| B25 configuration keys in validation, `.env.example`, section 15.2 | Partly: `IP_HASH_KEY`, `Y_CODE_TTL_MINUTES` and the new `TRUST_PROXY_HOPS` (default 0, applied with `trust proxy`) are validated and documented; `BREVO_API_KEY` and `MAIL_FROM_ADDRESS` are not validated | uncommitted |
-| B26 unit tests of every service | Partly: 131 tests, but not checked service by service | 863979f |
-| B27 integration tests on PostgreSQL (signup, lock, reset, e-mail change, purge) | Partly: e2e covers these flows; not checked line by line against the B27 list | 863979f |
+| B25 configuration keys in validation, `.env.example`, section 15.2 | Done: all keys are validated at startup, including `TRUST_PROXY_HOPS` (default 0) and, in production only, `BREVO_API_KEY` and `MAIL_FROM_ADDRESS` (a valid e-mail address). Checked: production without the key refuses to start, and names the key only | uncommitted |
+| B26 unit tests of every service | Done: every auth service and guard has a unit spec (checked by listing the files). Repositories and the session store are covered by the PostgreSQL integration tests instead | 863979f |
+| B27 integration tests on PostgreSQL (signup, lock, reset, e-mail change, purge) | Done: each case of the B27 list has an e2e test (`signup`, `login`, `password-reset`, `email-change`, `auth-rate-limit`, `purge`, `database-roles`) | 863979f |
 | F1 read the `Auth-*` boards | Done | — |
 | F2 to F13 frontend: components, API client, signup, code, login, forgot password, session route, protected area, French messages, Vitest, Playwright, axe | Done (axe on the four auth screens, Playwright on three viewports) | d86e0a5 |
-| X1 journal entries for each decision of the build | **Partly**: the integration decisions (login duplicate, CSRF fetch, SESSION cookie forwarding, Suspense, age order superseding DEC-142) are not yet in the journal | — |
-| X2 product doc: sections 9.2, 13, 15.2 | **Not checked** in this update | — |
+| X1 journal entries for each decision of the build | Done: DEC-147 to DEC-157 added (login duplicate, redirect, CSRF fetch, SESSION cookie, Suspense, age order, rate limits, proxy hops, purge rights, Brevo keys, no code in logs); DEC-142 marked as partly replaced by DEC-152 | uncommitted |
+| X2 product doc: sections 9.2, 13, 15.2 | Done: CSRF cookie name corrected in section 13 (`y_csrf`, not `XSRF-TOKEN`); `GET /auth/session` added to 9.2; `SESSION` cookie named, `Secure` outside local; section 15.2 lists the new keys | uncommitted |
 | X3 this plan updated after each step | Done (this update) | — |
 | X4 exit: e2e signup and login green, rate limits active and tested | **Partly met**: e2e green (backend 89, frontend 72) and rate limits active and tested; M1 is not closed until B23, the Brevo keys (B25) and X1 and X2 are done | — |
 
@@ -159,4 +159,4 @@ Status on 2026-10-19, after the merge of `m1-login` into `main` (fast-forward to
 3. Done: maintenance role granted DELETE on `signup_codes`, `password_reset_codes`, `email_change_codes` and `sessions`, tested without the superuser (B21).
 4. Add `BREVO_API_KEY` and `MAIL_FROM_ADDRESS` to the environment validation (B25).
 5. French e-mail texts and the "no code in logs" test (B23).
-6. Journal entries for the integration decisions, and check the product doc sections 9.2, 13 and 15.2 (X1, X2).
+6. Done: journal entries for the integration decisions, and the product doc sections 9.2, 13 and 15.2 checked (X1, X2).

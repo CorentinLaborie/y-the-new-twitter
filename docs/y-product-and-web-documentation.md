@@ -534,6 +534,7 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 | POST | `/auth/signup/resend` | Send a new signup code |
 | POST | `/auth/login` | Log in with email and password (phone login is out of v1, D2) |
 | POST | `/auth/logout` | End the session |
+| GET | `/auth/session` | Tell whether a user is logged in (anonymous visitors get 200 with no user) |
 | POST | `/auth/password-reset/request` | Send a reset code |
 | POST | `/auth/password-reset/confirm` | Validate the code and set a new password |
 | POST | `/auth/email-change/request` | Send a code to the new address |
@@ -903,8 +904,8 @@ Each screen below exists on desktop, tablet and mobile (rule R5). Only its conta
 | Passwords | Hashed with Argon2id (argon2 package). Never logged. |
 | Codes | 6 digits, stored **hashed**, with expiry and attempt counters. Consumed once. |
 | Brute force | Limit wrong codes and failed logins per account and per IP. Return 429 when exceeded. Add rate limiting (@nestjs/throttler) in milestone M1. |
-| Sessions | HTTP-only, Secure, SameSite=Lax cookie. Regenerate the session ID on login. Expire idle sessions. |
-| CSRF | Enabled for all mutations, with a double-submit token. The frontend sends the token from the `XSRF-TOKEN` cookie. |
+| Sessions | HTTP-only, SameSite=Lax cookie named `SESSION`, Secure outside the local profile. Regenerate the session ID on login. Expire idle sessions. |
+| CSRF | Enabled for all mutations, with a double-submit token (DEC-138). The cookie is `y_csrf` and the header is `X-CSRF-Token`. The frontend reads the cookie, and first makes a safe request to `/api/v1/status` when the cookie is missing (DEC-149). |
 | CORS | Allow only the frontend origin. |
 | Input | Validate every request DTO. Escape user content on render (React does this by default). Never render raw HTML from users. |
 | Age | 18+ at signup. VerifAge is the source of the age decision. Store the provider reference, never identity documents. |
@@ -994,7 +995,7 @@ The names are the ones used in the code (`backend/src/config/env.validation.ts`)
 | `AUDIT_HMAC_KEY` / `IP_HASH_KEY` | Secret keys for the audit chain and for hashed IP addresses (DEC-065) |
 | `BACKUP_CODE_HMAC_KEY` | Secret key for the HMAC of the administrator backup codes (DEC-114) |
 | `SESSION_SECRET` | Secret that signs the session cookie (DEC-131). Never committed |
-| `BREVO_API_KEY` / `MAIL_FROM_ADDRESS` | Email provider: Brevo, free plan, 300 e-mails a day, through its API and official SDK (DEC-018) |
+| `BREVO_API_KEY` / `MAIL_FROM_ADDRESS` | Email provider: Brevo, free plan, 300 e-mails a day, through its API (DEC-018). Required in production, checked at startup; `MAIL_FROM_ADDRESS` must be an address of a domain validated in Brevo. Outside production, e-mails are captured, not sent |
 | `ADMIN_ALERT_EMAIL` | Address for the administrator's login alerts and daily summary |
 | `VERIFAGE_BASE_URL` / `VERIFAGE_API_KEY` | Age verification service |
 | `APP_PUBLIC_URL` | Public URL of the frontend (links in emails, CORS) |
@@ -1002,7 +1003,7 @@ The names are the ones used in the code (`backend/src/config/env.validation.ts`)
 | `Y_CONVERSATION_THRESHOLD` | Number of Y that opens a conversation (default `50`) |
 | `Y_CODE_TTL_MINUTES` | Validity of the signup and reset codes, in minutes (default `15`) |
 
-At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `SESSION_SECRET`, `APP_PUBLIC_URL`, `TRUST_PROXY_HOPS`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`. A missing or invalid value stops the start, and only its name is printed. The e-mail and VerifAge keys are not checked yet: they come with their steps (M1).
+At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `SESSION_SECRET`, `APP_PUBLIC_URL`, `TRUST_PROXY_HOPS`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`, and in production also `BREVO_API_KEY` and `MAIL_FROM_ADDRESS`. A missing or invalid value stops the start, and only its name is printed. The e-mail and VerifAge keys are not checked yet: they come with their steps (M1).
 | `Y_CODE_TTL_MINUTES` | Lifetime of codes (default `15`, D8) |
 
 ---
