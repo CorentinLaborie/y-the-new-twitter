@@ -9,6 +9,49 @@ paths:
           description: ""
       tags:
         - App
+  /api/v1/auth/signup:
+    post:
+      operationId: SignupController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupDto"
+      responses:
+        "202":
+          description: ""
+      tags: &a1
+        - Signup
+  /api/v1/auth/signup/verify:
+    post:
+      operationId: SignupController_verify
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifySignupDto"
+      responses:
+        "200":
+          description: ""
+      tags: *a1
+  /api/v1/auth/signup/resend:
+    post:
+      operationId: SignupController_resend
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendSignupDto"
+      responses:
+        "202":
+          description: ""
+      tags: *a1
   /health:
     get:
       operationId: HealthController_check
@@ -26,7 +69,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a1
+                    example: &a2
                       database:
                         status: up
                     additionalProperties:
@@ -52,7 +95,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a1
+                    example: *a2
                     additionalProperties:
                       type: object
                       required:
@@ -74,7 +117,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a2
+                      database: &a3
                         status: up
                     additionalProperties:
                       type: object
@@ -88,7 +131,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a3
+                      redis: &a4
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -103,8 +146,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a2
-                      redis: *a3
+                      database: *a3
+                      redis: *a4
                     additionalProperties:
                       type: object
                       required:
@@ -123,4 +166,13 @@ info:
 tags: []
 servers: []
 components:
-  schemas: {}
+  schemas:
+    SignupDto:
+      type: object
+      properties: {}
+    VerifySignupDto:
+      type: object
+      properties: {}
+    ResendSignupDto:
+      type: object
+      properties: {}

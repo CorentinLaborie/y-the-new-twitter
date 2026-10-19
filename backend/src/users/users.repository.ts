@@ -1,5 +1,9 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../database/prisma.service";
+import { Injectable } from '@nestjs/common';
+import type { Prisma } from '../database/generated/client/client';
+import { PrismaService } from '../database/prisma.service';
+
+/** The Prisma client or a transaction opened by a caller. */
+export type UsersDb = Prisma.TransactionClient;
 
 export interface NewUser {
   handle: string;
@@ -27,12 +31,12 @@ export class UsersRepository {
   /** Handles are unique regardless of case (DEC-061). */
   findByHandle(handle: string) {
     return this.prisma.user.findFirst({
-      where: { handle: { equals: handle, mode: "insensitive" } },
+      where: { handle: { equals: handle, mode: 'insensitive' } },
     });
   }
 
-  create(user: NewUser) {
-    return this.prisma.user.create({
+  create(user: NewUser, db: UsersDb = this.prisma) {
+    return db.user.create({
       data: {
         handle: user.handle,
         displayName: user.displayName,
@@ -40,10 +44,18 @@ export class UsersRepository {
         passwordHash: user.passwordHash,
         birthDate: user.birthDate,
         phone: user.phone,
-        status: "pending_verification",
+        status: 'pending_verification',
         termsAcceptedAt: user.termsAcceptedAt,
         termsVersion: user.termsVersion,
       },
+    });
+  }
+
+  /** Moves the account to active once its e-mail is verified (section 3.2). */
+  activate(db: UsersDb, userId: string, at: Date) {
+    return db.user.update({
+      where: { id: userId },
+      data: { status: 'active', emailVerifiedAt: at, statusChangedAt: at },
     });
   }
 }

@@ -2,6 +2,11 @@ import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
 import { CapturingMailSender } from '../common/mail/capturing-mail-sender';
 import { MAIL_SENDER } from '../common/mail/mail-sender';
+import { AGE_VERIFIER, MockAgeVerifier } from './age-verifier';
+import { SignupController } from './signup/signup.controller';
+import { SignupService } from './signup/signup.service';
+import { SignupCodesRepository } from './signup/signup-codes.repository';
+import { SignupActivationRepository } from './signup/signup-activation.repository';
 
 /**
  * Account flows (M1). Controllers and services of each flow are registered here.
@@ -10,7 +15,7 @@ import { MAIL_SENDER } from '../common/mail/mail-sender';
  */
 @Module({
   imports: [UsersModule],
-  controllers: [],
+  controllers: [SignupController],
   providers: [
     {
       provide: MAIL_SENDER,
@@ -21,6 +26,10 @@ import { MAIL_SENDER } from '../common/mail/mail-sender';
         return new CapturingMailSender();
       },
     },
+    { provide: AGE_VERIFIER, useClass: MockAgeVerifier },
+    SignupService,
+    SignupCodesRepository,
+    SignupActivationRepository,
   ],
   exports: [MAIL_SENDER],
 })
