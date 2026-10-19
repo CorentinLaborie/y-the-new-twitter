@@ -14,6 +14,53 @@ Monorepo for the Y social application: a NestJS backend, a Next.js frontend, the
 
 Start with [`docs/README.md`](docs/README.md) for the index of the documentation.
 
+## Getting started
+
+Requirements: Node.js 24 LTS, npm, and Docker with the Compose plugin. The frontend is not set up yet.
+
+### Database
+
+```bash
+docker compose up -d postgres        # PostgreSQL 18.6 on 127.0.0.1:5434
+```
+
+### Backend (port 8080)
+
+```bash
+cp .env.example backend/.env         # fill every secret locally, with openssl rand -hex 32; never commit .env
+cd backend
+npm install
+set -a; . ./.env; set +a             # the Prisma CLI reads DATABASE_URL from the environment
+npx prisma migrate deploy            # applies the migrations
+npm run db:seed                      # optional: fictional data for local development
+npm run build && npm start           # then: curl localhost:8080/health
+```
+
+The backend refuses to start when a required secret is missing, and prints only the name of the key.
+
+### Tests and checks
+
+```bash
+cd backend
+npm run lint && npm test             # unit tests (no Docker needed)
+npm run test:e2e                     # end-to-end and migration tests: Docker must run
+npm run openapi:check                # the API contract matches backend/openapi.yaml
+npm run security:code                # Semgrep, through Docker
+npm run security:dependencies        # Dependency-Check, through Docker; set NVD_API_KEY in the environment (optional, slow without it)
+```
+
+The contract is changed on purpose: `npm run openapi:export`, then commit `backend/openapi.yaml` with the API change.
+
+### Database roles
+
+Once per environment, after the migrations, as the database owner. See `docs/y-product-and-web-documentation.md`, section 10.3.
+
+```bash
+psql -U <owner> -d <db> -v db=<db> -v app_password=… -v maintenance_password=… -v backup_password=… -f backend/database/roles.sql
+```
+
+Further reading: [docs index](docs/README.md), [rollback procedure](docs/operations.md), [product doc](docs/y-product-and-web-documentation.md).
+
 ## Contribution rules
 
 - The branch `main` is the trunk. Work happens on short-lived branches.

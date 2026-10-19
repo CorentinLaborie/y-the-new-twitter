@@ -8,6 +8,8 @@ Index of the project documentation.
 | [Stack overview (French)](stack-expliquee-simplement.md) | Anyone new to the project | The technologies explained in plain language, with a restaurant analogy |
 | [Database schema](database/y-database.dbml) | Backend and database developers | Schema source of truth (version 0.9, PostgreSQL), in DBML. Open it with any DBML viewer, such as dbdiagram.io |
 | [Database column reference](database/y-database-documentation.md) | Backend and database developers | Every table and column, its type, keys, defaults and meaning |
+| [Schema review (2026-10-19)](database/schema-review-2026-10-19.md) | Backend and database developers | Column-by-column check of the first migration against the column reference: no mismatch |
+| [API contract](../backend/openapi.yaml) | Frontend and API consumers | The OpenAPI document generated from the code. Changed on purpose with `npm run openapi:export` |
 | [Decision journal](decisions/journal-decisions.md) | Whole team | Every decision (DEC-001 onward): status, reason, alternatives, when to revisit |
 | [Operations: rollback procedure](operations.md) | Whoever deploys the backend | Previous image, database dump before each deploy, corrective migrations, restore to a new database. Target procedure: staging and backups come with M0 steps 9 to 12 |
 | [M0 plan](plans/M0-PLAN.md) | Whoever builds the foundations | Step-by-step plan for M0, sorted by area and order |
@@ -25,4 +27,4 @@ The design source is in [`../design/`](../design/STATUS.md). The design system, 
 
 ## Status
 
-The product document is at version 0.10 and the schema at version 0.9 (October 2026). The stack is NestJS (TypeScript) on PostgreSQL (DEC-069, DEC-070). The design is in `y/design/` (the design system is in `design-system/`, shared across sites). Decisions D1 to D13 and the later decisions are recorded in the decision journal. Open points are listed in the product doc (section 19) and in the M0 plan. Items marked **TO CONFIRM** are still open.
+The product document is at version 0.10 and the schema at version 0.9 (October 2026). Getting started (services, tests, checks) is in the root README. The stack is NestJS (TypeScript) on PostgreSQL (DEC-069, DEC-070). The design is in `y/design/` (the design system is in `design-system/`, shared across sites). Decisions D1 to D13 and the later decisions are recorded in the decision journal. Open points are listed in the product doc (section 19) and in the M0 plan. Items marked **TO CONFIRM** are still open.

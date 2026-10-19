@@ -7,7 +7,7 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "lint": "eslint .",
-    "db:seed": "prisma db seed",
+    "db:seed": "npm run build && prisma db seed",
     "openapi:export": "npm run build && node dist/openapi/export-openapi.js export",
     "openapi:check": "npm run build && node dist/openapi/export-openapi.js check",
     "security:code": "docker run --rm -v \"$(pwd):/src\" -w /src semgrep/semgrep@sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b semgrep scan --metrics=off --error --config p/owasp-top-ten --config p/typescript --config p/nodejs --exclude src/database/generated --exclude dist --exclude node_modules --exclude test .",

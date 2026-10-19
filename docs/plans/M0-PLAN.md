@@ -173,10 +173,10 @@ These need your decision or your account. Nothing below can start until they're 
 
 | # | Task | Output | Done when |
 |---|---|---|---|
-| 14.1 | Pinned versions | Exact patch versions recorded in the product doc section 5 and in the journal (DEC-069, DEC-070, DEC-072) | Versions recorded. |
-| 14.2 | Repository README | How to start each service, how to run tests, the migration rule | README reads well to a new developer. |
-| 14.3 | Index | `docs/README.md` lists the new files | Index updated. |
-| 14.4 | Status | Notion task statuses and the "Build progress" notes updated after each phase, if the workspace is still used | Statuses match the work. |
+| 14.1 | Pinned versions | Exact patch versions recorded in the product doc section 5 and in the journal (DEC-069, DEC-070, DEC-072) | Versions recorded. Done 2026-10-19: exact versions in the product doc section 5 and in DEC-134. |
+| 14.2 | Repository README | How to start each service, how to run tests, the migration rule | README reads well to a new developer. Done 2026-10-19: root README has a getting-started guide (services, tests, checks, roles) and the migration rule. |
+| 14.3 | Index | `docs/README.md` lists the new files | Index updated. Done 2026-10-19: the index lists the schema review, the API contract, the operations procedure and the journal. |
+| 14.4 | Status | Notion task statuses and the "Build progress" notes updated after each phase, if the workspace is still used | Statuses match the work. Not applicable: Notion is not used for this plan. |
 
 ---
 

@@ -298,14 +298,14 @@ flowchart LR
 | Complex queries | Prisma `$queryRaw` (typed), or Kysely | Optional, from milestone M4 | Feed, trends and counters with hand-written SQL. |
 | Migrations | Prisma Migrate | Matches Prisma 7 | Plain SQL migrations in `backend/prisma/migrations/`, applied by `prisma migrate deploy` (DEC-072). |
 | Database | PostgreSQL | **18.6**, pinned by digest at scaffold (DEC-070, DEC-126) | Supports the schema: `uuid`, `timestamptz`, `json`, expression indexes, full-text search. |
-| Password hashing | argon2 (Argon2id) | Current, pinned at scaffold | Section 13. |
+| Password hashing | argon2 (Argon2id) | Pinned with the auth module (M1). Not installed yet | Section 13. |
 | Security headers | Helmet | Current, pinned at scaffold | Standard HTTP security headers. |
-| CSRF | Double-submit token (for example the `csrf-csrf` package) | Current, pinned at scaffold | Section 13. |
+| CSRF | Double-submit token, written in the application (`CsrfGuard`, M0 step 3.10). No package | Done | Section 13. |
 | Rate limiting | @nestjs/throttler | Current, pinned at scaffold | Section 9.4. Login counters are kept in the database (DEC-040). |
 | API docs | @nestjs/swagger | Matches NestJS | Generates OpenAPI from decorators and DTOs. |
 | Health | @nestjs/terminus | Matches NestJS | Health endpoint `/health`. |
 | Logs | pino (nestjs-pino) | Current, pinned at scaffold | Structured JSON logs with a request ID. |
-| Scheduled jobs | @nestjs/schedule | Matches NestJS | Retention jobs (section 13, DEC-068). |
+| Scheduled jobs | @nestjs/schedule | Pinned with the first retention job (M1). Not installed yet | Retention jobs (section 13, DEC-068). |
 | Package manager | npm | With `package-lock.json`, pinned at scaffold | Same tool as the frontend. |
 | Backend tests | Jest, Supertest, Testcontainers for Node (PostgreSQL module) | Current, pinned at scaffold | Unit tests with Jest, HTTP tests with Supertest, real PostgreSQL in integration tests (DEC-073). |
 | Frontend framework | Next.js (App Router) | **16.2.11** or later (security release of 20 July 2026). Pin at scaffold (M0) | Server rendering for public pages. |
@@ -317,7 +317,16 @@ flowchart LR
 | End-to-end tests | Playwright | Current | Critical flows on all three breakpoints. |
 | Containers | Docker, Docker Compose | Current | Local PostgreSQL and production images. |
 | CI | GitHub Actions | — | Build, test and lint on every pull request. |
-| E-mail | Brevo (free plan), official SDK | 300 e-mails a day; API and SDK included | Codes, security e-mails and the daily digest (R18, DEC-018, DEC-041). |
+| E-mail | Brevo (free plan), official SDK | 300 e-mails a day; API and SDK included. On hold (DEC-110), not installed | Codes, security e-mails and the daily digest (R18, DEC-018, DEC-041). |
+
+**Pinned versions (2026-10-19, as in the repository; DEC-134)**
+
+- **Node.js:** 24.10.0 locally. `engines` is `>=24`. The exact container pin comes with the image (M0 steps 9 and 10).
+- **Backend framework and libraries:** `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express` and `@nestjs/testing` 11.2.7 · `@nestjs/config` 4.0.4 · `@nestjs/swagger` 11.4.7 · `@nestjs/terminus` 11.1.1 · `@nestjs/throttler` 6.7.1 · `nestjs-pino` 4.6.1 · `helmet` 8.3.0 · `class-validator` 0.15.1 · `class-transformer` 0.5.1 · `express` 5.2.1 (installed with NestJS) · `express-session` 1.19.0 (types 1.19.0) · `rxjs` 7.8.2 · `reflect-metadata` 0.2.2
+- **Persistence:** `prisma`, `@prisma/client` and `@prisma/adapter-pg` 7.10.1 · PostgreSQL 18.6, image pinned by digest (DEC-126)
+- **Tooling:** TypeScript 5.9.3 · `@types/node` 24.19.2 · ESLint 9.39.5 · typescript-eslint 8.71.2 · Jest 30.5.2 · ts-jest 29.4.15 · Supertest 7.3.1 · `@testcontainers/postgresql` 12.2.1 · `openapi-diff` 0.24.1 · `yaml` 2.9.1
+- **Security scans:** Semgrep image 1.179.0 and OWASP Dependency-Check image 12.2.2, both pinned by digest (M0 step 7.7)
+- **Not installed yet:** argon2 (M1, auth), @nestjs/schedule (M1, first job), Brevo (on hold, DEC-110), and the frontend stack (Next.js, React, Vitest, Playwright, from M0 step 6)
 
 ---
 
