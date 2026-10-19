@@ -11,6 +11,7 @@ npm run build && npm start
 npm run lint           # ESLint (flat config, eslint-config-next core-web-vitals + TypeScript)
 npm run typecheck      # tsc --noEmit, strict
 npm test               # Vitest and Testing Library (jsdom)
+npm run test:e2e       # Playwright, Chromium, desktop/tablet/mobile (builds and starts the app itself; first run: npx playwright install chromium)
 npm run format:check   # Prettier (npm run format to write)
 npm run tokens         # regenerate styles/tokens.css from styles/tokens.json
 npm run tokens:check   # fails when tokens.css is out of date
