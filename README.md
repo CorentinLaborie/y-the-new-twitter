@@ -21,3 +21,9 @@ Start with [`docs/README.md`](docs/README.md) for the index of the documentation
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/), for example `chore: scaffold monorepo`.
 - Every change reaches `main` through a pull request with one approving review.
 - Commits are made only when the owner asks for them.
+
+## Database migrations
+
+- Migrations live in `backend/prisma/migrations/`. Never edit a migration that has been applied on any environment; fix a mistake with a new migration.
+- Migrations are forward-only. A rollback is a new corrective migration that reverses the change (DEC-056), never an edited or deleted folder.
+- Workflow and details: [product doc, section 10](docs/y-product-and-web-documentation.md#10-database).

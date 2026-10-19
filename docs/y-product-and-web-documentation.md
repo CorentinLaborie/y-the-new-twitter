@@ -683,6 +683,11 @@ Rate limits protect accounts and codes. Content actions (posting, reacting, repl
 4. Add an integration test that runs the migrations on a fresh PostgreSQL (Testcontainers).
 5. Update `y-database-documentation.md` by hand so that its column lists and notes match the DBML.
 
+### 10.2 Migration rules
+
+- **Never edit an applied migration.** A migration is applied once it has run on any environment (local, staging or production). A mistake in it is fixed by a new migration.
+- **Forward-only.** There is no down migration. A rollback is a new corrective migration that reverses the change (DEC-056).
+
 ---
 
 ## 11. Frontend conventions
