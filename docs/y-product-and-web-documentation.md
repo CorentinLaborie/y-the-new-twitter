@@ -998,10 +998,11 @@ The names are the ones used in the code (`backend/src/config/env.validation.ts`)
 | `ADMIN_ALERT_EMAIL` | Address for the administrator's login alerts and daily summary |
 | `VERIFAGE_BASE_URL` / `VERIFAGE_API_KEY` | Age verification service |
 | `APP_PUBLIC_URL` | Public URL of the frontend (links in emails, CORS) |
+| `TRUST_PROXY_HOPS` | Reverse proxies in front of the API (default `0`). Behind one proxy that sets `X-Forwarded-For`, set `1`: the rate limits of section 9.4 are then per visitor, not per proxy |
 | `Y_CONVERSATION_THRESHOLD` | Number of Y that opens a conversation (default `50`) |
 | `Y_CODE_TTL_MINUTES` | Validity of the signup and reset codes, in minutes (default `15`) |
 
-At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `SESSION_SECRET`, `APP_PUBLIC_URL`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`. A missing or invalid value stops the start, and only its name is printed. The e-mail and VerifAge keys are not checked yet: they come with their steps (M1).
+At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `SESSION_SECRET`, `APP_PUBLIC_URL`, `TRUST_PROXY_HOPS`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`. A missing or invalid value stops the start, and only its name is printed. The e-mail and VerifAge keys are not checked yet: they come with their steps (M1).
 | `Y_CODE_TTL_MINUTES` | Lifetime of codes (default `15`, D8) |
 
 ---

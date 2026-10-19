@@ -125,18 +125,38 @@ Rules: the handle is ASCII, 30 characters at most, unique regardless of case. Th
 
 ## Progress
 
+Status on 2026-10-19, after the merge of `m1-login` into `main` (fast-forward to `d86e0a5`, pushed). Checked against the code and the test runs: 131 backend unit tests, 83 backend e2e, 99 frontend unit tests, 72 frontend e2e (9 of them against the real backend).
+
 | Step | Status | Commit |
 |---|---|---|
-| Decisions DEC-136 to DEC-141 | Done | — |
-| B1 argon2 0.45.1 installed, build OK on Node 24 | Done, not committed | — |
-| B2 password policy DEC-136 and argon2id service | Done, not committed | — |
-| B3 verification codes (argon2, 5 attempts) | Done, not committed | — |
-| B4 users repository (PostgreSQL integration tests) | Done, not committed | — |
-| B5 input rules, signup DTO, French phone, adult check | Done, not committed | — |
-| B6 errors: covered by the existing Problem Details filter (no new code) | Done, not committed | — |
-| B7 to B10 signup: create, verify, resend, age check (DEC-142 applied: single writer, one transaction, minors refused at signup, R7) | Integrated, tests green (55 unit, 46 e2e), not committed | — |
-| B11 to B15 login and session | Agent report received, to integrate | — |
-| B16 to B19 password reset and e-mail change | Agent report received, to integrate | — |
-| B20 to B22 rate limits, Brevo, purge | Agent report received, to integrate (roles.sql grants to fix) | — |
-| F1 to F13 frontend | Agent reports received, to integrate | — |
-| B23, B25, B26, B27, X1 to X4 | Not started | — |
+| Decisions DEC-136 to DEC-146 | Done (journal entries for the build decisions, see X1) | c13466f |
+| B1 to B6 foundations: argon2id, codes, users repository, input rules, errors | Done | db199fa |
+| B7 to B10 signup: create, verify, resend, age check | Done (DEC-142 applied, then superseded for the age order: see X1) | b105cd1 |
+| B11 login and session (lock rule DEC-143, session ID regenerated, logout) | Done | 863979f |
+| B14 session ID regenerated at login | Done (`regenerate` before the user is stored) | 863979f |
+| B15 logout destroys the session | Done (route in openapi.yaml) | 863979f |
+| B16 to B19 password reset and e-mail change (409 when the address is taken) | Done | 863979f |
+| B20 rate limits of section 9.4 on each security endpoint (login 20 per 15 minutes; signup 5 per hour; code requests 10 per hour; code checks 20 per hour; 429 with `Retry-After`) | Done: decorator on the nine security routes, tested over HTTP and in the application (`auth-rate-limit.e2e-spec.ts`). Behind a proxy the client address needs `TRUST_PROXY_HOPS` (see B25) | uncommitted |
+| B21 purge job (codes expired for 24 hours, expired sessions) | Done: `PurgeModule` imported in `AuthModule`; the daily job is registered when the application starts (`purge-schedule.e2e-spec.ts`) | uncommitted |
+| B21 maintenance role may delete the purged tables | Done: `backend/database/roles.sql` grants DELETE on the four tables; checked with the maintenance role itself, not the superuser (`database-roles.e2e-spec.ts`) | uncommitted |
+| B22 Brevo sender, fails closed without `BREVO_API_KEY` or `MAIL_FROM_ADDRESS` | Partly: wired in production, not called against Brevo (no account yet, DEC-110) | 863979f |
+| B23 French e-mail texts, no code in logs | **Not done** | — |
+| B24 `openapi.yaml` regenerated, check passes | Done (`openapi:check` OK) | 863979f |
+| B25 configuration keys in validation, `.env.example`, section 15.2 | Partly: `IP_HASH_KEY`, `Y_CODE_TTL_MINUTES` and the new `TRUST_PROXY_HOPS` (default 0, applied with `trust proxy`) are validated and documented; `BREVO_API_KEY` and `MAIL_FROM_ADDRESS` are not validated | uncommitted |
+| B26 unit tests of every service | Partly: 131 tests, but not checked service by service | 863979f |
+| B27 integration tests on PostgreSQL (signup, lock, reset, e-mail change, purge) | Partly: e2e covers these flows; not checked line by line against the B27 list | 863979f |
+| F1 read the `Auth-*` boards | Done | — |
+| F2 to F13 frontend: components, API client, signup, code, login, forgot password, session route, protected area, French messages, Vitest, Playwright, axe | Done (axe on the four auth screens, Playwright on three viewports) | d86e0a5 |
+| X1 journal entries for each decision of the build | **Partly**: the integration decisions (login duplicate, CSRF fetch, SESSION cookie forwarding, Suspense, age order superseding DEC-142) are not yet in the journal | — |
+| X2 product doc: sections 9.2, 13, 15.2 | **Not checked** in this update | — |
+| X3 this plan updated after each step | Done (this update) | — |
+| X4 exit: e2e signup and login green, rate limits active and tested | **Partly met**: e2e green (backend 89, frontend 72) and rate limits active and tested; M1 is not closed until B23, the Brevo keys (B25) and X1 and X2 are done | — |
+
+## Gaps to close before M1 is complete
+
+1. Done: rate-limit decorator on the security endpoints (B20), tested with a 429 and `Retry-After`.
+2. Done: `PurgeModule` imported, and the registration of the daily job tested (B21).
+3. Done: maintenance role granted DELETE on `signup_codes`, `password_reset_codes`, `email_change_codes` and `sessions`, tested without the superuser (B21).
+4. Add `BREVO_API_KEY` and `MAIL_FROM_ADDRESS` to the environment validation (B25).
+5. French e-mail texts and the "no code in logs" test (B23).
+6. Journal entries for the integration decisions, and check the product doc sections 9.2, 13 and 15.2 (X1, X2).
