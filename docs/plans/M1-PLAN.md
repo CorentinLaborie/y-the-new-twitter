@@ -20,6 +20,25 @@ Exit criteria (roadmap, section 18): end-to-end signup and login tests pass; rat
 | Settings screens | Endpoints in M1, screens in M7 | DEC-140 |
 | Rate limits and Brevo | Account counters in the database, IP limits in memory; Brevo adapter tested with a fake HTTP, never called locally | DEC-141 |
 
+## API contract (M1)
+
+Base path `/api/v1`. Errors are Problem Details (`application/problem+json`). Cookies: `SESSION` (HTTP-only, SameSite=Lax) and `y_csrf` (read by the frontend, sent back as `X-CSRF-Token` on every mutation, DEC-138).
+
+| Method and path | Body | Success | Errors |
+|---|---|---|---|
+| `POST /auth/signup` | `handle`, `displayName`, `email`, `password`, `birthDate` (YYYY-MM-DD), `termsAccepted: true`, `termsVersion: "1.0"`, optional `phone` | 202, empty body, **the same whether the e-mail exists or not** | 400/422 rule violations; 409 when the handle is taken |
+| `POST /auth/signup/verify` | `email`, `code` | 200, account `active`, age check run (mock) | 422 wrong, expired or exhausted code; 422 age refused |
+| `POST /auth/signup/resend` | `email` | 202, empty body, same answer in every case | 429 |
+| `POST /auth/login` | `email`, `password` | 200 `{ user: { handle, displayName } }` and a `SESSION` cookie | 401 generic "Identifiants incorrects"; 403 account not verified; 429 with `Retry-After` when locked or too many attempts |
+| `POST /auth/logout` | none | 204 | |
+| `GET /auth/session` | none | 200 `{ user: { handle, displayName } \| null }` | |
+| `POST /auth/password-reset/request` | `email` | 202, empty body, same answer in every case | 429 |
+| `POST /auth/password-reset/confirm` | `email`, `code`, `password` | 200 | 422 wrong code or password refused |
+| `POST /auth/email-change/request` | `newEmail` (logged-in, active user) | 202, empty body | 401 not logged in; 429 |
+| `POST /auth/email-change/confirm` | `code` (logged-in, active user) | 200 | 401; 422 wrong code |
+
+Rules: the handle is ASCII, 30 characters at most, unique regardless of case. The e-mail is stored in lower case. A wrong code counts as an attempt; the fifth wrong attempt invalidates the code. Every attempt at login is written to `login_events` (DEC-141 for the limits).
+
 ## Backend (M1-B)
 
 ### Foundations

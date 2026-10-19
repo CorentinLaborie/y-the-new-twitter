@@ -8,6 +8,7 @@ import { ProblemDetailsFilter } from './common/problem-details/problem-details.f
 import { CsrfGuard } from './common/csrf/csrf.guard';
 import { loggingOptions } from './common/logging/logging.options';
 import { validateEnvironment } from './config/env.validation';
+import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { SessionsModule } from './common/sessions/sessions.module';
 import { HealthModule } from './health/health.module';
@@ -23,6 +24,7 @@ import { HealthModule } from './health/health.module';
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: 120 }] }),
     DatabaseModule,
     SessionsModule,
+    AuthModule,
     HealthModule,
   ],
   controllers: [AppController],
