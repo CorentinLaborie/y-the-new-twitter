@@ -2,8 +2,9 @@
 
 import { useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { Button, buttonClassName } from '@/components/auth/button';
+import { TextField } from '@/components/auth/text-field';
 import { confirmPasswordReset } from '@/lib/auth-api';
-import { TextInput } from '../field';
 import { CONFIRMATION_MESSAGE, confirmErrorMessage } from '../messages';
 import { passwordProblem, PASSWORD_RULE_HINT } from '../password-rule';
 import styles from '../forgot-password.module.css';
@@ -20,7 +21,6 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
   const doneRef = useRef<HTMLParagraphElement>(null);
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
         <p ref={doneRef} tabIndex={-1} role="status" className={styles.status}>
           Votre mot de passe a été changé.
         </p>
-        <Link className={styles.button} href="/login">
+        <Link className={buttonClassName('primary')} href="/login">
           Se connecter
         </Link>
       </>
@@ -75,8 +75,9 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
         Saisissez le code à six chiffres reçu par e-mail, puis choisissez un nouveau mot de passe.
       </p>
       <form className={styles.form} onSubmit={onSubmit} noValidate>
-        <TextInput
+        <TextField
           ref={codeRef}
+          id="forgot-code"
           name="code"
           label="Code à 6 chiffres"
           placeholder="000000"
@@ -86,10 +87,12 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
           onChange={(event) => setCode(event.target.value)}
           error={codeError ?? undefined}
         />
-        <TextInput
+        <TextField
           ref={passwordRef}
+          id="forgot-new-password"
           name="password"
-          type={showPassword ? 'text' : 'password'}
+          type="password"
+          revealable
           label="Nouveau mot de passe"
           placeholder="Votre nouveau mot de passe"
           autoComplete="new-password"
@@ -97,15 +100,6 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
           onChange={(event) => setPassword(event.target.value)}
           hint={PASSWORD_RULE_HINT}
           error={passwordError ?? undefined}
-          action={
-            <button
-              type="button"
-              className={styles.revealButton}
-              onClick={() => setShowPassword((shown) => !shown)}
-            >
-              {showPassword ? 'Masquer' : 'Afficher'}
-            </button>
-          }
         />
         {formError ? (
           <p role="alert" className={styles.alert}>
@@ -115,9 +109,9 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
             </Link>
           </p>
         ) : null}
-        <button type="submit" className={styles.button} disabled={pending}>
+        <Button type="submit" disabled={pending}>
           {pending ? 'Envoi en cours…' : 'Changer mon mot de passe'}
-        </button>
+        </Button>
       </form>
     </>
   );

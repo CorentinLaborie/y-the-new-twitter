@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/auth/button';
 import { Checkbox } from '@/components/auth/checkbox';
-import formStyles from '@/components/auth/form.module.css';
 import { signupProblemMessage } from '@/components/auth/messages';
 import { Notice } from '@/components/auth/notice';
 import { TextField } from '@/components/auth/text-field';
@@ -19,6 +18,7 @@ import {
   type SignupField,
   type SignupValues,
 } from '@/lib/validation';
+import styles from './signup-screen.module.css';
 
 /** Display order, also the order in which the focus goes to the first invalid field. */
 const FIELD_ORDER: readonly SignupField[] = [
@@ -107,8 +107,8 @@ export function SignupForm() {
   }
 
   return (
-    <form className={formStyles.form} noValidate onSubmit={handleSubmit}>
-      <div className={formStyles.grid}>
+    <form className={styles.form} noValidate onSubmit={handleSubmit}>
+      <div className={styles.fields}>
         <TextField
           id="displayName"
           name="displayName"
@@ -119,7 +119,7 @@ export function SignupForm() {
           value={values.displayName}
           onChange={(event) => setField('displayName', event.target.value)}
           error={errors.displayName}
-          className={formStyles.wide}
+          className={styles.wide}
           ref={(element) => {
             inputs.current.displayName = element;
           }}
@@ -128,7 +128,6 @@ export function SignupForm() {
           id="handle"
           name="handle"
           label="Identifiant"
-          hint="Lettres, chiffres et tirets bas, 30 caractères maximum."
           placeholder={'Ex. : Jeannot45'}
           autoComplete="username"
           autoCapitalize="none"
@@ -145,6 +144,7 @@ export function SignupForm() {
           name="birthDate"
           label="Date de naissance"
           placeholder="JJ/MM/AAAA"
+          icon="calendar"
           autoComplete="bday"
           inputMode="numeric"
           value={values.birthDate}
@@ -188,7 +188,6 @@ export function SignupForm() {
           name="password"
           type="password"
           label="Mot de passe"
-          hint="Avec au moins un chiffre et un caractère spécial."
           placeholder={'8 caractères minimum'}
           autoComplete="new-password"
           value={values.password}

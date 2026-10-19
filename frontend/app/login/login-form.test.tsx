@@ -49,7 +49,7 @@ describe('LoginForm', () => {
 
     fillAndSubmit(' Alex@Exemple.fr ', 'ancien-mot-2!');
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/accueil'));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/home'));
     expect(login).toHaveBeenCalledWith('alex@exemple.fr', 'ancien-mot-2!');
   });
 

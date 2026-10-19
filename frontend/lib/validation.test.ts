@@ -159,8 +159,8 @@ describe('terms and code', () => {
     expect(validateCode('648125')).toBeUndefined();
     expect(validateCode(' 648125 ')).toBeUndefined();
     expect(validateCode('')).toBe('Saisissez le code reçu par e-mail.');
-    expect(validateCode('64812')).toBe('Le code est composé de 6 chiffres.');
-    expect(validateCode('64812a')).toBe('Le code est composé de 6 chiffres.');
+    expect(validateCode('64812')).toBe('Le code contient 6 chiffres.');
+    expect(validateCode('64812a')).toBe('Le code contient 6 chiffres.');
   });
 });
 

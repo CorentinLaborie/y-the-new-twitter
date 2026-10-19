@@ -1,6 +1,6 @@
 import { requireSession } from '../session-guard';
 
-export default async function AccueilPage() {
+export default async function HomePage() {
   await requireSession();
 
   return (

@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { ForgotPanel } from '../forgot-panel';
 import { ConfirmForm } from './confirm-form';
 import styles from '../forgot-password.module.css';
 
@@ -10,9 +11,11 @@ type ConfirmPageProps = {
 /** Step 2: code and new password. The e-mail address comes from the query string of step 1. */
 export default function ConfirmPage({ searchParams }: ConfirmPageProps) {
   return (
-    <Suspense fallback={null}>
-      <ConfirmStep searchParams={searchParams} />
-    </Suspense>
+    <ForgotPanel>
+      <Suspense fallback={null}>
+        <ConfirmStep searchParams={searchParams} />
+      </Suspense>
+    </ForgotPanel>
   );
 }
 

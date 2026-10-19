@@ -4,7 +4,7 @@ import type { ApiProblem } from '@/lib/auth-api';
 
 export const CONFIRMATION_MESSAGE = 'Si cette adresse peut être utilisée, un code vient de vous être envoyé.';
 
-export function retryMessage(retryAfterSeconds: number | undefined): string {
+function retryMessage(retryAfterSeconds: number | undefined): string {
   if (!retryAfterSeconds) {
     return 'Réessayez plus tard.';
   }

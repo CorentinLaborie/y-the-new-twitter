@@ -45,7 +45,7 @@ describe('CodeForm', () => {
     typeCode('12');
     fireEvent.click(screen.getByRole('button', { name: 'Valider mon compte' }));
 
-    expect(await screen.findByText('Le code est composé de 6 chiffres.')).toBeInTheDocument();
+    expect(await screen.findByText('Le code contient 6 chiffres.')).toBeInTheDocument();
     expect(screen.getByLabelText('Entrez le code reçu par e-mail')).toHaveFocus();
     expect(verifySignup).not.toHaveBeenCalled();
   });

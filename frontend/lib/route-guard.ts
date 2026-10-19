@@ -4,10 +4,10 @@
  */
 
 /** Routes of the protected area (app/(app)/). A path is protected when it equals an entry or starts with it. */
-export const PROTECTED_PATHS: readonly string[] = ['/accueil'];
+const PROTECTED_PATHS: readonly string[] = ['/home'];
 
 /** Where the user lands after logging in when no valid `next` is given. */
-export const DEFAULT_AFTER_LOGIN_PATH = '/accueil';
+export const DEFAULT_AFTER_LOGIN_PATH = '/home';
 
 /** Header that carries the requested path to server code, set by the proxy when it exists. */
 export const REQUESTED_PATH_HEADER = 'x-pathname';
@@ -50,9 +50,4 @@ export function safeNextPath(value: string | null | undefined): string | null {
 export function loginRedirectPath(requestedPath: string | null | undefined): string {
   const next = safeNextPath(requestedPath);
   return next ? `${LOGIN_PATH}?next=${encodeURIComponent(next)}` : LOGIN_PATH;
-}
-
-/** Where to go after a successful login, given the `next` query parameter. */
-export function afterLoginPath(next: string | null | undefined): string {
-  return safeNextPath(next) ?? DEFAULT_AFTER_LOGIN_PATH;
 }

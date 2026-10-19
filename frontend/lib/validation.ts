@@ -52,7 +52,7 @@ export type SignupValues = {
 
 export type SignupField = keyof SignupValues;
 
-export type LoginValues = { email: string; password: string };
+type LoginValues = { email: string; password: string };
 
 export type LoginField = keyof LoginValues;
 
@@ -179,7 +179,7 @@ export function validateCode(value: string): string | undefined {
   if (code.length === 0) {
     return 'Saisissez le code reçu par e-mail.';
   }
-  return CODE_PATTERN.test(code) ? undefined : `Le code est composé de ${CODE_LENGTH} chiffres.`;
+  return CODE_PATTERN.test(code) ? undefined : `Le code contient ${CODE_LENGTH} chiffres.`;
 }
 
 function withoutUndefined<Field extends string>(

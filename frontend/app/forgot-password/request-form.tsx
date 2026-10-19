@@ -2,9 +2,10 @@
 
 import { useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/auth/button';
+import { TextField } from '@/components/auth/text-field';
 import { requestPasswordReset } from '@/lib/auth-api';
 import { isValidEmail, EMAIL_INVALID_MESSAGE } from './email-rule';
-import { TextInput } from './field';
 import { requestErrorMessage } from './messages';
 import styles from './forgot-password.module.css';
 
@@ -51,8 +52,9 @@ export function RequestForm() {
         de passe.
       </p>
       <form className={styles.form} onSubmit={onSubmit} noValidate>
-        <TextInput
+        <TextField
           ref={inputRef}
+          id="forgot-email"
           name="email"
           type="email"
           label="Adresse e-mail"
@@ -69,9 +71,9 @@ export function RequestForm() {
             {formError}
           </p>
         ) : null}
-        <button type="submit" className={styles.button} disabled={pending}>
+        <Button type="submit" disabled={pending}>
           {pending ? 'Envoi en cours…' : 'Envoyer le code'}
-        </button>
+        </Button>
       </form>
     </>
   );

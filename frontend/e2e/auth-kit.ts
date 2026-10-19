@@ -3,7 +3,7 @@ import { expect, type Page, type Route } from '@playwright/test';
 // Shared helpers of the auth end-to-end tests (DEC-139: the account API is simulated, no real server is called).
 // Every request to /api/v1/auth/** is answered here and recorded, so that a test can check what the page sent.
 
-export const API_ORIGIN = 'http://localhost:8080';
+const API_ORIGIN = 'http://localhost:8080';
 
 // Labels, buttons and messages as the pages show them (checked against the integrated pages).
 export const ui = {
@@ -33,9 +33,9 @@ export function notice(page: Page) {
   return page.locator('[role="alert"]:not(#__next-route-announcer__)');
 }
 
-export type ApiCall = { method: string; path: string; body: Record<string, unknown> | undefined };
+type ApiCall = { method: string; path: string; body: Record<string, unknown> | undefined };
 
-export type Reply = {
+type Reply = {
   status: number;
   body?: unknown;
   contentType?: string;
@@ -43,7 +43,7 @@ export type Reply = {
 };
 
 // A reply is fixed, or computed from the call (to simulate a session that changes after login).
-export type Replies = Record<string, Reply | ((call: ApiCall) => Reply)>;
+type Replies = Record<string, Reply | ((call: ApiCall) => Reply)>;
 
 // Problem Details (application/problem+json) as the account API sends them on errors.
 export function problem(status: number, detail: string, headers?: Record<string, string>): Reply {
@@ -60,6 +60,19 @@ export function problem(status: number, detail: string, headers?: Record<string,
 export async function mockAuthApi(page: Page, replies: Replies = {}): Promise<ApiCall[]> {
   const calls: ApiCall[] = [];
   await page.route(`${API_ORIGIN}/api/v1/auth/**`, (route) => answer(route, replies, calls));
+  // Before its first mutation the client makes a safe request to /api/v1/status (DEC-149): answer it here,
+  // so that no test reaches a backend that may be running on the same port.
+  await page.route(`${API_ORIGIN}/api/v1/status`, (route) =>
+    route.fulfill({
+      status: 200,
+      headers: {
+        'access-control-allow-origin': route.request().headers()['origin'] ?? '*',
+        'access-control-allow-credentials': 'true',
+      },
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'ok' }),
+    }),
+  );
   return calls;
 }
 

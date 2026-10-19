@@ -9,9 +9,13 @@ const PASSWORD = 'Secret1234!';
 
 test.describe.configure({ mode: 'serial' });
 
-test('a visitor without session is sent from the protected home to the login page', async ({ page }) => {
-  await page.goto('/accueil');
+test('a visitor without session is sent from the protected home to the login page, which keeps the page asked for', async ({
+  page,
+}) => {
+  await page.goto('/home');
   await page.waitForURL((url) => url.pathname === '/login');
+  // The proxy passes the requested path to the session check, so the login page remembers it.
+  expect(new URL(page.url()).searchParams.get('next')).toBe('/home');
 });
 
 test('a wrong password shows the generic error and keeps the user on the login page', async ({ page }) => {
@@ -32,7 +36,7 @@ test('a valid login opens the protected home, and the session survives a reload'
   await page.getByLabel('Mot de passe', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
 
-  await page.waitForURL((url) => url.pathname === '/accueil');
+  await page.waitForURL((url) => url.pathname === '/home');
   await expect(page.getByRole('heading', { name: 'Accueil' })).toBeVisible();
 
   await page.reload();

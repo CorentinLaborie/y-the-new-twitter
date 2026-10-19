@@ -4,3 +4,4 @@ node_modules/
 package-lock.json
 styles/tokens.css
 styles/tokens.json
+styles/design-system.css

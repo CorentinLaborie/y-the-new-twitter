@@ -18,6 +18,7 @@ import {
   type FieldErrors,
   type LoginField,
 } from '@/lib/validation';
+import styles from './login-screen.module.css';
 
 const FIELD_ORDER: readonly LoginField[] = ['email', 'password'];
 
@@ -66,11 +67,11 @@ export function LoginForm() {
   }
 
   return (
-    <form className={formStyles.form} noValidate onSubmit={handleSubmit}>
+    <form className={[formStyles.form, styles.form].join(' ')} noValidate onSubmit={handleSubmit}>
       {verified ? (
         <Notice tone="success">Votre compte est validé. Connectez-vous pour continuer.</Notice>
       ) : null}
-      <div className={formStyles.stack}>
+      <div className={[formStyles.stack, styles.fields].join(' ')}>
         <TextField
           id="email"
           name="email"

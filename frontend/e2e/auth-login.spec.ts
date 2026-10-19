@@ -30,7 +30,7 @@ test('a valid login opens the protected home page', async ({ page }) => {
 
   await page.goto('/login');
   await fillLoginAndSubmit(page);
-  await page.waitForURL((url) => url.pathname === '/accueil');
+  await page.waitForURL((url) => url.pathname === '/home');
 
   expect(bodyOf(calls, 'POST /auth/login')).toEqual({ email: EMAIL, password: PASSWORD });
 });
@@ -45,10 +45,10 @@ test('a valid login opens the page given in next', async ({ page }) => {
     },
   });
 
-  await page.goto('/login?next=%2Faccueil');
+  await page.goto('/login?next=%2Fhome');
   await fillLoginAndSubmit(page);
 
-  await page.waitForURL((url) => url.pathname === '/accueil');
+  await page.waitForURL((url) => url.pathname === '/home');
 });
 
 test('wrong credentials show one generic error and keep the user on the login page', async ({ page }) => {
@@ -89,6 +89,6 @@ test('a locked account shows the waiting time given by Retry-After', async ({ pa
 test('a visitor without session is sent to the login page from the protected zone', async ({ page }) => {
   await mockAuthApi(page);
 
-  await page.goto('/accueil');
+  await page.goto('/home');
   await page.waitForURL((url) => url.pathname === '/login');
 });

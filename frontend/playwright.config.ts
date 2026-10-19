@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 3000;
+const PORT = Number(process.env.E2E_PORT ?? 3000);
 
 // Chromium only in M0. Three sizes: desktop, tablet and mobile (rule R5).
 export default defineConfig({

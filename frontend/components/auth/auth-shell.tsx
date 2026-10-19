@@ -1,52 +1,80 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { YIcon } from '@/components/brand/y-icon';
+import { YMark } from '@/components/brand/y-mark';
+import { AuthFooter } from './auth-footer';
 import styles from './auth-shell.module.css';
 
+type AuthScreen = 'login' | 'signup' | 'code' | 'welcome';
+
 type AuthShellProps = {
+  /** Which Auth board the screen follows. Each screen styles its own layout from `data-screen` (see its CSS file). */
+  screen: AuthScreen;
   title: string;
   /** Short line under the title, underlined, as on the Auth boards. */
   accent?: string;
+  /** The Y mark next to the title, shown from tablet width on the boards that have it. */
+  mark?: boolean;
   backLink?: { href: string; label: string };
   children: ReactNode;
-  /** Button or link shown after the divider, for example "Rejoindre la communauté". */
+  /** Divider and button shown after the form, for example "Rejoindre la communauté". */
   secondary?: ReactNode;
+  /** Legal line under the buttons. */
   footnote?: ReactNode;
 };
 
-/** Shared layout of the guest pages (login, signup, code): one column, centred, 16 px gutters. */
-export function AuthShell({ title, accent, backLink, children, secondary, footnote }: AuthShellProps) {
+/**
+ * Layout shared by the guest pages. The elements carry `data-slot` attributes: each screen positions them
+ * with the measures of its boards, in its own CSS file, so the markup stays the same on every screen.
+ */
+export function AuthShell({
+  screen,
+  title,
+  accent,
+  mark = false,
+  backLink,
+  children,
+  secondary,
+  footnote,
+}: AuthShellProps) {
   return (
-    <main className={styles.page}>
+    <main className={styles.stage} data-screen={screen}>
+      {mark ? (
+        <div className={styles.mark} data-slot="mark" aria-hidden="true">
+          <span className="y-logo y-logo-primary">
+            <YMark size={480} />
+          </span>
+        </div>
+      ) : null}
       {backLink ? (
-        <Link href={backLink.href} className={styles.back}>
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M19 12H5m0 0 7-7m-7 7 7 7"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+        <Link href={backLink.href} className={styles.back} data-slot="back">
+          <YIcon name="arrow-left" size={20} />
           {backLink.label}
         </Link>
       ) : null}
-      <header className={styles.header}>
-        <h1 className={styles.title}>{title}</h1>
-        {accent ? (
-          <p className={styles.accent}>
-            <span>{accent}</span>
+      <h1 className={styles.title} data-slot="title">
+        {title}
+      </h1>
+      {accent ? (
+        <p className={styles.accent} data-slot="accent">
+          <span>{accent}</span>
+        </p>
+      ) : null}
+      <div className={styles.auth} data-slot="auth">
+        {children}
+        {secondary ? (
+          <>
+            <div className={styles.divider} data-slot="divider" aria-hidden="true" />
+            {secondary}
+          </>
+        ) : null}
+        {footnote ? (
+          <p className={styles.legal} data-slot="legal">
+            {footnote}
           </p>
         ) : null}
-      </header>
-      <div className={styles.body}>{children}</div>
-      {secondary || footnote ? (
-        <div className={styles.footer}>
-          <div className={styles.divider} aria-hidden="true" />
-          {secondary}
-          {footnote ? <p className={styles.footnote}>{footnote}</p> : null}
-        </div>
-      ) : null}
+      </div>
+      <AuthFooter />
     </main>
   );
 }

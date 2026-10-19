@@ -62,9 +62,9 @@ describe('requireSession', () => {
 
   it('redirects to /login, keeping the requested protected page, when there is no user', async () => {
     vi.mocked(getSession).mockResolvedValue({ ok: true, status: 200, body: { user: null } });
-    requestedPath.value = '/accueil';
+    requestedPath.value = '/home';
 
-    await expect(redirectTargetOf(requireSession())).resolves.toBe('/login?next=%2Faccueil');
+    await expect(redirectTargetOf(requireSession())).resolves.toBe('/login?next=%2Fhome');
   });
 
   it('redirects to plain /login when the requested path is missing', async () => {
@@ -88,7 +88,7 @@ describe('requireSession', () => {
       status: 200,
       body: { user: { handle: 'marthe', displayName: 'Marthe' } },
     });
-    requestedPath.value = '/accueil';
+    requestedPath.value = '/home';
 
     await expect(redirectTargetOf(requireSession())).resolves.toBeNull();
   });

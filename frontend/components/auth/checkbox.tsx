@@ -1,5 +1,4 @@
 import type { ReactNode, Ref } from 'react';
-import styles from './checkbox.module.css';
 
 type CheckboxProps = {
   id: string;
@@ -12,18 +11,18 @@ type CheckboxProps = {
   ref?: Ref<HTMLInputElement>;
 };
 
+/** Checkbox of the design system (y-check), with its error text under it. */
 export function Checkbox({ id, name, label, checked, onChange, error, ref }: CheckboxProps) {
   const errorId = `${id}-error`;
 
   return (
-    <div className={error ? `${styles.field} ${styles.invalid}` : styles.field}>
-      <label htmlFor={id} className={styles.row}>
+    <div className={error ? 'y-field has-error' : 'y-field'}>
+      <label htmlFor={id} className="y-check">
         <input
           id={id}
           name={name}
           ref={ref}
           type="checkbox"
-          className={styles.box}
           checked={checked}
           onChange={(event) => onChange(event.currentTarget.checked)}
           aria-invalid={error ? true : undefined}
@@ -32,9 +31,9 @@ export function Checkbox({ id, name, label, checked, onChange, error, ref }: Che
         <span>{label}</span>
       </label>
       {error ? (
-        <p id={errorId} className={styles.error}>
+        <span id={errorId} className="y-field-error">
           {error}
-        </p>
+        </span>
       ) : null}
     </div>
   );

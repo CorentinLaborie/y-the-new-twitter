@@ -12,11 +12,11 @@ export type ApiProblem = {
   retryAfterSeconds?: number;
 };
 
-export type ApiResult<T> = { ok: true; status: number; body: T } | { ok: false; problem: ApiProblem };
+type ApiResult<T> = { ok: true; status: number; body: T } | { ok: false; problem: ApiProblem };
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
-export function readCsrfToken(cookieHeader: string): string | null {
+function readCsrfToken(cookieHeader: string): string | null {
   const match = /(?:^|;\s*)y_csrf=([^;]+)/.exec(cookieHeader);
   return match ? decodeURIComponent(match[1]) : null;
 }
@@ -89,11 +89,18 @@ async function request<T>(
     };
   }
 
-  const text = await response.text();
-  return { ok: true, status: response.status, body: (text ? JSON.parse(text) : {}) as T };
+  try {
+    const text = await response.text();
+    return { ok: true, status: response.status, body: (text ? JSON.parse(text) : {}) as T };
+  } catch {
+    return {
+      ok: false,
+      problem: { status: response.status, title: 'Réponse', detail: 'La réponse du serveur est illisible.' },
+    };
+  }
 }
 
-export type SignupInput = {
+type SignupInput = {
   handle: string;
   displayName: string;
   email: string;
@@ -111,7 +118,6 @@ export const resendSignupCode = (email: string) =>
   request<Record<string, never>>('POST', '/auth/signup/resend', { email });
 export const login = (email: string, password: string) =>
   request<{ user: ApiUser }>('POST', '/auth/login', { email, password });
-export const logout = () => request<Record<string, never>>('POST', '/auth/logout');
 /** `cookie` is the SESSION cookie of the visitor when the call is made on the server (see requireSession). */
 export const getSession = (cookie?: string) =>
   request<{ user: ApiUser | null }>('GET', '/auth/session', undefined, cookie);
@@ -119,7 +125,3 @@ export const requestPasswordReset = (email: string) =>
   request<Record<string, never>>('POST', '/auth/password-reset/request', { email });
 export const confirmPasswordReset = (email: string, code: string, password: string) =>
   request<Record<string, never>>('POST', '/auth/password-reset/confirm', { email, code, password });
-export const requestEmailChange = (newEmail: string) =>
-  request<Record<string, never>>('POST', '/auth/email-change/request', { newEmail });
-export const confirmEmailChange = (code: string) =>
-  request<Record<string, never>>('POST', '/auth/email-change/confirm', { code });

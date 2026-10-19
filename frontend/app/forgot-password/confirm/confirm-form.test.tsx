@@ -78,9 +78,12 @@ describe('ConfirmForm', () => {
     const passwordField = screen.getByLabelText('Nouveau mot de passe');
 
     expect(passwordField).toHaveAttribute('type', 'password');
-    fireEvent.click(screen.getByRole('button', { name: 'Afficher' }));
+    const revealButton = screen.getByRole('button', { name: 'Afficher le mot de passe' });
+    expect(revealButton).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(revealButton);
     await waitFor(() => expect(passwordField).toHaveAttribute('type', 'text'));
-    fireEvent.click(screen.getByRole('button', { name: 'Masquer' }));
+    expect(revealButton).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(revealButton);
     expect(passwordField).toHaveAttribute('type', 'password');
   });
 });

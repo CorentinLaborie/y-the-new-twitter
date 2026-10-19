@@ -1,0 +1,202 @@
+/*
+ * Signup code screen, measured on its boards (design/canvas-build/project/Auth-Code-*.dc.html):
+ * Auth-Code-Error-Mobile (360 x 667), Auth-Code-Error-Tablet (768 x 1024) and Auth-Code-Desktop (1440 x 900).
+ * A position written as calc(N * 100cqw / W) is the board value N in a board W wide: exact at W, proportional
+ * below it. Font sizes and gaps are the boards' own, per breakpoint (they do not scale).
+ */
+
+/* Mobile (default). The stage is the container of the cqw units. */
+.screen [data-screen='code'] {
+  aspect-ratio: 360 / 667;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+.screen [data-screen='code'] [data-slot='back'] {
+  top: calc(10 * 100cqw / 360);
+  left: calc(16 * 100cqw / 360);
+  min-height: 32px;
+  padding: 8px 0;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.screen [data-screen='code'] [data-slot='back'] svg {
+  width: 18px;
+  height: 18px;
+}
+
+.screen [data-screen='code'] [data-slot='title'] {
+  top: calc(64 * 100cqw / 360);
+  left: 0;
+  width: 100cqw;
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: -0.5px;
+}
+
+.screen [data-screen='code'] [data-slot='accent'] {
+  top: calc(104 * 100cqw / 360);
+  left: 0;
+  width: 100cqw;
+  font-size: 28px;
+  line-height: 36px;
+}
+
+.screen [data-screen='code'] [data-slot='accent'] span {
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.screen [data-screen='code'] [data-slot='auth'] {
+  top: calc(172 * 100cqw / 360);
+  left: calc(16 * 100cqw / 360);
+  width: calc(328 * 100cqw / 360);
+  gap: 16px;
+}
+
+.screen [data-screen='code'] [data-slot='auth'] > form {
+  gap: 16px;
+}
+
+/* The field classes are the design system's global ones, so they are named with :global. */
+.screen [data-screen='code'] [data-slot='auth'] :global(.y-field-label) {
+  font-size: 16px;
+}
+
+/* The boards set no line-height on the field texts (the body of the boards is "normal"), so they do not get the app's 24px. */
+.screen [data-screen='code'] [data-slot='auth'] :global(.y-field-label),
+.screen [data-screen='code'] [data-slot='auth'] :global(.y-field-hint),
+.screen [data-screen='code'] [data-slot='auth'] :global(.y-field-error) {
+  line-height: normal;
+}
+
+.screen [data-screen='code'] [data-slot='divider'] {
+  width: calc(328 * 100cqw / 360);
+}
+
+/* The shell declares the legal line absolute; here it is a flow item of the column, below the divider. */
+.screen [data-screen='code'] [data-slot='legal'] {
+  position: static;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+/* Tablet, from 600 px: Auth-Code-Error-Tablet (768 x 1024). */
+@media (min-width: 600px) {
+  .screen [data-screen='code'] {
+    aspect-ratio: 768 / 1024;
+  }
+
+  .screen [data-screen='code'] [data-slot='back'] {
+    top: calc(36 * 100cqw / 768);
+    left: calc(112 * 100cqw / 768);
+    padding: 4px 0;
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .screen [data-screen='code'] [data-slot='back'] svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .screen [data-screen='code'] [data-slot='title'] {
+    top: calc(104 * 100cqw / 768);
+    left: calc(112 * 100cqw / 768);
+    width: calc(544 * 100cqw / 768);
+    font-size: 32px;
+    line-height: 40px;
+    letter-spacing: normal;
+  }
+
+  .screen [data-screen='code'] [data-slot='accent'] {
+    top: calc(152 * 100cqw / 768);
+    left: calc(112 * 100cqw / 768);
+    width: calc(544 * 100cqw / 768);
+    font-size: 40px;
+    line-height: 48px;
+  }
+
+  .screen [data-screen='code'] [data-slot='accent'] span {
+    text-decoration-thickness: 3px;
+    text-underline-offset: 7px;
+  }
+
+  .screen [data-screen='code'] [data-slot='auth'] {
+    top: calc(240 * 100cqw / 768);
+    left: calc(112 * 100cqw / 768);
+    width: calc(544 * 100cqw / 768);
+    gap: 24px;
+  }
+
+  .screen [data-screen='code'] [data-slot='auth'] > form {
+    gap: 24px;
+  }
+
+  .screen [data-screen='code'] [data-slot='auth'] :global(.y-field-label) {
+    font-size: 18px;
+  }
+
+  .screen [data-screen='code'] [data-slot='divider'] {
+    width: calc(360 * 100cqw / 768);
+  }
+
+  .screen [data-screen='code'] [data-slot='legal'] {
+    font-size: 12px;
+    line-height: 18px;
+  }
+}
+
+/* Desktop, from 1024 px: Auth-Code-Desktop and Auth-Code-Error-Desktop (1440 x 900). */
+@media (min-width: 1024px) {
+  .screen [data-screen='code'] {
+    aspect-ratio: 1440 / 900;
+  }
+
+  .screen [data-screen='code'] [data-slot='back'] {
+    top: calc(36 * 100cqw / 1440);
+    left: calc(336 * 100cqw / 1440);
+  }
+
+  .screen [data-screen='code'] [data-slot='title'] {
+    top: calc(112 * 100cqw / 1440);
+    left: calc(336 * 100cqw / 1440);
+    width: calc(768 * 100cqw / 1440);
+    font-size: 40px;
+    line-height: 48px;
+    letter-spacing: normal;
+  }
+
+  .screen [data-screen='code'] [data-slot='accent'] {
+    top: calc(168 * 100cqw / 1440);
+    left: calc(336 * 100cqw / 1440);
+    width: calc(768 * 100cqw / 1440);
+    font-size: 54px;
+    line-height: 64px;
+  }
+
+  .screen [data-screen='code'] [data-slot='accent'] span {
+    text-decoration-thickness: 4px;
+    text-underline-offset: 9px;
+  }
+
+  .screen [data-screen='code'] [data-slot='auth'] {
+    top: calc(288 * 100cqw / 1440);
+    left: calc(336 * 100cqw / 1440);
+    width: calc(768 * 100cqw / 1440);
+  }
+
+  .screen [data-screen='code'] [data-slot='divider'] {
+    width: calc(360 * 100cqw / 1440);
+  }
+}
+
+/* Divider between the form and the legal line (the board's .y-auth-divider). */
+.divider {
+  align-self: center;
+  height: 4px;
+  margin: 8px 0;
+  border-radius: 2px;
+  background: #4f46e5;
+}

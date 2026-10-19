@@ -28,7 +28,7 @@ export function CodeForm() {
   if (validateEmail(email) !== undefined) {
     return (
       <Notice tone="error">
-        Adresse e-mail manquante ou invalide. <Link href="/signup">Recommencer l’inscription</Link>
+        Adresse e-mail manquante ou invalide. <Link href="/signup">Recommencer l’inscription</Link>.
       </Notice>
     );
   }

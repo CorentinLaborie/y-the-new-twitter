@@ -1,19 +1,17 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
+import { AuthFooter } from '@/components/auth/auth-footer';
 import styles from './forgot-password.module.css';
 
-/** Shared frame of the two steps: title and way back to the login screen. */
+/** Frame of the two steps: the board stage with the footer. Each page renders its own ForgotPanel. */
 export default function ForgotPasswordLayout({ children }: { children: ReactNode }) {
   return (
-    <main className={styles.page}>
-      <h1 className={styles.title}>Mot de passe oublié</h1>
-      {children}
-      <p className={styles.note}>
-        Vous vous souvenez de votre mot de passe ?{' '}
-        <Link className={styles.link} href="/login">
-          Retour à la connexion
-        </Link>
-      </p>
+    <main className={styles.root}>
+      <div className={styles.stage}>
+        {children}
+        <div className={styles.footer}>
+          <AuthFooter />
+        </div>
+      </div>
     </main>
   );
 }

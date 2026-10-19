@@ -1,108 +1,96 @@
-.page {
+/*
+ * Shared base of the guest screens. Each screen positions its elements in its own CSS file, with the measures
+ * of its Auth boards (design/canvas-build/project/Auth-*.dc.html): the boards are absolute frames, so each
+ * length there is written as a share of the frame width (--k), which keeps the layout exact at the board width
+ * and proportional below it. The container is the stage itself, so 100cqw is the stage width.
+ */
+
+.stage {
+  position: relative;
   box-sizing: border-box;
-  display: flex;
   width: 100%;
-  max-width: 768px;
-  min-height: 100vh;
   margin: 0 auto;
-  padding: var(--space-16) var(--space-16) var(--space-48);
-  flex-direction: column;
-  gap: var(--space-24);
+  container-type: inline-size;
+  background: #f8fafc;
+  color: #1e293b;
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
 }
 
-.back {
-  align-self: flex-start;
-  display: inline-flex;
-  min-height: 32px;
+.mark,
+.back,
+.title,
+.accent,
+.auth {
+  position: absolute;
   box-sizing: border-box;
-  align-items: center;
-  gap: var(--space-8);
-  padding: var(--space-4) 0;
-  color: var(--color-primary);
-  font-size: var(--type-subheading-size);
-  line-height: var(--type-subheading-line-height);
-  font-weight: var(--type-subheading-weight);
-  text-decoration: none;
 }
 
-.back:hover {
-  color: var(--color-primary-hover);
-}
-
-.header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-8);
-  text-align: center;
+.mark {
+  display: none;
+  line-height: 0;
 }
 
 .title {
   margin: 0;
-  color: var(--color-foreground);
-  font-size: var(--type-heading-size);
-  line-height: var(--type-heading-line-height);
-  font-weight: var(--type-subheading-weight);
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .accent {
   margin: 0;
-  color: var(--color-primary);
-  font-size: var(--type-title-size);
-  line-height: var(--type-title-line-height);
-  font-weight: var(--type-title-weight);
+  font-weight: 700;
+  color: #4f46e5;
+  text-align: center;
 }
 
 .accent span {
   text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 5px;
   text-decoration-skip-ink: none;
 }
 
-.body {
+.auth {
   display: flex;
   flex-direction: column;
-  gap: var(--space-24);
-}
-
-.footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-24);
 }
 
 .divider {
-  width: 100%;
-  max-width: 360px;
-  height: 4px;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary);
+  align-self: center;
+  border-radius: 2px;
+  background: #4f46e5;
 }
 
-.footnote {
+.legal {
   margin: 0;
-  color: var(--color-muted-foreground);
-  font-size: var(--type-metadata-size);
-  line-height: var(--type-metadata-line-height);
+  color: #6b7280;
   text-align: center;
 }
 
-@media (min-width: 768px) {
-  .page {
-    padding-top: var(--space-64);
-  }
+.legal a,
+.legal a:hover {
+  color: #1e293b;
+  font-weight: 600;
+  text-decoration: underline;
+  white-space: nowrap;
+}
 
-  .title {
-    font-size: var(--type-board-size);
-    line-height: var(--type-board-line-height);
-    font-weight: 600;
-  }
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: none;
+}
 
-  .accent {
-    font-size: var(--type-display-size);
-    line-height: var(--type-display-line-height);
-    font-weight: var(--type-title-weight);
-  }
+.back:hover {
+  color: #4338ca;
+}
+
+.stage [data-slot='footer'] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }

@@ -1,5 +1,5 @@
 /** Health of the backend, as reported by /health (outside the /api/v1 prefix). */
-export type HealthReport = {
+type HealthReport = {
   reachable: boolean;
   healthy: boolean;
   components: Record<string, string>;
