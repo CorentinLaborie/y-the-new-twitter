@@ -94,7 +94,7 @@ These need your decision or your account. Nothing below can start until they're 
 | 6.2 | Folder structure (section 6) | `app/`, `components/`, `lib/` (API client), `styles/` (design tokens) | Folders exist. |
 | 6.3 | Lint and format | ESLint, Prettier, TypeScript strict | `npm run lint` passes. |
 | 6.4 | Design tokens | `styles/tokens.css` generated from `design-system/ds-build/project/tokens.json` (root of the project, shared across sites, DEC-075) (light theme only, AA colours from step 5). CSS Modules with CSS variables (D10). | A test page uses `--color-primary` (`#4f46e5`). |
-| 6.5 | Health and error boundary | A page that calls `/health` through the API client, and a global error page | Page renders, and the error page shows on a forced error. |
+| 6.5 | Health and error boundary | A page that calls `/health` through the API client, and a global error page | Page renders, and the error page shows on a forced error. Verified 2026-10-19: in a production build, a temporary route that throws (removed afterwards) shows the French error page in Chromium with a retry button, and does not show the technical message. |
 
 ---
 
