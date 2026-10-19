@@ -28,3 +28,6 @@ backend/src/database/generated/
 
 # Design archive (not versioned, see README)
 design/archive/
+
+# Local agent worktrees (not part of the repository)
+.claude/worktrees/

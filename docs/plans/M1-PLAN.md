@@ -134,4 +134,9 @@ Rules: the handle is ASCII, 30 characters at most, unique regardless of case. Th
 | B4 users repository (PostgreSQL integration tests) | Done, not committed | — |
 | B5 input rules, signup DTO, French phone, adult check | Done, not committed | — |
 | B6 errors: covered by the existing Problem Details filter (no new code) | Done, not committed | — |
-| B7 to B27, F1 to F13, X1 to X4 | Not started (seven agents after validation of the foundations) | — |
+| B7 to B10 signup: create, verify, resend, age check (DEC-142 applied: single writer, one transaction, minors refused at signup, R7) | Integrated, tests green (55 unit, 46 e2e), not committed | — |
+| B11 to B15 login and session | Agent report received, to integrate | — |
+| B16 to B19 password reset and e-mail change | Agent report received, to integrate | — |
+| B20 to B22 rate limits, Brevo, purge | Agent report received, to integrate (roles.sql grants to fix) | — |
+| F1 to F13 frontend | Agent reports received, to integrate | — |
+| B23, B25, B26, B27, X1 to X4 | Not started | — |
