@@ -8,6 +8,8 @@
     "start": "node dist/main.js",
     "lint": "eslint .",
     "db:seed": "prisma db seed",
+    "openapi:export": "npm run build && node dist/openapi/export-openapi.js export",
+    "openapi:check": "npm run build && node dist/openapi/export-openapi.js check",
     "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config test/jest-e2e.json"
   },
   "keywords": [],
@@ -46,11 +48,13 @@
     "@types/supertest": "7.2.1",
     "eslint": "9.39.5",
     "jest": "30.5.2",
+    "openapi-diff": "0.24.1",
     "prisma": "7.10.1",
     "supertest": "7.3.1",
     "ts-jest": "29.4.15",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.71.2"
+    "typescript-eslint": "8.71.2",
+    "yaml": "2.9.1"
   },
   "jest": {
     "moduleFileExtensions": [

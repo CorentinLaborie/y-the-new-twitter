@@ -35,10 +35,12 @@ export function configureApp(app: INestApplication): void {
 
   // Swagger is available locally and in staging only (section 9 of the product doc).
   if (config.get<string>('NODE_ENV') !== 'production') {
-    const document = SwaggerModule.createDocument(
-      app,
-      new DocumentBuilder().setTitle('Y API').setVersion('1').build(),
-    );
+    const document = SwaggerModule.createDocument(app, openApiConfig());
     SwaggerModule.setup('api/docs', app, document);
   }
+}
+
+/** The OpenAPI settings, shared by the served document and the exported contract (openapi.yaml). */
+export function openApiConfig() {
+  return new DocumentBuilder().setTitle('Y API').setVersion('1').build();
 }

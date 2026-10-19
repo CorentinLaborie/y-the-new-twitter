@@ -4,7 +4,7 @@
 |---|---|
 | **Product** | Y, a question-based social network (French UI) |
 | **Document version** | 0.10 — draft, 2026-10-19 (contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
-| **Changelog** | 0.10 (2026-10-19): M0 steps 3.2, 3.9 and 5.1 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
+| **Changelog** | 0.10 (2026-10-19): M0 steps 3.2, 3.9, 5.1, 7.5 and 7.6 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
 | **Audience** | Product owner, designers, frontend and backend developers, reviewers |
 | **Companion documents** | [`database/y-database.dbml`](database/y-database.dbml) (schema source), [`database/y-database-documentation.md`](database/y-database-documentation.md) (column reference) |
 
@@ -509,7 +509,7 @@ Base path: `/api/v1`. JSON everywhere. Authentication by session cookie. Mutatio
 - **Times:** ISO 8601 in UTC. **Field names:** camelCase in JSON, everywhere (including `lastMessageAt`).
 - **Reserved handles:** `me`, `admin`, `api`, `login`, `signup`, `settings`, `explore`, `home`, `messages`, `notifications`, `bookmarks`, `hashtags`, `suggestions`, `support`, `y`. A handle cannot use a reserved word. A handle uses only ASCII letters, digits and underscore (DEC-061).
 - **Exceptions to plural nouns:** `/feed`, `/search`, `/auth/*`, `/admin/*` (sections), `/age-verification`, and the `me` resource (`/users/me`).
-- **OpenAPI:** the OpenAPI document (`openapi.yaml`) is generated from the code (@nestjs/swagger). Today it is served at `/api/docs` (not in production). The export script `npm run openapi:export`, the committed file and the CI check for breaking changes (section 14) come with M0 step 7.6. It is required, not optional.
+- **OpenAPI:** the OpenAPI document (`openapi.yaml`) is generated from the code (@nestjs/swagger). Today it is served at `/api/docs` (not in production). The contract is exported to `backend/openapi.yaml` with `npm run openapi:export` and committed. `npm run openapi:check` fails on a breaking change (openapi-diff) and when the file is out of date (M0 step 7.6). The CI run comes with step 9. It is required, not optional.
 - **Versioning:** a breaking change creates `/api/v2`. The old version is marked with `Deprecation` and `Sunset` headers before removal.
 
 ### 9.2 Endpoints
@@ -927,7 +927,7 @@ Each screen below exists on desktop, tablet and mobile (rule R5). Only its conta
 
 ## 14. Testing strategy
 
-> **Status (2026-10-19):** in place today: backend unit tests (audit chain, CSRF guard, Problem Details filter, configuration validation), end-to-end tests with Supertest (`backend/test/app.e2e-spec.ts`), and, on PostgreSQL 18 with Testcontainers (`backend/test/*.e2e-spec.ts`): migrations, database roles, health check, sessions and seed. Not yet: frontend tests, Playwright, axe, the openapi-diff check (M0 step 7.6), the test mail adapter (step 7.5), the Dependency-Check and Semgrep scans (step 7.7), and the k6 and ZAP tests (later milestones).
+> **Status (2026-10-19):** in place today: backend unit tests (audit chain, CSRF guard, Problem Details filter, configuration validation), end-to-end tests with Supertest (`backend/test/app.e2e-spec.ts`), and, on PostgreSQL 18 with Testcontainers (`backend/test/*.e2e-spec.ts`): migrations, database roles, health check, sessions and seed. The e-mail capture adapter (step 7.5) is in place, with unit tests. The API contract check (step 7.6) is in place: `backend/openapi.yaml` is committed and `openapi-diff` runs in the tests. Not yet: frontend tests, Playwright, axe, the Dependency-Check and Semgrep scans (step 7.7), and the k6 and ZAP tests (later milestones).
 
 | Level | Tool | What it covers |
 |---|---|---|
