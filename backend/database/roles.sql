@@ -24,9 +24,10 @@ REVOKE ALL ON _prisma_migrations FROM y_app;
 -- The two logs are append-only for the application (DEC-059).
 REVOKE UPDATE, DELETE ON admin_audit_log, login_events FROM y_app;
 
--- Maintenance: delete old rows of the two logs, and nothing else (DEC-059, DEC-065).
+-- Maintenance: delete old rows of the two logs, and expired codes and sessions for the retention purge
+-- (DEC-059, DEC-065, DEC-068), and nothing else.
 -- DELETE with a WHERE clause also needs SELECT on the columns it reads.
-GRANT SELECT, DELETE ON admin_audit_log, login_events TO y_maintenance;
+GRANT SELECT, DELETE ON admin_audit_log, login_events, signup_codes, password_reset_codes, email_change_codes, sessions TO y_maintenance;
 
 -- Backup: read everything, write nothing.
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO y_backup;

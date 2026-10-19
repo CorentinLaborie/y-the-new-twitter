@@ -44,6 +44,12 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   Y_CODE_TTL_MINUTES!: number;
+
+  /** Reverse proxies in front of the application. 0: no proxy, the socket address is the client (section 9.4). */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  TRUST_PROXY_HOPS: number = 0;
 }
 
 /**

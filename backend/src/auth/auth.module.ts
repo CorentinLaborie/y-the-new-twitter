@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
+import { PurgeModule } from './purge/purge.module';
+import { RateLimitModule } from './rate-limit/rate-limit.module';
 import { BrevoMailSender } from '../common/mail/brevo-mail-sender';
 import { CapturingMailSender } from '../common/mail/capturing-mail-sender';
 import { MAIL_SENDER } from '../common/mail/mail-sender';
@@ -29,7 +31,7 @@ import { EmailChangeService } from './email-change/email-change.service';
  * Brevo (DEC-018), and production fails closed when BREVO_API_KEY is missing, so no e-mail is lost silently.
  */
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, RateLimitModule, PurgeModule],
   controllers: [
     SignupController,
     LoginController,

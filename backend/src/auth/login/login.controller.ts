@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { AuthRateLimit } from '../rate-limit/auth-rate-limit.decorator';
 import { Public } from '../session/access.decorators';
 import { LoginDto } from './login.dto';
 import { LoginService } from './login.service';
@@ -26,6 +27,7 @@ export class LoginController {
   /** 200 with the user and a SESSION cookie; 401 generic; 403 unverified; 429 with Retry-After when locked. */
   @Public()
   @Post('login')
+  @AuthRateLimit('login')
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() body: LoginDto,

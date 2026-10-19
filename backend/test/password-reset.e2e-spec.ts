@@ -6,6 +6,7 @@ import { CapturingMailSender } from '../src/common/mail/capturing-mail-sender';
 import { MAIL_SENDER } from '../src/common/mail/mail-sender';
 import { configureApp } from '../src/configure-app';
 import { hashPassword, verifyPassword } from '../src/auth/password';
+import { resetRateLimits } from './support/rate-limits';
 import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
 
 const OLD_PASSWORD = 'Ancien-mot1!';
@@ -95,6 +96,7 @@ describe('Password reset (e2e, B16 and B17)', () => {
 
   beforeEach(() => {
     mail.clear();
+    resetRateLimits(app);
   });
 
   describe('request (B16)', () => {

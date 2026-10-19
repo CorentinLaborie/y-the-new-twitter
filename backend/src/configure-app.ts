@@ -13,6 +13,8 @@ export function configureApp(app: INestApplication): void {
   const config = app.get(ConfigService);
 
   app.use(helmet());
+  // Behind a reverse proxy, the client address is read from X-Forwarded-For, or every user shares the proxy's limit.
+  app.getHttpAdapter().getInstance().set('trust proxy', config.getOrThrow<number>('TRUST_PROXY_HOPS'));
   // Retry-After must be readable by the browser to show the lock delay (section 9.4).
   app.enableCors({
     origin: config.getOrThrow<string>('APP_PUBLIC_URL'),

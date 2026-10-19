@@ -5,6 +5,7 @@ import request from 'supertest';
 import { CapturingMailSender } from '../src/common/mail/capturing-mail-sender';
 import { MAIL_SENDER } from '../src/common/mail/mail-sender';
 import { configureApp } from '../src/configure-app';
+import { resetRateLimits } from './support/rate-limits';
 import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
 
 interface TestAccount {
@@ -41,6 +42,11 @@ describe('Signup: create, verify, resend (e2e)', () => {
     );
     csrf = cookie!.split(';')[0].split('=')[1];
   }, 180_000);
+
+  beforeEach(() => {
+    // The rate limits are per IP, and every request of this file comes from one address: each test starts empty.
+    resetRateLimits(app);
+  });
 
   afterAll(async () => {
     await app?.close();

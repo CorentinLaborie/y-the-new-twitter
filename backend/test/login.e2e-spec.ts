@@ -6,6 +6,7 @@ import { configureApp } from '../src/configure-app';
 import { hashPassword } from '../src/auth/password';
 import { PrismaService } from '../src/database/prisma.service';
 import { UsersRepository } from '../src/users/users.repository';
+import { resetRateLimits } from './support/rate-limits';
 import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
 
 const PASSWORD = 'Abcdef1!';
@@ -80,6 +81,11 @@ describe('Login, session and logout (e2e)', () => {
     const status = await agent.get('/api/v1/status').expect(200);
     csrf = cookieValue(status, 'y_csrf') ?? '';
   }, 180_000);
+
+  beforeEach(() => {
+    // The rate limits are per IP, and every request of this file comes from one address: each test starts empty.
+    resetRateLimits(app);
+  });
 
   afterAll(async () => {
     await app?.close();

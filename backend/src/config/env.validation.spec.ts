@@ -31,6 +31,11 @@ describe('validateEnvironment', () => {
     expect(() => validateEnvironment(without('AUDIT_HMAC_KEY'))).toThrow('Invalid configuration: AUDIT_HMAC_KEY');
   });
 
+  it('defaults the proxy hops to 0, and refuses a negative number', () => {
+    expect(validateEnvironment(validConfig).TRUST_PROXY_HOPS).toBe(0);
+    expect(() => validateEnvironment({ ...validConfig, TRUST_PROXY_HOPS: '-1' })).toThrow('TRUST_PROXY_HOPS');
+  });
+
   it('fails when the profile is unknown', () => {
     expect(() => validateEnvironment({ ...validConfig, NODE_ENV: 'demo' })).toThrow('NODE_ENV');
   });

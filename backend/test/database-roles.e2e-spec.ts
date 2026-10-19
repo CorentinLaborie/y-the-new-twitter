@@ -116,7 +116,17 @@ describe('Database roles (e2e)', () => {
     expect(remaining.stdout.trim()).toBe('0');
   });
 
-  it('refuses the maintenance role any change except deletion of the two logs', async () => {
+  it('lets the maintenance role delete expired codes and sessions, as the retention purge does', async () => {
+    // The purge (src/auth/purge) deletes these tables with the maintenance role, and only these.
+    for (const table of ['signup_codes', 'password_reset_codes', 'email_change_codes', 'sessions']) {
+      const result = await asMaintenance(`DELETE FROM ${table} WHERE expires_at < now();`);
+
+      expect(result.stderr).toBe('');
+      expect(result.exitCode).toBe(0);
+    }
+  });
+
+  it('refuses the maintenance role any other change, such as writing or deleting users', async () => {
     const update = await asMaintenance(`UPDATE admin_audit_log SET reason = 'changed';`);
     const insert = await asMaintenance(
       `INSERT INTO admin_audit_log (action, target_type, target_id, prev_hash)
