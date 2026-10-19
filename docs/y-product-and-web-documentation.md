@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Product** | Y, a question-based social network (French UI) |
-| **Document version** | 0.9 — draft, 2026-10-19 (contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
-| **Changelog** | 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
+| **Document version** | 0.10 — draft, 2026-10-19 (contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
+| **Changelog** | 0.10 (2026-10-19): M0 steps 3.2, 3.9 and 5.1 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
 | **Audience** | Product owner, designers, frontend and backend developers, reviewers |
 | **Companion documents** | [`database/y-database.dbml`](database/y-database.dbml) (schema source), [`database/y-database-documentation.md`](database/y-database-documentation.md) (column reference) |
 
@@ -389,6 +389,7 @@ npm install
 set -a; . ./.env; set +a        # the Prisma CLI reads DATABASE_URL from the environment
 npx prisma migrate deploy       # applies the migrations to the local database
 npm run build && npm start      # there is no watch mode yet
+npm run db:seed                 # optional: fictional users, hashtags, questions and replies (refuses production)
 ```
 
 The backend refuses to start when a required key is missing, and prints only the key names (section 15.2).
@@ -418,7 +419,7 @@ cd frontend && npm run lint && npm test                      # once the frontend
 
 ### 8.1 Package structure
 
-Organize by feature, then by layer. The tree is the target. Today `src/` holds `common/` (CSRF, logging, Problem Details, audit chain), `config/`, `health/`, `app.controller.ts`, `app.module.ts`, `configure-app.ts` and `main.ts`. A feature folder is created when its step starts (owner decision, 2026-10-19).
+Organize by feature, then by layer. The tree is the target. Today `src/` holds `common/` (CSRF, logging, Problem Details, audit chain, sessions), `config/`, `database/` (Prisma service, generated client, seed), `health/`, `app.controller.ts`, `app.module.ts`, `configure-app.ts` and `main.ts`. A feature folder is created when its step starts (owner decision, 2026-10-19).
 
 ```
 src/
@@ -450,7 +451,7 @@ Each feature module contains:
 - Services own transactions (`prisma.$transaction`) and enforce product rules (section 2).
 - Prisma models never leave the repository layer. Controllers return DTOs.
 - Repositories are the only place that writes queries.
-- The Prisma client enters the project with M0 step 3.2. Until then, only the migration tests query the database.
+- The Prisma client is `PrismaService` (M0 step 3.2). Only repositories and the session store query the database through it.
 
 ### 8.3 Coding rules
 
@@ -702,6 +703,21 @@ Rate limits protect accounts and codes. Content actions (posting, reacting, repl
 - **Never edit an applied migration.** A migration is applied once it has run on any environment (local, staging or production). A mistake in it is fixed by a new migration.
 - **Forward-only.** There is no down migration. A rollback is a new corrective migration that reverses the change (DEC-056).
 
+### 10.3 Database roles
+
+Three roles are created once per environment, after the migrations, by `backend/database/roles.sql` (DEC-129):
+
+| Role | Used by | Rights |
+|---|---|---|
+| `y_app` | The application (`DATABASE_URL`) | Reads and writes its tables. `admin_audit_log` and `login_events` are append-only: `SELECT` and `INSERT` only. Cannot change `_prisma_migrations`. |
+| `y_maintenance` | The purge jobs (`DATABASE_MAINTENANCE_URL`) | `SELECT` and `DELETE` on `admin_audit_log` and `login_events`, and nothing else. The other purges get their rights when their job is built (M1 to M7). |
+| `y_backup` | The backup job (M0 step 11) | Reads every table, writes none. |
+
+- Passwords are passed on the command line (`psql -v app_password=…`). They are never stored in the repository.
+- Tables created by later migrations get the application and backup grants by default, when the migration runs as the role that ran the script. A new append-only table must remove `UPDATE` and `DELETE` from `y_app` in its own migration.
+- Migrations need a role that owns the schema. Locally that is `y`. A separate owner role for staging and production is set up at M0 step 10.
+- In staging and production, `DATABASE_URL` uses `y_app`, not the owner.
+
 ---
 
 ## 11. Frontend conventions
@@ -911,7 +927,7 @@ Each screen below exists on desktop, tablet and mobile (rule R5). Only its conta
 
 ## 14. Testing strategy
 
-> **Status (2026-10-19):** in place today: backend unit tests (audit chain, CSRF guard, Problem Details filter, configuration validation), end-to-end tests with Supertest (`backend/test/app.e2e-spec.ts`), and migration tests on PostgreSQL 18 with Testcontainers (`backend/test/database-migrations.e2e-spec.ts`). Not yet: frontend tests, Playwright, axe, the openapi-diff check (M0 step 7.6), the test mail adapter (step 7.5), the Dependency-Check and Semgrep scans (step 7.7), and the k6 and ZAP tests (later milestones).
+> **Status (2026-10-19):** in place today: backend unit tests (audit chain, CSRF guard, Problem Details filter, configuration validation), end-to-end tests with Supertest (`backend/test/app.e2e-spec.ts`), and, on PostgreSQL 18 with Testcontainers (`backend/test/*.e2e-spec.ts`): migrations, database roles, health check, sessions and seed. Not yet: frontend tests, Playwright, axe, the openapi-diff check (M0 step 7.6), the test mail adapter (step 7.5), the Dependency-Check and Semgrep scans (step 7.7), and the k6 and ZAP tests (later milestones).
 
 | Level | Tool | What it covers |
 |---|---|---|
@@ -968,6 +984,7 @@ The names are the ones used in the code (`backend/src/config/env.validation.ts`)
 | `DATABASE_MAINTENANCE_URL` | PostgreSQL connection URL of the maintenance account. Used only by the purges. It alone can delete rows of `admin_audit_log` and `login_events` (DEC-059, DEC-065) |
 | `AUDIT_HMAC_KEY` / `IP_HASH_KEY` | Secret keys for the audit chain and for hashed IP addresses (DEC-065) |
 | `BACKUP_CODE_HMAC_KEY` | Secret key for the HMAC of the administrator backup codes (DEC-114) |
+| `SESSION_SECRET` | Secret that signs the session cookie (DEC-131). Never committed |
 | `BREVO_API_KEY` / `MAIL_FROM_ADDRESS` | Email provider: Brevo, free plan, 300 e-mails a day, through its API and official SDK (DEC-018) |
 | `ADMIN_ALERT_EMAIL` | Address for the administrator's login alerts and daily summary |
 | `VERIFAGE_BASE_URL` / `VERIFAGE_API_KEY` | Age verification service |
@@ -975,14 +992,14 @@ The names are the ones used in the code (`backend/src/config/env.validation.ts`)
 | `Y_CONVERSATION_THRESHOLD` | Number of Y that opens a conversation (default `50`) |
 | `Y_CODE_TTL_MINUTES` | Validity of the signup and reset codes, in minutes (default `15`) |
 
-At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `APP_PUBLIC_URL`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`. A missing or invalid value stops the start, and only its name is printed. The e-mail and VerifAge keys are not checked yet: they come with their steps (M1).
+At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `SESSION_SECRET`, `APP_PUBLIC_URL`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`. A missing or invalid value stops the start, and only its name is printed. The e-mail and VerifAge keys are not checked yet: they come with their steps (M1).
 | `Y_CODE_TTL_MINUTES` | Lifetime of codes (default `15`, D8) |
 
 ---
 
 ## 16. Deployment and operations
 
-> **Status (2026-10-19):** not built yet. Today the backend has `/health` (no database check until M0 step 3.2), JSON logs with a request ID, and no Dockerfile, CI, staging or backups. Server access (OVH) is postponed by the owner, so the staging, backup and restore steps (M0 steps 10 to 12) wait for it. CI is step 9.
+> **Status (2026-10-19):** not built yet. Today the backend has `/health` (checks the database, M0 step 3.2), JSON logs with a request ID, and no Dockerfile, CI, staging or backups. Server access (OVH) is postponed by the owner, so the staging, backup and restore steps (M0 steps 10 to 12) wait for it. CI is step 9.
 
 **Build artifacts**
 - Backend: the NestJS application compiled to JavaScript (`dist/`), packaged in a Docker image on Node.js 24.

@@ -7,6 +7,7 @@ const validConfig: Record<string, string> = {
   AUDIT_HMAC_KEY: 'audit',
   IP_HASH_KEY: 'ip',
   BACKUP_CODE_HMAC_KEY: 'backup',
+  SESSION_SECRET: 'session',
   APP_PUBLIC_URL: 'http://localhost:3000',
   Y_CONVERSATION_THRESHOLD: '50',
   Y_CODE_TTL_MINUTES: '15',

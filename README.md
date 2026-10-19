@@ -26,4 +26,5 @@ Start with [`docs/README.md`](docs/README.md) for the index of the documentation
 
 - Migrations live in `backend/prisma/migrations/`. Never edit a migration that has been applied on any environment; fix a mistake with a new migration.
 - Migrations are forward-only. A rollback is a new corrective migration that reverses the change (DEC-056), never an edited or deleted folder.
+- Once per environment, after the migrations, as the database owner: `psql -U <owner> -d <db> -v db=<db> -v app_password=… -v maintenance_password=… -v backup_password=… -f backend/database/roles.sql` (product doc, section 10.3).
 - Workflow and details: [product doc, section 10](docs/y-product-and-web-documentation.md#10-database).

@@ -5,6 +5,7 @@ process.env.DATABASE_MAINTENANCE_URL = 'postgresql://y_maintenance:test@localhos
 process.env.AUDIT_HMAC_KEY = 'test-audit-key';
 process.env.IP_HASH_KEY = 'test-ip-key';
 process.env.BACKUP_CODE_HMAC_KEY = 'test-backup-key';
+process.env.SESSION_SECRET = 'test-session-secret';
 process.env.APP_PUBLIC_URL = 'http://localhost:3000';
 process.env.Y_CONVERSATION_THRESHOLD = '50';
 process.env.Y_CODE_TTL_MINUTES = '15';

@@ -24,4 +24,4 @@ The design source is in [`../design/`](../design/STATUS.md). The design system, 
 
 ## Status
 
-The product document and the schema are both at version 0.9 (October 2026). The stack is NestJS (TypeScript) on PostgreSQL (DEC-069, DEC-070). The design is in `y/design/` (the design system is in `design-system/`, shared across sites). Decisions D1 to D13 and the later decisions are recorded in the decision journal. Open points are listed in the product doc (section 19) and in the M0 plan. Items marked **TO CONFIRM** are still open.
+The product document is at version 0.10 and the schema at version 0.9 (October 2026). The stack is NestJS (TypeScript) on PostgreSQL (DEC-069, DEC-070). The design is in `y/design/` (the design system is in `design-system/`, shared across sites). Decisions D1 to D13 and the later decisions are recorded in the decision journal. Open points are listed in the product doc (section 19) and in the M0 plan. Items marked **TO CONFIRM** are still open.

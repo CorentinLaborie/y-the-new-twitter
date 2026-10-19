@@ -1,14 +1,20 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseFilters } from '@nestjs/common';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
+import { DatabaseHealthIndicator } from './database.health';
+import { HealthCheckFilter } from './health-check.filter';
 
 /** Served at /health, outside the /api/v1 prefix (section 7 of the product doc). */
 @Controller('health')
+@UseFilters(HealthCheckFilter)
 export class HealthController {
-  constructor(private readonly health: HealthCheckService) {}
+  constructor(
+    private readonly health: HealthCheckService,
+    private readonly database: DatabaseHealthIndicator,
+  ) {}
 
   @Get()
   @HealthCheck()
   check() {
-    return this.health.check([]);
+    return this.health.check([() => this.database.check()]);
   }
 }

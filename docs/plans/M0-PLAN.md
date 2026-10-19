@@ -52,14 +52,14 @@ These need your decision or your account. Nothing below can start until they're 
 | # | Task | Output | Done when |
 |---|---|---|---|
 | 3.1 | Generate the NestJS project | Node.js 24 LTS, NestJS **11.x** (latest patch at scaffold), TypeScript in strict mode, npm with `package-lock.json`, folder `backend/` | `npm run build` and `npm test` pass on an empty application. |
-| 3.2 | Add the libraries | `@nestjs/config`, `@nestjs/swagger` (enabled locally and in staging only), `class-validator`, `class-transformer`, Prisma 7 (`prisma`, `@prisma/client` and the PostgreSQL adapter the pinned version requires), `express-session`, `argon2`, `helmet`, `@nestjs/throttler`, `@nestjs/schedule`, `@nestjs/terminus`, `nestjs-pino` (DEC-074) | Application starts with the database. Unused libraries were removed on 2026-10-19 by owner order and return with their step: `@prisma/client` and the adapter with this step's database check, `express-session` with 3.9, `argon2` with the auth module, `@nestjs/schedule` with the first scheduled job. |
+| 3.2 | Add the libraries | `@nestjs/config`, `@nestjs/swagger` (enabled locally and in staging only), `class-validator`, `class-transformer`, Prisma 7 (`prisma`, `@prisma/client` and the PostgreSQL adapter the pinned version requires), `express-session`, `argon2`, `helmet`, `@nestjs/throttler`, `@nestjs/schedule`, `@nestjs/terminus`, `nestjs-pino` (DEC-074) | Application starts with the database. Unused libraries were removed on 2026-10-19 by owner order and return with their step: `@prisma/client` and the adapter with this step's database check, `express-session` with 3.9, `argon2` with the auth module, `@nestjs/schedule` with the first scheduled job. Done 2026-10-19: `@prisma/client` and `@prisma/adapter-pg` 7.10.1 back. `/health` runs `SELECT 1` on the database (503 with the Terminus body when it is down). Tests: `app.e2e-spec.ts`, `health-database.e2e-spec.ts`. |
 | 3.3 | Create the feature modules (section 8.1) | Each feature module (`*.controller.ts`, `*.service.ts`, `*.repository.ts`, `*.module.ts`, `dto/`) is created with the step that needs it. Empty placeholders were removed on 2026-10-19 by owner order. `src/common/` exists now (CSRF, logging, Problem Details, audit chain). | Each module exists when its step starts. |
 | 3.4 | Configuration with `@nestjs/config` | Profiles `local`, `staging`, `production` selected by `NODE_ENV`. Configuration keys from section 15.2. The threshold is read from configuration, never hard-coded (section 8.3). | Each profile loads. Missing secrets, including `IP_HASH_KEY` and `AUDIT_HMAC_KEY`, fail at startup. |
 | 3.5 | Expose the health endpoint | `/health` through @nestjs/terminus, outside the `/api/v1` prefix (section 7). In production, Swagger is off (section 9). | `curl localhost:8080/health` returns `status: ok`. |
 | 3.6 | Set the API base path | Global prefix `/api/v1` (section 9.1) | A test endpoint responds under `/api/v1`. |
 | 3.7 | Error format | RFC 9457 Problem Details, `application/problem+json`, from one global exception filter, status codes as in section 8.4 | A test error returns the Problem Details shape. |
 | 3.8 | Structured logs with a request ID | JSON logs with `nestjs-pino`, request ID on every line. No passwords, codes, session IDs or full e-mail addresses (section 8.3). | A log line contains the request ID and no secret. |
-| 3.9 | Session store | express-session with an application store on the `sessions` table (DEC-071). Cookie HTTP-only, Secure, SameSite=Lax. Sliding 30-day expiry. | A test login creates one row, and a logout deletes it. |
+| 3.9 | Session store | express-session with an application store on the `sessions` table (DEC-071). Cookie HTTP-only, Secure, SameSite=Lax. Sliding 30-day expiry. | A test login creates one row, and a logout deletes it. Done 2026-10-19: `SessionStore` on the `sessions` table, `express-session` 1.19.0, cookie `SESSION`. Test: `sessions.e2e-spec.ts`. |
 | 3.10 | Security basics | Helmet headers, CORS limited to `APP_PUBLIC_URL`, CSRF double-submit token on mutations, global `ValidationPipe` with `whitelist` (section 13) | A request without the CSRF token is refused. An unknown field in a body is refused. |
 
 ---
@@ -74,7 +74,7 @@ These need your decision or your account. Nothing below can start until they're 
 | 4.4 | Integration test on a fresh PostgreSQL | Testcontainers runs the migrations on PostgreSQL 18 (section 10.1, step 4) | Test passes. |
 | 4.5 | Write the rule for migrations | Never edit an applied migration. Forward-only. A rollback is a new corrective migration (DEC-056). | Rule written in `README.md` and the product doc section 10. |
 | 4.6 | Test the audit chain against the reference example | A unit test builds the two entries of the reference (`admin_audit_log`, hash chain section) with the sample key and checks both HMACs (DEC-064, DEC-128). The verification reads entries ordered by `created_at`, then `id` (DEC-127). A second test alters the first entry and checks that verification fails. Insertions take a transaction-level advisory lock (`pg_advisory_xact_lock`), so the chain stays in order (DEC-063). | Both tests pass. |
-| 4.7 | Set the database roles | A SQL script, run once per environment outside Prisma Migrate. The application role has `SELECT` and `INSERT` on `admin_audit_log` and `login_events`, and no `UPDATE` or `DELETE`. The maintenance role has `DELETE` on those two tables only (DEC-059, DEC-065). | An integration test shows that the application role is refused `UPDATE` and `DELETE` on `admin_audit_log` (`permission denied`). |
+| 4.7 | Set the database roles | A SQL script, run once per environment outside Prisma Migrate. The application role has `SELECT` and `INSERT` on `admin_audit_log` and `login_events`, and no `UPDATE` or `DELETE`. The maintenance role has `DELETE` on those two tables only (DEC-059, DEC-065, DEC-129). Script: `backend/database/roles.sql`. Test: `backend/test/database-roles.e2e-spec.ts`. | An integration test shows that the application role is refused `UPDATE` and `DELETE` on `admin_audit_log` (`permission denied`). |
 
 ---
 
@@ -82,7 +82,7 @@ These need your decision or your account. Nothing below can start until they're 
 
 | # | Task | Output | Done when |
 |---|---|---|---|
-| 5.1 | Seed script for local and staging | Prisma seed script (`prisma db seed`): a few fictional users, questions, replies, hashtags. No real personal data (section 15.1). | Seed runs on a fresh database. |
+| 5.1 | Seed script for local and staging | Prisma seed script (`prisma db seed`): a few fictional users, questions, replies, hashtags. No real personal data (section 15.1). | Seed runs on a fresh database. Done 2026-10-19: `src/database/seed.ts`, run with `npm run db:seed`. Test: `seed.e2e-spec.ts`. |
 
 ---
 

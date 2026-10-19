@@ -1,28 +1,11 @@
-import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-
-const BACKEND_ROOT = join(__dirname, '..');
-// Same PostgreSQL 18.6 image as docker-compose.yml, pinned by digest (DEC-126).
-const POSTGRES_IMAGE = 'postgres:18.6@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336';
+import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
 
 describe('Database migrations (e2e)', () => {
   let container: StartedPostgreSqlContainer;
 
-  // Runs a statement in the container with psql. ON_ERROR_STOP makes a failing statement exit non-zero.
-  async function sql(statement: string) {
-    return container.exec([
-      'psql',
-      '-U',
-      container.getUsername(),
-      '-d',
-      container.getDatabase(),
-      '-v',
-      'ON_ERROR_STOP=1',
-      '-tA',
-      '-c',
-      statement,
-    ]);
+  function sql(statement: string) {
+    return runAsSuperuser(container, statement);
   }
 
   async function insertUser(handle: string): Promise<string> {
@@ -36,13 +19,7 @@ describe('Database migrations (e2e)', () => {
   }
 
   beforeAll(async () => {
-    container = await new PostgreSqlContainer(POSTGRES_IMAGE).start();
-
-    execFileSync(join(BACKEND_ROOT, 'node_modules', '.bin', 'prisma'), ['migrate', 'deploy'], {
-      cwd: BACKEND_ROOT,
-      env: { ...process.env, DATABASE_URL: container.getConnectionUri() },
-      stdio: 'pipe',
-    });
+    container = await startMigratedPostgres();
   }, 180_000);
 
   afterAll(async () => {

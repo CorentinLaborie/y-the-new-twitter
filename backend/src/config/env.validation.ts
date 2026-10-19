@@ -28,6 +28,10 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   BACKUP_CODE_HMAC_KEY!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  SESSION_SECRET!: string;
+
   @IsUrl({ require_tld: false })
   APP_PUBLIC_URL!: string;
 
