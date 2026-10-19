@@ -108,7 +108,7 @@ These need your decision or your account. Nothing below can start until they're 
 | 7.4 | Accessibility | axe in the Playwright smoke test | axe reports no violation on the home page. |
 | 7.5 | E-mail capture | A test mail adapter that records messages instead of sending them (DEC-073). Brevo is never called in tests. | A test sends a message through the adapter and reads it back. No real e-mail is sent. Done 2026-10-19: `MailSender` contract and `CapturingMailSender` (test adapter, refuses production). Brevo not wired (DEC-110). Test: `capturing-mail-sender.spec.ts`. |
 | 7.6 | API contract | `openapi-diff` (open source) in CI, comparing `openapi.yaml` with the last committed version | The check runs on a changed API. Done 2026-10-19: `npm run openapi:export` writes `backend/openapi.yaml` (committed); `npm run openapi:check` runs `openapi-diff` against it and fails on a breaking change or a stale file. Test: `openapi.e2e-spec.ts`. CI run with step 9. |
-| 7.7 | Security scans | OWASP Dependency-Check (dependencies), Semgrep (code). OWASP ZAP is for staging later. | Both run locally without errors. |
+| 7.7 | Security scans | OWASP Dependency-Check (dependencies), Semgrep (code). OWASP ZAP is for staging later. | Both run locally without errors. Done 2026-10-19: Semgrep 1.179.0 (0 findings) and Dependency-Check 12.2.2 (780 dependencies; one HIGH finding in a test-only dependency, excepted with DEC-133). `npm run security:code` and `npm run security:dependencies`; images pinned by digest. |
 
 ---
 

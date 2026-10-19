@@ -10,6 +10,8 @@
     "db:seed": "prisma db seed",
     "openapi:export": "npm run build && node dist/openapi/export-openapi.js export",
     "openapi:check": "npm run build && node dist/openapi/export-openapi.js check",
+    "security:code": "docker run --rm -v \"$(pwd):/src\" -w /src semgrep/semgrep@sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b semgrep scan --metrics=off --error --config p/owasp-top-ten --config p/typescript --config p/nodejs --exclude src/database/generated --exclude dist --exclude node_modules --exclude test .",
+    "security:dependencies": "docker run --rm -e NVD_API_KEY -v \"$(pwd):/src\" -v \"$HOME/.cache/y-dependency-check:/usr/share/dependency-check/data\" owasp/dependency-check@sha256:ad169904106250816059f113d374d63a49a7cb0fd2c5e476d05c4fb814cc77b9 --scan /src --exclude '**/node_modules/**' --exclude '**/dist/**' --project y-backend --format JSON --format HTML --out /src/dist/dependency-check --failOnCVSS 7 --suppression /src/security/dependency-check-suppressions.xml --enableExperimental",
     "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config test/jest-e2e.json"
   },
   "keywords": [],
