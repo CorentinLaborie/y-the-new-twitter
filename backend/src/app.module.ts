@@ -16,6 +16,7 @@ import { QuestionsModule } from './questions/questions.module';
 import { ReactionsModule } from './reactions/reactions.module';
 import { RepliesModule } from './replies/replies.module';
 import { FeedModule } from './feed/feed.module';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { FeedModule } from './feed/feed.module';
     ReactionsModule,
     RepliesModule,
     FeedModule,
+    SupportModule,
     HealthModule,
   ],
   controllers: [AppController],

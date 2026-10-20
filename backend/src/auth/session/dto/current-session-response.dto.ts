@@ -14,6 +14,15 @@ class CurrentUserDto {
     description: 'Status of the account. A suspended account still gets its session (section 3.4).',
   })
   readonly status!: AccountStatus;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'Spam répété.',
+    description:
+      'Reason of the suspension (DEC-077). Set only when status is suspended, null otherwise, even if a reason was stored before.',
+  })
+  readonly suspensionReason!: string | null;
 }
 
 /** GET /auth/session: the logged-in user, or null when there is no session (200, not 401). */

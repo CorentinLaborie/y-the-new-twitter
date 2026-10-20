@@ -82,9 +82,9 @@ describe('Login, session and logout (e2e)', () => {
     csrf = cookieValue(status, 'y_csrf') ?? '';
   }, 180_000);
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // The rate limits are per IP, and every request of this file comes from one address: each test starts empty.
-    resetRateLimits(app);
+    await resetRateLimits(app);
   });
 
   afterAll(async () => {
@@ -150,7 +150,9 @@ describe('Login, session and logout (e2e)', () => {
     const logged = await agent.get('/api/v1/auth/session').expect(200);
     const anonymous = await request(app.getHttpServer()).get('/api/v1/auth/session').expect(200);
 
-    expect(logged.body).toEqual({ user: { handle: 'login_active', displayName: 'Compte login_active', status: 'active' } });
+    expect(logged.body).toEqual({
+      user: { handle: 'login_active', displayName: 'Compte login_active', status: 'active', suspensionReason: null },
+    });
     expect(anonymous.body).toEqual({ user: null });
   });
 

@@ -22,4 +22,10 @@ export class SessionUserRepository {
       select: { id: true, handle: true, displayName: true, role: true, status: true },
     });
   }
+
+  /** The reason the administrator gave for the suspension (users.suspension_reason, DEC-077). Null when there is none. */
+  async suspensionReasonOf(id: string): Promise<string | null> {
+    const user = await this.prisma.user.findUnique({ where: { id }, select: { suspensionReason: true } });
+    return user?.suspensionReason ?? null;
+  }
 }

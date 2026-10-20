@@ -720,6 +720,57 @@ paths:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags:
         - Feed
+  /api/v1/support/messages:
+    post:
+      operationId: SupportController_send
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupportMessageDto"
+      responses:
+        "201":
+          description: The message was added to the open thread of the account, or to a
+            new thread. Returns its reference.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportMessageResponseDto"
+        "400":
+          description: The body has no text field, or the text is not a string.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not suspended (the session guard refuses every other
+            status).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "422":
+          description: The text is not 1 to 1000 characters once trimmed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - Support
   /health:
     get:
       operationId: HealthController_check
@@ -900,10 +951,17 @@ components:
           example: active
           description: Status of the account. A suspended account still gets its session
             (section 3.4).
+        suspensionReason:
+          type: string
+          nullable: true
+          example: Spam répété.
+          description: Reason of the suspension (DEC-077). Set only when status is
+            suspended, null otherwise, even if a reason was stored before.
       required:
         - handle
         - displayName
         - status
+        - suspensionReason
     CurrentSessionResponseDto:
       type: object
       properties:
@@ -1205,3 +1263,23 @@ components:
         - trending
         - questions
         - nextCursor
+    CreateSupportMessageDto:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Text of the message to the administrator, trimmed. Counted in
+            characters.
+      required:
+        - text
+    SupportMessageResponseDto:
+      type: object
+      properties:
+        reference:
+          type: string
+          example: CNT-20261019-0001
+          maxLength: 20
+      required:
+        - reference
