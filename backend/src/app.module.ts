@@ -14,6 +14,7 @@ import { SessionsModule } from './common/sessions/sessions.module';
 import { HealthModule } from './health/health.module';
 import { QuestionsModule } from './questions/questions.module';
 import { ReactionsModule } from './reactions/reactions.module';
+import { RepliesModule } from './replies/replies.module';
 import { FeedModule } from './feed/feed.module';
 
 @Module({
@@ -30,6 +31,7 @@ import { FeedModule } from './feed/feed.module';
     AuthModule,
     QuestionsModule,
     ReactionsModule,
+    RepliesModule,
     FeedModule,
     HealthModule,
   ],

@@ -315,6 +315,283 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a5
+  /api/v1/questions/{questionId}/replies:
+    post:
+      operationId: RepliesController_create
+      parameters:
+        - name: questionId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: Repeated with the same text on the same question, returns the first
+            reply. Section 9.1.
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReplyDto"
+      responses:
+        "201":
+          description: The reply.
+          headers:
+            Location:
+              description: Path of the new reply.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyResponseDto"
+        "400":
+          description: The question id is not a UUID, or the Idempotency-Key is empty or
+            too long.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The question does not exist, or it is hidden, deleted or blocked.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "422":
+          description: The text is empty or longer than 280 characters, the conversation
+            is not open yet, or the key was used for another request.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a6
+        - Replies
+    get:
+      operationId: RepliesController_list
+      parameters:
+        - name: questionId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: cursor
+          required: false
+          in: query
+          description: nextCursor of the previous page. Absent for the first page.
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+      responses:
+        "200":
+          description: One page of replies, oldest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyPageDto"
+        "400":
+          description: The question id is not a UUID, the cursor is invalid, or the limit
+            is out of range.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The question does not exist, or it is hidden, deleted or blocked.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a6
+  /api/v1/replies/{replyId}:
+    delete:
+      operationId: RepliesController_remove
+      parameters:
+        - name: replyId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: The reply was deleted.
+        "400":
+          description: The reply id is not a UUID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The reply belongs to another account.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The reply does not exist or was already deleted.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a6
+  /api/v1/replies/{replyId}/reactions/{kind}:
+    put:
+      operationId: ReplyReactionsController_set
+      parameters:
+        - name: replyId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: kind
+          required: true
+          in: path
+          schema:
+            enum:
+              - like
+              - dislike
+            type: string
+      responses:
+        "200":
+          description: The counters after the reaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyReactionResponseDto"
+        "400":
+          description: The reply id is not a UUID, or the kind is not like or dislike.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The reply does not exist, or it is hidden, deleted or blocked.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a7
+        - ReplyReactions
+    delete:
+      operationId: ReplyReactionsController_remove
+      parameters:
+        - name: replyId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: kind
+          required: true
+          in: path
+          schema:
+            enum:
+              - like
+              - dislike
+            type: string
+      responses:
+        "204":
+          description: The reaction of this kind was removed, or there was none.
+        "400":
+          description: The reply id is not a UUID, or the kind is not like or dislike.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The reply does not exist, or it is hidden, deleted or blocked.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a7
   /api/v1/feed:
     get:
       operationId: FeedController_forYou
@@ -392,7 +669,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a6
+                    example: &a8
                       database:
                         status: up
                     additionalProperties:
@@ -418,7 +695,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a6
+                    example: *a8
                     additionalProperties:
                       type: object
                       required:
@@ -440,7 +717,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a7
+                      database: &a9
                         status: up
                     additionalProperties:
                       type: object
@@ -454,7 +731,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a8
+                      redis: &a10
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -469,8 +746,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a7
-                      redis: *a8
+                      database: *a9
+                      redis: *a10
                     additionalProperties:
                       type: object
                       required:
@@ -684,6 +961,121 @@ components:
         - viewerReactions
         - yThreshold
         - conversationOpen
+    CreateReplyDto:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 280
+          description: Text of the reply, trimmed. Counted in characters.
+      required:
+        - text
+    ReplyAuthorDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: alice
+        displayName:
+          type: string
+          example: Alice
+      required:
+        - handle
+        - displayName
+    ReplyCountersDto:
+      type: object
+      properties:
+        like:
+          type: number
+          example: 3
+        dislike:
+          type: number
+          example: 0
+      required:
+        - like
+        - dislike
+    ReplyResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        questionId:
+          type: string
+          format: uuid
+        text:
+          type: string
+          maxLength: 280
+        createdAt:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/ReplyAuthorDto"
+        counters:
+          $ref: "#/components/schemas/ReplyCountersDto"
+        viewerReactions:
+          type: array
+          description: Empty when the viewer has none.
+          items:
+            type: string
+            enum:
+              - like
+              - dislike
+      required:
+        - id
+        - questionId
+        - text
+        - createdAt
+        - author
+        - counters
+        - viewerReactions
+    ReplyPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReplyResponseDto"
+        nextCursor:
+          type: string
+          nullable: true
+          example: MjAyNi0xMC0yMFQxMDo0MTowMC4wMDBafGExYjJjM2Q0
+      required:
+        - items
+        - nextCursor
+    ReplyReactionCountsDto:
+      type: object
+      properties:
+        like:
+          type: number
+          example: 3
+        dislike:
+          type: number
+          example: 0
+      required:
+        - like
+        - dislike
+    ReplyReactionResponseDto:
+      type: object
+      properties:
+        replyId:
+          type: string
+          format: uuid
+        counts:
+          $ref: "#/components/schemas/ReplyReactionCountsDto"
+        viewerReactions:
+          type: array
+          description: Empty when the viewer has none.
+          items:
+            type: string
+            enum:
+              - like
+              - dislike
+      required:
+        - replyId
+        - counts
+        - viewerReactions
     FeedPageDto:
       type: object
       properties:
