@@ -73,6 +73,35 @@ Exit criteria (from the milestone table): replies refused below 50 Y; cursor pag
 5. **Explanation of the 50 Y rule:** answered 2026-10-20: in M3, information button and dialog (F10).
 6. **Autocomplete on `@`:** answered 2026-10-20: plain text in M3, `@pseudo` recognised without a suggestion list.
 
+## Progression (2026-10-20)
+
+State of each task, as committed on origin/main (`d8c2efa`).
+
+| Task | State | Commit or note |
+|---|---|---|
+| B1 | Done | Schema checked against DBML v0.9 |
+| B2 | Done | `0d27f20` (notice once at 50 Y, not to the author's own Y: DEC-195) |
+| B3 to B7, B10 | Done | Lot A: `8497d2b`, `0825b0f`, `23d3499`, `36a41c7`; reply DELETE answers 404 to a non-author (DEC-190) |
+| B8, B9 | Done | `7a37086`, `fe4ab84` (one notification when the question author is mentioned, DEC-189) |
+| B4 (GET replies) | Done | Lot A |
+| Question detail (for F11) | Done | `5677547` (`GET /questions/{id}`, not in the original list: needed by the share view) |
+| F1 | Done | Card shows the reply count (`ad8acd0`) |
+| F2 | Done | Closed line below 50 Y (`Conversation`) |
+| F3 | Done in code, tested by unit tests | Composer with the 280 counter; no end-to-end test yet (no route shows the composer for writing outside the share view, which is read-only) |
+| F4 | Done | "Voir plus de réponses", oldest first (DEC-198) |
+| F5 | Done | Pressed state per reaction, each toggled on its own (`reply-item.tsx`) |
+| F6 | Done | ⋯ menu, confirmation dialog, own replies only |
+| F7 | Done as plain text | No link until the profile route exists (as planned) |
+| F8 | Done for the states drawn on the design page (section 16) | Rendering in the application checked by the owner; design page v103 for tablet and mobile |
+| F9 | Partly | Focus and keyboard use in the components; no axe run yet on the conversation |
+| F10 | Done | Dialog on desktop and tablet; bottom sheet on mobile by CSS class (no sheet component in the repo) |
+| F11 | Done | Share view `/questions/[id]`, read-only (owner decision), not in navigation |
+| X1 | Done for lot B and the review | DEC-186 to DEC-198 |
+| X2 | Done | Section 9.2, route `GET /questions/{id}` |
+| X3 | Done | This section |
+
+Open points: the end-to-end test of the composer (F3); the axe check of the conversation (F9); the check of the rendering in the application by the owner.
+
 ## Working method (decided 2026-10-20, DEC-182 to DEC-184)
 
 - Four lots, built one after the other: A (backend replies: B3 to B7, B10), B (mentions and notifications: B8, B9), C (frontend conversation: F1 to F11), D (documentation: X1 to X3).
