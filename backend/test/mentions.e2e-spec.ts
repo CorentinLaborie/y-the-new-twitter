@@ -159,6 +159,19 @@ describe('Mentions and reply notifications (e2e, M3 B8, B9)', () => {
     ).toBe(`mention,${replier}`);
   });
 
+  it('gives the question author one notification when a reply mentions them, not two', async () => {
+    const questionAuthor = await createUser('m_both_owner');
+    const replier = await createUser('m_both_replier');
+    const question = await createOpenQuestion(questionAuthor);
+    const client = await clientFor(replier);
+
+    const created = await postReply(client, question, 'Merci @m_both_owner').expect(201);
+
+    expect(
+      await sql(`SELECT type FROM notifications WHERE reply_id = '${created.body.id}' AND recipient_id = '${questionAuthor}';`),
+    ).toBe('mention');
+  });
+
   it('notifies nobody for the author replying to their own question', async () => {
     const owner = await createUser('m_self_owner');
     const question = await createOpenQuestion(owner);

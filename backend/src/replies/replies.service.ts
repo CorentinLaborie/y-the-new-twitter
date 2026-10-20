@@ -140,7 +140,8 @@ export class RepliesService {
     await this.replies.changeReplyCount(db, questionId, 1);
     const target = { questionId, replyId: reply.id };
     await this.mentions.record(db, author.id, target, mentioned);
-    if (question.authorId !== author.id) {
+    // A mentioned question author gets the mention notification only, not a second one for the same reply.
+    if (question.authorId !== author.id && !mentioned.includes(question.authorId)) {
       await this.replies.writeReplyNotification(db, question.authorId, author.id, questionId, reply.id);
     }
 
