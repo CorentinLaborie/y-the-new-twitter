@@ -30,7 +30,8 @@ describe('Session store error (e2e, DEC-213)', () => {
     const failingStore = {
       // express-session subscribes to the store's events when it is created.
       on: () => undefined,
-      get:(_sid: string, callback: (error?: unknown) => void) => callback(new Error('connect ECONNREFUSED 10.0.0.5:5432')),
+      get: (_sid: string, callback: (error?: unknown) => void) =>
+        callback(new Error('connect ECONNREFUSED 10.0.0.5:5432')),
       set: (_sid: string, _session: unknown, callback?: (error?: unknown) => void) => callback?.(),
       destroy: (_sid: string, callback?: (error?: unknown) => void) => callback?.(),
     };
