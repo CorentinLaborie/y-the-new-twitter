@@ -42,13 +42,17 @@ describe('safeNextPath', () => {
 });
 
 describe('loginRedirectPath', () => {
-  it('sends a guest to /login and keeps the requested protected page as next', () => {
-    expect(loginRedirectPath('/home')).toBe('/login?next=%2Fhome');
+  it('sends a guest to /login with the session-expired reason, and keeps the requested protected page as next', () => {
+    expect(loginRedirectPath('/home')).toBe('/login?reason=session-expired&next=%2Fhome');
   });
 
-  it('sends a guest to /login without next when the requested path is unknown or unsafe', () => {
-    expect(loginRedirectPath(null)).toBe('/login');
-    expect(loginRedirectPath('https://example.com')).toBe('/login');
-    expect(loginRedirectPath('/login')).toBe('/login');
+  it('sends a guest to /login with the reason alone when the requested path is unknown or unsafe', () => {
+    expect(loginRedirectPath(null)).toBe('/login?reason=session-expired');
+    expect(loginRedirectPath('https://example.com')).toBe('/login?reason=session-expired');
+    expect(loginRedirectPath('/login')).toBe('/login?reason=session-expired');
+  });
+
+  it('drops next when the requested path has a query string, which may hold personal data', () => {
+    expect(loginRedirectPath('/home?handle=alice')).toBe('/login?reason=session-expired');
   });
 });

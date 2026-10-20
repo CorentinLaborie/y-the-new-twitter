@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { deleteReaction, putReaction } from './feed-api';
+import { deleteReaction, fetchFeedPage, putReaction } from './feed-api';
 
 describe('reaction calls', () => {
   beforeEach(() => {
@@ -50,5 +50,27 @@ describe('reaction calls', () => {
 
     expect(result).toEqual({ ok: true, body: {} });
     expect(vi.mocked(fetch).mock.calls[0]?.[1]?.method).toBe('DELETE');
+  });
+});
+
+describe('the protected feed calls', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('sends the browser to the session-expired login page when the feed answers 401', async () => {
+    const replace = vi.fn();
+    vi.stubGlobal('location', { replace });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({ title: 'Non authentifié', detail: 'Session absente.' }, { status: 401 }),
+      ),
+    );
+
+    const result = await fetchFeedPage();
+
+    expect(result).toMatchObject({ ok: false, problem: { status: 401 } });
+    expect(replace).toHaveBeenCalledWith('/login?reason=session-expired');
   });
 });

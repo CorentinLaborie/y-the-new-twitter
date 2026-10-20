@@ -24,3 +24,9 @@
   background: var(--color-accent);
   color: var(--color-accent-foreground);
 }
+
+.info {
+  border-color: var(--color-border);
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+}

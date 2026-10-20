@@ -3,6 +3,8 @@
  * Every page under app/(app)/ must be listed in PROTECTED_PATHS.
  */
 
+import { SESSION_EXPIRED_REASON } from '@/lib/session-expired';
+
 /** Routes of the protected area (app/(app)/). A path is protected when it equals an entry or starts with it. */
 const PROTECTED_PATHS: readonly string[] = ['/home'];
 
@@ -46,8 +48,15 @@ export function safeNextPath(value: string | null | undefined): string | null {
   return `${url.pathname}${url.search}`;
 }
 
-/** Login URL for a guest who asked for `requestedPath`. The `next` parameter is kept only when it is usable. */
+/**
+ * Login URL for a guest who asked for `requestedPath` on a protected page: the session-expired reason (the login page
+ * shows its message), and `next` only when the path is safe and carries no query string (a query may hold personal data).
+ */
 export function loginRedirectPath(requestedPath: string | null | undefined): string {
   const next = safeNextPath(requestedPath);
-  return next ? `${LOGIN_PATH}?next=${encodeURIComponent(next)}` : LOGIN_PATH;
+  const params = new URLSearchParams({ reason: SESSION_EXPIRED_REASON });
+  if (next !== null && !next.includes('?')) {
+    params.set('next', next);
+  }
+  return `${LOGIN_PATH}?${params.toString()}`;
 }

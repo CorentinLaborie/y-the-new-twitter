@@ -19,15 +19,21 @@ import {
 type ComposerProps = {
   /** Display name of the signed-in user, for the avatar. */
   displayName: string;
+  /** True for a suspended account: publishing is off (R13, DEC-095), and the composer says why. */
+  suspended: boolean;
   /** Called with the question the API created, so that the feed shows it first. */
   onPosted: (question: FeedQuestion) => void;
 };
 
+/** Shown under the composer when the account is suspended (section 3.4, DEC-095). */
+const SUSPENDED_PUBLISHING_MESSAGE = 'Votre compte est suspendu : la publication est désactivée.';
+
 /**
  * Composer of a question at the top of the feed (Home boards). Text only, up to 280 characters (R1).
  * Over the limit the text is refused with a message, and the button stays off. The API refusal is shown as a notice.
+ * A suspended account gets the button off, with the reason of it under the composer.
  */
-export function Composer({ displayName, onPosted }: ComposerProps) {
+export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -36,11 +42,12 @@ export function Composer({ displayName, onPosted }: ComposerProps) {
   const textareaId = useId();
   const hintId = useId();
   const refusalId = useId();
+  const suspendedId = useId();
 
   const characterCount = questionLength(text);
   const questionCheck = checkQuestion(text);
   const tooLong = !questionCheck.ok && questionCheck.reason === 'too-long';
-  const canSubmit = questionCheck.ok && !submitting;
+  const canSubmit = questionCheck.ok && !submitting && !suspended;
 
   function handleChange(value: string) {
     setText(value);
@@ -93,6 +100,11 @@ export function Composer({ displayName, onPosted }: ComposerProps) {
             {TOO_LONG_MESSAGE}
           </p>
         ) : null}
+        {suspended ? (
+          <p id={suspendedId} className={styles.refusal}>
+            {SUSPENDED_PUBLISHING_MESSAGE}
+          </p>
+        ) : null}
         {submitError ? <Notice tone="error">{submitError}</Notice> : null}
         <div className={styles.composerFooter}>
           <span id={hintId} className={styles.hint}>
@@ -103,7 +115,12 @@ export function Composer({ displayName, onPosted }: ComposerProps) {
             <span className={styles.counter} data-over={tooLong ? 'true' : undefined}>
               {characterCount}/{QUESTION_MAX_LENGTH}
             </span>
-            <button type="submit" className={`y-btn y-btn-primary ${styles.submit}`} disabled={!canSubmit}>
+            <button
+              type="submit"
+              className={`y-btn y-btn-primary ${styles.submit}`}
+              disabled={!canSubmit}
+              aria-describedby={suspended ? suspendedId : undefined}
+            >
               {submitting ? 'Publication…' : 'Poster'}
             </button>
           </div>

@@ -10,8 +10,8 @@
  * on any 4xx or 5xx answer, so the share view can tell a 404 from the other errors.
  */
 
-import { apiRequest } from '@/lib/api-client';
 import type { FeedQuestion } from '@/lib/feed-api';
+import { protectedApiRequest } from '@/lib/session-expired';
 
 /** A FeedQuestion whose counters also carry the reply count (QuestionCountersDto). */
 export type QuestionDetail = FeedQuestion & {
@@ -20,7 +20,10 @@ export type QuestionDetail = FeedQuestion & {
 
 /** One question, for the share view. Throws the ApiProblem when the API refuses it (404 when unavailable). */
 export async function getQuestion(questionId: string): Promise<QuestionDetail> {
-  const result = await apiRequest<QuestionDetail>('GET', `/questions/${encodeURIComponent(questionId)}`);
+  const result = await protectedApiRequest<QuestionDetail>(
+    'GET',
+    `/questions/${encodeURIComponent(questionId)}`,
+  );
   if (!result.ok) {
     throw result.problem;
   }

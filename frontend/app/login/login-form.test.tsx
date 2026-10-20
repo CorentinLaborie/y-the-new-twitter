@@ -117,6 +117,28 @@ describe('LoginForm', () => {
     expect(takePendingEmail()).toBeNull();
   });
 
+  it('tells the visitor that the session has expired, above the form, with role="status"', () => {
+    givenUrl('reason=session-expired');
+    const { container } = render(<LoginForm />);
+
+    const message = screen.getByRole('status');
+    expect(message).toHaveTextContent('Votre session a expiré. Reconnectez-vous pour continuer.');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    const form = container.querySelector('form');
+    expect(form).not.toBeNull();
+    expect(
+      message.compareDocumentPosition(form as HTMLFormElement) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('shows no session message on a plain login page, or for an unknown reason', () => {
+    givenUrl('reason=anything-else');
+    render(<LoginForm />);
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Votre session a expiré/)).not.toBeInTheDocument();
+  });
+
   it('keeps the e-mail field empty when no address was handed over', () => {
     givenUrl('verified=1');
     render(<LoginForm />);

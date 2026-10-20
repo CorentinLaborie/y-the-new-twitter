@@ -11,8 +11,11 @@ export type ApiUser = { handle: string; displayName: string };
 /** Account status, as GET /auth/session sends it in `user.status`. */
 export type AccountStatus = 'pending_verification' | 'active' | 'suspended' | 'pending_deletion' | 'deleted';
 
-/** The signed-in user of GET /auth/session: the account fields, and the status of the account. */
-export type SessionUser = ApiUser & { status: AccountStatus };
+/**
+ * The signed-in user of GET /auth/session: the account fields, the status of the account, and the reason of its
+ * suspension (set only while the status is suspended, null otherwise).
+ */
+export type SessionUser = ApiUser & { status: AccountStatus; suspensionReason: string | null };
 
 type SignupInput = {
   handle: string;

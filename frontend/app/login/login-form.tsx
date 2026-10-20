@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/auth/button';
 import formStyles from '@/components/auth/form.module.css';
-import { loginProblemMessage } from '@/components/auth/messages';
+import { loginProblemMessage, SESSION_EXPIRED_MESSAGE } from '@/components/auth/messages';
 import { Notice } from '@/components/auth/notice';
 import { TextField } from '@/components/auth/text-field';
 import { login } from '@/lib/auth-api';
 import { rememberPendingEmail, takePendingEmail } from '@/lib/pending-email';
 import { DEFAULT_AFTER_LOGIN_PATH, safeNextPath } from '@/lib/route-guard';
+import { SESSION_EXPIRED_REASON } from '@/lib/session-expired';
 import {
   firstErrorField,
   hasErrors,
@@ -24,13 +25,15 @@ import styles from './login-screen.module.css';
 const FIELD_ORDER: readonly LoginField[] = ['email', 'password'];
 
 /**
- * Login form. The `verified=1` parameter shows the confirmation of the code page. The address of a just verified
+ * Login form. The `verified=1` parameter shows the confirmation of the code page. The `reason=session-expired`
+ * parameter (set when a protected call answers 401) shows that the session has ended. The address of a just verified
  * account (or of the code page link) comes from sessionStorage, not from the URL, and pre-fills the field.
  */
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verified = searchParams.get('verified') === '1';
+  const sessionExpired = searchParams.get('reason') === SESSION_EXPIRED_REASON;
   const [values, setValues] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<FieldErrors<LoginField>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -78,57 +81,60 @@ export function LoginForm() {
   }
 
   return (
-    <form className={[formStyles.form, styles.form].join(' ')} noValidate onSubmit={handleSubmit}>
-      {verified ? (
-        <Notice tone="success">Votre compte est validé. Connectez-vous pour continuer.</Notice>
-      ) : null}
-      <div className={[formStyles.stack, styles.fields].join(' ')}>
-        <TextField
-          id="email"
-          name="email"
-          type="email"
-          label="Adresse e-mail"
-          placeholder="Votre adresse e-mail"
-          autoComplete="username"
-          spellCheck={false}
-          value={values.email}
-          onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
-          error={errors.email}
-          ref={(element) => {
-            inputs.current.email = element;
-          }}
-        />
-        <TextField
-          id="password"
-          name="password"
-          type="password"
-          label="Mot de passe"
-          placeholder="Votre mot de passe"
-          autoComplete="current-password"
-          value={values.password}
-          onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
-          error={errors.password}
-          ref={(element) => {
-            inputs.current.password = element;
-          }}
-        />
-      </div>
-      {formError ? (
-        <Notice tone="error">
-          {formError}
-          {unverified ? (
-            <>
-              {' '}
-              <Link href="/signup/code" onClick={() => rememberPendingEmail(normalizeEmail(values.email))}>
-                Saisir mon code
-              </Link>
-            </>
-          ) : null}
-        </Notice>
-      ) : null}
-      <Button type="submit" disabled={submitting}>
-        {submitting ? 'Connexion…' : 'Se connecter'}
-      </Button>
-    </form>
+    <>
+      {sessionExpired ? <Notice tone="info">{SESSION_EXPIRED_MESSAGE}</Notice> : null}
+      <form className={[formStyles.form, styles.form].join(' ')} noValidate onSubmit={handleSubmit}>
+        {verified ? (
+          <Notice tone="success">Votre compte est validé. Connectez-vous pour continuer.</Notice>
+        ) : null}
+        <div className={[formStyles.stack, styles.fields].join(' ')}>
+          <TextField
+            id="email"
+            name="email"
+            type="email"
+            label="Adresse e-mail"
+            placeholder="Votre adresse e-mail"
+            autoComplete="username"
+            spellCheck={false}
+            value={values.email}
+            onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
+            error={errors.email}
+            ref={(element) => {
+              inputs.current.email = element;
+            }}
+          />
+          <TextField
+            id="password"
+            name="password"
+            type="password"
+            label="Mot de passe"
+            placeholder="Votre mot de passe"
+            autoComplete="current-password"
+            value={values.password}
+            onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
+            error={errors.password}
+            ref={(element) => {
+              inputs.current.password = element;
+            }}
+          />
+        </div>
+        {formError ? (
+          <Notice tone="error">
+            {formError}
+            {unverified ? (
+              <>
+                {' '}
+                <Link href="/signup/code" onClick={() => rememberPendingEmail(normalizeEmail(values.email))}>
+                  Saisir mon code
+                </Link>
+              </>
+            ) : null}
+          </Notice>
+        ) : null}
+        <Button type="submit" disabled={submitting}>
+          {submitting ? 'Connexion…' : 'Se connecter'}
+        </Button>
+      </form>
+    </>
   );
 }

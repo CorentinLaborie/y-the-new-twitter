@@ -17,7 +17,7 @@
  */
 
 import { questionLength } from '@/components/feed/question-rules';
-import { apiRequest } from '@/lib/api-client';
+import { protectedApiRequest } from '@/lib/session-expired';
 
 export const REPLY_MAX_LENGTH = 280;
 
@@ -66,7 +66,7 @@ async function callOrThrow<T>(
   path: string,
   options?: { body?: unknown; headers?: Record<string, string> },
 ): Promise<T> {
-  const result = await apiRequest<T>(method, path, options);
+  const result = await protectedApiRequest<T>(method, path, options);
   if (!result.ok) {
     throw result.problem;
   }

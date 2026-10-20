@@ -46,13 +46,14 @@ describe('requireSession', () => {
     vi.mocked(getSession).mockResolvedValue({
       ok: true,
       status: 200,
-      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active' } },
+      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active', suspensionReason: null } },
     });
 
     await expect(requireSession()).resolves.toEqual({
       handle: 'marthe',
       displayName: 'Marthe',
       status: 'active',
+      suspensionReason: null,
     });
   });
 
@@ -64,33 +65,35 @@ describe('requireSession', () => {
     expect(getSession).toHaveBeenCalledWith('SESSION=signed-session-id');
   });
 
-  it('redirects to /login, keeping the requested protected page, when there is no user', async () => {
+  it('redirects to /login with the session-expired reason, keeping the requested protected page, when there is no user', async () => {
     vi.mocked(getSession).mockResolvedValue({ ok: true, status: 200, body: { user: null } });
     requestedPath.value = '/home';
 
-    await expect(redirectTargetOf(requireSession())).resolves.toBe('/login?next=%2Fhome');
+    await expect(redirectTargetOf(requireSession())).resolves.toBe(
+      '/login?reason=session-expired&next=%2Fhome',
+    );
   });
 
-  it('redirects to plain /login when the requested path is missing', async () => {
+  it('redirects to /login with the session-expired reason alone when the requested path is missing', async () => {
     vi.mocked(getSession).mockResolvedValue({ ok: true, status: 200, body: { user: null } });
 
-    await expect(redirectTargetOf(requireSession())).resolves.toBe('/login');
+    await expect(redirectTargetOf(requireSession())).resolves.toBe('/login?reason=session-expired');
   });
 
-  it('fails closed to /login when the API cannot be reached', async () => {
+  it('fails closed to /login with the session-expired reason when the API cannot be reached', async () => {
     vi.mocked(getSession).mockResolvedValue({
       ok: false,
       problem: { status: 0, title: 'Réseau', detail: 'Le serveur est injoignable.' },
     });
 
-    await expect(redirectTargetOf(requireSession())).resolves.toBe('/login');
+    await expect(redirectTargetOf(requireSession())).resolves.toBe('/login?reason=session-expired');
   });
 
   it('never redirects a request that has a session', async () => {
     vi.mocked(getSession).mockResolvedValue({
       ok: true,
       status: 200,
-      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active' } },
+      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active', suspensionReason: null } },
     });
     requestedPath.value = '/home';
 

@@ -29,7 +29,8 @@
  * Errors are Problem Details, read as ApiProblem (lib/api-client.ts).
  */
 
-import { apiRequest, type ApiProblem } from '@/lib/api-client';
+import type { ApiProblem } from '@/lib/api-client';
+import { protectedApiRequest } from '@/lib/session-expired';
 
 export type ReactionKind = 'like' | 'dislike' | 'y';
 
@@ -64,7 +65,7 @@ export function fetchFeedPage(cursor?: string): Promise<FeedResult<FeedPage>> {
   if (cursor) {
     query.set('cursor', cursor);
   }
-  return apiRequest<FeedPage>('GET', `/feed?${query.toString()}`);
+  return protectedApiRequest<FeedPage>('GET', `/feed?${query.toString()}`);
 }
 
 /**
@@ -72,7 +73,7 @@ export function fetchFeedPage(cursor?: string): Promise<FeedResult<FeedPage>> {
  * the composer keeps one key per text until the post succeeds.
  */
 export function postQuestion(text: string, idempotencyKey: string): Promise<FeedResult<FeedQuestion>> {
-  return apiRequest<FeedQuestion>('POST', '/questions', {
+  return protectedApiRequest<FeedQuestion>('POST', '/questions', {
     body: { text },
     headers: { 'Idempotency-Key': idempotencyKey },
   });
@@ -105,7 +106,7 @@ async function sendReaction(
   questionId: string,
   kind: ReactionKind,
 ): Promise<FeedResult<Partial<ReactionState>>> {
-  const result = await apiRequest<Partial<ReactionAnswer>>(
+  const result = await protectedApiRequest<Partial<ReactionAnswer>>(
     method,
     `/questions/${encodeURIComponent(questionId)}/reactions/${kind}`,
   );

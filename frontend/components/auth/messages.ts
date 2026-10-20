@@ -9,6 +9,12 @@ import { messageForCode, UNVERIFIED_ACCOUNT_MESSAGE } from '@/lib/api-messages';
 const CONNECTION_ERROR_MESSAGE = 'Le serveur est injoignable. Réessayez dans un instant.';
 const UNEXPECTED_ERROR_MESSAGE = 'Une erreur est survenue. Réessayez.';
 
+/**
+ * Shown on the login page after a 401 of the protected area (lib/session-expired.ts). The product doc gives no text
+ * for this state, so the text is provisional: to be validated by the owner (DEC-145, R8).
+ */
+export const SESSION_EXPIRED_MESSAGE = 'Votre session a expiré. Reconnectez-vous pour continuer.';
+
 /** Wait shown after a 429: "45 secondes", "1 minute", "15 minutes". Rounded up to the minute from 60 s. */
 export function formatWait(seconds: number): string {
   if (seconds < 60) {

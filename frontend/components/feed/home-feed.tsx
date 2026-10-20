@@ -100,9 +100,12 @@ function newQuestionsLabel(count: number): string {
 export function HomeFeed({
   displayName,
   viewerHandle,
+  suspended,
 }: {
   displayName: string;
   viewerHandle: string | null;
+  /** True for a suspended account: the composer keeps publishing off. */
+  suspended: boolean;
 }) {
   const [state, setState] = useState<FeedState>(INITIAL_STATE);
   /** The questions whose conversation is open under their card. */
@@ -307,7 +310,7 @@ export function HomeFeed({
 
   return (
     <div className={styles.feed}>
-      <Composer displayName={displayName} onPosted={handleQuestionPosted} />
+      <Composer displayName={displayName} suspended={suspended} onPosted={handleQuestionPosted} />
 
       {trendingQuestions.length > 0 ? (
         <section className={styles.trending} aria-labelledby="trending-title">

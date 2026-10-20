@@ -21,7 +21,11 @@ export default async function HomePage() {
         </button>
       </div>
       <div role="tabpanel" id="feed-panel" aria-labelledby="tab-for-you">
-        <HomeFeed displayName={user.displayName} viewerHandle={user.handle} />
+        <HomeFeed
+          displayName={user.displayName}
+          viewerHandle={user.handle}
+          suspended={user.status === 'suspended'}
+        />
       </div>
     </main>
   );

@@ -17,6 +17,8 @@ const CREATED: FeedQuestion = {
   viewerReactions: [],
 };
 
+const SUSPENDED_MESSAGE = 'Votre compte est suspendu : la publication est désactivée.';
+
 function typeText(text: string) {
   fireEvent.change(screen.getByLabelText('Posez votre question'), { target: { value: text } });
 }
@@ -31,7 +33,7 @@ describe('Composer', () => {
   });
 
   it('starts empty, with the counter at 0 out of 280 and the button off', () => {
-    render(<Composer displayName="Alice" onPosted={vi.fn()} />);
+    render(<Composer displayName="Alice" suspended={false} onPosted={vi.fn()} />);
 
     expect(counter()).toHaveTextContent('0/280');
     expect(screen.getByRole('button', { name: 'Poster' })).toBeDisabled();
@@ -39,7 +41,7 @@ describe('Composer', () => {
   });
 
   it('counts 280 characters as allowed: no refusal, and the button is on', () => {
-    render(<Composer displayName="Alice" onPosted={vi.fn()} />);
+    render(<Composer displayName="Alice" suspended={false} onPosted={vi.fn()} />);
 
     typeText('a'.repeat(280));
 
@@ -51,7 +53,7 @@ describe('Composer', () => {
   });
 
   it('refuses 281 characters: the counter is marked, the French refusal is shown and the button stays off', () => {
-    render(<Composer displayName="Alice" onPosted={vi.fn()} />);
+    render(<Composer displayName="Alice" suspended={false} onPosted={vi.fn()} />);
 
     typeText('a'.repeat(281));
 
@@ -63,7 +65,7 @@ describe('Composer', () => {
   });
 
   it('does not send a text of spaces only', () => {
-    render(<Composer displayName="Alice" onPosted={vi.fn()} />);
+    render(<Composer displayName="Alice" suspended={false} onPosted={vi.fn()} />);
 
     typeText('   ');
 
@@ -73,7 +75,7 @@ describe('Composer', () => {
   it('sends the trimmed text, then clears the composer and gives the question to the feed', async () => {
     vi.mocked(postQuestion).mockResolvedValue({ ok: true, body: CREATED });
     const onPosted = vi.fn();
-    render(<Composer displayName="Alice" onPosted={onPosted} />);
+    render(<Composer displayName="Alice" suspended={false} onPosted={onPosted} />);
 
     typeText('  Pourquoi attendons-nous le lundi ?  ');
     fireEvent.click(screen.getByRole('button', { name: 'Poster' }));
@@ -90,7 +92,7 @@ describe('Composer', () => {
       problem: { status: 403, title: 'Interdit', detail: 'Votre compte est suspendu.' },
     });
     const onPosted = vi.fn();
-    render(<Composer displayName="Alice" onPosted={onPosted} />);
+    render(<Composer displayName="Alice" suspended={false} onPosted={onPosted} />);
 
     typeText('Une question');
     fireEvent.click(screen.getByRole('button', { name: 'Poster' }));
@@ -105,7 +107,7 @@ describe('Composer', () => {
     vi.stubGlobal('crypto', { getRandomValues: realCrypto.getRandomValues.bind(realCrypto) });
     try {
       vi.mocked(postQuestion).mockResolvedValue({ ok: true, body: CREATED });
-      render(<Composer displayName="Alice" onPosted={vi.fn()} />);
+      render(<Composer displayName="Alice" suspended={false} onPosted={vi.fn()} />);
 
       typeText('Une question');
       fireEvent.click(screen.getByRole('button', { name: 'Poster' }));
@@ -115,5 +117,35 @@ describe('Composer', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  describe('for a suspended account (section 3.4, DEC-095)', () => {
+    it('shows the publishing explanation, and keeps the button off even with a valid text', () => {
+      render(<Composer displayName="Alice" suspended onPosted={vi.fn()} />);
+
+      typeText('Une question valide');
+
+      expect(screen.getByText(SUSPENDED_MESSAGE)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Poster' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Poster' })).toHaveAccessibleDescription(SUSPENDED_MESSAGE);
+    });
+
+    it('does not send the question when the form is submitted anyway', () => {
+      const { container } = render(<Composer displayName="Alice" suspended onPosted={vi.fn()} />);
+
+      typeText('Une question valide');
+      fireEvent.submit(container.querySelector('form')!);
+
+      expect(postQuestion).not.toHaveBeenCalled();
+    });
+
+    it('shows no explanation for an active account', () => {
+      render(<Composer displayName="Alice" suspended={false} onPosted={vi.fn()} />);
+
+      typeText('Une question valide');
+
+      expect(screen.queryByText(SUSPENDED_MESSAGE)).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Poster' })).toBeEnabled();
+    });
   });
 });

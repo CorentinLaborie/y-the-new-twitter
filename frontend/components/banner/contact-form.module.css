@@ -1,0 +1,107 @@
+/*
+ * Contact form of a suspended account (design: Contact-Suspended and Contact-Sent boards). Same tokens as the composer
+ * of the feed, so that the form looks like the rest of the product at every size.
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: normal;
+  color: var(--color-foreground);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-muted-foreground);
+}
+
+.textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 14px;
+  line-height: var(--type-body-line-height);
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+.textarea[aria-invalid='true'] {
+  border-color: var(--color-destructive);
+}
+
+.textarea:disabled {
+  opacity: 0.6;
+}
+
+.refusal {
+  margin: 0;
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-destructive-text);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.counter {
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.counter[data-over='true'] {
+  color: var(--color-destructive-text);
+  font-weight: 600;
+}
+
+.submit {
+  height: 36px;
+  padding: 0 var(--space-16);
+  font-size: 14px;
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-muted-foreground);
+}
+
+.sentTitle {
+  display: block;
+  font-size: var(--type-supporting-strong-size);
+}
+
+.sentText {
+  display: block;
+}
+
+.reference {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
