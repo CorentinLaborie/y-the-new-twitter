@@ -6,9 +6,13 @@
 
 import { apiRequest } from '@/lib/api-client';
 
-export type { ApiProblem } from '@/lib/api-client';
-
 export type ApiUser = { handle: string; displayName: string };
+
+/** Account status, as GET /auth/session sends it in `user.status`. */
+export type AccountStatus = 'pending_verification' | 'active' | 'suspended' | 'pending_deletion' | 'deleted';
+
+/** The signed-in user of GET /auth/session: the account fields, and the status of the account. */
+export type SessionUser = ApiUser & { status: AccountStatus };
 
 type SignupInput = {
   handle: string;
@@ -31,7 +35,7 @@ export const login = (email: string, password: string) =>
   apiRequest<{ user: ApiUser }>('POST', '/auth/login', { body: { email, password } });
 /** `cookie` is the SESSION cookie of the visitor when the call is made on the server (see requireSession). */
 export const getSession = (cookie?: string) =>
-  apiRequest<{ user: ApiUser | null }>('GET', '/auth/session', { cookie });
+  apiRequest<{ user: SessionUser | null }>('GET', '/auth/session', { cookie });
 export const requestPasswordReset = (email: string) =>
   apiRequest<Record<string, never>>('POST', '/auth/password-reset/request', { body: { email } });
 export const confirmPasswordReset = (email: string, code: string, password: string) =>

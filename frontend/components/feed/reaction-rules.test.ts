@@ -11,9 +11,9 @@ const NONE: ReactionState = {
 
 describe('applyReaction', () => {
   it('sets a reaction the viewer does not have yet, with a PUT', () => {
-    const { next, request } = applyReaction(NONE, 'like');
+    const { next, method } = applyReaction(NONE, 'like');
 
-    expect(request).toBe('put');
+    expect(method).toBe('PUT');
     expect(next.viewerReactions).toEqual(['like']);
     expect(next.counters).toEqual({ like: 11, dislike: 2, y: 49 });
   });
@@ -25,9 +25,9 @@ describe('applyReaction', () => {
       viewerReactions: ['like'],
     };
 
-    const { next, request } = applyReaction(liked, 'dislike');
+    const { next, method } = applyReaction(liked, 'dislike');
 
-    expect(request).toBe('put');
+    expect(method).toBe('PUT');
     expect(next.viewerReactions).toEqual(['dislike']);
     expect(next.counters).toEqual({ like: 10, dislike: 3, y: 49 });
   });
@@ -39,9 +39,9 @@ describe('applyReaction', () => {
       viewerReactions: ['like'],
     };
 
-    const { next, request } = applyReaction(liked, 'like');
+    const { next, method } = applyReaction(liked, 'like');
 
-    expect(request).toBe('delete');
+    expect(method).toBe('DELETE');
     expect(next.viewerReactions).toEqual([]);
     expect(next.counters.like).toBe(10);
   });

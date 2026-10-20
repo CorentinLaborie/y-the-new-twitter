@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/auth/button';
 import { TextField } from '@/components/auth/text-field';
 import { requestPasswordReset } from '@/lib/auth-api';
+import { rememberPendingEmail } from '@/lib/pending-email';
 import { isValidEmail, EMAIL_INVALID_MESSAGE } from './email-rule';
 import { requestErrorMessage } from './messages';
 import styles from './forgot-password.module.css';
 
 /**
- * Step 1: the e-mail address. Whatever the account state, a 202 answer leads to the code step, so the screen
- * never says whether the address has an account (product doc 13, enumeration protection).
+ * Step 1: the e-mail enteredEmail. Whatever the account state, a 202 answer leads to the code step, so the screen
+ * never says whether the enteredEmail has an account (product doc 13, enumeration protection).
  */
 export function RequestForm() {
   const router = useRouter();
@@ -19,13 +20,13 @@ export function RequestForm() {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const address = email.trim();
+    const enteredEmail = email.trim();
 
-    if (!isValidEmail(address)) {
+    if (!isValidEmail(enteredEmail)) {
       setFormError(null);
       setEmailError(EMAIL_INVALID_MESSAGE);
       inputRef.current?.focus();
@@ -34,14 +35,15 @@ export function RequestForm() {
 
     setEmailError(null);
     setFormError(null);
-    setPending(true);
-    const result = await requestPasswordReset(address);
+    setSubmitting(true);
+    const result = await requestPasswordReset(enteredEmail);
     if (result.ok) {
-      router.push(`/forgot-password/confirm?email=${encodeURIComponent(address)}`);
+      rememberPendingEmail(enteredEmail);
+      router.push('/forgot-password/confirm');
       return;
     }
 
-    setPending(false);
+    setSubmitting(false);
     setFormError(requestErrorMessage(result.problem));
   }
 
@@ -71,8 +73,8 @@ export function RequestForm() {
             {formError}
           </p>
         ) : null}
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Envoi en cours…' : 'Envoyer le code'}
+        <Button type="submit" disabled={submitting}>
+          {submitting ? 'Envoi en cours…' : 'Envoyer le code'}
         </Button>
       </form>
     </>

@@ -12,54 +12,66 @@ import {
 } from '@/lib/feed-api';
 import { Composer } from './composer';
 import { FeedIcon } from './feed-icon';
-import { FeedEmpty, FeedError, FeedLoading } from './feed-states';
+import {
+  CONNECTION_FAILURE_MESSAGE,
+  feedFailureMessage,
+  FeedEmpty,
+  FeedError,
+  FeedLoading,
+} from './feed-states';
 import { applyReaction, reactionFailureMessage, withReactions, withServerState } from './reaction-rules';
 import styles from './feed.module.css';
 import { QuestionCard } from './question-card';
 
 type Phase = 'loading' | 'ready' | 'failed';
-type MoreStatus = 'idle' | 'loading' | 'failed';
+type NextPageStatus = 'idle' | 'loading' | 'failed';
 
 type FeedState = {
   /** State of the first page (or of its retry). */
   phase: Phase;
+  /** Message of the failed first page, shown by the error state. */
+  loadError: string;
   /** The trending block, from the first page: the top 10 by reactions in the last 24 h. Hidden when empty. */
-  trending: FeedQuestion[];
-  items: FeedQuestion[];
+  trendingQuestions: FeedQuestion[];
+  /** The list, the most recent first. */
+  questions: FeedQuestion[];
   /** Questions found by the check of the first page, not shown yet (the pill "Afficher N nouvelles questions"). */
-  pending: FeedQuestion[];
+  newQuestions: FeedQuestion[];
   nextCursor: string | null;
   /** State of the next page, loaded with "Voir plus". */
-  more: MoreStatus;
+  nextPageStatus: NextPageStatus;
   /** Questions whose reaction call is in flight: their reactions are off until the answer comes. */
-  busy: string[];
+  pendingReactionIds: string[];
   /** The failed reaction, rolled back, with its message. */
   reactionError: { questionId: string; message: string } | null;
 };
 
 const INITIAL_STATE: FeedState = {
   phase: 'loading',
-  trending: [],
-  items: [],
-  pending: [],
+  loadError: '',
+  trendingQuestions: [],
+  questions: [],
+  newQuestions: [],
   nextCursor: null,
-  more: 'idle',
-  busy: [],
+  nextPageStatus: 'idle',
+  pendingReactionIds: [],
   reactionError: null,
 };
 
 /** How often the first page is checked for new questions, while the feed is shown. */
 const NEW_QUESTIONS_CHECK_MS = 30_000;
 
-/** Adds the incoming questions after the current ones, without repeating one already shown. */
-function appendUnique(current: FeedQuestion[], incoming: FeedQuestion[]): FeedQuestion[] {
-  const shown = new Set(current.map((question) => question.id));
-  return [...current, ...incoming.filter((question) => !shown.has(question.id))];
+/** The questions of `first`, then those of `second` that `first` does not already have. */
+function withoutDuplicates(first: FeedQuestion[], second: FeedQuestion[]): FeedQuestion[] {
+  const inFirst = new Set(first.map((question) => question.id));
+  return [...first, ...second.filter((question) => !inFirst.has(question.id))];
 }
 
-/** Questions of a page that the feed neither shows (trending, list) nor holds as pending. */
-function unseen(page: FeedQuestion[], state: FeedState): FeedQuestion[] {
-  const known = new Set([...state.trending, ...state.items, ...state.pending].map((question) => question.id));
+/** Questions of a page that the feed neither shows (trending, list) nor holds as new. */
+function questionsNotShown(page: FeedQuestion[], state: FeedState): FeedQuestion[] {
+  const known = new Set(
+    [...state.trendingQuestions, ...state.questions, ...state.newQuestions].map((question) => question.id),
+  );
   return page.filter((question) => !known.has(question.id));
 }
 
@@ -81,22 +93,25 @@ export function HomeFeed({ displayName }: { displayName: string }) {
         ? {
             ...current,
             phase: 'ready',
-            trending: result.body.trending,
-            items: appendUnique(current.items, result.body.items),
+            trendingQuestions: result.body.trending,
+            questions: withoutDuplicates(current.questions, result.body.questions),
             nextCursor: result.body.nextCursor,
           }
-        : { ...current, phase: 'failed' },
+        : { ...current, phase: 'failed', loadError: feedFailureMessage(result.problem) },
     );
   }, []);
 
-  const checkNewQuestions = useCallback(() => {
+  const checkForNewQuestions = useCallback(() => {
     fetchFeedPage().then((result) => {
       if (!result.ok) {
         return;
       }
       setState((current) =>
         current.phase === 'ready'
-          ? { ...current, pending: [...current.pending, ...unseen(result.body.items, current)] }
+          ? {
+              ...current,
+              newQuestions: [...current.newQuestions, ...questionsNotShown(result.body.questions, current)],
+            }
           : current,
       );
     });
@@ -106,15 +121,25 @@ export function HomeFeed({ displayName }: { displayName: string }) {
     fetchFeedPage().then(applyFirstPage);
   }, [applyFirstPage]);
 
-  const { phase, trending, items, pending, nextCursor, more, busy, reactionError } = state;
+  const {
+    phase,
+    loadError,
+    trendingQuestions,
+    questions,
+    newQuestions,
+    nextCursor,
+    nextPageStatus,
+    pendingReactionIds,
+    reactionError,
+  } = state;
 
   useEffect(() => {
     if (phase !== 'ready') {
       return;
     }
-    const timer = setInterval(checkNewQuestions, NEW_QUESTIONS_CHECK_MS);
+    const timer = setInterval(checkForNewQuestions, NEW_QUESTIONS_CHECK_MS);
     return () => clearInterval(timer);
-  }, [phase, checkNewQuestions]);
+  }, [phase, checkForNewQuestions]);
 
   function retryFirstPage() {
     setState((current) => ({ ...current, phase: 'loading' }));
@@ -122,17 +147,17 @@ export function HomeFeed({ displayName }: { displayName: string }) {
   }
 
   function loadMore(cursor: string) {
-    setState((current) => ({ ...current, more: 'loading' }));
+    setState((current) => ({ ...current, nextPageStatus: 'loading' }));
     fetchFeedPage(cursor).then((result) => {
       setState((current) =>
         result.ok
           ? {
               ...current,
-              items: appendUnique(current.items, result.body.items),
+              questions: withoutDuplicates(current.questions, result.body.questions),
               nextCursor: result.body.nextCursor,
-              more: 'idle',
+              nextPageStatus: 'idle',
             }
-          : { ...current, more: 'failed' },
+          : { ...current, nextPageStatus: 'failed' },
       );
     });
   }
@@ -140,117 +165,118 @@ export function HomeFeed({ displayName }: { displayName: string }) {
   function showNewQuestions() {
     setState((current) => ({
       ...current,
-      items: appendUnique(current.pending, current.items),
-      pending: [],
+      questions: withoutDuplicates(current.newQuestions, current.questions),
+      newQuestions: [],
     }));
   }
 
-  function reactTo(question: FeedQuestion, kind: ReactionKind) {
-    const { next, request } = applyReaction(question, kind);
+  function handleReaction(question: FeedQuestion, kind: ReactionKind) {
+    const { next, method } = applyReaction(question, kind);
     // The same question can be shown in the trending block and in the list: both copies follow the reaction.
-    const replaceIn = (list: FeedQuestion[], value: FeedQuestion) =>
+    const replaceInList = (list: FeedQuestion[], value: FeedQuestion) =>
       list.map((shown) => (shown.id === question.id ? value : shown));
 
     setState((current) => ({
       ...current,
-      busy: [...current.busy, question.id],
+      pendingReactionIds: [...current.pendingReactionIds, question.id],
       reactionError: current.reactionError?.questionId === question.id ? null : current.reactionError,
-      trending: replaceIn(current.trending, withReactions(question, next)),
-      items: replaceIn(current.items, withReactions(question, next)),
+      trendingQuestions: replaceInList(current.trendingQuestions, withReactions(question, next)),
+      questions: replaceInList(current.questions, withReactions(question, next)),
     }));
 
-    const call = request === 'put' ? putReaction(question.id, kind) : deleteReaction(question.id, kind);
-    call.then((result) => {
+    const reactionCall =
+      method === 'PUT' ? putReaction(question.id, kind) : deleteReaction(question.id, kind);
+    reactionCall.then((result) => {
       setState((current) => {
-        const busy = current.busy.filter((id) => id !== question.id);
+        const pendingReactionIds = current.pendingReactionIds.filter((id) => id !== question.id);
         if (!result.ok) {
           return {
             ...current,
-            busy,
-            trending: replaceIn(current.trending, question),
-            items: replaceIn(current.items, question),
+            pendingReactionIds,
+            trendingQuestions: replaceInList(current.trendingQuestions, question),
+            questions: replaceInList(current.questions, question),
             reactionError: { questionId: question.id, message: reactionFailureMessage(result.problem) },
           };
         }
-        const shown = current.items.find((item) => item.id === question.id) ?? question;
+        const shown = current.questions.find((item) => item.id === question.id) ?? question;
         const reactions = withServerState(next, result.body);
         return {
           ...current,
-          busy,
-          trending: replaceIn(current.trending, withReactions(shown, reactions)),
-          items: replaceIn(current.items, withReactions(shown, reactions)),
+          pendingReactionIds,
+          trendingQuestions: replaceInList(current.trendingQuestions, withReactions(shown, reactions)),
+          questions: replaceInList(current.questions, withReactions(shown, reactions)),
         };
       });
     });
   }
 
-  function renderCard(question: FeedQuestion) {
+  function renderQuestionCard(question: FeedQuestion) {
     return (
       <QuestionCard
         question={question}
-        busy={busy.includes(question.id)}
+        reactionPending={pendingReactionIds.includes(question.id)}
         reactionError={reactionError?.questionId === question.id ? reactionError.message : null}
-        onReact={(kind) => reactTo(question, kind)}
+        onReact={(kind) => handleReaction(question, kind)}
       />
     );
   }
 
-  function handlePosted(question: FeedQuestion) {
+  function handleQuestionPosted(question: FeedQuestion) {
     setState((current) => ({
       ...current,
-      items: [question, ...current.items.filter((shown) => shown.id !== question.id)],
-      pending: current.pending.filter((waiting) => waiting.id !== question.id),
+      questions: [question, ...current.questions.filter((shown) => shown.id !== question.id)],
+      newQuestions: current.newQuestions.filter((waiting) => waiting.id !== question.id),
     }));
   }
 
   return (
     <div className={styles.feed}>
-      <Composer displayName={displayName} onPosted={handlePosted} />
+      <Composer displayName={displayName} onPosted={handleQuestionPosted} />
 
-      {trending.length > 0 ? (
+      {trendingQuestions.length > 0 ? (
         <section className={styles.trending} aria-labelledby="trending-title">
           <h2 id="trending-title" className={styles.trendingTitle}>
             Tendances sur 24 h
           </h2>
           <ul className={styles.list}>
-            {trending.map((question) => (
-              <li key={question.id}>{renderCard(question)}</li>
+            {trendingQuestions.map((question) => (
+              <li key={question.id}>{renderQuestionCard(question)}</li>
             ))}
           </ul>
         </section>
       ) : null}
 
-      {pending.length > 0 ? (
+      {newQuestions.length > 0 ? (
         <button type="button" className={styles.newQuestions} onClick={showNewQuestions}>
           <FeedIcon name="plus" size={14} />
-          {newQuestionsLabel(pending.length)}
+          {newQuestionsLabel(newQuestions.length)}
         </button>
       ) : null}
 
-      {items.length > 0 ? (
+      {questions.length > 0 ? (
         <ul className={styles.list}>
-          {items.map((question) => (
-            <li key={question.id}>{renderCard(question)}</li>
+          {questions.map((question) => (
+            <li key={question.id}>{renderQuestionCard(question)}</li>
           ))}
         </ul>
       ) : null}
-      {items.length === 0 && phase === 'loading' ? <FeedLoading /> : null}
-      {trending.length === 0 && items.length === 0 && phase === 'ready' ? <FeedEmpty /> : null}
-      {phase === 'failed' ? <FeedError onRetry={retryFirstPage} /> : null}
+      {questions.length === 0 && phase === 'loading' ? <FeedLoading /> : null}
+      {trendingQuestions.length === 0 && questions.length === 0 && phase === 'ready' ? <FeedEmpty /> : null}
+      {phase === 'failed' ? <FeedError message={loadError} onRetry={retryFirstPage} /> : null}
 
-      {phase === 'ready' && more === 'failed' && nextCursor ? (
-        <FeedError onRetry={() => loadMore(nextCursor)} />
+      {phase === 'ready' && nextPageStatus === 'failed' && nextCursor ? (
+        <FeedError message={CONNECTION_FAILURE_MESSAGE} onRetry={() => loadMore(nextCursor)} />
       ) : null}
-      {phase === 'ready' && nextCursor && more !== 'failed' ? (
+      {phase === 'ready' && nextCursor && nextPageStatus !== 'failed' ? (
         <button
           type="button"
-          className={`y-loadmore ${more === 'loading' ? 'is-loading' : ''}`}
-          disabled={more === 'loading'}
-          aria-busy={more === 'loading' ? true : undefined}
+          className={`y-loadmore ${nextPageStatus === 'loading' ? 'is-loading' : ''}`}
+          disabled={nextPageStatus === 'loading'}
+          aria-busy={nextPageStatus === 'loading' ? true : undefined}
           onClick={() => loadMore(nextCursor)}
         >
-          {more === 'loading' ? <span className="y-loadmore-spinner" aria-hidden="true" /> : null}
-          {more === 'loading' ? 'Chargement…' : 'Voir plus'}
+          {nextPageStatus === 'loading' ? <span className="y-loadmore-spinner" aria-hidden="true" /> : null}
+          {nextPageStatus === 'loading' ? 'Chargement…' : 'Voir plus'}
         </button>
       ) : null}
     </div>

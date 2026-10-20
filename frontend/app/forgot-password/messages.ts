@@ -1,4 +1,4 @@
-import type { ApiProblem } from '@/lib/auth-api';
+import type { ApiProblem } from '@/lib/api-client';
 
 /** French messages for the forgot-password screens, from the status of the API answer (no raw API text). */
 

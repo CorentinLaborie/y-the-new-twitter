@@ -24,7 +24,7 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
   const [codeError, setCodeError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -41,9 +41,9 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
       return;
     }
 
-    setPending(true);
+    setSubmitting(true);
     const result = await confirmPasswordReset(email, enteredCode, password);
-    setPending(false);
+    setSubmitting(false);
     if (result.ok) {
       setPassword('');
       setDone(true);
@@ -109,8 +109,8 @@ export function ConfirmForm({ email }: ConfirmFormProps) {
             </Link>
           </p>
         ) : null}
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Envoi en cours…' : 'Changer mon mot de passe'}
+        <Button type="submit" disabled={submitting}>
+          {submitting ? 'Envoi en cours…' : 'Changer mon mot de passe'}
         </Button>
       </form>
     </>

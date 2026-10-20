@@ -8,6 +8,7 @@ import { signupProblemMessage } from '@/components/auth/messages';
 import { Notice } from '@/components/auth/notice';
 import { TextField } from '@/components/auth/text-field';
 import { signup } from '@/lib/auth-api';
+import { rememberPendingEmail } from '@/lib/pending-email';
 import {
   firstErrorField,
   hasErrors,
@@ -48,7 +49,7 @@ export function SignupForm() {
   const [values, setValues] = useState<SignupValues>(EMPTY_VALUES);
   const [errors, setErrors] = useState<FieldErrors<SignupField>>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const inputs = useRef<Partial<Record<SignupField, HTMLInputElement | null>>>({});
 
   function setField<Field extends SignupField>(field: Field, value: SignupValues[Field]) {
@@ -56,8 +57,8 @@ export function SignupForm() {
     setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
-  function focusFirstError(found: FieldErrors<SignupField>) {
-    const field = firstErrorField(found, FIELD_ORDER);
+  function focusFirstError(fieldErrors: FieldErrors<SignupField>) {
+    const field = firstErrorField(fieldErrors, FIELD_ORDER);
     if (field) {
       inputs.current[field]?.focus();
     }
@@ -67,16 +68,16 @@ export function SignupForm() {
     event.preventDefault();
     setFormError(null);
 
-    const found = validateSignup(values);
+    const fieldErrors = validateSignup(values);
     const birthDate = toIsoBirthDate(values.birthDate);
-    if (hasErrors(found) || birthDate === null) {
-      setErrors(found);
-      focusFirstError(found);
+    if (hasErrors(fieldErrors) || birthDate === null) {
+      setErrors(fieldErrors);
+      focusFirstError(fieldErrors);
       return;
     }
 
     setErrors({});
-    setPending(true);
+    setSubmitting(true);
     const email = normalizeEmail(values.email);
     const phone = values.phone.trim();
     const result = await signup({
@@ -91,18 +92,19 @@ export function SignupForm() {
     });
 
     if (result.ok) {
-      router.push(`/signup/code?email=${encodeURIComponent(email)}`);
+      rememberPendingEmail(email);
+      router.push('/signup/code');
       return;
     }
 
-    setPending(false);
-    const problem = signupProblemMessage(result.problem);
-    if (problem.field) {
-      const field = problem.field;
-      setErrors({ [field]: problem.message });
+    setSubmitting(false);
+    const problemMessage = signupProblemMessage(result.problem);
+    if (problemMessage.field) {
+      const field = problemMessage.field;
+      setErrors({ [field]: problemMessage.message });
       inputs.current[field]?.focus();
     } else {
-      setFormError(problem.message);
+      setFormError(problemMessage.message);
     }
   }
 
@@ -224,8 +226,8 @@ export function SignupForm() {
         }}
       />
       {formError ? <Notice tone="error">{formError}</Notice> : null}
-      <Button type="submit" disabled={pending}>
-        {pending ? 'Création du compte…' : 'Créer mon compte'}
+      <Button type="submit" disabled={submitting}>
+        {submitting ? 'Création du compte…' : 'Créer mon compte'}
       </Button>
     </form>
   );

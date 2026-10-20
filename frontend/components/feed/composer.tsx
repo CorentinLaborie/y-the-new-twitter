@@ -2,7 +2,9 @@
 
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { Notice } from '@/components/auth/notice';
+import { messageForCode } from '@/lib/api-messages';
 import { postQuestion, type FeedQuestion } from '@/lib/feed-api';
+import { avatarInitial } from './avatar-initial';
 import { FeedIcon } from './feed-icon';
 import styles from './feed.module.css';
 import {
@@ -21,28 +23,41 @@ type ComposerProps = {
 };
 
 /**
+ * A random key for the Idempotency-Key header. crypto.randomUUID exists only in secure contexts (HTTPS, localhost),
+ * so the key is built from random bytes otherwise.
+ */
+function newIdempotencyKey(): string {
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('');
+}
+
+/**
  * Composer of a question at the top of the feed (Home boards). Text only, up to 280 characters (R1).
  * Over the limit the text is refused with a message, and the button stays off. The API refusal is shown as a notice.
  */
 export function Composer({ displayName, onPosted }: ComposerProps) {
   const [text, setText] = useState('');
-  const [pending, setPending] = useState(false);
-  const [failure, setFailure] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   // One key per text: a repeated submit of the same text returns the first result (Idempotency-Key).
   const idempotencyKey = useRef<string | null>(null);
   const textareaId = useId();
   const hintId = useId();
   const refusalId = useId();
 
-  const length = questionLength(text);
-  const check = checkQuestion(text);
-  const tooLong = !check.ok && check.reason === 'too-long';
-  const canSubmit = check.ok && !pending;
+  const characterCount = questionLength(text);
+  const questionCheck = checkQuestion(text);
+  const tooLong = !questionCheck.ok && questionCheck.reason === 'too-long';
+  const canSubmit = questionCheck.ok && !submitting;
 
   function handleChange(value: string) {
     setText(value);
     idempotencyKey.current = null;
-    setFailure(null);
+    setSubmitError(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -50,17 +65,17 @@ export function Composer({ displayName, onPosted }: ComposerProps) {
     if (!canSubmit) {
       return;
     }
-    idempotencyKey.current ??= crypto.randomUUID();
-    setPending(true);
-    setFailure(null);
+    idempotencyKey.current ??= newIdempotencyKey();
+    setSubmitting(true);
+    setSubmitError(null);
     const result = await postQuestion(normalizeQuestion(text), idempotencyKey.current);
-    setPending(false);
+    setSubmitting(false);
     if (result.ok) {
       idempotencyKey.current = null;
       setText('');
       onPosted(result.body);
     } else {
-      setFailure(result.problem.detail);
+      setSubmitError(messageForCode(result.problem) ?? result.problem.detail);
     }
   }
 
@@ -69,7 +84,7 @@ export function Composer({ displayName, onPosted }: ComposerProps) {
   return (
     <form className={styles.composer} onSubmit={handleSubmit}>
       <span className={`${styles.avatar} ${styles.composerAvatar}`} aria-hidden="true">
-        {displayName.charAt(0).toUpperCase()}
+        {avatarInitial(displayName)}
       </span>
       <div className={styles.composerBody}>
         <label htmlFor={textareaId} className={styles.composerLabel}>
@@ -78,19 +93,19 @@ export function Composer({ displayName, onPosted }: ComposerProps) {
         <textarea
           id={textareaId}
           className={styles.textarea}
-          placeholder={'Quelle est votre question ?'}
+          placeholder={'Quelle est votre question ?'}
           value={text}
           onChange={(event) => handleChange(event.target.value)}
           aria-invalid={tooLong ? true : undefined}
           aria-describedby={describedBy}
-          disabled={pending}
+          disabled={submitting}
         />
         {tooLong ? (
           <p id={refusalId} className={styles.refusal}>
             {TOO_LONG_MESSAGE}
           </p>
         ) : null}
-        {failure ? <Notice tone="error">{failure}</Notice> : null}
+        {submitError ? <Notice tone="error">{submitError}</Notice> : null}
         <div className={styles.composerFooter}>
           <span id={hintId} className={styles.hint}>
             <FeedIcon name="globe" size={16} />
@@ -98,10 +113,10 @@ export function Composer({ displayName, onPosted }: ComposerProps) {
           </span>
           <div className={styles.composerActions}>
             <span className={styles.counter} data-over={tooLong ? 'true' : undefined}>
-              {length}/{QUESTION_MAX_LENGTH}
+              {characterCount}/{QUESTION_MAX_LENGTH}
             </span>
             <button type="submit" className={`y-btn y-btn-primary ${styles.submit}`} disabled={!canSubmit}>
-              {pending ? 'Publication…' : 'Poster'}
+              {submitting ? 'Publication…' : 'Poster'}
             </button>
           </div>
         </div>

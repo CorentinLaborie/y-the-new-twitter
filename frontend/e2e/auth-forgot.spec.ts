@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { bodyOf, mockAuthApi, notice, problem, ui } from './auth-kit';
+import { bodyOf, givenPendingEmail, mockAuthApi, notice, problem, ui } from './auth-kit';
 
 const KNOWN_EMAIL = 'alice@example.com';
 const UNKNOWN_EMAIL = 'personne@example.com';
@@ -15,7 +15,7 @@ test('a reset request gives the same answer whatever the e-mail address', async 
     await page.getByRole('button', { name: ui.submitForgot, exact: true }).click();
 
     await page.waitForURL((url) => url.pathname === '/forgot-password/confirm');
-    expect(new URL(page.url()).searchParams.get('email')).toBe(email);
+    expect(new URL(page.url()).search).toBe('');
     await expect(notice(page)).toHaveCount(0);
   }
 
@@ -26,7 +26,8 @@ test('a reset request gives the same answer whatever the e-mail address', async 
 test('the confirm page sends the code and the new password', async ({ page }) => {
   const calls = await mockAuthApi(page, { 'POST /auth/password-reset/confirm': { status: 200, body: {} } });
 
-  await page.goto(`/forgot-password/confirm?email=${encodeURIComponent(KNOWN_EMAIL)}`);
+  await givenPendingEmail(page, KNOWN_EMAIL);
+  await page.goto('/forgot-password/confirm');
   await page.getByLabel(ui.code, { exact: true }).fill('654321');
   await page.getByLabel(ui.newPassword, { exact: true }).fill(NEW_PASSWORD);
   await page.getByRole('button', { name: ui.submitReset, exact: true }).click();
@@ -47,11 +48,12 @@ test('a wrong code on the confirm page shows an error and keeps the user there',
     'POST /auth/password-reset/confirm': problem(422, 'Code incorrect ou expiré.'),
   });
 
-  await page.goto(`/forgot-password/confirm?email=${encodeURIComponent(KNOWN_EMAIL)}`);
+  await givenPendingEmail(page, KNOWN_EMAIL);
+  await page.goto('/forgot-password/confirm');
   await page.getByLabel(ui.code, { exact: true }).fill('000000');
   await page.getByLabel(ui.newPassword, { exact: true }).fill(NEW_PASSWORD);
   await page.getByRole('button', { name: ui.submitReset, exact: true }).click();
 
   await expect(notice(page)).toContainText(/code est incorrect/i);
-  await expect(page).toHaveURL(/\/forgot-password\/confirm\?/);
+  await expect(page).toHaveURL(/\/forgot-password\/confirm$/);
 });

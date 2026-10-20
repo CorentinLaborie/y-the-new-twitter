@@ -32,11 +32,11 @@ function question(id: string, text: string): FeedQuestion {
 }
 
 function page(
-  items: FeedQuestion[],
+  questions: FeedQuestion[],
   nextCursor: string | null = null,
   trending: FeedQuestion[] = [],
 ): { ok: true; body: FeedPage } {
-  return { ok: true, body: { trending, items, nextCursor } };
+  return { ok: true, body: { trending, questions, nextCursor } };
 }
 
 const failure = { ok: false as const, problem: { status: 500, title: 'Erreur', detail: 'Erreur serveur.' } };
@@ -103,6 +103,31 @@ describe('HomeFeed', () => {
     expect(await screen.findByText('Question après reprise')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(fetchFeedPage).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows the account message of the API, not the connection advice, when the account is not active', async () => {
+    vi.mocked(fetchFeedPage).mockResolvedValue({
+      ok: false,
+      problem: { status: 403, title: 'Interdit', detail: 'Votre compte est suspendu.' },
+    });
+
+    render(<HomeFeed displayName="Alice" />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Votre compte est suspendu.');
+    expect(alert).not.toHaveTextContent('Vérifiez votre connexion');
+  });
+
+  it('shows the French text of the account code, not the API detail', async () => {
+    vi.mocked(fetchFeedPage).mockResolvedValue({
+      ok: false,
+      problem: { status: 403, title: 'Interdit', detail: 'Account suspended.', code: 'account_suspended' },
+    });
+
+    render(<HomeFeed displayName="Alice" />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Votre compte est suspendu.');
+    expect(screen.queryByText('Account suspended.')).not.toBeInTheDocument();
   });
 
   it('loads the next page with Voir plus, appends it, and hides the control at the end of the feed', async () => {

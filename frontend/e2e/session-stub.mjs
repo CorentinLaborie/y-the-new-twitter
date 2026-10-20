@@ -12,7 +12,9 @@ const server = createServer((request, response) => {
     const signedIn = SIGNED_IN_COOKIE.test(request.headers.cookie ?? '');
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(
-      JSON.stringify({ user: signedIn ? { handle: 'alice', displayName: 'Alice Martin' } : null }),
+      JSON.stringify({
+        user: signedIn ? { handle: 'alice', displayName: 'Alice Martin', status: 'active' } : null,
+      }),
     );
     return;
   }

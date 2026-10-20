@@ -10,13 +10,13 @@ describe('reaction calls', () => {
     vi.unstubAllGlobals();
   });
 
-  it('maps the PUT answer: counts become counters, the Y threshold and the open conversation come along', async () => {
+  it('maps the PUT answer: the counters, the Y threshold and the open conversation come along', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () =>
         Response.json({
           questionId: 'q1',
-          counts: { like: 10, dislike: 2, y: 50 },
+          counters: { like: 10, dislike: 2, y: 50 },
           viewerReactions: ['y'],
           yThreshold: 50,
           conversationOpen: true,

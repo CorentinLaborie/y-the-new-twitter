@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useSearchParams } from 'next/navigation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { login } from '@/lib/auth-api';
+import { rememberPendingEmail, takePendingEmail } from '@/lib/pending-email';
 import { LoginForm } from './login-form';
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
@@ -25,6 +26,7 @@ describe('LoginForm', () => {
   beforeEach(() => {
     vi.mocked(login).mockReset();
     push.mockReset();
+    window.sessionStorage.clear();
     givenUrl('');
   });
 
@@ -66,7 +68,7 @@ describe('LoginForm', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it('links an unverified account to the code page', async () => {
+  it('links an unverified account to the code page and hands the e-mail over outside the URL', async () => {
     vi.mocked(login).mockResolvedValue({
       ok: false,
       problem: { status: 403, title: 'Forbidden', detail: 'Account not verified.' },
@@ -77,10 +79,11 @@ describe('LoginForm', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Votre compte n’est pas encore validé.');
-    expect(screen.getByRole('link', { name: 'Saisir mon code' })).toHaveAttribute(
-      'href',
-      '/signup/code?email=alex%40exemple.fr',
-    );
+    const link = screen.getByRole('link', { name: 'Saisir mon code' });
+    expect(link).toHaveAttribute('href', '/signup/code');
+    link.addEventListener('click', (event) => event.preventDefault());
+    fireEvent.click(link);
+    expect(takePendingEmail()).toBe('alex@exemple.fr');
   });
 
   it('shows how long to wait after too many attempts', async () => {
@@ -97,13 +100,22 @@ describe('LoginForm', () => {
     );
   });
 
-  it('confirms a freshly verified account and pre-fills its e-mail', () => {
-    givenUrl('verified=1&email=alex%40exemple.fr');
+  it('confirms a freshly verified account and pre-fills its e-mail from the code page', async () => {
+    givenUrl('verified=1');
+    rememberPendingEmail('alex@exemple.fr');
     render(<LoginForm />);
 
     expect(screen.getByRole('status')).toHaveTextContent(
       'Votre compte est validé. Connectez-vous pour continuer.',
     );
-    expect(screen.getByLabelText('Adresse e-mail')).toHaveValue('alex@exemple.fr');
+    await waitFor(() => expect(screen.getByLabelText('Adresse e-mail')).toHaveValue('alex@exemple.fr'));
+    expect(takePendingEmail()).toBeNull();
+  });
+
+  it('keeps the e-mail field empty when no address was handed over', () => {
+    givenUrl('verified=1');
+    render(<LoginForm />);
+
+    expect(screen.getByLabelText('Adresse e-mail')).toHaveValue('');
   });
 });

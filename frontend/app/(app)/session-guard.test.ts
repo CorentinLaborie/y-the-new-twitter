@@ -46,10 +46,14 @@ describe('requireSession', () => {
     vi.mocked(getSession).mockResolvedValue({
       ok: true,
       status: 200,
-      body: { user: { handle: 'marthe', displayName: 'Marthe' } },
+      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active' } },
     });
 
-    await expect(requireSession()).resolves.toEqual({ handle: 'marthe', displayName: 'Marthe' });
+    await expect(requireSession()).resolves.toEqual({
+      handle: 'marthe',
+      displayName: 'Marthe',
+      status: 'active',
+    });
   });
 
   it('forwards only the SESSION cookie to the API, because the API is another origin', async () => {
@@ -86,7 +90,7 @@ describe('requireSession', () => {
     vi.mocked(getSession).mockResolvedValue({
       ok: true,
       status: 200,
-      body: { user: { handle: 'marthe', displayName: 'Marthe' } },
+      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active' } },
     });
     requestedPath.value = '/home';
 

@@ -3,16 +3,18 @@
  * Used by the account API (lib/auth-api.ts), the feed API (lib/feed-api.ts) and the health page (getHealth).
  */
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 export type ApiProblem = {
   status: number;
   title: string;
   detail: string;
   retryAfterSeconds?: number;
+  /** Stable code of the refusal (Problem Details extension), when the API sends one. See lib/api-messages.ts. */
+  code?: string;
 };
 
-export type ApiResult<T> = { ok: true; status: number; body: T } | { ok: false; problem: ApiProblem };
+type ApiResult<T> = { ok: true; status: number; body: T } | { ok: false; problem: ApiProblem };
 
 type ApiMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -37,9 +39,9 @@ async function csrfToken(): Promise<string | null> {
   if (typeof document === 'undefined') {
     return null;
   }
-  const existing = readCsrfToken(document.cookie);
-  if (existing) {
-    return existing;
+  const existingToken = readCsrfToken(document.cookie);
+  if (existingToken) {
+    return existingToken;
   }
   try {
     await fetch(`${API_BASE_URL}/api/v1/status`, { credentials: 'include' });
@@ -82,15 +84,20 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    const json = (await response.json().catch(() => ({}))) as { title?: string; detail?: string };
+    const errorBody = (await response.json().catch(() => ({}))) as {
+      title?: string;
+      detail?: string;
+      code?: string;
+    };
     const retryAfter = Number(response.headers.get('Retry-After'));
     return {
       ok: false,
       problem: {
         status: response.status,
-        title: json.title ?? response.statusText,
-        detail: json.detail ?? 'Une erreur est survenue.',
+        title: errorBody.title ?? response.statusText,
+        detail: errorBody.detail ?? 'Une erreur est survenue.',
         retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
+        code: errorBody.code,
       },
     };
   }

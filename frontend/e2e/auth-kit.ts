@@ -1,4 +1,5 @@
 import { expect, type Page, type Route } from '@playwright/test';
+import { PENDING_EMAIL_KEY } from '../lib/pending-email';
 
 // Shared helpers of the auth end-to-end tests (DEC-139: the account API is simulated, no real server is called).
 // Every request to /api/v1/auth/** is answered here and recorded, so that a test can check what the page sent.
@@ -130,10 +131,16 @@ export function bodyOf(calls: ApiCall[], key: string): Record<string, unknown> {
   return call.body;
 }
 
-// The page moved to the code page for this e-mail address.
-export async function expectCodePage(page: Page, email: string): Promise<void> {
-  await expect(page).toHaveURL(/\/signup\/code\?/);
-  const url = new URL(page.url());
-  expect(url.pathname).toBe('/signup/code');
-  expect(url.searchParams.get('email')).toBe(email);
+// The page moved to the code page, and the address bar carries no personal data.
+export async function expectCodePage(page: Page): Promise<void> {
+  await expect(page).toHaveURL(/\/signup\/code$/);
+}
+
+// The address that the signup or forgot-password page hands over in sessionStorage (lib/pending-email.ts),
+// set before the page loads, so that a page opened directly gets it.
+export async function givenPendingEmail(page: Page, email: string): Promise<void> {
+  await page.addInitScript(
+    ([key, value]) => window.sessionStorage.setItem(key, value),
+    [PENDING_EMAIL_KEY, email],
+  );
 }

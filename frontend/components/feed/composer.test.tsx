@@ -99,4 +99,21 @@ describe('Composer', () => {
     expect(screen.getByLabelText('Posez votre question')).toHaveValue('Une question');
     expect(onPosted).not.toHaveBeenCalled();
   });
+
+  it('still sends an Idempotency-Key where crypto.randomUUID is missing (pages served outside HTTPS)', async () => {
+    const realCrypto = globalThis.crypto;
+    vi.stubGlobal('crypto', { getRandomValues: realCrypto.getRandomValues.bind(realCrypto) });
+    try {
+      vi.mocked(postQuestion).mockResolvedValue({ ok: true, body: CREATED });
+      render(<Composer displayName="Alice" onPosted={vi.fn()} />);
+
+      typeText('Une question');
+      fireEvent.click(screen.getByRole('button', { name: 'Poster' }));
+
+      await waitFor(() => expect(postQuestion).toHaveBeenCalledTimes(1));
+      expect(vi.mocked(postQuestion).mock.calls[0]?.[1]).toMatch(/^[0-9a-f]{32}$/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

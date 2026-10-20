@@ -113,11 +113,11 @@ export async function signIn(context: BrowserContext): Promise<void> {
 }
 
 export function feedPage(
-  items: FeedQuestionJson[],
+  questions: FeedQuestionJson[],
   nextCursor: string | null = null,
   trending: FeedQuestionJson[] = [],
 ): Reply {
-  return { status: 200, body: { trending, items, nextCursor } };
+  return { status: 200, body: { trending, questions, nextCursor } };
 }
 
 export function question(id: string, text: string, hashtags: string[] = []): FeedQuestionJson {

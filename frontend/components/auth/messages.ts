@@ -1,12 +1,10 @@
-import type { ApiProblem } from '@/lib/auth-api';
+import type { ApiProblem } from '@/lib/api-client';
+import { messageForCode, UNVERIFIED_ACCOUNT_MESSAGE } from '@/lib/api-messages';
 
 /*
  * French texts for the errors of the account API. The backend `detail` is not used: it can be in English
- * (class-validator defaults, "Unexpected error."), so the text comes from the status and the form.
+ * (class-validator defaults, "Unexpected error."), so the text comes from the code, or else from the status and the form.
  */
-
-const UNVERIFIED_ACCOUNT_MESSAGE =
-  'Votre compte n’est pas encore validé. Saisissez le code reçu par e-mail pour l’activer.';
 
 const CONNECTION_ERROR_MESSAGE = 'Le serveur est injoignable. Réessayez dans un instant.';
 const UNEXPECTED_ERROR_MESSAGE = 'Une erreur est survenue. Réessayez.';
@@ -34,6 +32,10 @@ function genericMessage(problem: ApiProblem): string {
 type ProblemMessage<Field extends string = string> = { message: string; field?: Field };
 
 export function signupProblemMessage(problem: ApiProblem): ProblemMessage<'handle'> {
+  const coded = messageForCode(problem);
+  if (coded) {
+    return { message: coded };
+  }
   switch (problem.status) {
     case 409:
       return { field: 'handle', message: 'Cet identifiant existe déjà.' };
@@ -48,6 +50,10 @@ export function signupProblemMessage(problem: ApiProblem): ProblemMessage<'handl
 }
 
 export function loginProblemMessage(problem: ApiProblem): ProblemMessage {
+  const coded = messageForCode(problem);
+  if (coded) {
+    return { message: coded };
+  }
   switch (problem.status) {
     case 401:
       return { message: 'Identifiants incorrects.' };
@@ -61,6 +67,10 @@ export function loginProblemMessage(problem: ApiProblem): ProblemMessage {
 }
 
 export function verifyProblemMessage(problem: ApiProblem): ProblemMessage<'code'> {
+  const coded = messageForCode(problem);
+  if (coded) {
+    return { message: coded };
+  }
   switch (problem.status) {
     case 422:
       return { field: 'code', message: 'Le code est incorrect ou a expiré. Demandez un nouveau code.' };
@@ -72,6 +82,10 @@ export function verifyProblemMessage(problem: ApiProblem): ProblemMessage<'code'
 }
 
 export function resendProblemMessage(problem: ApiProblem): ProblemMessage {
+  const coded = messageForCode(problem);
+  if (coded) {
+    return { message: coded };
+  }
   return problem.status === 429
     ? { message: tooManyAttemptsMessage(problem) }
     : { message: genericMessage(problem) };

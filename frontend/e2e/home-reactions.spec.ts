@@ -65,7 +65,7 @@ async function openQuestion(page: Page, reaction?: (call: ReactionCall) => Reply
           status: 200,
           body: {
             questionId: call.questionId,
-            counts: server.state.counters,
+            counters: server.state.counters,
             viewerReactions: server.state.viewerReactions,
             yThreshold: server.state.yThreshold,
             conversationOpen: server.state.conversationOpen,

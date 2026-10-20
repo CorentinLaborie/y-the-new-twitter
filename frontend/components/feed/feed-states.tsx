@@ -1,3 +1,5 @@
+import type { ApiProblem } from '@/lib/api-client';
+import { messageForCode } from '@/lib/api-messages';
 import { FeedIcon } from './feed-icon';
 import styles from './feed.module.css';
 
@@ -46,17 +48,29 @@ export function FeedEmpty() {
 }
 
 /** A load failed (Home-Error boards). The retry control is a real button. */
-export function FeedError({ onRetry }: { onRetry: () => void }) {
+export function FeedError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="y-errorstate" role="alert">
       <span className="y-errorstate-icon">
         <FeedIcon name="triangle-alert" size={24} />
       </span>
       <h2 className="y-errorstate-title">Impossible de charger le fil</h2>
-      <p className="y-errorstate-message">Vérifiez votre connexion, puis réessayez.</p>
+      <p className="y-errorstate-message">{message}</p>
       <button type="button" className="y-errorstate-retry" onClick={onRetry}>
         Réessayer
       </button>
     </div>
   );
+}
+
+/** Message of a feed that could not be loaded, for the error state. */
+export const CONNECTION_FAILURE_MESSAGE = 'Vérifiez votre connexion, puis réessayez.';
+
+/**
+ * A refusal with a known code (an account that is not active, a CSRF refusal) shows its French text from the code.
+ * Otherwise a 403 on the feed shows the API message (the account is suspended or pending deletion, and the API sends
+ * the French text for it). Other failures get the connection advice.
+ */
+export function feedFailureMessage(problem: ApiProblem): string {
+  return messageForCode(problem) ?? (problem.status === 403 ? problem.detail : CONNECTION_FAILURE_MESSAGE);
 }

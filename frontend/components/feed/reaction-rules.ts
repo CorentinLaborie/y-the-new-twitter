@@ -4,7 +4,8 @@
  * the previous one when the call fails.
  */
 
-import type { ApiProblem } from '@/lib/auth-api';
+import type { ApiProblem } from '@/lib/api-client';
+import { messageForCode } from '@/lib/api-messages';
 import type { FeedQuestion, ReactionKind, ReactionState } from '@/lib/feed-api';
 
 /** The kinds of reaction, in the order of the pills. */
@@ -23,7 +24,7 @@ function currentReaction(state: ReactionState): ReactionKind | null {
 export function applyReaction(
   state: ReactionState,
   kind: ReactionKind,
-): { next: ReactionState; request: 'put' | 'delete' } {
+): { next: ReactionState; method: 'PUT' | 'DELETE' } {
   const previous = currentReaction(state);
   const counters = { ...state.counters };
 
@@ -32,11 +33,11 @@ export function applyReaction(
   }
 
   if (previous === kind) {
-    return { next: { ...state, counters, viewerReactions: [] }, request: 'delete' };
+    return { next: { ...state, counters, viewerReactions: [] }, method: 'DELETE' };
   }
 
   counters[kind] += 1;
-  return { next: { ...state, counters, viewerReactions: [kind] }, request: 'put' };
+  return { next: { ...state, counters, viewerReactions: [kind] }, method: 'PUT' };
 }
 
 /** The server's answer replaces the optimistic state; a 204 answer (no body) keeps it. */
@@ -51,10 +52,12 @@ export function withServerState(state: ReactionState, answer: Partial<ReactionSt
 
 /** The message under a question whose reaction failed (the page has been rolled back). */
 export function reactionFailureMessage(problem: ApiProblem): string {
-  if (problem.status === 403) {
-    return 'Votre compte n’est pas actif : vous ne pouvez pas réagir pour le moment.';
-  }
-  return 'Votre réaction n’a pas été enregistrée. Réessayez.';
+  return (
+    messageForCode(problem) ??
+    (problem.status === 403
+      ? 'Votre compte n’est pas actif : vous ne pouvez pas réagir pour le moment.'
+      : 'Votre réaction n’a pas été enregistrée. Réessayez.')
+  );
 }
 
 /** The question with its reaction fields replaced; the text and the author stay. */

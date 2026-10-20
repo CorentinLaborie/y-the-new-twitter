@@ -14,7 +14,7 @@ async function fillLoginAndSubmit(page: Page): Promise<void> {
 function sessionAfterLogin(loggedIn: { value: boolean }) {
   return () => ({
     status: 200,
-    body: { user: loggedIn.value ? { handle: 'alice', displayName: 'Alice' } : null },
+    body: { user: loggedIn.value ? { handle: 'alice', displayName: 'Alice', status: 'active' } : null },
   });
 }
 
@@ -71,7 +71,7 @@ test('an unverified account is told to enter its code, with a link to the code p
 
   await expect(notice(page)).toContainText('pas encore validé');
   await page.getByRole('link', { name: ui.verifyLink }).click();
-  await expectCodePage(page, EMAIL);
+  await expectCodePage(page);
 });
 
 test('a locked account shows the waiting time given by Retry-After', async ({ page }) => {

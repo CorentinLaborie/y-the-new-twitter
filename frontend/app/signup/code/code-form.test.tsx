@@ -1,19 +1,14 @@
+import { StrictMode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useSearchParams } from 'next/navigation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { resendSignupCode, verifySignup } from '@/lib/auth-api';
+import { rememberPendingEmail, takePendingEmail } from '@/lib/pending-email';
 import { CodeForm } from './code-form';
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 
 vi.mock('@/lib/auth-api', () => ({ verifySignup: vi.fn(), resendSignupCode: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push }), useSearchParams: vi.fn() }));
-
-function givenEmailInUrl(query: string) {
-  vi.mocked(useSearchParams).mockReturnValue(
-    new URLSearchParams(query) as unknown as ReturnType<typeof useSearchParams>,
-  );
-}
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
 function typeCode(value: string) {
   fireEvent.change(screen.getByLabelText('Entrez le code reçu par e-mail'), { target: { value } });
@@ -24,19 +19,34 @@ describe('CodeForm', () => {
     vi.mocked(verifySignup).mockReset();
     vi.mocked(resendSignupCode).mockReset();
     push.mockReset();
-    givenEmailInUrl('email=alex%40exemple.fr');
+    window.sessionStorage.clear();
+    rememberPendingEmail('alex@exemple.fr');
   });
 
-  it('asks to start again when the URL has no valid e-mail', () => {
-    givenEmailInUrl('');
+  it('asks to start again when the signup page handed over no valid e-mail', async () => {
+    window.sessionStorage.clear();
     render(<CodeForm />);
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Adresse e-mail manquante ou invalide.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Adresse e-mail manquante ou invalide.');
     expect(screen.getByRole('link', { name: 'Recommencer l’inscription' })).toHaveAttribute(
       'href',
       '/signup',
     );
     expect(screen.queryByRole('button', { name: 'Valider mon compte' })).not.toBeInTheDocument();
+  });
+
+  it('reads the e-mail once, even when React runs the effects twice (StrictMode)', async () => {
+    vi.mocked(verifySignup).mockResolvedValue({ ok: true, status: 200, body: {} });
+    render(
+      <StrictMode>
+        <CodeForm />
+      </StrictMode>,
+    );
+
+    typeCode('648125');
+    fireEvent.click(screen.getByRole('button', { name: 'Valider mon compte' }));
+
+    await waitFor(() => expect(verifySignup).toHaveBeenCalledWith('alex@exemple.fr', '648125'));
   });
 
   it('rejects a code that is not six digits without calling the API', async () => {
@@ -71,14 +81,15 @@ describe('CodeForm', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it('goes to the login page with a confirmation once the code is accepted', async () => {
+  it('goes to the login page with a confirmation, handing the e-mail over outside the URL', async () => {
     vi.mocked(verifySignup).mockResolvedValue({ ok: true, status: 200, body: {} });
     render(<CodeForm />);
 
     typeCode('648125');
     fireEvent.click(screen.getByRole('button', { name: 'Valider mon compte' }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/login?verified=1&email=alex%40exemple.fr'));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/login?verified=1'));
+    expect(takePendingEmail()).toBe('alex@exemple.fr');
   });
 
   it('sends a new code and confirms it without saying whether the address exists', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ApiProblem } from '@/lib/auth-api';
+import type { ApiProblem } from '@/lib/api-client';
 import {
   formatWait,
   loginProblemMessage,

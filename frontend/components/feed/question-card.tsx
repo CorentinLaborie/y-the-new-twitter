@@ -1,5 +1,6 @@
 import { YMark } from '@/components/brand/y-mark';
 import type { FeedQuestion, ReactionKind } from '@/lib/feed-api';
+import { avatarInitial } from './avatar-initial';
 import { FeedIcon } from './feed-icon';
 import { formatPostDate } from './format-date';
 import { REACTION_KINDS } from './reaction-rules';
@@ -10,7 +11,7 @@ const REACTION_NAMES: Record<ReactionKind, string> = { like: 'J’aime', dislike
 type QuestionCardProps = {
   question: FeedQuestion;
   /** A reaction call of this question is in flight: its reactions are off until the answer comes. */
-  busy: boolean;
+  reactionPending: boolean;
   /** The message of a reaction that failed and was rolled back, shown under the reactions. */
   reactionError: string | null;
   onReact: (kind: ReactionKind) => void;
@@ -27,14 +28,14 @@ function ReactionGlyph({ kind }: { kind: ReactionKind }) {
  * Card of one question in the feed: author (display name and handle), date, hashtags, text, the reactions with their
  * counts (one per user, R11) and the Y progress "49/50" (R3), marked as reached once the conversation is open.
  */
-export function QuestionCard({ question, busy, reactionError, onReact }: QuestionCardProps) {
+export function QuestionCard({ question, reactionPending, reactionError, onReact }: QuestionCardProps) {
   const { counters, yThreshold, conversationOpen, viewerReactions } = question;
 
   return (
     <article className={styles.card}>
       <header className={styles.cardHead}>
         <span className={`${styles.avatar} ${styles.cardAvatar}`} aria-hidden="true">
-          {question.author.displayName.charAt(0).toUpperCase()}
+          {avatarInitial(question.author.displayName)}
         </span>
         <div className={styles.who}>
           <span className={styles.name}>{question.author.displayName}</span>
@@ -60,9 +61,9 @@ export function QuestionCard({ question, busy, reactionError, onReact }: Questio
             className={styles.reaction}
             data-kind={kind}
             aria-pressed={viewerReactions.includes(kind)}
-            aria-disabled={busy || undefined}
+            aria-disabled={reactionPending || undefined}
             onClick={() => {
-              if (!busy) {
+              if (!reactionPending) {
                 onReact(kind);
               }
             }}

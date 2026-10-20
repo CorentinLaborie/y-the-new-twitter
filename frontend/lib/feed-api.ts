@@ -4,18 +4,18 @@
  * Contract: backend/openapi.yaml, served by the API under /api/v1.
  *
  * GET /feed?tab=for-you[&cursor=…]
- *   200 { trending, items, nextCursor }
+ *   200 { trending, questions, nextCursor }
  *   trending: the top 10 questions by reactions in the last 24 h, on the first page only (empty on the others).
- *   items: the list by date, the most recent first; on the first page it excludes the trending questions.
+ *   questions: the list by date, the most recent first; on the first page it excludes the trending questions.
  *
  * POST /questions   body { text }   header Idempotency-Key
  *   201 FeedQuestion, with a Location header. 422 when the text is empty or over 280 characters.
  *   403 for an account that is not active (R13).
  *
- * PUT /questions/{id}/reactions/{kind}      200 with the counts after the reaction
+ * PUT /questions/{id}/reactions/{kind}      200 with the counters after the reaction
  * DELETE /questions/{id}/reactions/{kind}   204, no body: the page keeps its own update
  *   kind: like | dislike | y. One reaction per user and question (R11): PUT replaces the previous one.
- *   403 for an account that is not active (R13). The page maps `counts` to `counters`.
+ *   403 for an account that is not active (R13).
  *
  * FeedQuestion = {
  *   id, text, hashtags, createdAt (ISO 8601, UTC), author: { handle, displayName },
@@ -52,7 +52,7 @@ export type FeedQuestion = ReactionState & {
 };
 
 /** One page of the feed. `trending` (the top 10 by reactions in the last 24 h) is sent on the first page only. */
-export type FeedPage = { trending: FeedQuestion[]; items: FeedQuestion[]; nextCursor: string | null };
+export type FeedPage = { trending: FeedQuestion[]; questions: FeedQuestion[]; nextCursor: string | null };
 
 export type FeedResult<T> = { ok: true; body: T } | { ok: false; problem: ApiProblem };
 
@@ -76,29 +76,29 @@ export function postQuestion(text: string, idempotencyKey: string): Promise<Feed
   });
 }
 
-/** The reaction answer as the API sends it (section 9.3): the counts come as `counts`. */
+/** The reaction answer as the API sends it (section 9.3). */
 type ReactionAnswer = {
   questionId: string;
-  counts: ReactionCounters;
+  counters: ReactionCounters;
   viewerReactions: ReactionKind[];
   yThreshold: number;
   conversationOpen: boolean;
 };
 
-/** The page's name for the answer's fields: `counts` becomes `counters`. Empty when the answer has no body (204). */
+/** The state carried by the answer. Empty when the answer has no body (204). */
 function toReactionState(answer: Partial<ReactionAnswer>): Partial<ReactionState> {
-  if (!answer.counts) {
+  if (!answer.counters) {
     return {};
   }
   return {
-    counters: answer.counts,
+    counters: answer.counters,
     viewerReactions: answer.viewerReactions,
     yThreshold: answer.yThreshold,
     conversationOpen: answer.conversationOpen,
   };
 }
 
-async function reactionCall(
+async function sendReaction(
   method: 'PUT' | 'DELETE',
   questionId: string,
   kind: ReactionKind,
@@ -115,7 +115,7 @@ export function putReaction(
   questionId: string,
   kind: ReactionKind,
 ): Promise<FeedResult<Partial<ReactionState>>> {
-  return reactionCall('PUT', questionId, kind);
+  return sendReaction('PUT', questionId, kind);
 }
 
 /** Removes the viewer's reaction of `kind` on a question. The API answers 204: the page keeps its own update. */
@@ -123,5 +123,5 @@ export function deleteReaction(
   questionId: string,
   kind: ReactionKind,
 ): Promise<FeedResult<Partial<ReactionState>>> {
-  return reactionCall('DELETE', questionId, kind);
+  return sendReaction('DELETE', questionId, kind);
 }

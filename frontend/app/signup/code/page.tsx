@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { LegalNotice } from '@/components/auth/legal-notice';
 import { CodeForm } from './code-form';
@@ -20,10 +19,7 @@ export default function SignupCodePage() {
         backLink={{ href: '/signup', label: 'Retour' }}
         footnote={<LegalNotice action="inscrivant" />}
       >
-        {/* The form reads the e-mail from the URL, which needs a Suspense boundary (Cache Components). */}
-        <Suspense fallback={null}>
-          <CodeForm />
-        </Suspense>
+        <CodeForm />
         <div className={styles.divider} data-slot="divider" aria-hidden="true" />
       </AuthShell>
     </div>

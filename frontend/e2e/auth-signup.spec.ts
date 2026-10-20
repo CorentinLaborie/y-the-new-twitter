@@ -29,11 +29,12 @@ test('a complete signup ends on the login page', async ({ page }) => {
 
   await page.goto('/signup');
   await fillSignupAndSubmit(page, EMAIL, ADULT_BIRTH_DATE);
-  await expect(page).toHaveURL(/\/signup\/code\?/);
+  await expect(page).toHaveURL(/\/signup\/code$/);
 
   await page.getByLabel(ui.signupCode, { exact: true }).fill('123456');
   await page.getByRole('button', { name: ui.submitCode, exact: true }).click();
   await page.waitForURL((url) => url.pathname === '/login');
+  await expect(page.getByLabel(ui.email, { exact: true })).toHaveValue(EMAIL);
 
   expect(bodyOf(calls, 'POST /auth/signup')).toMatchObject({
     email: EMAIL,
@@ -51,7 +52,7 @@ test('an e-mail already in use gets the same answer as a new one', async ({ page
   await page.goto('/signup');
   await fillSignupAndSubmit(page, 'deja.inscrit@example.com', ADULT_BIRTH_DATE);
 
-  await expect(page).toHaveURL(/\/signup\/code\?/);
+  await expect(page).toHaveURL(/\/signup\/code$/);
   await expect(notice(page)).toHaveCount(0);
   expect(bodyOf(calls, 'POST /auth/signup')).toMatchObject({ email: 'deja.inscrit@example.com' });
 });
@@ -64,14 +65,14 @@ test('a wrong code shows an error and keeps the user on the code page', async ({
 
   await page.goto('/signup');
   await fillSignupAndSubmit(page, EMAIL, ADULT_BIRTH_DATE);
-  await expect(page).toHaveURL(/\/signup\/code\?/);
+  await expect(page).toHaveURL(/\/signup\/code$/);
 
   await page.getByLabel(ui.signupCode, { exact: true }).fill('000000');
   await page.getByRole('button', { name: ui.submitCode, exact: true }).click();
 
   // A wrong code is an error on the code field itself, not a notice.
   await expect(page.getByText(/code est incorrect/i)).toBeVisible();
-  await expectCodePage(page, EMAIL);
+  await expectCodePage(page);
 });
 
 test('the code can be sent again from the code page', async ({ page }) => {
@@ -82,7 +83,7 @@ test('the code can be sent again from the code page', async ({ page }) => {
 
   await page.goto('/signup');
   await fillSignupAndSubmit(page, EMAIL, ADULT_BIRTH_DATE);
-  await expect(page).toHaveURL(/\/signup\/code\?/);
+  await expect(page).toHaveURL(/\/signup\/code$/);
 
   await page.getByRole('button', { name: ui.resendCode, exact: true }).click();
 

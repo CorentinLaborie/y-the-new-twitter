@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { requestPasswordReset } from '@/lib/auth-api';
+import { takePendingEmail } from '@/lib/pending-email';
 import { RequestForm } from './request-form';
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
@@ -37,9 +38,8 @@ describe('RequestForm', () => {
 
     submitAddress('  marthe@example.fr ');
 
-    await waitFor(() =>
-      expect(push).toHaveBeenCalledWith('/forgot-password/confirm?email=marthe%40example.fr'),
-    );
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/forgot-password/confirm'));
+    expect(takePendingEmail()).toBe('marthe@example.fr');
     expect(requestPasswordReset).toHaveBeenCalledWith('marthe@example.fr');
   });
 

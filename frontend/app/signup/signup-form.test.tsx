@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { signup } from '@/lib/auth-api';
+import { takePendingEmail } from '@/lib/pending-email';
 import { SignupForm } from './signup-form';
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
@@ -43,14 +44,15 @@ describe('SignupForm', () => {
     expect(signup).not.toHaveBeenCalled();
   });
 
-  it('sends the normalised values and goes to the code page with the e-mail', async () => {
+  it('sends the normalised values and goes to the code page, handing the e-mail over outside the URL', async () => {
     vi.mocked(signup).mockResolvedValue({ ok: true, status: 202, body: {} });
     render(<SignupForm />);
 
     fillValidForm();
     submit();
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/signup/code?email=jeannot%40exemple.fr'));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/signup/code'));
+    expect(takePendingEmail()).toBe('jeannot@exemple.fr');
     expect(signup).toHaveBeenCalledWith({
       handle: 'Jeannot45',
       displayName: 'Jeannot Dupont',
