@@ -36,6 +36,8 @@ GRANT SELECT, DELETE ON admin_audit_log, login_events, signup_codes, password_re
 GRANT SELECT ON questions, replies TO y_maintenance;
 GRANT UPDATE (body) ON questions, replies TO y_maintenance;
 GRANT SELECT, DELETE ON question_hashtags, mentions TO y_maintenance;
+-- The retention purge takes its lease here (owner decision 2026-10-20): read, insert and take over an expired lease.
+GRANT SELECT, INSERT, UPDATE ON job_leases TO y_maintenance;
 
 -- Backup: read everything, write nothing.
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO y_backup;

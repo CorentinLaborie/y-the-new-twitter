@@ -317,6 +317,17 @@ model RateLimitCounter {
   @@map("rate_limit_counters")
 }
 
+/// Leases of the scheduled jobs that must run on one instance only (owner decision 2026-10-20). The holder of a
+/// lease keeps it until expires_at, even after its run, so the other instances skip the tick. No cleanup job: an
+/// expired lease is taken over, not deleted.
+model JobLease {
+  key       String   @id @map("key") @db.Text
+  owner     String   @map("owner") @db.Text
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+
+  @@map("job_leases")
+}
+
 model Follow {
   followerId String   @map("follower_id") @db.Uuid
   followeeId String   @map("followee_id") @db.Uuid

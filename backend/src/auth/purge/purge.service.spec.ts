@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { Clock } from './clock';
 import { MaintenancePrismaService } from './maintenance-prisma.service';
-import { PurgeService } from './purge.service';
+import { PURGE_JOB_NAME, PurgeService } from './purge.service';
 
 const NOW = new Date('2026-10-19T12:00:00.000Z');
 const CODE_CUTOFF = new Date('2026-10-18T12:00:00.000Z');
@@ -21,6 +21,8 @@ function fakeDatabase(
     questionHashtag: { deleteMany: deleteMany(0) },
     mention: { deleteMany: deleteMany(0) },
     $transaction: jest.fn(async (operations: Promise<unknown>[]) => Promise.all(operations)),
+    // The lease statement returns the row when this instance takes the lease, and no row when another holds it.
+    $queryRaw: jest.fn().mockResolvedValue([{ key: PURGE_JOB_NAME }]),
   };
 }
 
@@ -43,6 +45,27 @@ describe('PurgeService', () => {
     expect(database.signupCode.deleteMany).toHaveBeenCalledWith(codeWhere);
     expect(database.passwordResetCode.deleteMany).toHaveBeenCalledWith(codeWhere);
     expect(database.emailChangeCode.deleteMany).toHaveBeenCalledWith(codeWhere);
+  });
+
+  it('runs the purge when this instance takes the lease', async () => {
+    const database = fakeDatabase();
+    const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
+
+    await service.runDailyPurge();
+
+    expect(database.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(database.session.deleteMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips the purge while another instance holds the lease', async () => {
+    const database = fakeDatabase();
+    database.$queryRaw.mockResolvedValue([]);
+    const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
+
+    await service.runDailyPurge();
+
+    expect(database.session.deleteMany).not.toHaveBeenCalled();
+    expect(database.signupCode.deleteMany).not.toHaveBeenCalled();
   });
 
   it('deletes sessions whose expiry is in the past', async () => {

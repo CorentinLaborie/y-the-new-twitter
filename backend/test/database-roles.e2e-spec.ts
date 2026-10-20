@@ -126,6 +126,19 @@ describe('Database roles (e2e)', () => {
     }
   });
 
+  it('lets the maintenance role take the purge lease, and nothing else on job_leases', async () => {
+    // The purge takes its lease with an insert, or a take-over of an expired row (src/auth/purge/purge.service.ts).
+    const take = await asMaintenance(
+      `INSERT INTO job_leases (key, owner, expires_at) VALUES ('role-test', 'role', now())
+       ON CONFLICT (key) DO UPDATE SET owner = EXCLUDED.owner, expires_at = EXCLUDED.expires_at;`,
+    );
+    const remove = await asMaintenance(`DELETE FROM job_leases;`);
+
+    expect(take.stderr).toBe('');
+    expect(take.exitCode).toBe(0);
+    expect(remove.stderr).toContain('permission denied for table job_leases');
+  });
+
   it('lets the maintenance role write only the body of questions, as the content erasure does', async () => {
     const body = await asMaintenance(`UPDATE questions SET body = '' WHERE false;`);
     const column = await asMaintenance(`UPDATE questions SET moderation_status = 'hidden' WHERE false;`);
