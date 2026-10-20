@@ -567,7 +567,7 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 |---|---|---|
 | GET | `/feed?tab=for-you\|following&cursor=…` | Home feed. `for-you` from M2 (D17). The first page (no cursor) returns `trending`: the 10 most reacted questions of the last 24 hours (DEC-159), and 20 `items` by date, without the trending questions. Later pages return `trending: []`. Each question has `viewerReactions`, the signed-in viewer's reaction (at most one, DEC-172). `following` from M4 |
 | POST | `/questions` | Post a question (280 characters max) |
-| GET | `/questions/{id}` | One question (used for shared links) |
+| GET | `/questions/{id}` | One question, as the feed returns it (share view, M3). Hidden, deleted or blocked: `404` |
 | DELETE | `/questions/{id}` | Delete own question (soft delete) |
 | PUT | `/questions/{id}/reactions/{kind}` | Add a reaction: `like`, `dislike` or `y` |
 | DELETE | `/questions/{id}/reactions/{kind}` | Remove a reaction |
