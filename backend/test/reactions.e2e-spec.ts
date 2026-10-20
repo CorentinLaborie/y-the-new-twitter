@@ -222,6 +222,26 @@ describe('Question reactions (e2e, B3 to B5)', () => {
     expect(reaching.body).toMatchObject({ counts: { y: 50 }, yThreshold: 50, conversationOpen: true });
   });
 
+  it('writes one conversation_opened notice to the author when the Y count reaches 50, and none after (B2)', async () => {
+    const author = await createUser();
+    const question = await createQuestion(author);
+    await sql(`UPDATE questions SET y_count = 49 WHERE id = '${question}';`);
+    const first = await clientFor(await createUser());
+    const second = await clientFor(await createUser());
+    const third = await clientFor(await createUser());
+
+    await put(first, question, 'y').expect(200);
+    await put(second, question, 'y').expect(200);
+    await put(third, question, 'y').expect(200);
+
+    expect(
+      await sql(
+        `SELECT count(*) || ',' || max(recipient_id::text) || ',' || coalesce(max(actor_id::text), 'null')
+         FROM notifications WHERE type = 'conversation_opened' AND question_id = '${question}';`,
+      ),
+    ).toBe(`1,${author},null`);
+  });
+
   it('keeps the counters equal to the rows under parallel reactions from several users (B4)', async () => {
     const author = await createUser();
     const question = await createQuestion(author);

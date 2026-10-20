@@ -68,7 +68,10 @@ export class ReactionsService {
     const threshold = this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD');
     const counters = await this.reactions.findCounters(db, questionId);
     if (counters.conversationOpenedAt === null && counters.yCount >= threshold) {
-      await this.reactions.openConversation(db, questionId, new Date());
+      const opened = await this.reactions.openConversation(db, questionId, new Date());
+      if (opened.count === 1) {
+        await this.reactions.writeConversationOpened(db, questionId, counters.authorId);
+      }
     }
     const viewer = await this.reactions.findReaction(db, viewerId, questionId);
 

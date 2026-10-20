@@ -34,7 +34,7 @@ export class ReactionsRepository {
   findCounters(db: ReactionsDb, questionId: string) {
     return db.question.findUniqueOrThrow({
       where: { id: questionId },
-      select: { likeCount: true, dislikeCount: true, yCount: true, conversationOpenedAt: true },
+      select: { authorId: true, likeCount: true, dislikeCount: true, yCount: true, conversationOpenedAt: true },
     });
   }
 
@@ -43,6 +43,13 @@ export class ReactionsRepository {
     return db.question.updateMany({
       where: { id: questionId, conversationOpenedAt: null },
       data: { conversationOpenedAt: at },
+    });
+  }
+
+  /** The system notice to the author when the conversation opens (no actor). Shown in M5. */
+  writeConversationOpened(db: ReactionsDb, questionId: string, recipientId: string) {
+    return db.notification.create({
+      data: { recipientId, actorId: null, type: 'conversation_opened', questionId },
     });
   }
 

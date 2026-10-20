@@ -16,6 +16,7 @@ type Repository = jest.Mocked<
     | 'removeReaction'
     | 'changeCounters'
     | 'openConversation'
+    | 'writeConversationOpened'
   >
 >;
 
@@ -45,12 +46,15 @@ describe('ReactionsService (B3, B5)', () => {
     repository = {
       lockQuestion: jest.fn().mockResolvedValue(undefined),
       findVisibleQuestion: jest.fn().mockResolvedValue({ id: QUESTION_ID }),
-      findCounters: jest.fn().mockResolvedValue({ likeCount: 3, dislikeCount: 1, yCount: 49, conversationOpenedAt: null }),
+      findCounters: jest
+        .fn()
+        .mockResolvedValue({ authorId: 'author-1', likeCount: 3, dislikeCount: 1, yCount: 49, conversationOpenedAt: null }),
       findReaction: jest.fn().mockResolvedValue(null),
       setReaction: jest.fn().mockResolvedValue(undefined),
       removeReaction: jest.fn().mockResolvedValue(undefined),
       changeCounters: jest.fn().mockResolvedValue(undefined),
       openConversation: jest.fn().mockResolvedValue({ count: 0 }),
+      writeConversationOpened: jest.fn().mockResolvedValue(undefined),
     };
     prisma = { $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback('tx')) };
     const config = { getOrThrow: jest.fn().mockReturnValue(50) } as unknown as ConfigService;
@@ -79,6 +83,36 @@ describe('ReactionsService (B3, B5)', () => {
 
     expect(repository.openConversation).toHaveBeenCalledWith('tx', QUESTION_ID, expect.any(Date));
     expect(response.conversationOpen).toBe(true);
+  });
+
+  it('writes one conversation_opened notice to the author on the first opening only (B2)', async () => {
+    repository.findCounters.mockResolvedValue({
+      authorId: 'author-1',
+      likeCount: 0,
+      dislikeCount: 0,
+      yCount: 50,
+      conversationOpenedAt: null,
+    } as never);
+    repository.openConversation.mockResolvedValue({ count: 1 });
+
+    await service.set(VIEWER, QUESTION_ID, 'y');
+
+    expect(repository.writeConversationOpened).toHaveBeenCalledWith('tx', QUESTION_ID, 'author-1');
+  });
+
+  it('writes no notice when another request has already opened the conversation (B2)', async () => {
+    repository.findCounters.mockResolvedValue({
+      authorId: 'author-1',
+      likeCount: 0,
+      dislikeCount: 0,
+      yCount: 50,
+      conversationOpenedAt: null,
+    } as never);
+    repository.openConversation.mockResolvedValue({ count: 0 });
+
+    await service.set(VIEWER, QUESTION_ID, 'y');
+
+    expect(repository.writeConversationOpened).not.toHaveBeenCalled();
   });
 
   it('keeps the conversation open when the Y count drops back below the threshold (R13)', async () => {
