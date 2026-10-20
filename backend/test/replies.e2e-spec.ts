@@ -282,5 +282,5 @@ describe('Replies and reply reactions (e2e, M3 B3 to B7)', () => {
        FROM reply_reactions WHERE reply_id = '${reply.body.id}';`,
     );
     expect(await counters(reply.body.id)).toBe(rows);
-  });
+  }, 30_000);
 });

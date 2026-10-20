@@ -13,5 +13,6 @@
   "setupFiles": [
     "reflect-metadata",
     "<rootDir>/test/setup-env.ts"
-  ]
+  ],
+  "maxWorkers": 2
 }
