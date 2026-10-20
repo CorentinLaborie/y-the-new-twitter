@@ -3,6 +3,7 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { Notice } from '@/components/auth/notice';
 import { messageForCode } from '@/lib/api-messages';
+import { newIdempotencyKey } from '@/lib/idempotency';
 import { postQuestion, type FeedQuestion } from '@/lib/feed-api';
 import { avatarInitial } from './avatar-initial';
 import { FeedIcon } from './feed-icon';
@@ -21,19 +22,6 @@ type ComposerProps = {
   /** Called with the question the API created, so that the feed shows it first. */
   onPosted: (question: FeedQuestion) => void;
 };
-
-/**
- * A random key for the Idempotency-Key header. crypto.randomUUID exists only in secure contexts (HTTPS, localhost),
- * so the key is built from random bytes otherwise.
- */
-function newIdempotencyKey(): string {
-  if (typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) =>
-    byte.toString(16).padStart(2, '0'),
-  ).join('');
-}
 
 /**
  * Composer of a question at the top of the feed (Home boards). Text only, up to 280 characters (R1).

@@ -11,7 +11,7 @@ const CREATED: FeedQuestion = {
   hashtags: ['attente'],
   createdAt: '2026-10-14T08:41:00Z',
   author: { handle: 'alice', displayName: 'Alice' },
-  counters: { like: 0, dislike: 0, y: 0 },
+  counters: { like: 0, dislike: 0, y: 0, reply: 0 },
   yThreshold: 50,
   conversationOpen: false,
   viewerReactions: [],

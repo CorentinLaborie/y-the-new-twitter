@@ -64,7 +64,7 @@ export function reactionFailureMessage(problem: ApiProblem): string {
 export function withReactions(question: FeedQuestion, reactions: ReactionState): FeedQuestion {
   return {
     ...question,
-    counters: reactions.counters,
+    counters: { ...question.counters, ...reactions.counters },
     yThreshold: reactions.yThreshold,
     conversationOpen: reactions.conversationOpen,
     viewerReactions: reactions.viewerReactions,

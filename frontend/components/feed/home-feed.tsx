@@ -9,7 +9,9 @@ import {
   type FeedQuestion,
   type FeedResult,
   type ReactionKind,
+  type ReactionState,
 } from '@/lib/feed-api';
+import { Conversation } from '@/components/conversation/conversation';
 import { Composer } from './composer';
 import { FeedIcon } from './feed-icon';
 import {
@@ -75,6 +77,17 @@ function questionsNotShown(page: FeedQuestion[], state: FeedState): FeedQuestion
   return page.filter((question) => !known.has(question.id));
 }
 
+/** The reply count of a question, from counters.reply. */
+function replyCountOf(question: FeedQuestion): number {
+  return question.counters.reply;
+}
+
+/** withReactions, with the reply count of the question kept: the reaction answers do not send it. */
+function withReactionsKeepingReplies(question: FeedQuestion, reactions: ReactionState): FeedQuestion {
+  const updated = withReactions(question, reactions);
+  return { ...updated, counters: { ...updated.counters, reply: question.counters.reply } };
+}
+
 function newQuestionsLabel(count: number): string {
   return count > 1 ? `Afficher ${count} nouvelles questions` : `Afficher ${count} nouvelle question`;
 }
@@ -84,8 +97,16 @@ function newQuestionsLabel(count: number): string {
  * Loading, empty and error states follow the Home boards. The list is cursor-paginated ("Voir plus").
  * While the feed is shown, the first page is checked for new questions, which the pill shows until clicked.
  */
-export function HomeFeed({ displayName }: { displayName: string }) {
+export function HomeFeed({
+  displayName,
+  viewerHandle,
+}: {
+  displayName: string;
+  viewerHandle: string | null;
+}) {
   const [state, setState] = useState<FeedState>(INITIAL_STATE);
+  /** The questions whose conversation is open under their card. */
+  const [openConversations, setOpenConversations] = useState<ReadonlySet<string>>(() => new Set());
 
   const applyFirstPage = useCallback((result: FeedResult<FeedPage>) => {
     setState((current) =>
@@ -198,26 +219,81 @@ export function HomeFeed({ displayName }: { displayName: string }) {
             reactionError: { questionId: question.id, message: reactionFailureMessage(result.problem) },
           };
         }
-        const shown = current.questions.find((item) => item.id === question.id) ?? question;
+        const shown =
+          current.questions.find((item) => item.id === question.id) ??
+          current.trendingQuestions.find((item) => item.id === question.id) ??
+          question;
         const reactions = withServerState(next, result.body);
         return {
           ...current,
           pendingReactionIds,
-          trendingQuestions: replaceInList(current.trendingQuestions, withReactions(shown, reactions)),
-          questions: replaceInList(current.questions, withReactions(shown, reactions)),
+          trendingQuestions: replaceInList(
+            current.trendingQuestions,
+            withReactionsKeepingReplies(shown, reactions),
+          ),
+          questions: replaceInList(current.questions, withReactionsKeepingReplies(shown, reactions)),
         };
       });
     });
   }
 
+  function toggleConversation(questionId: string) {
+    setOpenConversations((current) => {
+      const next = new Set(current);
+      if (next.has(questionId)) {
+        next.delete(questionId);
+      } else {
+        next.add(questionId);
+      }
+      return next;
+    });
+  }
+
+  /** The new reply count of a question, after a reply is posted or deleted in its open conversation. */
+  function handleReplyCountChange(questionId: string, count: number) {
+    const withCount = (list: FeedQuestion[]) =>
+      list.map((shown) =>
+        shown.id === questionId ? { ...shown, counters: { ...shown.counters, reply: count } } : shown,
+      );
+    setState((current) => ({
+      ...current,
+      trendingQuestions: withCount(current.trendingQuestions),
+      questions: withCount(current.questions),
+    }));
+  }
+
   function renderQuestionCard(question: FeedQuestion) {
+    const conversationShown = openConversations.has(question.id);
     return (
       <QuestionCard
         question={question}
         reactionPending={pendingReactionIds.includes(question.id)}
         reactionError={reactionError?.questionId === question.id ? reactionError.message : null}
         onReact={(kind) => handleReaction(question, kind)}
+        replyCount={replyCountOf(question)}
+        onOpenConversation={() => toggleConversation(question.id)}
+        conversationOpen={conversationShown}
       />
+    );
+  }
+
+  /** The card, and under it the conversation when it is open, in the same list item. */
+  function renderQuestionItem(question: FeedQuestion) {
+    return (
+      <>
+        {renderQuestionCard(question)}
+        {openConversations.has(question.id) ? (
+          <Conversation
+            questionId={question.id}
+            yCount={question.counters.y}
+            yThreshold={question.yThreshold}
+            conversationOpen={question.conversationOpen}
+            replyCount={replyCountOf(question)}
+            viewerHandle={viewerHandle}
+            onReplyCountChange={(count) => handleReplyCountChange(question.id, count)}
+          />
+        ) : null}
+      </>
     );
   }
 
@@ -240,7 +316,7 @@ export function HomeFeed({ displayName }: { displayName: string }) {
           </h2>
           <ul className={styles.list}>
             {trendingQuestions.map((question) => (
-              <li key={question.id}>{renderQuestionCard(question)}</li>
+              <li key={question.id}>{renderQuestionItem(question)}</li>
             ))}
           </ul>
         </section>
@@ -256,7 +332,7 @@ export function HomeFeed({ displayName }: { displayName: string }) {
       {questions.length > 0 ? (
         <ul className={styles.list}>
           {questions.map((question) => (
-            <li key={question.id}>{renderQuestionCard(question)}</li>
+            <li key={question.id}>{renderQuestionItem(question)}</li>
           ))}
         </ul>
       ) : null}

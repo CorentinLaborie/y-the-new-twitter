@@ -173,10 +173,10 @@ test('Voir plus loads the next page and keeps the questions already shown', asyn
   });
 
   await page.goto('/home');
-  await page.getByRole('button', { name: 'Voir plus' }).click();
+  await page.getByRole('button', { name: 'Voir plus', exact: true }).click();
 
   await expect(page.getByRole('listitem')).toHaveCount(2);
-  await expect(page.getByRole('button', { name: 'Voir plus' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Voir plus', exact: true })).toHaveCount(0);
   expect(feedCalls.map((call) => call.cursor)).toEqual([null, 'page-2']);
 });
 

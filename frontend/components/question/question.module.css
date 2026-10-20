@@ -1,0 +1,255 @@
+/*
+ * Question card additions and the 50 Y dialog, from the Question boards (ReplyCount, Info50, CopyLink, LinkCopied).
+ * The dialog is centred from 768 px; under 768 px it becomes a bottom sheet (the same element, pinned to the bottom).
+ */
+
+/* Reply count: a text link under the reactions. */
+
+.replyRow {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  margin-top: var(--space-8);
+}
+
+.replyCount {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--space-4);
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.replyCount:hover {
+  text-decoration: underline;
+}
+
+/* Without onOpenConversation the count is plain text. */
+span.replyCount {
+  cursor: default;
+}
+
+span.replyCount:hover {
+  text-decoration: none;
+}
+
+/* Y counter and its information button. */
+
+.yGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-left: auto;
+}
+
+.infoButton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-card);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+}
+
+.infoButton:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Card menu ("Plus d'options") and its popover. */
+
+.menuWrap {
+  position: relative;
+  flex: none;
+}
+
+.menuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+}
+
+.menuButton:hover,
+.menuButton[aria-expanded='true'] {
+  background: var(--color-accent);
+  color: var(--color-primary);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-popover);
+  color: var(--color-popover-foreground);
+  box-shadow: var(--shadow-raised);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background: var(--color-accent);
+}
+
+/* Status under the card: "Lien copié." or the failure message. */
+
+.status {
+  min-height: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-muted-foreground);
+}
+
+.statusFailed {
+  color: var(--color-destructive-text);
+}
+
+/* Focus: visible on every control of the card and the dialog. */
+
+.replyCount:focus-visible,
+.infoButton:focus-visible,
+.menuButton:focus-visible,
+.menuItem:focus-visible,
+.closeButton:focus-visible,
+.primaryButton:focus-visible,
+.dialog:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* Dialog: centred over a scrim from 768 px. */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(15 23 42 / 0.5);
+}
+
+.dialog {
+  position: fixed;
+  z-index: 51;
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  width: min(420px, calc(100vw - 32px));
+  transform: translate(-50%, -50%);
+  padding: var(--space-24);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  box-shadow: var(--shadow-raised);
+}
+
+.dialogHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.dialogTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 26px;
+}
+
+.dialogText {
+  margin: var(--space-12) 0 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-muted-foreground);
+}
+
+.dialogActions {
+  display: flex;
+  margin-top: var(--space-16);
+}
+
+.closeButton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+}
+
+.primaryButton {
+  flex: 1;
+  height: 40px;
+  padding: 0 var(--space-16);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Under 768 px: bottom sheet, full width, pinned to the bottom edge. */
+
+@media (max-width: 767px) {
+  .dialog {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    transform: none;
+    padding: var(--space-8) var(--space-16) var(--space-16);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 30px -5px rgb(0 0 0 / 0.25);
+  }
+}

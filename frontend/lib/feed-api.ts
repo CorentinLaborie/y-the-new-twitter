@@ -49,6 +49,8 @@ export type FeedQuestion = ReactionState & {
   hashtags: string[];
   createdAt: string;
   author: { handle: string; displayName: string };
+  /** The reactions and the reply count (QuestionCountersDto). The reaction answers do not send `reply`. */
+  counters: ReactionCounters & { reply: number };
 };
 
 /** One page of the feed. `trending` (the top 10 by reactions in the last 24 h) is sent on the first page only. */
