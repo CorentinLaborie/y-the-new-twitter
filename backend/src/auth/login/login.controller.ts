@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { ApiOkResponse } from '@nestjs/swagger';
+import { regenerateSession } from '../../common/sessions/regenerate-session';
 import { problemDetailsResponse } from '../../common/problem-details/problem-details.swagger';
 import { AuthRateLimit } from '../rate-limit/auth-rate-limit.decorator';
 import { Public } from '../session/access.decorators';
@@ -53,16 +54,9 @@ export class LoginController {
           code: 'account_pending_verification',
         });
       case 'success':
-        // A new session ID before the user is recorded, so an old ID cannot be reused (section 13).
         await regenerateSession(req);
         req.session.userId = outcome.user.id;
         return { user: { handle: outcome.user.handle, displayName: outcome.user.displayName } };
     }
   }
-}
-
-function regenerateSession(req: Request): Promise<void> {
-  return new Promise((resolve, reject) => {
-    req.session.regenerate((error) => (error ? reject(error) : resolve()));
-  });
 }

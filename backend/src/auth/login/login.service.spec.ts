@@ -188,4 +188,36 @@ describe('LoginService', () => {
     expect(outcome).toEqual({ status: 'invalid' });
     expect(attempts.recordEvent).toHaveBeenCalledWith(expect.objectContaining({ result: 'failure' }));
   });
+
+  it('refuses a correct password of an account that is not an administrator on the back-office login, like a wrong one', async () => {
+    users.findByEmail.mockResolvedValue(account({ role: 'user' }));
+
+    const outcome = await service.checkPassword({ ...attempt(), adminOnly: true });
+
+    expect(outcome).toEqual({ status: 'invalid' });
+    expect(attempts.clearAfterSuccess).not.toHaveBeenCalled();
+    expect(attempts.countFailuresSince).toHaveBeenCalledWith('user-1', expect.any(Date));
+  });
+
+  it('lets an administrator through the back-office password check, without clearing the counters or recording a success', async () => {
+    users.findByEmail.mockResolvedValue(account({ role: 'admin' }));
+
+    const outcome = await service.checkPassword({ ...attempt(), adminOnly: true });
+
+    expect(outcome.status).toBe('ok');
+    expect(attempts.clearAfterSuccess).not.toHaveBeenCalled();
+    expect(attempts.recordEvent).not.toHaveBeenCalledWith(expect.objectContaining({ result: 'success' }));
+  });
+
+  it('counts a failed second factor like a wrong password, through recordFailure', async () => {
+    attempts.countFailuresSince.mockResolvedValue(MAX_FAILED_LOGINS);
+    const before = Date.now();
+
+    await service.recordFailure(account(), { ipHash: 'hash', userAgent: null });
+
+    expect(attempts.recordEvent).toHaveBeenCalledWith({ userId: 'user-1', result: 'failure', ipHash: 'hash', userAgent: null });
+    expect(attempts.countFailure).toHaveBeenCalledWith('user-1');
+    const lockedUntil = attempts.lockUntil.mock.calls[0][1] as Date;
+    expect(lockedUntil.getTime()).toBeGreaterThanOrEqual(before + LOCK_DURATION_MS);
+  });
 });

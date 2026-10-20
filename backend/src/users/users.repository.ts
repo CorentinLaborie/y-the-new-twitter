@@ -31,6 +31,12 @@ export class UsersRepository {
     });
   }
 
+  /** The e-mail address of an account, for the messages the server sends to it. Null when there is no such account. */
+  async emailOf(id: string): Promise<string | null> {
+    const user = await this.prisma.user.findUnique({ where: { id }, select: { email: true } });
+    return user?.email ?? null;
+  }
+
   /** Handles are unique regardless of case (DEC-061). */
   findByHandle(handle: string) {
     return this.prisma.user.findFirst({

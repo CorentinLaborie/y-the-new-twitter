@@ -15,11 +15,19 @@ export const LOCK_DURATION_MS = 15 * 60 * 1000;
 const FAILURE_WINDOW_MS = 15 * 60 * 1000;
 const USER_AGENT_MAX_LENGTH = 255;
 
-interface LoginAttempt {
+export interface LoginAttempt {
   email: string;
   password: string;
   ipAddress: string;
   userAgent: string | undefined;
+  /** Back-office login (DEC-036): only an account with the admin role can pass. Any other account is refused like a wrong password. */
+  adminOnly?: boolean;
+}
+
+/** The fields every login_events row of one attempt carries. */
+interface LoginEventFields {
+  ipHash: string;
+  userAgent: string | null;
 }
 
 /**
@@ -31,10 +39,14 @@ type LoginOutcome =
   | { readonly status: 'invalid' }
   | { readonly status: 'unverified' };
 
-interface EventFields {
-  ipHash: string;
-  userAgent: string | null;
-}
+/**
+ * The password step. Only 'ok' keeps the account for the next step: a second factor for the back-office, then
+ * completeLogin. A success is not recorded here, so a wrong second factor still counts toward the lock.
+ */
+type PasswordCheck =
+  | { readonly status: 'ok'; readonly account: User; readonly event: LoginEventFields }
+  | { readonly status: 'invalid' }
+  | { readonly status: 'unverified' };
 
 /**
  * Checks the credentials and keeps the account counters (DEC-141). The IP limits of section 9.4 are not
@@ -56,11 +68,20 @@ export class LoginService {
   }
 
   async login(attempt: LoginAttempt): Promise<LoginOutcome> {
+    const check = await this.checkPassword(attempt);
+    if (check.status !== 'ok') {
+      return check;
+    }
+
+    return this.completeLogin(check.account, check.event);
+  }
+
+  async checkPassword(attempt: LoginAttempt): Promise<PasswordCheck> {
     const now = new Date();
     const found = await this.users.findByEmail(attempt.email);
     // A deleted account answers like an unknown e-mail address.
     const account = found !== null && found.status !== 'deleted' ? found : null;
-    const event: EventFields = {
+    const event: LoginEventFields = {
       ipHash: createHmac('sha256', this.ipHashKey).update(attempt.ipAddress).digest('hex'),
       userAgent: attempt.userAgent?.slice(0, USER_AGENT_MAX_LENGTH) ?? null,
     };
@@ -68,7 +89,9 @@ export class LoginService {
     // The password is always compared, even for an unknown address or a locked account, so the answer takes
     // the same time whatever the account state (section 9.4).
     const storedHash = account?.passwordHash ?? (await this.unknownAccountHash);
-    const matches = (await verifyPassword(storedHash, attempt.password)) && account !== null;
+    const passwordMatches = await verifyPassword(storedHash, attempt.password);
+    const matches =
+      passwordMatches && account !== null && (attempt.adminOnly !== true || account.role === 'admin');
 
     if (account?.lockedUntil && account.lockedUntil > now) {
       // A locked account is not counted again, and is refused even with the right password.
@@ -77,7 +100,7 @@ export class LoginService {
     }
 
     if (account === null || !matches) {
-      return this.refuseWrongPassword(account, now, event);
+      return this.refuseWrongPassword(account, event);
     }
 
     if (account.status === 'pending_verification') {
@@ -85,6 +108,12 @@ export class LoginService {
       return { status: 'unverified' };
     }
 
+    return { status: 'ok', account, event };
+  }
+
+  /** Clears the counters and records the success. A lock set in the meantime refuses the login. */
+  async completeLogin(account: User, event: LoginEventFields): Promise<LoginOutcome> {
+    const now = new Date();
     if (!(await this.attempts.clearAfterSuccess(account.id, now))) {
       // A concurrent failure locked the account while this password was being checked.
       await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
@@ -105,27 +134,27 @@ export class LoginService {
   }
 
   /**
-   * Records the failure. The fifth failure in the window locks the account, and is still answered
-   * 'invalid' (401). Only the attempts after the last lock and the last success are counted.
+   * Records one failed attempt on a known account (a wrong password, or a wrong second factor). The fifth failure in
+   * the window locks the account (section 9.4). Only the attempts after the last lock and the last success are counted.
    */
-  private async refuseWrongPassword(
-    account: User | null,
-    now: Date,
-    event: EventFields,
-  ): Promise<LoginOutcome> {
-    await this.attempts.recordEvent({ userId: account?.id ?? null, result: 'failure', ...event });
-    if (account !== null) {
-      await this.attempts.countFailure(account.id);
-      const failures = await this.attempts.countFailuresSince(
-        account.id,
-        await this.windowStart(account, now),
-      );
+  async recordFailure(account: User, event: LoginEventFields): Promise<void> {
+    const now = new Date();
+    await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
+    await this.attempts.countFailure(account.id);
+    const failures = await this.attempts.countFailuresSince(account.id, await this.windowStart(account, now));
 
-      if (failures >= MAX_FAILED_LOGINS) {
-        await this.attempts.lockUntil(account.id, new Date(now.getTime() + LOCK_DURATION_MS));
-      }
+    if (failures >= MAX_FAILED_LOGINS) {
+      await this.attempts.lockUntil(account.id, new Date(now.getTime() + LOCK_DURATION_MS));
+    }
+  }
+
+  private async refuseWrongPassword(account: User | null, event: LoginEventFields): Promise<PasswordCheck> {
+    if (account === null) {
+      await this.attempts.recordEvent({ userId: null, result: 'failure', ...event });
+      return { status: 'invalid' };
     }
 
+    await this.recordFailure(account, event);
     return { status: 'invalid' };
   }
 

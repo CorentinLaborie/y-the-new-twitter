@@ -9,6 +9,7 @@ import { CsrfGuard } from './common/csrf/csrf.guard';
 import { loggingOptions } from './common/logging/logging.options';
 import { validateEnvironment } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
 import { DatabaseModule } from './database/database.module';
 import { SessionsModule } from './common/sessions/sessions.module';
 import { HealthModule } from './health/health.module';
@@ -30,6 +31,7 @@ import { SupportModule } from './support/support.module';
     DatabaseModule,
     SessionsModule,
     AuthModule,
+    AdminModule,
     QuestionsModule,
     ReactionsModule,
     RepliesModule,

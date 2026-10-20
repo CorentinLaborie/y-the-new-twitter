@@ -71,6 +71,6 @@ import { EmailChangeService } from './email-change/email-change.service';
     SignupCodesRepository,
     SignupActivationRepository,
   ],
-  exports: [MAIL_SENDER],
+  exports: [MAIL_SENDER, LoginService, SessionUserService],
 })
 export class AuthModule {}

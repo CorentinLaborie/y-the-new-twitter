@@ -28,6 +28,11 @@ class EnvironmentVariables {
   @IsNotEmpty()
   BACKUP_CODE_HMAC_KEY!: string;
 
+  /** Base64 key of 32 bytes that encrypts the TOTP secrets of the back-office (DEC-107). Never in Git. */
+  @IsString()
+  @IsNotEmpty()
+  TOTP_ENCRYPTION_KEY!: string;
+
   @IsString()
   @IsNotEmpty()
   SESSION_SECRET!: string;
