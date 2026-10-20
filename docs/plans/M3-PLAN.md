@@ -73,6 +73,15 @@ Exit criteria (from the milestone table): replies refused below 50 Y; cursor pag
 5. **Explanation of the 50 Y rule:** answered 2026-10-20: in M3, information button and dialog (F10).
 6. **Autocomplete on `@`:** answered 2026-10-20: plain text in M3, `@pseudo` recognised without a suggestion list.
 
+## Working method (decided 2026-10-20, DEC-182 to DEC-184)
+
+- Four lots, built one after the other: A (backend replies: B3 to B7, B10), B (mentions and notifications: B8, B9), C (frontend conversation: F1 to F11), D (documentation: X1 to X3).
+- After each step, the checks for the files it touches (targeted tests, then lint and tsc). The full suites run once per lot.
+- One owner validation per lot: a short diff summary and the commit message. Nothing is committed or pushed before that.
+- Sequential: backend first, then frontend, in the same repository.
+- M0 steps 9 to 12 and 15, the Brevo domain and the legal texts are postponed (DEC-184).
+- At the end of M3, the owner reviews the code. A review guide lists the commits, the files of each lot and the tests that cover them.
+
 ## Progress
 
 | Step | Status | Commit |
@@ -80,3 +89,9 @@ Exit criteria (from the milestone table): replies refused below 50 Y; cursor pag
 | Plan drafted and accepted (2026-10-20) | Done | — |
 | B1 schema check against DBML v0.9 and migrations | Done: no gap, no migration needed. The DBML note on independent reply reactions is the source for R2 | — |
 | B2 `conversation_opened` notice to the author, once, at the 50 Y crossing | Done in the working tree: unit tests (12 in `reactions`), e2e `reactions` 11/11, tsc and lint clean. Not committed, message waiting for the owner's validation | — |
+| Lot A, shared Idempotency-Key handling (`common/idempotency`), questions moved onto it, fingerprint per route (DEC-185) | Done in the working tree: questions unit 19/19, questions e2e green | — |
+| Lot A, B3: `POST /questions/{id}/replies` (422 below 50 Y, 280 characters, blocked pair 404, key replay, Location) | Done in the working tree: replies e2e green | — |
+| Lot A, B4 to B5: list oldest first with cursor, soft delete by the author (403 for others, 404 once deleted) | Done in the working tree: e2e green | — |
+| Lot A, B6 to B7: reply reactions, like and dislike independent, counters under parallel calls | Done in the working tree: e2e green (parallel test 30 s timeout) | — |
+| Lot A, B10: OpenAPI regenerated, `openapi:check` OK | Done in the working tree | — |
+| Lot A checks | Backend unit 183/183. Backend e2e 145/145 with `--maxWorkers=2`; with the default workers, timeouts of 5 s appear on the existing tests too (load, not the code) | — |
