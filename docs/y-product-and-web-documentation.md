@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Product** | Y, a question-based social network (French UI) |
-| **Document version** | 0.11 — draft, 2026-10-20 (M2: « Pour vous » feed with the trending block, idempotency keys expire after 24 h; DEC-158 to DEC-163; earlier 0.10: contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
-| **Changelog** | 0.11 (2026-10-20): M2 documentation. Section 9.1: idempotency keys expire 24 hours after the first request (DEC-162). Section 9.2: the first page of `/feed?tab=for-you` returns the `trending` block (DEC-159). M2 plan accepted (DEC-158). 0.10 (2026-10-19): M0 steps 3.2, 3.9, 5.1, 6, 7.2, 7.3, 7.4, 7.5, 7.6 and 7.7 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
+| **Document version** | 0.12 — draft, 2026-10-20 (sections 9.4, R13 and the reply deletion aligned with the owner decisions of 2026-10-20; 0.11 — M2: « Pour vous » feed with the trending block, idempotency keys expire after 24 h; DEC-158 to DEC-163; earlier 0.10: contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
+| **Changelog** | 0.12 (2026-10-20): owner decisions on the API. A locked account answers `401` like a wrong password, not `429` (section 9.4). Code requests are limited to 3 per account per hour, answered `202` whatever happens (section 9.4). Deleting another account's reply answers `404`, as for a missing reply (section 9.2). R13: an account that stops being active leaves the counters, and comes back when it is active again. 0.11 (2026-10-20): M2 documentation. Section 9.1: idempotency keys expire 24 hours after the first request (DEC-162). Section 9.2: the first page of `/feed?tab=for-you` returns the `trending` block (DEC-159). M2 plan accepted (DEC-158). 0.10 (2026-10-19): M0 steps 3.2, 3.9, 5.1, 6, 7.2, 7.3, 7.4, 7.5, 7.6 and 7.7 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
 | **Audience** | Product owner, designers, frontend and backend developers, reviewers |
 | **Companion documents** | [`database/y-database.dbml`](database/y-database.dbml) (schema source), [`database/y-database-documentation.md`](database/y-database-documentation.md) (column reference) |
 
@@ -81,7 +81,7 @@ These rules are binding for every feature. They come from explicit product decis
 | R10 | Notification times are relative ("il y a 2 h") for recent events. | Product decision, 2026-10-15 |
 | R11 | Each user has **one reaction per question**: J'aime, Pas d'accord or Y. Changing it replaces the previous one. Removing it is allowed. | D1 (proposed default), 2026-10-16 |
 | R12 | A question that does not reach 50 Y **stays forever** in the feed, trends and search, like any post. Nothing is archived or deleted automatically. It can keep receiving reactions. Replies open only at 50 Y (R3). | Decision of the product owner, 2026-10-16 |
-| R13 | Only **`active` accounts** can post, react, reply, follow and save. Accounts in any other status (suspended, pending deletion, deleted, pending verification) are hidden from every feed, search, trend, suggestion, explore list and notification of other users (DEC-086). There is **no account-age condition and no quota** on actions. A user **may react to their own question**. Only `active` accounts count toward the 50 Y threshold. An open conversation **stays open** even if Y counts drop. | Decision of the product owner, 2026-10-16; DEC-086, 2026-10-19 |
+| R13 | Only **`active` accounts** can post, react, reply, follow and save. Accounts in any other status (suspended, pending deletion, deleted, pending verification) are hidden from every feed, search, trend, suggestion, explore list and notification of other users (DEC-086). There is **no account-age condition and no quota** on actions. A user **may react to their own question**. Only `active` accounts count toward the 50 Y threshold: the reactions and replies of an account that stops being active leave the counters (Y, likes, dislikes, replies) in the same transaction as the status change, and come back when it is active again. An open conversation **stays open** even if Y counts drop. | Decision of the product owner, 2026-10-16; DEC-086, 2026-10-19 |
 | R14 | A user can **block** another account. Blocked content is hidden both ways, neither can follow, message or mention the other, and **blocking removes follows in both directions**. Blocking is in v1. | Decision of the product owner, 2026-10-16 (D12) |
 | R15 | **Age check with VerifAge.** The provider is chosen (DEC-019). The verification mechanism is **on hold**: it waits for the VerifAge API documentation, requested from the provider by the owner (DEC-020). R7 stays binding. | Decision of 2026-10-16 |
 | R16 | **Account deletion with a 90-day window.** On request, the account is suspended for deletion: it can no longer publish, react, reply or message. Its data is kept for 90 days, during which the user can cancel by logging back in. After 90 days, the account and its personal data are purged. This also serves as the GDPR right to erasure. | Decision of the product owner, 2026-10-16 (DEC-024) |
@@ -493,7 +493,7 @@ Use these status codes consistently:
 | Status | When |
 |---|---|
 | 400 | Malformed request |
-| 401 | Not logged in, or wrong credentials at login (generic message, section 9.4) |
+| 401 | Not logged in, or wrong credentials at login, including a locked account (generic message, section 9.4) |
 | 403 | Logged in but not allowed |
 | 404 | Resource not found, or hidden (for example a deleted question) |
 | 409 | Conflict, such as an email or handle already in use |
@@ -582,7 +582,7 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 |---|---|---|
 | GET | `/questions/{id}/replies?cursor=…` | Replies, paginated ("Voir plus de réponses") |
 | POST | `/questions/{id}/replies` | Reply. Refused with 422 until the conversation is open |
-| DELETE | `/replies/{id}` | Delete own reply (soft delete) |
+| DELETE | `/replies/{id}` | Delete own reply (soft delete). Another account's reply answers `404`, as a missing reply does |
 | PUT | `/replies/{id}/reactions/{kind}` | `like` or `dislike` |
 | DELETE | `/replies/{id}/reactions/{kind}` | Remove a reaction |
 
@@ -674,19 +674,19 @@ The same `yThreshold` and `conversationOpen` fields appear in every question pay
 
 Today the only limit is global: 120 requests per minute per IP address (value chosen during M0 step 3, not written in the plan). The per-endpoint limits below arrive with the auth module.
 
-Rate limits protect accounts and codes. Content actions (posting, reacting, replying, messaging, following, blocking) have **no quota** (R13). Limits return `429` with a `Retry-After` header. Values are proposed defaults (DEC-040).
+Rate limits protect accounts and codes. Content actions (posting, reacting, replying, messaging, following, blocking) have **no quota** (R13). The per-IP limits return `429` with a `Retry-After` header. A locked account answers `401`, the same as a wrong password. A code request over the per-account limit answers `202`, the same as any other, and sends no code. Values are proposed defaults (DEC-040).
 
 | Endpoint | Limit (proposed) |
 |---|---|
-| `POST /auth/login` | 5 failures per account in 15 minutes, then the account is locked for 15 minutes. 20 attempts per IP in 15 minutes |
+| `POST /auth/login` | 5 failures per account in 15 minutes, then the account is locked for 15 minutes. While it is locked, every attempt answers the same `401` as a wrong password, even with the right password (the lock is not revealed, and no session opens). 20 attempts per IP in 15 minutes (`429`) |
 | `POST /auth/signup` | 5 per IP per hour |
 | `POST /auth/signup/verify`, `POST /auth/password-reset/confirm`, `POST /auth/email-change/confirm` | 5 wrong codes per code, then the code is invalidated (D8). 20 attempts per IP per hour |
-| `POST /auth/signup/resend`, `POST /auth/password-reset/request`, `POST /auth/email-change/request` | 3 per account per hour, 10 per IP per hour |
-| `POST /admin/*` login | 5 failures, then a 15-minute lock, and an alert e-mail (DEC-036) |
+| `POST /auth/signup/resend`, `POST /auth/password-reset/request`, `POST /auth/email-change/request` | 3 per account per hour, the three endpoints sharing one count, and 10 per IP per hour. An address without an account is counted by a hash of the address (never stored in clear). Above the account limit, the answer is the usual `202`, with no code sent and the open code kept |
+| `POST /admin/*` login | 5 failures, then a 15-minute lock, and an alert e-mail (DEC-036). The lock answers the same `401` as a wrong password, as for `POST /auth/login` |
 
-**Enumeration protection:** the signup response and the password-reset response do not reveal whether an email address already has an account. The response is the same in both cases (proposed).
+**Enumeration protection:** the signup response and the password-reset response do not reveal whether an email address already has an account. The response is the same in both cases (proposed). The same holds for the code request limit: the response is the same `202` whether the account exists, is active or has reached its limit.
 
-**Login errors:** a wrong password returns `401` with the generic message "Identifiants incorrects". Account existence is not revealed.
+**Login errors:** a wrong password returns `401` with the generic message "Identifiants incorrects". Account existence is not revealed. A locked account answers the same `401`: the user is not told that the account is locked, and the lock delay is not sent.
 
 ---
 
@@ -904,7 +904,7 @@ Each screen below exists on desktop, tablet and mobile (rule R5). Only its conta
 |---|---|
 | Passwords | Hashed with Argon2id (argon2 package). Never logged. |
 | Codes | 6 digits, stored **hashed**, with expiry and attempt counters. Consumed once. |
-| Brute force | Limit wrong codes and failed logins per account and per IP. Return 429 when exceeded. Add rate limiting (@nestjs/throttler) in milestone M1. |
+| Brute force | Limit wrong codes and failed logins per account and per IP. Return 429 when the IP limit is exceeded; a locked account answers 401 like a wrong password (section 9.4). Add rate limiting (@nestjs/throttler) in milestone M1. |
 | Sessions | HTTP-only, SameSite=Lax cookie named `SESSION`, Secure outside the local profile. Regenerate the session ID on login. Expire idle sessions. |
 | CSRF | Enabled for all mutations, with a double-submit token (DEC-138). The cookie is `y_csrf` and the header is `X-CSRF-Token`. The frontend reads the cookie, and first makes a safe request to `/api/v1/status` when the cookie is missing (DEC-149). |
 | CORS | Allow only the frontend origin. |
