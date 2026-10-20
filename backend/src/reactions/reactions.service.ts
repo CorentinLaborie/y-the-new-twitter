@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { PrismaService } from '../database/prisma.service';
 import type { ReactionKind } from '../database/generated/client/client';
+import { ACCOUNT_NOT_ACTIVE_MESSAGE, UsersRepository } from '../users/users.repository';
 import { ReactionResponseDto } from './dto/reaction-response.dto';
 import { CounterChange, ReactionsDb, ReactionsRepository } from './reactions.repository';
 
@@ -27,6 +28,7 @@ export class ReactionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly reactions: ReactionsRepository,
+    private readonly users: UsersRepository,
     private readonly config: ConfigService,
   ) {}
 
@@ -56,8 +58,14 @@ export class ReactionsService {
     });
   }
 
-  /** Locks the question first, so every reaction on it is applied in turn (B4). Hidden or blocked questions are not found. */
+  /**
+   * Locks the viewer's account first, then the question, so every reaction on it is applied in turn (B4) and never
+   * counts an account that became inactive meanwhile (R13). Hidden or blocked questions are not found.
+   */
   private async lockVisibleQuestion(db: ReactionsDb, viewerId: string, questionId: string): Promise<void> {
+    if (!(await this.users.lockActiveAccount(db, viewerId))) {
+      throw new ForbiddenException(ACCOUNT_NOT_ACTIVE_MESSAGE);
+    }
     await this.reactions.lockQuestion(db, questionId);
     if (!(await this.reactions.findVisibleQuestion(db, viewerId, questionId))) {
       throw new NotFoundException(QUESTION_NOT_FOUND);

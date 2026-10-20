@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { PrismaService } from '../database/prisma.service';
 import type { ReplyReactionKind } from '../database/generated/client/client';
+import { ACCOUNT_NOT_ACTIVE_MESSAGE, UsersRepository } from '../users/users.repository';
 import { ReplyReactionResponseDto } from './dto/reply-reaction-response.dto';
 import { RepliesDb, RepliesRepository } from './replies.repository';
 
@@ -21,6 +22,7 @@ export class ReplyReactionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly replies: RepliesRepository,
+    private readonly users: UsersRepository,
   ) {}
 
   /** Adds the viewer's reaction of this kind. Repeating a kind changes nothing. */
@@ -49,8 +51,14 @@ export class ReplyReactionsService {
     });
   }
 
-  /** Locks the reply first, so its reactions run in turn (B7). A hidden, deleted or blocked reply is not found. */
+  /**
+   * Locks the viewer's account, then the reply, so its reactions run in turn (B7) and never count an account that
+   * became inactive meanwhile (R13). A hidden, deleted or blocked reply is not found.
+   */
   private async lockVisibleReply(db: RepliesDb, viewerId: string, replyId: string): Promise<void> {
+    if (!(await this.users.lockActiveAccount(db, viewerId))) {
+      throw new ForbiddenException(ACCOUNT_NOT_ACTIVE_MESSAGE);
+    }
     await this.replies.lockReply(db, replyId);
     if (!(await this.replies.findVisibleReply(db, viewerId, replyId))) {
       throw new NotFoundException(REPLY_NOT_FOUND);

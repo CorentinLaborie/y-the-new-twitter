@@ -22,12 +22,14 @@ interface LoginAttempt {
   userAgent: string | undefined;
 }
 
-/** What the controller turns into an HTTP answer. */
+/**
+ * What the controller turns into an HTTP answer. A locked account answers 'invalid', like a wrong password, so the
+ * caller cannot tell that the account is locked (section 9.4).
+ */
 type LoginOutcome =
   | { readonly status: 'success'; readonly user: SessionUser }
   | { readonly status: 'invalid' }
-  | { readonly status: 'unverified' }
-  | { readonly status: 'locked'; readonly retryAfterSeconds: number };
+  | { readonly status: 'unverified' };
 
 interface EventFields {
   ipHash: string;
@@ -63,14 +65,16 @@ export class LoginService {
       userAgent: attempt.userAgent?.slice(0, USER_AGENT_MAX_LENGTH) ?? null,
     };
 
-    if (account?.lockedUntil && account.lockedUntil > now) {
-      await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
-      return lockedOutcome(account.lockedUntil, now);
-    }
-
-    // The password is always compared, even for an unknown address (section 9.4).
+    // The password is always compared, even for an unknown address or a locked account, so the answer takes
+    // the same time whatever the account state (section 9.4).
     const storedHash = account?.passwordHash ?? (await this.unknownAccountHash);
     const matches = (await verifyPassword(storedHash, attempt.password)) && account !== null;
+
+    if (account?.lockedUntil && account.lockedUntil > now) {
+      // A locked account is not counted again, and is refused even with the right password.
+      await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
+      return { status: 'invalid' };
+    }
 
     if (account === null || !matches) {
       return this.refuseWrongPassword(account, now, event);
@@ -84,7 +88,7 @@ export class LoginService {
     if (!(await this.attempts.clearAfterSuccess(account.id, now))) {
       // A concurrent failure locked the account while this password was being checked.
       await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
-      return { status: 'locked', retryAfterSeconds: LOCK_DURATION_MS / 1000 };
+      return { status: 'invalid' };
     }
 
     await this.attempts.recordEvent({ userId: account.id, result: 'success', ...event });
@@ -138,11 +142,4 @@ export class LoginService {
 
     return new Date(Math.max(...starts.map((date) => date.getTime())));
   }
-}
-
-function lockedOutcome(lockedUntil: Date, now: Date): LoginOutcome {
-  return {
-    status: 'locked',
-    retryAfterSeconds: Math.max(1, Math.ceil((lockedUntil.getTime() - now.getTime()) / 1000)),
-  };
 }

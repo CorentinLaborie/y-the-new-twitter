@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
 import { PurgeModule } from './purge/purge.module';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
+import { CodeRequestLimitService } from './rate-limit/code-request-limit.service';
 import { BrevoMailSender } from '../common/mail/brevo-mail-sender';
 import { CapturingMailSender } from '../common/mail/capturing-mail-sender';
 import { MAIL_SENDER } from '../common/mail/mail-sender';
@@ -41,6 +42,7 @@ import { EmailChangeService } from './email-change/email-change.service';
     EmailChangeController,
   ],
   providers: [
+    CodeRequestLimitService,
     PasswordResetService,
     PasswordResetCodesRepository,
     EmailChangeService,

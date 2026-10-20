@@ -1,7 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import type { PrismaService } from '../database/prisma.service';
+import { UsersRepository } from '../users/users.repository';
 import { ReactionsRepository } from './reactions.repository';
 import { counterChange, ReactionsService } from './reactions.service';
 
@@ -19,6 +20,8 @@ type Repository = jest.Mocked<
     | 'writeConversationOpened'
   >
 >;
+
+type Users = jest.Mocked<Pick<UsersRepository, 'lockActiveAccount'>>;
 
 const VIEWER: SessionUser = { id: 'user-1', handle: 'alice', displayName: 'Alice', role: 'user', status: 'active' };
 const QUESTION_ID = '0f8c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f';
@@ -39,6 +42,7 @@ describe('counterChange (B3, B4)', () => {
 
 describe('ReactionsService (B3, B5)', () => {
   let repository: Repository;
+  let users: Users;
   let prisma: { $transaction: jest.Mock };
   let service: ReactionsService;
 
@@ -56,9 +60,34 @@ describe('ReactionsService (B3, B5)', () => {
       openConversation: jest.fn().mockResolvedValue({ count: 0 }),
       writeConversationOpened: jest.fn().mockResolvedValue(undefined),
     };
+    users = { lockActiveAccount: jest.fn().mockResolvedValue(true) };
     prisma = { $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback('tx')) };
     const config = { getOrThrow: jest.fn().mockReturnValue(50) } as unknown as ConfigService;
-    service = new ReactionsService(prisma as unknown as PrismaService, repository as unknown as ReactionsRepository, config);
+    service = new ReactionsService(
+      prisma as unknown as PrismaService,
+      repository as unknown as ReactionsRepository,
+      users as unknown as UsersRepository,
+      config,
+    );
+  });
+
+  it('locks the viewer account before the question, so a status change and a reaction never interleave (R13)', async () => {
+    await service.set(VIEWER, QUESTION_ID, 'y');
+
+    expect(users.lockActiveAccount).toHaveBeenCalledWith('tx', 'user-1');
+    expect(users.lockActiveAccount.mock.invocationCallOrder[0]).toBeLessThan(
+      repository.lockQuestion.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('refuses a viewer whose account is no longer active under the lock, and writes nothing (R13)', async () => {
+    users.lockActiveAccount.mockResolvedValue(false);
+
+    await expect(service.set(VIEWER, QUESTION_ID, 'y')).rejects.toThrow(ForbiddenException);
+    await expect(service.remove(VIEWER, QUESTION_ID, 'y')).rejects.toThrow(ForbiddenException);
+    expect(repository.lockQuestion).not.toHaveBeenCalled();
+    expect(repository.setQuestionReaction).not.toHaveBeenCalled();
+    expect(repository.changeQuestionCounters).not.toHaveBeenCalled();
   });
 
   it('sets a new reaction, updates the counters and returns them with the Y progress', async () => {

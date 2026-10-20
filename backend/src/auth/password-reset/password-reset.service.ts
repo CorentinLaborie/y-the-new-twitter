@@ -2,6 +2,7 @@ import { Inject, Injectable, UnprocessableEntityException } from '@nestjs/common
 import { ConfigService } from '@nestjs/config';
 import { MAIL_SENDER, type MailSender } from '../../common/mail/mail-sender';
 import { UsersRepository } from '../../users/users.repository';
+import { CodeRequestLimitService } from '../rate-limit/code-request-limit.service';
 import { hashPassword, isPasswordAllowed } from '../password';
 import { generateCode, hashCode, verifyCode } from '../verification-code';
 import { PasswordResetCodesRepository } from './password-reset-codes.repository';
@@ -22,20 +23,23 @@ export class PasswordResetService {
   constructor(
     private readonly users: UsersRepository,
     private readonly codes: PasswordResetCodesRepository,
+    private readonly codeRequests: CodeRequestLimitService,
     private readonly config: ConfigService,
     @Inject(MAIL_SENDER) private readonly mail: MailSender,
   ) {}
 
   /**
-   * Sends a code only when an active account has this address. The code is hashed in every case,
-   * so an unknown address takes as long as a known one. The caller always answers 202 (section 9.4).
+   * Sends a code only when an active account has this address, and when the account is under its code request
+   * limit (section 9.4). The request is counted in every case. The code is hashed in every case, so an unknown
+   * address takes as long as a known one. The caller always answers 202.
    */
   async requestCode(email: string): Promise<void> {
     const user = await this.users.findByEmail(email);
     const code = generateCode();
     const codeHash = await hashCode(code);
+    const allowed = await this.codeRequests.allow(user ? { userId: user.id } : { email });
 
-    if (!user || user.status !== 'active') {
+    if (!user || user.status !== 'active' || !allowed) {
       return;
     }
 

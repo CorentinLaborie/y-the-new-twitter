@@ -1,0 +1,57 @@
+import { ThrottlerStorageService } from '@nestjs/throttler';
+import { CodeRequestLimitService } from './code-request-limit.service';
+
+describe('CodeRequestLimitService (section 9.4)', () => {
+  let storage: ThrottlerStorageService;
+  let limit: CodeRequestLimitService;
+
+  beforeEach(() => {
+    storage = new ThrottlerStorageService();
+    limit = new CodeRequestLimitService(storage);
+  });
+
+  afterEach(() => {
+    storage.onApplicationShutdown();
+  });
+
+  it('allows 3 code requests per account, then refuses the 4th', async () => {
+    const account = { userId: 'user-1' };
+
+    expect(await limit.allow(account)).toBe(true);
+    expect(await limit.allow(account)).toBe(true);
+    expect(await limit.allow(account)).toBe(true);
+    expect(await limit.allow(account)).toBe(false);
+  });
+
+  it('counts each account on its own', async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await limit.allow({ userId: 'user-1' });
+    }
+
+    expect(await limit.allow({ userId: 'user-2' })).toBe(true);
+  });
+
+  it('counts an unknown address with the same counter whatever its case or spaces', async () => {
+    await limit.allow({ email: 'nobody@example.test' });
+    await limit.allow({ email: ' Nobody@Example.test ' });
+    await limit.allow({ email: 'NOBODY@example.test' });
+
+    expect(await limit.allow({ email: 'nobody@example.test' })).toBe(false);
+  });
+
+  it('never keeps an unknown address in clear: its counter key is a SHA-256 hash', async () => {
+    await limit.allow({ email: 'nobody@example.test' });
+
+    const keys = JSON.stringify([...storage.storage.keys()]);
+    expect(keys).not.toContain('nobody');
+    expect(keys).toMatch(/code-request-account:email:[0-9a-f]{64}/);
+  });
+
+  it('keeps an account id and an address apart, even when their text is the same', async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await limit.allow({ userId: 'nobody@example.test' });
+    }
+
+    expect(await limit.allow({ email: 'nobody@example.test' })).toBe(true);
+  });
+});

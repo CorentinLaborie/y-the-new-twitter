@@ -229,14 +229,14 @@ describe('Replies and reply reactions (e2e, M3 B3 to B7)', () => {
     expect(await sql(`SELECT reply_count FROM questions WHERE id = '${question}';`)).toBe('0');
   });
 
-  it('refuses the deletion of a reply by another account (403) and deletes nothing', async () => {
+  it('answers 404 to the deletion of a reply by another account, as for a missing reply, and deletes nothing', async () => {
     const author = await createUser();
     const question = await createOpenQuestion(author);
     const replier = await clientFor(await createUser());
     const other = await clientFor(await createUser());
     const created = await postReply(replier, question, 'Pas à toi').expect(201);
 
-    await other.agent.delete(`/api/v1/replies/${created.body.id}`).set('x-csrf-token', other.token).expect(403);
+    await other.agent.delete(`/api/v1/replies/${created.body.id}`).set('x-csrf-token', other.token).expect(404);
 
     expect(await sql(`SELECT deleted_at IS NULL FROM replies WHERE id = '${created.body.id}';`)).toBe('t');
   });

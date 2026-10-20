@@ -134,12 +134,12 @@ describe('LoginService', () => {
     expect(attempts.countFailuresSince).toHaveBeenCalledWith('user-1', lastSuccess);
   });
 
-  it('refuses a locked account without checking the password or counting', async () => {
+  it('answers invalid for a locked account, even with the right password, as for a wrong password', async () => {
     users.findByEmail.mockResolvedValue(account({ lockedUntil: new Date(Date.now() + 120_000) }));
 
     const outcome = await service.login(attempt());
 
-    expect(outcome.status).toBe('locked');
+    expect(outcome).toEqual({ status: 'invalid' });
     expect(attempts.clearAfterSuccess).not.toHaveBeenCalled();
     expect(attempts.countFailuresSince).not.toHaveBeenCalled();
     expect(attempts.recordEvent).toHaveBeenCalledWith(expect.objectContaining({ result: 'failure' }));
@@ -179,13 +179,13 @@ describe('LoginService', () => {
     );
   });
 
-  it('answers locked when a concurrent failure locked the account during the check', async () => {
+  it('answers invalid when a concurrent failure locked the account during the check', async () => {
     users.findByEmail.mockResolvedValue(account());
     attempts.clearAfterSuccess.mockResolvedValue(false);
 
     const outcome = await service.login(attempt());
 
-    expect(outcome).toEqual({ status: 'locked', retryAfterSeconds: LOCK_DURATION_MS / 1000 });
+    expect(outcome).toEqual({ status: 'invalid' });
     expect(attempts.recordEvent).toHaveBeenCalledWith(expect.objectContaining({ result: 'failure' }));
   });
 });

@@ -18,12 +18,13 @@ export class FeedRepository {
 
   /**
    * The questions with the most reactions since `since`, most reacted first, ties by id. Hidden questions
-   * and blocked authors are left out before the ranking, so they do not take a place.
+   * and blocked authors are left out before the ranking, so they do not take a place. Only reactions of active
+   * accounts are counted (R13), as in the stored counters.
    */
   async findTrendingIds(viewerId: string, since: Date, count: number): Promise<string[]> {
     const groups = await this.prisma.questionReaction.groupBy({
       by: ['questionId'],
-      where: { createdAt: { gte: since }, question: visibleTo(viewerId) },
+      where: { createdAt: { gte: since }, question: visibleTo(viewerId), user: { status: 'active' } },
       _count: { questionId: true },
       orderBy: [{ _count: { questionId: 'desc' } }, { questionId: 'asc' }],
       take: count,

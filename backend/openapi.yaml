@@ -64,7 +64,27 @@ paths:
               $ref: "#/components/schemas/LoginDto"
       responses:
         "200":
-          description: ""
+          description: The user, with a SESSION cookie.
+        "401":
+          description: Wrong e-mail or password. Also the answer while the account is
+            locked after 5 failures, so the lock is not revealed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The e-mail address is not verified yet (code
+            account_pending_verification).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests from this IP address (20 attempts in 15 minutes).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
       tags:
         - Login
   /api/v1/auth/session:
@@ -475,14 +495,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-        "403":
-          description: The reply belongs to another account.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetailsDto"
         "404":
-          description: The reply does not exist or was already deleted.
+          description: The reply does not exist, was already deleted, or belongs to
+            another account.
           content:
             application/problem+json:
               schema:
@@ -780,6 +795,39 @@ components:
     ResendSignupDto:
       type: object
       properties: {}
+    ProblemDetailsDto:
+      type: object
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+          example: Unprocessable Entity
+        status:
+          type: number
+          example: 422
+        detail:
+          type: string
+          example: La question doit contenir de 1 à 280 caractères.
+        instance:
+          type: string
+          example: /api/v1/questions
+        requestId:
+          type: string
+        code:
+          type: string
+          example: account_suspended
+          description: "Stable machine-readable code of the refusal, when it has one:
+            account_pending_verification, account_suspended,
+            account_pending_deletion or csrf_invalid. The detail text is in
+            French and may change."
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
     LoginDto:
       type: object
       properties: {}
@@ -829,39 +877,6 @@ components:
     EmailChangeConfirmDto:
       type: object
       properties: {}
-    ProblemDetailsDto:
-      type: object
-      properties:
-        type:
-          type: string
-          example: about:blank
-        title:
-          type: string
-          example: Unprocessable Entity
-        status:
-          type: number
-          example: 422
-        detail:
-          type: string
-          example: La question doit contenir de 1 à 280 caractères.
-        instance:
-          type: string
-          example: /api/v1/questions
-        requestId:
-          type: string
-        code:
-          type: string
-          example: account_suspended
-          description: "Stable machine-readable code of the refusal, when it has one:
-            account_pending_verification, account_suspended,
-            account_pending_deletion or csrf_invalid. The detail text is in
-            French and may change."
-      required:
-        - type
-        - title
-        - status
-        - detail
-        - instance
     CreateQuestionDto:
       type: object
       properties:

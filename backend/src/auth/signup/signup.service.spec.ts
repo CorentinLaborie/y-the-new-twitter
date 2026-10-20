@@ -20,6 +20,7 @@ function build() {
     invalidateOpen: jest.fn() as Mock,
   };
   const activation = { recordAgeCheck: jest.fn() as Mock };
+  const codeRequests = { allow: jest.fn().mockResolvedValue(true) as Mock };
   const mail = { send: jest.fn() as Mock };
   const ageVerifier = { check: jest.fn() as Mock };
   const config = { getOrThrow: jest.fn().mockReturnValue('15') };
@@ -32,11 +33,12 @@ function build() {
     users as never,
     codes as never,
     activation as never,
+    codeRequests as never,
     mail,
     ageVerifier,
   );
 
-  return { service, users, codes, activation, mail, ageVerifier };
+  return { service, users, codes, activation, codeRequests, mail, ageVerifier };
 }
 
 const signupInput = {
@@ -192,6 +194,37 @@ describe('SignupService', () => {
         expect.objectContaining({ userId: 'user-1' }),
       );
       expect(mail.send).toHaveBeenCalledTimes(1);
+    });
+
+    it('counts the request on the account id when the account exists (section 9.4)', async () => {
+      const { service, users, codeRequests } = build();
+      users.findByEmail.mockResolvedValue(pendingUser);
+
+      await service.resend({ email: 'alice@example.test' });
+
+      expect(codeRequests.allow).toHaveBeenCalledWith({ userId: 'user-1' });
+    });
+
+    it('counts an unknown e-mail by the address, and sends nothing for it', async () => {
+      const { service, users, codeRequests, codes } = build();
+      users.findByEmail.mockResolvedValue(null);
+
+      await service.resend({ email: 'nobody@example.test' });
+
+      expect(codeRequests.allow).toHaveBeenCalledWith({ email: 'nobody@example.test' });
+      expect(codes.invalidateOpen).not.toHaveBeenCalled();
+    });
+
+    it('invalidates nothing and sends nothing when the account is over its limit, and answers the same', async () => {
+      const { service, users, codeRequests, codes, mail } = build();
+      users.findByEmail.mockResolvedValue(pendingUser);
+      codeRequests.allow.mockResolvedValue(false);
+
+      await expect(service.resend({ email: 'alice@example.test' })).resolves.toBeUndefined();
+
+      expect(codes.invalidateOpen).not.toHaveBeenCalled();
+      expect(codes.create).not.toHaveBeenCalled();
+      expect(mail.send).not.toHaveBeenCalled();
     });
   });
 });

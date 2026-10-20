@@ -2,6 +2,7 @@ import { ConflictException, UnauthorizedException, UnprocessableEntityException 
 import { ConfigService } from '@nestjs/config';
 import { CapturingMailSender } from '../../common/mail/capturing-mail-sender';
 import { UsersRepository } from '../../users/users.repository';
+import { CodeRequestLimitService } from '../rate-limit/code-request-limit.service';
 import { hashCode, verifyCode } from '../verification-code';
 import { EmailChangeCodesRepository } from './email-change-codes.repository';
 import { EmailChangeService } from './email-change.service';
@@ -13,6 +14,7 @@ type Codes = jest.Mocked<
   >
 >;
 type Users = jest.Mocked<Pick<UsersRepository, 'findByEmail'>>;
+type CodeRequests = jest.Mocked<Pick<CodeRequestLimitService, 'allow'>>;
 
 const USER_ID = 'user-1';
 const OLD_EMAIL = 'alice@example.test';
@@ -35,6 +37,7 @@ function codeFromMail(text: string): string {
 describe('EmailChangeService (B18, B19)', () => {
   let codes: Codes;
   let users: Users;
+  let codeRequests: CodeRequests;
   let mail: CapturingMailSender;
   let service: EmailChangeService;
 
@@ -47,11 +50,13 @@ describe('EmailChangeService (B18, B19)', () => {
       completeChange: jest.fn().mockResolvedValue('changed'),
     };
     users = { findByEmail: jest.fn().mockResolvedValue(null) };
+    codeRequests = { allow: jest.fn().mockResolvedValue(true) };
     mail = new CapturingMailSender();
     const config = { getOrThrow: jest.fn().mockReturnValue(15) } as unknown as ConfigService;
     service = new EmailChangeService(
       users as unknown as UsersRepository,
       codes as unknown as EmailChangeCodesRepository,
+      codeRequests as unknown as CodeRequestLimitService,
       config,
       mail,
     );
@@ -75,6 +80,21 @@ describe('EmailChangeService (B18, B19)', () => {
 
     it('sends nothing when another account already uses the address, and keeps no code', async () => {
       users.findByEmail.mockResolvedValue(userRow({ id: 'user-2', email: NEW_EMAIL }));
+
+      await expect(service.requestChange(USER_ID, NEW_EMAIL)).resolves.toBeUndefined();
+
+      expect(mail.messages()).toEqual([]);
+      expect(codes.replaceOpenCode).not.toHaveBeenCalled();
+    });
+
+    it('counts the request on the account id (section 9.4)', async () => {
+      await service.requestChange(USER_ID, NEW_EMAIL);
+
+      expect(codeRequests.allow).toHaveBeenCalledWith({ userId: USER_ID });
+    });
+
+    it('sends nothing and keeps the open code when the account is over its limit, and answers the same', async () => {
+      codeRequests.allow.mockResolvedValue(false);
 
       await expect(service.requestChange(USER_ID, NEW_EMAIL)).resolves.toBeUndefined();
 

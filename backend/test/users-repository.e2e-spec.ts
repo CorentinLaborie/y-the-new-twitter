@@ -80,4 +80,43 @@ describe("UsersRepository (e2e)", () => {
       }),
     ).rejects.toThrow();
   });
+
+  it("drops an inactive account's reactions and replies from the counters, and restores them when it is active again (R13)", async () => {
+    const now = new Date();
+    const author = await repository.create({ ...newUser, handle: "recount_author", email: "recount_author@example.test" });
+    const reactor = await repository.create({ ...newUser, handle: "recount_reactor", email: "recount_reactor@example.test" });
+    const liker = await repository.create({ ...newUser, handle: "recount_liker", email: "recount_liker@example.test" });
+    await prisma.$transaction((tx) => repository.activate(tx, author.id, now));
+    await prisma.$transaction((tx) => repository.activate(tx, reactor.id, now));
+    await prisma.$transaction((tx) => repository.activate(tx, liker.id, now));
+    const question = await prisma.question.create({
+      data: { authorId: author.id, body: "Recount", yCount: 1, likeCount: 1, replyCount: 1 },
+    });
+    // One reaction per account and question (primary key userId + questionId): the liker holds the like.
+    await prisma.questionReaction.create({ data: { userId: reactor.id, questionId: question.id, kind: "y" } });
+    await prisma.questionReaction.create({ data: { userId: liker.id, questionId: question.id, kind: "like" } });
+    await prisma.reply.create({ data: { questionId: question.id, authorId: reactor.id, body: "Reply" } });
+    const reply = await prisma.reply.findFirstOrThrow({ where: { questionId: question.id, authorId: reactor.id } });
+    await prisma.replyReaction.create({ data: { userId: reactor.id, replyId: reply.id, kind: "dislike" } });
+
+    const counters = () =>
+      prisma.question.findUniqueOrThrow({
+        where: { id: question.id },
+        select: { yCount: true, likeCount: true, replyCount: true },
+      });
+    const suspend = (status: "suspended" | "active") =>
+      prisma.$transaction(async (tx) => {
+        await tx.user.update({ where: { id: reactor.id }, data: { status } });
+        await repository.recalculateCounters(tx, reactor.id);
+      });
+
+    await suspend("suspended");
+    expect(await counters()).toEqual({ yCount: 0, likeCount: 1, replyCount: 0 });
+    expect(await prisma.replyReaction.count({ where: { replyId: reply.id } })).toBe(1);
+
+    await suspend("active");
+    expect(await counters()).toEqual({ yCount: 1, likeCount: 1, replyCount: 1 });
+    const restored = await prisma.reply.findUniqueOrThrow({ where: { id: reply.id }, select: { dislikeCount: true } });
+    expect(restored.dislikeCount).toBe(1);
+  });
 });

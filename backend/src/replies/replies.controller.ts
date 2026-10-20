@@ -78,8 +78,7 @@ export class RepliesController {
   @ApiNoContentResponse({ description: 'The reply was deleted.' })
   @problemDetailsResponse(400, 'The reply id is not a UUID.')
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(403, 'The reply belongs to another account.')
-  @problemDetailsResponse(404, 'The reply does not exist or was already deleted.')
+  @problemDetailsResponse(404, 'The reply does not exist, was already deleted, or belongs to another account.')
   remove(@CurrentUser() viewer: SessionUser, @Param('replyId', ParseUUIDPipe) replyId: string): Promise<void> {
     return this.replies.remove(viewer, replyId);
   }

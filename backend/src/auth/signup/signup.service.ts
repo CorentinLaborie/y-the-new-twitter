@@ -6,6 +6,7 @@ import { MAIL_SENDER, type MailSender } from '../../common/mail/mail-sender';
 import { UsersRepository } from '../../users/users.repository';
 import { CURRENT_TERMS_VERSION, isOldEnough, MINIMUM_AGE, normalisePhone } from '../account-rules';
 import { AGE_VERIFIER, type AgeVerifier } from '../age-verifier';
+import { CodeRequestLimitService } from '../rate-limit/code-request-limit.service';
 import { hashPassword } from '../password';
 import { CODE_MAX_ATTEMPTS, generateCode, hashCode, verifyCode } from '../verification-code';
 import { SignupDto } from '../dto/signup.dto';
@@ -27,6 +28,7 @@ export class SignupService {
     private readonly users: UsersRepository,
     private readonly codes: SignupCodesRepository,
     private readonly activation: SignupActivationRepository,
+    private readonly codeRequests: CodeRequestLimitService,
     @Inject(MAIL_SENDER) private readonly mail: MailSender,
     @Inject(AGE_VERIFIER) private readonly ageVerifier: AgeVerifier,
   ) {}
@@ -101,14 +103,15 @@ export class SignupService {
   }
 
   /**
-   * Replaces the open code with a new one and sends it. Nothing happens for an unknown
-   * or already active account, and the caller cannot tell the difference.
+   * Replaces the open code with a new one and sends it. Nothing happens for an unknown or already active account,
+   * or when the account is over its code request limit (section 9.4): the caller cannot tell the difference.
    */
   async resend(dto: ResendSignupDto): Promise<void> {
     const now = new Date();
     const { code, codeHash } = await this.newCode();
     const user = await this.users.findByEmail(dto.email);
-    if (user?.status !== 'pending_verification') {
+    const allowed = await this.codeRequests.allow(user ? { userId: user.id } : { email: dto.email });
+    if (user?.status !== 'pending_verification' || !allowed) {
       return;
     }
 

@@ -2,6 +2,7 @@ import { UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CapturingMailSender } from '../../common/mail/capturing-mail-sender';
 import { UsersRepository } from '../../users/users.repository';
+import { CodeRequestLimitService } from '../rate-limit/code-request-limit.service';
 import { verifyPassword } from '../password';
 import { hashCode, verifyCode } from '../verification-code';
 import { PasswordResetCodesRepository } from './password-reset-codes.repository';
@@ -11,6 +12,7 @@ type Codes = jest.Mocked<
   Pick<PasswordResetCodesRepository, 'replaceOpenCode' | 'findOpenCode' | 'reserveAttempt' | 'completeReset'>
 >;
 type Users = jest.Mocked<Pick<UsersRepository, 'findByEmail'>>;
+type CodeRequests = jest.Mocked<Pick<CodeRequestLimitService, 'allow'>>;
 
 const ACTIVE_USER = { id: 'user-1', email: 'alice@example.test', status: 'active' };
 const PASSWORD = 'Nouveau-mot2!';
@@ -30,6 +32,7 @@ function codeFromMail(mail: { text: string }): string {
 describe('PasswordResetService (B16, B17)', () => {
   let codes: Codes;
   let users: Users;
+  let codeRequests: CodeRequests;
   let mail: CapturingMailSender;
   let service: PasswordResetService;
 
@@ -41,9 +44,16 @@ describe('PasswordResetService (B16, B17)', () => {
       completeReset: jest.fn().mockResolvedValue(true),
     };
     users = { findByEmail: jest.fn().mockResolvedValue(userRow()) };
+    codeRequests = { allow: jest.fn().mockResolvedValue(true) };
     mail = new CapturingMailSender();
     const config = { getOrThrow: jest.fn().mockReturnValue(15) } as unknown as ConfigService;
-    service = new PasswordResetService(users as unknown as UsersRepository, codes as unknown as PasswordResetCodesRepository, config, mail);
+    service = new PasswordResetService(
+      users as unknown as UsersRepository,
+      codes as unknown as PasswordResetCodesRepository,
+      codeRequests as unknown as CodeRequestLimitService,
+      config,
+      mail,
+    );
   });
 
   describe('request', () => {
@@ -75,6 +85,29 @@ describe('PasswordResetService (B16, B17)', () => {
       users.findByEmail.mockResolvedValue(userRow({ status }));
 
       await service.requestCode(ACTIVE_USER.email);
+
+      expect(mail.messages()).toEqual([]);
+      expect(codes.replaceOpenCode).not.toHaveBeenCalled();
+    });
+
+    it('counts the request on the account id, when the account exists', async () => {
+      await service.requestCode(ACTIVE_USER.email);
+
+      expect(codeRequests.allow).toHaveBeenCalledWith({ userId: ACTIVE_USER.id });
+    });
+
+    it('counts an unknown address by the address, so the limit applies to it too (section 9.4)', async () => {
+      users.findByEmail.mockResolvedValue(null);
+
+      await service.requestCode('nobody@example.test');
+
+      expect(codeRequests.allow).toHaveBeenCalledWith({ email: 'nobody@example.test' });
+    });
+
+    it('sends no code and keeps the open code when the account is over its limit, and answers the same', async () => {
+      codeRequests.allow.mockResolvedValue(false);
+
+      await expect(service.requestCode(ACTIVE_USER.email)).resolves.toBeUndefined();
 
       expect(mail.messages()).toEqual([]);
       expect(codes.replaceOpenCode).not.toHaveBeenCalled();

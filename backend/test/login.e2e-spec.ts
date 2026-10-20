@@ -165,17 +165,16 @@ describe('Login, session and logout (e2e)', () => {
     expect(response.body).toEqual({ user: null });
   });
 
-  it('answers the fifth failure 401 and locks: the next attempt is 429 with Retry-After, even for the right password', async () => {
+  it('answers the fifth failure 401 and locks: the next attempt is the same 401, even for the right password', async () => {
     const id = await createAccount('login_locked', true);
 
     for (let attempt = 1; attempt <= 5; attempt++) {
       await login('login_locked@example.test', WRONG_PASSWORD).expect(401);
     }
-    const refused = await login('login_locked@example.test', PASSWORD).expect(429);
+    const refused = await login('login_locked@example.test', PASSWORD).expect(401);
 
-    const retryAfter = Number(refused.headers['retry-after']);
-    expect(retryAfter).toBeGreaterThan(14 * 60);
-    expect(retryAfter).toBeLessThanOrEqual(15 * 60);
+    expect(refused.headers['retry-after']).toBeUndefined();
+    expect(refused.body.detail).toBe('Identifiants incorrects');
     expect(await sql(`SELECT count(*) FROM sessions WHERE user_id = '${id}';`)).toBe('0');
     expect(await sql(`SELECT locked_until > now() FROM users WHERE id = '${id}';`)).toBe('t');
   });

@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { MAIL_SENDER, type MailSender } from '../../common/mail/mail-sender';
 import { UsersRepository } from '../../users/users.repository';
+import { CodeRequestLimitService } from '../rate-limit/code-request-limit.service';
 import { generateCode, hashCode, verifyCode } from '../verification-code';
 import { addressChangedMail, newAddressCodeMail } from './email-change-mail';
 import { EmailChangeCodesRepository } from './email-change-codes.repository';
@@ -21,20 +22,23 @@ export class EmailChangeService {
   constructor(
     private readonly users: UsersRepository,
     private readonly codes: EmailChangeCodesRepository,
+    private readonly codeRequests: CodeRequestLimitService,
     private readonly config: ConfigService,
     @Inject(MAIL_SENDER) private readonly mail: MailSender,
   ) {}
 
   /**
-   * Sends a code to the new address only when no account uses it and it differs from the current one.
-   * The code is hashed in every case, so the answer takes the same time. The caller always answers 202.
+   * Sends a code to the new address only when no account uses it, it differs from the current one, and the account
+   * is under its code request limit (section 9.4). The code is hashed in every case, so the answer takes the same
+   * time. The caller always answers 202.
    */
   async requestChange(userId: string, newEmail: string): Promise<void> {
     const account = await this.activeAccount(userId);
     const code = generateCode();
     const codeHash = await hashCode(code);
+    const allowed = await this.codeRequests.allow({ userId });
 
-    if (newEmail === account.email || (await this.users.findByEmail(newEmail))) {
+    if (!allowed || newEmail === account.email || (await this.users.findByEmail(newEmail))) {
       return;
     }
 
