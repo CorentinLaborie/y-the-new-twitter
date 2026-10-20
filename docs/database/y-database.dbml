@@ -2,6 +2,7 @@
 // Y — proposed database schema (PostgreSQL 18)
 // Derived from the app design boards (Landing, Auth, App feed, Explore,
 // Notifications, Messages, Bookmarks, Profile, Settings).
+// Version 0.10 — 2026-10-20: idempotency_keys (Idempotency-Key of POST, section 9.1, 24-hour expiry), replies.body length (M2 B1, B2).
 // Version 0.9 — 2026-10-19: owner decisions DEC-119 to DEC-124 (foreign key indexes,
 // French full-text search, hashtag prefix index, updated_at set by the application).
 // Version 0.8 — 2026-10-19: closed_by_lift on support_threads (DEC-117).
@@ -324,7 +325,7 @@ Table blocks {
 Table questions {
   id uuid [pk, default: `gen_random_uuid()`]
   author_id uuid [not null, ref: > users.id]
-  body varchar(280) [not null, note: 'Text only. 280-char counter in the composer. GIN full-text index for search, 'french' configuration (DEC-120).']
+  body varchar(280) [not null, note: 'Text only. 280-char counter in the composer. Empty only once erased: 90 days after deletion the body and links are erased (DEC-067, CHECK in migration 20261020180000_content_erasure_placeholders). GIN full-text index for search, 'french' configuration (DEC-120).']
   like_count int [not null, default: 0]
   dislike_count int [not null, default: 0]
   y_count int [not null, default: 0, note: 'Progress shown as 49/50 Y. Only reactions from active accounts count (R13).']
@@ -347,7 +348,7 @@ Table replies {
   id uuid [pk, default: `gen_random_uuid()`]
   question_id uuid [not null, ref: > questions.id]
   author_id uuid [not null, ref: > users.id]
-  body varchar(280) [not null, note: 'Maximum 280 characters (D3).']
+  body varchar(280) [not null, note: 'Maximum 280 characters (D3). At least 1, or empty once erased (CHECK in migrations 20261020130000_replies_body_length and 20261020180000_content_erasure_placeholders).']
   like_count int [not null, default: 0]
   dislike_count int [not null, default: 0]
   created_at timestamptz(3) [not null, default: `now()`]
@@ -436,6 +437,21 @@ Table bookmarks {
     question_id
   }
   Note: 'Signets sort "Date de la question" joins questions.created_at.'
+}
+
+Table idempotency_keys {
+  user_id uuid [not null, ref: > users.id]
+  key varchar(255) [not null]
+  request_hash char(64) [not null, note: 'SHA-256 (hex) of the trimmed text. The same key with another text is refused (422).']
+  response jsonb [not null, note: 'First response of the POST, returned again for a repeated key within 24 hours.']
+  created_at timestamptz(3) [not null, default: `now()`]
+  expires_at timestamptz(3) [not null, note: 'created_at plus 24 hours (owner decision, 2026-10-20). Expired keys are absent for the API and deleted by the retention purge.']
+
+  indexes {
+    (user_id, key) [pk]
+    expires_at
+  }
+  Note: 'Idempotency-Key of POST requests (section 9.1), per user, kept 24 hours.'
 }
 
 // -----------------------------------------------------------------------------

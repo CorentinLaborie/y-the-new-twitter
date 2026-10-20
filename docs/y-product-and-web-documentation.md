@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Product** | Y, a question-based social network (French UI) |
-| **Document version** | 0.10 — draft, 2026-10-19 (contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
-| **Changelog** | 0.10 (2026-10-19): M0 steps 3.2, 3.9, 5.1, 6, 7.2, 7.3, 7.4, 7.5, 7.6 and 7.7 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
+| **Document version** | 0.11 — draft, 2026-10-20 (M2: « Pour vous » feed with the trending block, idempotency keys expire after 24 h; DEC-158 to DEC-163; earlier 0.10: contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
+| **Changelog** | 0.11 (2026-10-20): M2 documentation. Section 9.1: idempotency keys expire 24 hours after the first request (DEC-162). Section 9.2: the first page of `/feed?tab=for-you` returns the `trending` block (DEC-159). M2 plan accepted (DEC-158). 0.10 (2026-10-19): M0 steps 3.2, 3.9, 5.1, 6, 7.2, 7.3, 7.4, 7.5, 7.6 and 7.7 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
 | **Audience** | Product owner, designers, frontend and backend developers, reviewers |
 | **Companion documents** | [`database/y-database.dbml`](database/y-database.dbml) (schema source), [`database/y-database-documentation.md`](database/y-database-documentation.md) (column reference) |
 
@@ -506,14 +506,14 @@ Use these status codes consistently:
 
 Base path: `/api/v1`. JSON everywhere. Authentication by session cookie. Mutations require the CSRF token.
 
-> **Status (2026-10-19):** this section is the target contract. Today the API has `GET /api/v1/status` and `GET /health` only. The CSRF protection is in place: a double-submit cookie `y_csrf`, sent back in the `X-CSRF-Token` header on every mutation. No mutation route exists yet.
+> **Status (2026-10-20):** the account routes (M1), `POST /questions`, the reaction routes and `GET /feed` (M2) are built. The other routes of this section are the target contract. The CSRF protection is in place: a double-submit cookie `y_csrf`, sent back in the `X-CSRF-Token` header on every mutation.
 
 ### 9.1 Conventions
 
 - Resource names are plural nouns in kebab-case. Exceptions are listed below.
 - Reactions are **idempotent** `PUT`/`DELETE` on a sub-resource, so clicking twice does not double-count. Marking a conversation as read is also a `PUT`.
 - **Every list endpoint** uses cursor pagination: `?cursor=…&limit=…`. Default `limit` is 20, maximum 50. Responses have the envelope `{ "items": [...], "nextCursor": "…" | null }`. Offsets are not used. This applies to the feed, replies, followers and following, bookmarks, notifications, conversations, messages, hashtags, search, popular questions, trends, suggestions, blocks and admin lists.
-- **Idempotency:** every `POST` that creates a resource (questions, replies, messages, conversations, reports, blocks) accepts an `Idempotency-Key` header. A repeated key returns the first result instead of creating a second item.
+- **Idempotency:** every `POST` that creates a resource (questions, replies, messages, conversations, reports, blocks) accepts an `Idempotency-Key` header. A repeated key returns the first result instead of creating a second item. A key expires 24 hours after the first request, and the daily purge deletes expired keys (DEC-162).
 - **Status codes:** `201` on creation with a `Location` header, `204` on deletion without body, `200` on other successful mutations. Full list in section 8.4.
 - **Times:** ISO 8601 in UTC. **Field names:** camelCase in JSON, everywhere (including `lastMessageAt`).
 - **Reserved handles:** `me`, `admin`, `api`, `login`, `signup`, `settings`, `explore`, `home`, `messages`, `notifications`, `bookmarks`, `hashtags`, `suggestions`, `support`, `y`. A handle cannot use a reserved word. A handle uses only ASCII letters, digits and underscore (DEC-061).
@@ -565,7 +565,7 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/feed?tab=for-you\|following&cursor=…` | Home feed. `for-you` from M2 (D17). `following` from M4 |
+| GET | `/feed?tab=for-you\|following&cursor=…` | Home feed. `for-you` from M2 (D17). The first page (no cursor) returns `trending`: the 10 most reacted questions of the last 24 hours (DEC-159), and 20 `items` by date, without the trending questions. Later pages return `trending: []`. Each question has `viewerReactions`, the signed-in viewer's reaction (at most one, DEC-172). `following` from M4 |
 | POST | `/questions` | Post a question (280 characters max) |
 | GET | `/questions/{id}` | One question (used for shared links) |
 | DELETE | `/questions/{id}` | Delete own question (soft delete) |
@@ -693,7 +693,7 @@ Rate limits protect accounts and codes. Content actions (posting, reacting, repl
 ## 10. Database
 
 - **Schema source of truth:** [`database/y-database.dbml`](database/y-database.dbml). Column reference: [`database/y-database-documentation.md`](database/y-database-documentation.md).
-- **28 tables** (DBML version 0.9), grouped into accounts, sessions, social, content, messaging, activity, moderation and administration. Version 0.2 added `blocks` (R14) and the Spring Session tables. Version 0.3 adds `admin_audit_log` (R17). Version 0.4 adds `login_events` (DEC-060). Version 0.5 adds `users.terms_version` (DEC-062), `admin_audit_log.prev_hash` (DEC-063), the encoding rules of the hash chain (DEC-064) and a single unique index on `handle` (DEC-061). Version 0.6 moves the schema from MySQL to PostgreSQL (DEC-070) and replaces the Spring Session tables with one `sessions` table (DEC-071). The handle index is now a unique index on `lower(handle)`.
+- **29 tables** (DBML version 0.10), grouped into accounts, sessions, social, content, messaging, activity, moderation and administration. Version 0.2 added `blocks` (R14) and the Spring Session tables. Version 0.3 adds `admin_audit_log` (R17). Version 0.4 adds `login_events` (DEC-060). Version 0.5 adds `users.terms_version` (DEC-062), `admin_audit_log.prev_hash` (DEC-063), the encoding rules of the hash chain (DEC-064) and a single unique index on `handle` (DEC-061). Version 0.6 moves the schema from MySQL to PostgreSQL (DEC-070) and replaces the Spring Session tables with one `sessions` table (DEC-071). The handle index is now a unique index on `lower(handle)`.
 - **Migrations:** Prisma Migrate (DEC-072). The initial migration creates the schema from the DBML. Every later change is a new migration folder. Never edit a migration that has been applied anywhere.
 - **Identifiers:** `uuid` values generated by the database with `gen_random_uuid()`.
 - **Time:** `timestamptz(3)`, stored in UTC.
@@ -712,6 +712,7 @@ Rate limits protect accounts and codes. Content actions (posting, reacting, repl
 
 - **Never edit an applied migration.** A migration is applied once it has run on any environment (local, staging or production). A mistake in it is fixed by a new migration.
 - **Forward-only.** There is no down migration. A rollback is a new corrective migration that reverses the change (DEC-056).
+- **Maintenance grants.** A table purged by a maintenance job (the retention purge, section 13) gets its `y_maintenance` grant in its own migration, as a `DO` block that runs `GRANT SELECT, DELETE` only when the role exists (`pg_roles`). A right limited to one column is granted on that column only (`GRANT UPDATE (body)`, DEC-166). Migrations run as the database owner, so no password and no manual step are needed. `backend/database/roles.sql` only creates the roles, once per fresh environment; on a fresh environment the migration grant is skipped (no role yet) and roles.sql gives the same rights.
 
 ### 10.3 Database roles
 
@@ -720,7 +721,7 @@ Three roles are created once per environment, after the migrations, by `backend/
 | Role | Used by | Rights |
 |---|---|---|
 | `y_app` | The application (`DATABASE_URL`) | Reads and writes its tables. `admin_audit_log` and `login_events` are append-only: `SELECT` and `INSERT` only. Cannot change `_prisma_migrations`. |
-| `y_maintenance` | The purge jobs (`DATABASE_MAINTENANCE_URL`) | `SELECT` and `DELETE` on `admin_audit_log` and `login_events`, and nothing else. The other purges get their rights when their job is built (M1 to M7). |
+| `y_maintenance` | The purge jobs (`DATABASE_MAINTENANCE_URL`) | `SELECT` and `DELETE` on the tables the purges delete (`admin_audit_log`, `login_events`, codes, `sessions`, `idempotency_keys`). For the content erasure (DEC-067): `SELECT` and `UPDATE (body)` only on `questions` and `replies`, and `SELECT` and `DELETE` on `question_hashtags` and `mentions` (DEC-166). Nothing else. Each purge grant is made by the migration of its table (section 10.2). |
 | `y_backup` | The backup job (M0 step 11) | Reads every table, writes none. |
 
 - Passwords are passed on the command line (`psql -v app_password=…`). They are never stored in the repository.

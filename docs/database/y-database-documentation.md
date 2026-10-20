@@ -1,6 +1,6 @@
 # Y — Database documentation
 Schema proposal for the Y app, version 0.9 of 2026-10-19 (matches the DBML). Derived from the design boards of Desktop, Tablet and Mobile. The source of truth is [`y-database.dbml`](y-database.dbml) in this folder. Requires **PostgreSQL 18.6**, pinned by digest (DEC-070, DEC-126). The local development server listens on port 5434 (DEC-125).
-> **Status: draft.** Decisions D1 to D13 are applied as **validated defaults** (decision journal, 2026-10-16). The age check uses VerifAge (DEC-019); its exact mechanism is pending the API documentation (DEC-020, R15). Items still marked **TO CONFIRM** are open. Version 0.7 applies DEC-080 to DEC-092 to the model; version 0.8 adds `support_threads.closed_by_lift` (DEC-117); version 0.9 applies DEC-119 to DEC-124 (indexes, French full-text search, hashtag prefix index, `updated_at` set by the application); the worked example in section 7 must be recalculated (**À recalculer**).
+> **Status: draft.** Decisions D1 to D13 are applied as **validated defaults** (decision journal, 2026-10-16). The age check uses VerifAge (DEC-019); its exact mechanism is pending the API documentation (DEC-020, R15). Items still marked **TO CONFIRM** are open. Version 0.7 applies DEC-080 to DEC-092 to the model; version 0.8 adds `support_threads.closed_by_lift` (DEC-117); version 0.9 applies DEC-119 to DEC-124 (indexes, French full-text search, hashtag prefix index, `updated_at` set by the application); version 0.10 adds `idempotency_keys` (section 9.1, 24-hour expiry) and the 1-to-280 CHECK on `replies.body`; the worked example in section 7 must be recalculated (**À recalculer**).
 
 ## Contents
 - [1. Accounts and authentication](#1-accounts-and-authentication)
@@ -351,7 +351,7 @@ The posts of Y. A question is text only, up to 280 characters. It gets reactions
 |---|---|---|---|---|---|
 | `id` | `uuid` | Yes | Primary key | generated (UUID) | Unique identifier of the question. |
 | `author_id` | `uuid` | Yes | FK → `users.id` |  | The user who posted the question. |
-| `body` | `varchar(280)` | Yes | — |  | Text of the question. Maximum 280 characters. No images or media. GIN full-text index for search, French configuration (DEC-120). |
+| `body` | `varchar(280)` | Yes | — |  | Text of the question. 1 to 280 characters, or empty on an erased placeholder (CHECK `questions_body_length_check`, migrations `20261020120000_questions_body_length` and `20261020180000_content_erasure_placeholders`). After 90 days in the deleted state the body is emptied by the retention purge (DEC-067). No images or media. GIN full-text index for search, French configuration (DEC-120). |
 | `like_count` | `int` | Yes | — | `0` | Number of J'aime reactions. Kept up to date from `question_reactions`. |
 | `dislike_count` | `int` | Yes | — | `0` | Number of Pas d'accord reactions. Kept up to date from `question_reactions`. |
 | `y_count` | `int` | Yes | — | `0` | Number of Y reactions from active accounts. Shown as progress, e.g. 49/50. |
@@ -385,7 +385,7 @@ Answers posted under a question. They become available once the question's conve
 | `id` | `uuid` | Yes | Primary key | generated (UUID) | Unique identifier of the reply. |
 | `question_id` | `uuid` | Yes | FK → `questions.id` |  | The question being answered. |
 | `author_id` | `uuid` | Yes | FK → `users.id` |  | The user who wrote the reply. |
-| `body` | `varchar(280)` | Yes | — |  | Text of the reply. Maximum 280 characters (D3). |
+| `body` | `varchar(280)` | Yes | — |  | Text of the reply. 1 to 280 characters (D3; CHECK `replies_body_length_check`, migrations `20261020130000_replies_body_length` and `20261020180000_content_erasure_placeholders`), or empty once erased (DEC-067). |
 | `like_count` | `int` | Yes | — | `0` | Number of like reactions on this reply. |
 | `dislike_count` | `int` | Yes | — | `0` | Number of dislike reactions on this reply. |
 | `created_at` | `timestamptz(3)` | Yes | — | current time (UTC) | When the reply was posted. |
@@ -505,6 +505,30 @@ Links questions to hashtags. A question can carry several hashtags.
 
 - Primary key on (`question_id`, `hashtag_id`)
 - Index on (`hashtag_id`, `created_at`) — one hashtag page
+
+### `idempotency_keys`
+
+The `Idempotency-Key` of a `POST` (section 9.1 of the product document), kept per user. The first response of the request is stored and returned again when the same key comes back with the same text, for 24 hours (owner decision, 2026-10-20). A key used with another text is refused (422). After 24 hours the key is absent: a new request with it creates a new question. The daily retention purge deletes the expired rows (`expires_at` at or before now).
+
+**Links**
+
+- `user_id` → `users.id` (many `idempotency_keys` rows per `users` row)
+
+**Columns**
+
+| Column | Type | Required | Key | Default | Description |
+|---|---|---|---|---|---|
+| `user_id` | `uuid` | Yes | Primary key, FK → `users.id` |  | The user who sent the request. |
+| `key` | `varchar(255)` | Yes | Primary key |  | The `Idempotency-Key` header value. |
+| `request_hash` | `char(64)` | Yes | — |  | SHA-256 (hex) of the trimmed text of the request. |
+| `response` | `jsonb` | Yes | — |  | The response first returned for this key. |
+| `created_at` | `timestamptz(3)` | Yes | — | current time (UTC) | When the key was first used. |
+| `expires_at` | `timestamptz(3)` | Yes | — |  | `created_at` plus 24 hours. The key is absent from this time on. Deleted by the retention purge. |
+
+**Indexes**
+
+- Primary key on (`user_id`, `key`)
+- Index on (`expires_at`) — the retention purge
 
 ## 5. Messages
 Private conversations between users.
@@ -939,7 +963,7 @@ Enums are fixed lists of values stored in a column.
 - **Search**: covers questions (GIN full-text index on `questions.body`), users (GIN full-text index on `users.handle` and `users.display_name`), and hashtags (prefix match on `hashtags.name`, with a `text_pattern_ops` index, DEC-122). The full-text indexes use the `french` configuration (DEC-120) and are written as `to_tsvector` expressions in migration `20261019140000_owner_decisions`.
 - **Text length**: limits are enforced by the database (`varchar` lengths) and repeated in the app. Limits: bio 160, questions and replies 280, messages 1000 (D3).
 - **Encoding**: UTF-8 throughout. Handle uniqueness is case-insensitive through one unique index on `lower(handle)` (DEC-061, DEC-070). Handles are ASCII only, so no accent rule is needed.
-- **CHECK constraints** (written in the initial migration, not in the DBML): `follows` and `blocks` cannot point to the same user; `reports` and `mentions` have exactly one target (DEC-089); `reports.details` is required for `other`; counters are `>= 0`.
+- **CHECK constraints** (written in the initial migration, not in the DBML): `follows` and `blocks` cannot point to the same user; `reports` and `mentions` have exactly one target (DEC-089); `reports.details` is required for `other`; counters are `>= 0`. Migrations `20261020120000_questions_body_length` and `20261020130000_replies_body_length` add `questions.body` and `replies.body` between 1 and 280 characters (`char_length`, R1, D3).
 - **Foreign key indexes (DEC-121)**: every foreign key column has an index that starts with that column, so joins and deletes do not scan whole tables.
 - **Migrations**: Prisma Migrate. Each migration is a folder of plain SQL in `backend/prisma/migrations/`. The initial migration creates the schema from the DBML, including the `sessions` table and the full-text and CHECK constraints that Prisma's schema file cannot express.
 
