@@ -122,11 +122,28 @@ function answer(
   method: string,
   path: string,
   search: URLSearchParams,
+  postData: string | null,
   question: QuestionJson | null,
   replies: ReplyJson[],
 ): Answer {
   if (method === 'GET' && QUESTION_PATH.test(path)) {
     return question ? { status: 200, body: question } : notFound(path);
+  }
+
+  if (method === 'POST' && REPLIES_PATH.test(path)) {
+    // The reply is created at the end of the list, as the API does: its text is the one posted.
+    const { text } = JSON.parse(postData ?? '{}') as { text: string };
+    const created: ReplyJson = {
+      id: `reply-posted-${replies.length + 1}`,
+      questionId: QUESTION_ID,
+      text,
+      createdAt: new Date(Date.UTC(2026, 9, 15, 9, replies.length + 1)).toISOString(),
+      author: { handle: 'alice', displayName: 'Alice Martin' },
+      counters: { like: 0, dislike: 0 },
+      viewerReactions: [],
+    };
+    replies.push(created);
+    return { status: 201, body: created };
   }
 
   if (method === 'GET' && REPLIES_PATH.test(path)) {
@@ -161,14 +178,20 @@ function answer(
   return notFound(path);
 }
 
+function isConversationPath(path: string): boolean {
+  return QUESTION_PATH.test(path) || REPLIES_PATH.test(path) || REPLY_PATH.test(path);
+}
+
 /**
  * Answers the share view of the question and its replies, and the reply calls. Every other call gets a 404, so that a
- * missing answer fails the test visibly. Returns the mutating calls the page made, as "METHOD /path" (the reads are not
- * recorded).
+ * missing answer fails the test visibly, unless `fallthrough` is set: the other calls then go to the route registered
+ * before this one (the feed mock of feed-kit.ts, on the home page). Returns the mutating calls the page made, as
+ * "METHOD /path" (the reads are not recorded).
  */
 export async function mockConversationApi(
   page: Page,
   fixture: ConversationFixture,
+  options: { fallthrough?: boolean } = {},
 ): Promise<{ calls: string[] }> {
   const calls: string[] = [];
   // The replies of the test: a copy, so that the reactions and the deletions change this state only.
@@ -193,10 +216,21 @@ export async function mockConversationApi(
 
     const url = new URL(request.url());
     const path = url.pathname.replace('/api/v1', '');
+    if (options.fallthrough && !isConversationPath(path)) {
+      await route.fallback();
+      return;
+    }
     if (request.method() !== 'GET') {
       calls.push(`${request.method()} ${path}`);
     }
-    const reply = answer(request.method(), path, url.searchParams, fixture.question, replies);
+    const reply = answer(
+      request.method(),
+      path,
+      url.searchParams,
+      request.postData(),
+      fixture.question,
+      replies,
+    );
 
     await route.fulfill({
       status: reply.status,
