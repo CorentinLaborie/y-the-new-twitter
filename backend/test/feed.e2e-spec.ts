@@ -30,7 +30,7 @@ interface FeedItem {
 
 interface FeedPage {
   trending: FeedItem[];
-  items: FeedItem[];
+  questions: FeedItem[];
   nextCursor: string | null;
 }
 
@@ -66,7 +66,7 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
   }
 
   /** Every page of the feed, from the first one to the last. */
-  async function walk(limit: number): Promise<{ trending: FeedItem[]; items: FeedItem[]; pages: FeedPage[] }> {
+  async function walk(limit: number): Promise<{ trending: FeedItem[]; questions: FeedItem[]; pages: FeedPage[] }> {
     const pages: FeedPage[] = [];
     let cursor: string | null = null;
     do {
@@ -75,7 +75,7 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
       cursor = page.nextCursor;
     } while (cursor !== null && pages.length < 20);
 
-    return { trending: pages[0].trending, items: pages.flatMap((page) => page.items), pages };
+    return { trending: pages[0].trending, questions: pages.flatMap((page) => page.questions), pages };
   }
 
   beforeAll(async () => {
@@ -131,17 +131,17 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     await container?.stop();
   });
 
-  it('answers trending, items and nextCursor; the first page lists by date, newest first, and the trending question is not repeated', async () => {
+  it('answers trending, questions and nextCursor; the first page lists by date, newest first, and the trending question is not repeated', async () => {
     const page = await fetchPage(3);
 
-    expect(Object.keys(page).sort()).toEqual(['items', 'nextCursor', 'trending']);
+    expect(Object.keys(page).sort()).toEqual(['nextCursor', 'questions', 'trending']);
     expect(page.trending.map((question) => question.text)).toEqual(['Très ancienne']);
-    expect(page.items.map((question) => question.text)).toEqual(['Question 1', 'Question 2', 'Question 3']);
+    expect(page.questions.map((question) => question.text)).toEqual(['Question 1', 'Question 2', 'Question 3']);
     expect(page.nextCursor).not.toBeNull();
-    expect(Object.keys(page.items[0]).sort()).toEqual(
+    expect(Object.keys(page.questions[0]).sort()).toEqual(
       ['author', 'conversationOpen', 'counters', 'createdAt', 'hashtags', 'id', 'text', 'viewerReactions', 'yThreshold'],
     );
-    expect(page.items[0]).toMatchObject({
+    expect(page.questions[0]).toMatchObject({
       author: { handle: 'feed_writer', displayName: 'feed_writer Test' },
       hashtags: [],
       counters: { like: 0, dislike: 0, y: 0, reply: 0 },
@@ -152,9 +152,9 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
   });
 
   it('pages the list without duplicates or gaps, and every visible question is in it (R12)', async () => {
-    const { items, pages } = await walk(20);
-    const ids = items.map((question) => question.id);
-    const texts = items.map((question) => question.text);
+    const { questions, pages } = await walk(20);
+    const ids = questions.map((question) => question.id);
+    const texts = questions.map((question) => question.text);
 
     expect(pages.length).toBe(3);
     expect(new Set(ids).size).toBe(ids.length);
@@ -162,9 +162,9 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     expect(texts).toContain('Ancienne sans réaction');
     // Trending on the first screen, and in the list again on the last page: cursor pages are not filtered.
     expect(texts).toContain('Très ancienne');
-    const dates = items.map((question) => question.createdAt);
+    const dates = questions.map((question) => question.createdAt);
     expect(dates).toEqual([...dates].sort().reverse());
-    expect(items.at(-1)?.text).toMatch(/ancienne/);
+    expect(questions.at(-1)?.text).toMatch(/ancienne/);
   });
 
   it('keeps the cursor pages free of the trending block, and of the trending questions of the first page', async () => {
@@ -172,8 +172,8 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     const second = await fetchPage(20, first.nextCursor);
 
     expect(second.trending).toEqual([]);
-    const firstIds = first.items.map((question) => question.id);
-    expect(second.items.filter((question) => firstIds.includes(question.id))).toEqual([]);
+    const firstIds = first.questions.map((question) => question.id);
+    expect(second.questions.filter((question) => firstIds.includes(question.id))).toEqual([]);
     expect(first.trending.map((question) => question.id).filter((id) => firstIds.includes(id))).toEqual([]);
   });
 
@@ -184,14 +184,14 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     );
     const second = await fetchPage(20, first.nextCursor);
 
-    const firstIds = first.items.map((question) => question.id);
-    expect(second.items.filter((question) => firstIds.includes(question.id))).toEqual([]);
-    expect(second.items).toHaveLength(20);
+    const firstIds = first.questions.map((question) => question.id);
+    expect(second.questions.filter((question) => firstIds.includes(question.id))).toEqual([]);
+    expect(second.questions).toHaveLength(20);
   });
 
   it('leaves out hidden, deleted, suspended and blocked-in-either-direction questions', async () => {
-    const { trending, items } = await walk(50);
-    const texts = [...trending, ...items].map((question) => question.text);
+    const { trending, questions } = await walk(50);
+    const texts = [...trending, ...questions].map((question) => question.text);
 
     expect(texts).not.toContain('Cachée');
     expect(texts).not.toContain('Supprimée');
@@ -202,7 +202,7 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
 
   it('uses 20 as the default page size, and refuses an unknown tab, a bad limit or a bad cursor (400)', async () => {
     const defaults = await agent.get('/api/v1/feed?tab=for-you').expect(200);
-    expect(defaults.body.items).toHaveLength(20);
+    expect(defaults.body.questions).toHaveLength(20);
 
     await agent.get('/api/v1/feed?tab=following').expect(400);
     await agent.get('/api/v1/feed').expect(400);
@@ -214,8 +214,8 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
   it('shows the Y count in counters.y, with yThreshold and conversationOpen on each question (B5)', async () => {
     await sql(`UPDATE questions SET y_count = 49 WHERE body = 'Question 2';`);
 
-    const { items } = await walk(50);
-    const item = items.find((candidate) => candidate.text === 'Question 2');
+    const { questions } = await walk(50);
+    const item = questions.find((candidate) => candidate.text === 'Question 2');
 
     expect(item).toMatchObject({ counters: { y: 49 }, yThreshold: 50, conversationOpen: false });
   });
@@ -223,7 +223,7 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
   it('gives each question the viewer\'s own reaction in viewerReactions, and nothing for the others (R11)', async () => {
     const page = await fetchPage(50);
     const reacted = page.trending.find((candidate) => candidate.text === 'Très ancienne');
-    const notReacted = page.items.find((candidate) => candidate.text === 'Question 2');
+    const notReacted = page.questions.find((candidate) => candidate.text === 'Question 2');
 
     expect(reacted).toMatchObject({ viewerReactions: ['like'] });
     expect(notReacted).toMatchObject({ viewerReactions: [] });
@@ -247,7 +247,7 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
 
     const first = await fetchPage(50);
     const trendingTexts = first.trending.map((question) => question.text);
-    const listedIds = first.items.map((question) => question.id);
+    const listedIds = first.questions.map((question) => question.id);
 
     expect(trendingTexts).toHaveLength(10);
     expect(trendingTexts.every((text) => text === 'Très ancienne' || text.startsWith('Cap '))).toBe(true);

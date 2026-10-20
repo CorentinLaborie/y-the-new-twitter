@@ -1,8 +1,8 @@
 import { createHmac } from 'node:crypto';
 
-export type AuditDetailValue = string | number | boolean | null | AuditDetails;
+type AuditDetailValue = string | number | boolean | null | AuditDetails;
 
-export interface AuditDetails {
+interface AuditDetails {
   [key: string]: AuditDetailValue;
 }
 
@@ -20,7 +20,7 @@ export interface AuditEntry {
   prevHash: string;
 }
 
-export interface AuditChainCheck {
+interface AuditChainCheck {
   valid: boolean;
   /** Index of the first entry whose prevHash does not match the HMAC of the entry before it. */
   brokenAt: number | null;

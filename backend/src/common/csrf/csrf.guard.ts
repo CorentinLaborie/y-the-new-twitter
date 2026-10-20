@@ -34,7 +34,7 @@ export class CsrfGuard implements CanActivate {
 
     const headerToken = request.headers[CSRF_HEADER];
     if (!cookieToken || typeof headerToken !== 'string' || !sameToken(cookieToken, headerToken)) {
-      throw new ForbiddenException('CSRF token missing or invalid.');
+      throw new ForbiddenException({ message: 'Jeton de sécurité absent ou invalide.', code: 'csrf_invalid' });
     }
 
     return true;

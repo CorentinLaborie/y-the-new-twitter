@@ -34,10 +34,10 @@ export class ReactionsService {
   async set(viewer: SessionUser, questionId: string, kind: ReactionKind): Promise<ReactionResponseDto> {
     return this.prisma.$transaction(async (tx) => {
       await this.lockVisibleQuestion(tx, viewer.id, questionId);
-      const current = await this.reactions.findReaction(tx, viewer.id, questionId);
-      if (current?.kind !== kind) {
-        await this.reactions.setReaction(tx, viewer.id, questionId, kind);
-        await this.reactions.changeCounters(tx, questionId, counterChange(current?.kind ?? null, kind));
+      const existing = await this.reactions.findQuestionReaction(tx, viewer.id, questionId);
+      if (existing?.kind !== kind) {
+        await this.reactions.setQuestionReaction(tx, viewer.id, questionId, kind);
+        await this.reactions.changeQuestionCounters(tx, questionId, counterChange(existing?.kind ?? null, kind));
       }
 
       return this.response(tx, viewer.id, questionId);
@@ -48,10 +48,10 @@ export class ReactionsService {
   async remove(viewer: SessionUser, questionId: string, kind: ReactionKind): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       await this.lockVisibleQuestion(tx, viewer.id, questionId);
-      const current = await this.reactions.findReaction(tx, viewer.id, questionId);
-      if (current?.kind === kind) {
-        await this.reactions.removeReaction(tx, viewer.id, questionId);
-        await this.reactions.changeCounters(tx, questionId, counterChange(kind, null));
+      const existing = await this.reactions.findQuestionReaction(tx, viewer.id, questionId);
+      if (existing?.kind === kind) {
+        await this.reactions.removeQuestionReaction(tx, viewer.id, questionId);
+        await this.reactions.changeQuestionCounters(tx, questionId, counterChange(kind, null));
       }
     });
   }
@@ -64,23 +64,37 @@ export class ReactionsService {
     }
   }
 
+  /** The counters after the reaction. Opens the conversation first when the Y count has reached the threshold (R3). */
   private async response(db: ReactionsDb, viewerId: string, questionId: string): Promise<ReactionResponseDto> {
     const threshold = this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD');
-    const counters = await this.reactions.findCounters(db, questionId);
-    if (counters.conversationOpenedAt === null && counters.yCount >= threshold) {
-      const opened = await this.reactions.openConversation(db, questionId, new Date());
-      if (opened.count === 1) {
-        await this.reactions.writeConversationOpened(db, questionId, counters.authorId);
-      }
+    const question = await this.reactions.findQuestionCounters(db, questionId);
+    if (question.conversationOpenedAt === null && question.yCount >= threshold) {
+      await this.openAndNotifyAuthor(db, viewerId, questionId, question.authorId);
     }
-    const viewer = await this.reactions.findReaction(db, viewerId, questionId);
+    const viewerReaction = await this.reactions.findQuestionReaction(db, viewerId, questionId);
 
     return {
       questionId,
-      counts: { like: counters.likeCount, dislike: counters.dislikeCount, y: counters.yCount },
-      viewerReactions: viewer ? [viewer.kind] : [],
+      counters: { like: question.likeCount, dislike: question.dislikeCount, y: question.yCount },
+      viewerReactions: viewerReaction ? [viewerReaction.kind] : [],
       yThreshold: threshold,
-      conversationOpen: counters.conversationOpenedAt !== null || counters.yCount >= threshold,
+      conversationOpen: question.conversationOpenedAt !== null || question.yCount >= threshold,
     };
+  }
+
+  /**
+   * Opens the conversation, once (R3). The author gets the notice only when another account's reaction opened it:
+   * no notification is written for the account's own action.
+   */
+  private async openAndNotifyAuthor(
+    db: ReactionsDb,
+    viewerId: string,
+    questionId: string,
+    authorId: string,
+  ): Promise<void> {
+    const opened = await this.reactions.openConversation(db, questionId, new Date());
+    if (opened.count === 1 && authorId !== viewerId) {
+      await this.reactions.writeConversationOpened(db, questionId, authorId);
+    }
   }
 }

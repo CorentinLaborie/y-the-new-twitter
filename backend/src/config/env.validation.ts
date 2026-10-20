@@ -1,10 +1,10 @@
 import { plainToInstance, Type } from 'class-transformer';
 import { IsEmail, IsIn, IsInt, IsNotEmpty, IsString, IsUrl, Min, ValidateIf, validateSync } from 'class-validator';
 
-export const PROFILES = ['local', 'staging', 'production'] as const;
-export type Profile = (typeof PROFILES)[number];
+const PROFILES = ['local', 'staging', 'production'] as const;
+type Profile = (typeof PROFILES)[number];
 
-export class EnvironmentVariables {
+class EnvironmentVariables {
   @IsIn(PROFILES)
   NODE_ENV: Profile = 'local';
 

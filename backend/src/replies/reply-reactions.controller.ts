@@ -19,7 +19,7 @@ import { ReplyReactionsService } from './reply-reactions.service';
 /** Reply reactions (M3, B6). Logged-in, active accounts only: the global SessionGuard enforces it (R13). */
 @Controller('replies/:replyId/reactions')
 export class ReplyReactionsController {
-  constructor(private readonly reactions: ReplyReactionsService) {}
+  constructor(private readonly replyReactions: ReplyReactionsService) {}
 
   @Put(':kind')
   @HttpCode(HttpStatus.OK)
@@ -35,7 +35,7 @@ export class ReplyReactionsController {
     @Param('replyId', ParseUUIDPipe) replyId: string,
     @Param('kind', new ParseEnumPipe(ReplyReactionKind)) kind: ReplyReactionKind,
   ): Promise<ReplyReactionResponseDto> {
-    return this.reactions.set(viewer, replyId, kind);
+    return this.replyReactions.set(viewer, replyId, kind);
   }
 
   @Delete(':kind')
@@ -52,6 +52,6 @@ export class ReplyReactionsController {
     @Param('replyId', ParseUUIDPipe) replyId: string,
     @Param('kind', new ParseEnumPipe(ReplyReactionKind)) kind: ReplyReactionKind,
   ): Promise<void> {
-    return this.reactions.remove(viewer, replyId, kind);
+    return this.replyReactions.remove(viewer, replyId, kind);
   }
 }

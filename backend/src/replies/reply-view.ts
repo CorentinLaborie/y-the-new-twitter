@@ -7,7 +7,7 @@ export const REPLY_VIEW_INCLUDE = {
   author: { select: { handle: true, displayName: true } },
 } satisfies Prisma.ReplyInclude;
 
-export type ReplyRow = Prisma.ReplyGetPayload<{ include: typeof REPLY_VIEW_INCLUDE }>;
+type ReplyRow = Prisma.ReplyGetPayload<{ include: typeof REPLY_VIEW_INCLUDE }>;
 
 /**
  * What one viewer may see of a reply: not deleted, visible, written by an active account, no block in either

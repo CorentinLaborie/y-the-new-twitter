@@ -2,13 +2,14 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@n
 import { STATUS_CODES } from 'node:http';
 import { Request, Response } from 'express';
 
-export interface ProblemDetails {
+interface ProblemDetails {
   type: string;
   title: string;
   status: number;
   detail: string;
   instance: string;
   requestId?: string;
+  code?: string;
 }
 
 /**
@@ -37,6 +38,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       detail: status >= 500 ? 'Unexpected error.' : messageOf(exception),
       instance: request.originalUrl,
       requestId: request.id === undefined ? undefined : String(request.id),
+      code: codeOf(exception),
     };
 
     response.status(status).setHeader('Content-Type', 'application/problem+json').json(body);
@@ -59,4 +61,14 @@ function messageOf(exception: unknown): string {
   }
 
   return typeof message === 'string' ? message : exception.message;
+}
+
+/** The stable code of a refusal, when the exception carries one (`{ message, code }`): a RFC 9457 extension member. */
+function codeOf(exception: unknown): string | undefined {
+  if (!(exception instanceof HttpException)) {
+    return undefined;
+  }
+
+  const code = (exception.getResponse() as { code?: unknown }).code;
+  return typeof code === 'string' ? code : undefined;
 }

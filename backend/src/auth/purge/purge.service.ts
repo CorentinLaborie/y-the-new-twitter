@@ -11,7 +11,7 @@ const CONTENT_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 
 export const PURGE_JOB_NAME = 'retention-purge';
 
-export interface PurgeReport {
+interface PurgeReport {
   signupCodes: number;
   passwordResetCodes: number;
   emailChangeCodes: number;

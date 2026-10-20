@@ -22,12 +22,12 @@ export class MentionsRepository {
   }
 
   /** One block in either direction between the author and any of these accounts (R14). */
-  findBlockBetween(db: MentionsDb, authorId: string, userIds: readonly string[]) {
+  findBlockBetween(db: MentionsDb, authorId: string, mentionedUserIds: readonly string[]) {
     return db.block.findFirst({
       where: {
         OR: [
-          { blockerId: authorId, blockedId: { in: [...userIds] } },
-          { blockerId: { in: [...userIds] }, blockedId: authorId },
+          { blockerId: authorId, blockedId: { in: [...mentionedUserIds] } },
+          { blockerId: { in: [...mentionedUserIds] }, blockedId: authorId },
         ],
       },
       select: { blockerId: true },
@@ -35,9 +35,9 @@ export class MentionsRepository {
   }
 
   /** One mention row per account. A mention in a reply points to the reply, not to the question. */
-  createMentions(db: MentionsDb, target: MentionTarget, userIds: readonly string[]) {
+  createMentions(db: MentionsDb, target: MentionTarget, mentionedUserIds: readonly string[]) {
     return db.mention.createMany({
-      data: userIds.map((mentionedUserId) => ({
+      data: mentionedUserIds.map((mentionedUserId) => ({
         questionId: target.replyId ? null : target.questionId,
         replyId: target.replyId ?? null,
         mentionedUserId,
@@ -46,9 +46,14 @@ export class MentionsRepository {
   }
 
   /** One mention notification per account (written here, shown in M5). */
-  writeMentionNotifications(db: MentionsDb, actorId: string, target: MentionTarget, recipientIds: readonly string[]) {
+  writeMentionNotifications(
+    db: MentionsDb,
+    actorId: string,
+    target: MentionTarget,
+    mentionedUserIds: readonly string[],
+  ) {
     return db.notification.createMany({
-      data: recipientIds.map((recipientId) => ({
+      data: mentionedUserIds.map((recipientId) => ({
         recipientId,
         actorId,
         type: 'mention',

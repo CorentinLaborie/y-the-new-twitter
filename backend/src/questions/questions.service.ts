@@ -62,11 +62,11 @@ export class QuestionsService {
     text: string,
     hashtags: readonly string[],
   ): Promise<QuestionResponseDto> {
-    const mentioned = await this.mentions.resolve(db, author.id, text);
+    const mentionedUserIds = await this.mentions.resolve(db, author.id, text);
     const question = await this.questions.createQuestion(db, author.id, text);
     const hashtagIds = await this.questions.findOrCreateHashtags(db, hashtags);
     await this.questions.linkHashtags(db, question.id, hashtagIds);
-    await this.mentions.record(db, author.id, { questionId: question.id }, mentioned);
+    await this.mentions.record(db, author.id, { questionId: question.id }, mentionedUserIds);
 
     return toQuestionView(
       {

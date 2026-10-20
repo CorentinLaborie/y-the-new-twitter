@@ -4,7 +4,7 @@ import type { Prisma } from '../../database/generated/client/client';
 /** The Prisma client or a transaction opened by the service. */
 export type Db = Prisma.TransactionClient;
 
-export interface NewSignupCode {
+interface NewSignupCode {
   userId: string;
   codeHash: string;
   expiresAt: Date;

@@ -80,7 +80,7 @@ export class RepliesService {
     // One row more than the page: its presence tells whether another page follows.
     const rows = await this.replies.findPage(viewer.id, questionId, after, limit + 1);
     const page = rows.slice(0, limit);
-    const reactions = await this.replies.findViewerReactions(
+    const viewerReactionRows = await this.replies.findViewerReplyReactions(
       viewer.id,
       page.map((row) => row.id),
     );
@@ -91,7 +91,7 @@ export class RepliesService {
         toReplyView(
           row,
           row,
-          reactions.filter((reaction) => reaction.replyId === row.id).map((reaction) => reaction.kind),
+          viewerReactionRows.filter((reaction) => reaction.replyId === row.id).map((reaction) => reaction.kind),
         ),
       ),
       nextCursor: rows.length > limit && last ? encodeCursor({ createdAt: last.createdAt, id: last.id }) : null,
@@ -111,7 +111,7 @@ export class RepliesService {
       }
 
       await this.replies.markDeleted(tx, replyId, new Date());
-      await this.replies.changeReplyCount(tx, reply.questionId, -1);
+      await this.replies.changeQuestionReplyCount(tx, reply.questionId, -1);
     });
   }
 
@@ -135,16 +135,31 @@ export class RepliesService {
       throw new UnprocessableEntityException(`Les réponses s’ouvrent à ${threshold} Y.`);
     }
 
-    const mentioned = await this.mentions.resolve(db, author.id, text);
+    const mentionedUserIds = await this.mentions.resolve(db, author.id, text);
     const reply = await this.replies.createReply(db, author.id, questionId, text);
-    await this.replies.changeReplyCount(db, questionId, 1);
-    const target = { questionId, replyId: reply.id };
-    await this.mentions.record(db, author.id, target, mentioned);
-    // A mentioned question author gets the mention notification only, not a second one for the same reply.
-    if (question.authorId !== author.id && !mentioned.includes(question.authorId)) {
-      await this.replies.writeReplyNotification(db, question.authorId, author.id, questionId, reply.id);
-    }
+    await this.replies.changeQuestionReplyCount(db, questionId, 1);
+    await this.mentions.record(db, author.id, { questionId, replyId: reply.id }, mentionedUserIds);
+    await this.notifyQuestionAuthor(db, author.id, question.authorId, questionId, reply.id, mentionedUserIds);
 
     return toReplyView(reply, reply, []);
+  }
+
+  /**
+   * The question's author hears of the reply, unless they wrote it. A mentioned author gets the mention notification
+   * only, not a second one for the same reply.
+   */
+  private async notifyQuestionAuthor(
+    db: RepliesDb,
+    replierId: string,
+    questionAuthorId: string,
+    questionId: string,
+    replyId: string,
+    mentionedUserIds: readonly string[],
+  ): Promise<void> {
+    if (questionAuthorId === replierId || mentionedUserIds.includes(questionAuthorId)) {
+      return;
+    }
+
+    await this.replies.writeReplyNotification(db, questionAuthorId, replierId, questionId, replyId);
   }
 }

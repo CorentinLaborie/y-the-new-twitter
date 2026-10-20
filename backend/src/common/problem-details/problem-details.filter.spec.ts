@@ -1,4 +1,4 @@
-import { ArgumentsHost, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
+import { ArgumentsHost, BadRequestException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { ProblemDetailsFilter } from './problem-details.filter';
 
 function hostFor(originalUrl: string) {
@@ -43,6 +43,24 @@ describe('ProblemDetailsFilter', () => {
     filter.catch(new BadRequestException(['a must be a string', 'b is unknown']), host);
 
     expect(json).toHaveBeenCalledWith(expect.objectContaining({ status: 400, detail: 'a must be a string; b is unknown' }));
+  });
+
+  it('adds the stable code of a refusal that carries one, and keeps the French detail', () => {
+    const { host, json } = hostFor('/api/v1/questions');
+
+    filter.catch(new ForbiddenException({ message: 'Votre compte est suspendu.', code: 'account_suspended' }), host);
+
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 403, detail: 'Votre compte est suspendu.', code: 'account_suspended' }),
+    );
+  });
+
+  it('has no code for a refusal without one', () => {
+    const { host, json } = hostFor('/api/v1/missing');
+
+    filter.catch(new NotFoundException('Route not found.'), host);
+
+    expect(json.mock.calls[0][0].code).toBeUndefined();
   });
 
   it('hides the message of an unexpected error and logs it', () => {

@@ -11,7 +11,7 @@ const INVALID_CODE = 'Le code est incorrect ou a expiré.';
 const PASSWORD_REFUSED =
   'Le mot de passe doit contenir de 8 à 128 caractères, dont au moins un chiffre et un caractère spécial.';
 
-export interface PasswordResetInput {
+interface PasswordResetInput {
   email: string;
   code: string;
   password: string;
@@ -57,13 +57,17 @@ export class PasswordResetService {
       throw new UnprocessableEntityException(INVALID_CODE);
     }
 
-    const open = await this.codes.findOpenCode(user.id);
-    if (!open || !(await this.codes.reserveAttempt(open.id)) || !(await verifyCode(open.codeHash, input.code))) {
+    const openCode = await this.codes.findOpenCode(user.id);
+    if (
+      !openCode ||
+      !(await this.codes.reserveAttempt(openCode.id)) ||
+      !(await verifyCode(openCode.codeHash, input.code))
+    ) {
       throw new UnprocessableEntityException(INVALID_CODE);
     }
 
     const passwordHash = await hashPassword(input.password);
-    if (!(await this.codes.completeReset(open.id, user.id, passwordHash))) {
+    if (!(await this.codes.completeReset(openCode.id, user.id, passwordHash))) {
       throw new UnprocessableEntityException(INVALID_CODE);
     }
 

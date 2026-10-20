@@ -1,11 +1,9 @@
 import { Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
+import { ApiOkResponse } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Public } from './access.decorators';
+import { CurrentSessionResponseDto } from './dto/current-session-response.dto';
 import { SessionUserService } from './session-user.service';
-
-export interface CurrentSessionResponse {
-  readonly user: { readonly handle: string; readonly displayName: string } | null;
-}
 
 /** Every status except 'deleted': a suspended account still gets its banner (section 3.4). */
 const ALL_LIVE_STATUSES = ['pending_verification', 'active', 'suspended', 'pending_deletion'] as const;
@@ -17,12 +15,13 @@ export class SessionController {
   /** The logged-in user, or null when there is no session (anonymous visitors get 200, not 401). */
   @Public()
   @Get('session')
-  async current(@Req() req: Request): Promise<CurrentSessionResponse> {
+  @ApiOkResponse({ type: CurrentSessionResponseDto })
+  async current(@Req() req: Request): Promise<CurrentSessionResponseDto> {
     const decision = await this.sessions.check(req.session, { statuses: ALL_LIVE_STATUSES });
 
     return {
       user: decision.allowed
-        ? { handle: decision.user.handle, displayName: decision.user.displayName }
+        ? { handle: decision.user.handle, displayName: decision.user.displayName, status: decision.user.status }
         : null,
     };
   }

@@ -35,21 +35,21 @@ export class IdempotencyService {
   ) {}
 
   /**
-   * `create` runs in a transaction together with the key, so the key is stored with the resource or not at all.
+   * `write` runs in a transaction together with the key, so the key is stored with the resource or not at all.
    * A repeat with the same fingerprint returns the stored response. Another fingerprint under the same key is
    * refused with 422. A concurrent first request that committed first is replayed the same way.
    */
-  async run<T>(userId: string, key: string, fingerprint: string, create: (db: IdempotencyDb) => Promise<T>): Promise<T> {
+  async run<T>(userId: string, key: string, fingerprint: string, write: (db: IdempotencyDb) => Promise<T>): Promise<T> {
     const now = new Date();
-    const first = await this.idempotency.find(userId, key);
-    if (first && first.expiresAt > now) {
-      return replay<T>(first, fingerprint);
+    const stored = await this.idempotency.find(userId, key);
+    if (stored && stored.expiresAt > now) {
+      return replay<T>(stored, fingerprint);
     }
 
     try {
       return await this.prisma.$transaction(async (tx) => {
         await this.idempotency.deleteExpired(tx, userId, key, now);
-        const response = await create(tx);
+        const response = await write(tx);
         await this.idempotency.save(tx, {
           userId,
           key,
@@ -71,13 +71,13 @@ export class IdempotencyService {
   }
 }
 
-/** The first response of a key, when the fingerprint is the same. */
-function replay<T>(first: { readonly requestHash: string; readonly response: Prisma.JsonValue }, fingerprint: string): T {
-  if (first.requestHash !== fingerprint) {
+/** The response stored under a key, when the fingerprint is the same. */
+function replay<T>(stored: { readonly requestHash: string; readonly response: Prisma.JsonValue }, fingerprint: string): T {
+  if (stored.requestHash !== fingerprint) {
     throw new UnprocessableEntityException(KEY_REUSED_MESSAGE);
   }
 
-  return first.response as unknown as T;
+  return stored.response as unknown as T;
 }
 
 function isUniqueViolation(error: unknown): boolean {

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Prisma, ReplyReactionKind } from '../database/generated/client/client';
 import { PrismaService } from '../database/prisma.service';
 import { visibleTo } from '../questions/question-view';
-import type { FeedPosition } from '../feed/feed-cursor';
+import type { CursorPosition } from '../feed/feed-cursor';
 import { REPLY_VIEW_INCLUDE, visibleReplyTo } from './reply-view';
 
 /** The Prisma client or a transaction opened by the service. */
@@ -45,12 +45,13 @@ export class RepliesRepository {
     });
   }
 
-  changeReplyCount(db: RepliesDb, questionId: string, change: number) {
+  /** Moves the reply count of a question: +1 when a reply is posted, -1 when it is deleted. */
+  changeQuestionReplyCount(db: RepliesDb, questionId: string, change: number) {
     return db.question.update({ where: { id: questionId }, data: { replyCount: { increment: change } } });
   }
 
   /** One page of replies under a question, oldest first, keyset on (createdAt, id). */
-  findPage(viewerId: string, questionId: string, after: FeedPosition | null, take: number) {
+  findPage(viewerId: string, questionId: string, after: CursorPosition | null, take: number) {
     const afterCursor =
       after === null
         ? {}
@@ -69,8 +70,8 @@ export class RepliesRepository {
     });
   }
 
-  /** The viewer's own reaction kinds on these replies: both kinds can be set on one reply (R2). */
-  findViewerReactions(viewerId: string, replyIds: readonly string[]) {
+  /** The viewer's own reaction rows on these replies: both kinds can be set on one reply (R2). */
+  findViewerReplyReactions(viewerId: string, replyIds: readonly string[]) {
     return this.prisma.replyReaction.findMany({
       where: { userId: viewerId, replyId: { in: [...replyIds] } },
       select: { replyId: true, kind: true },
@@ -96,29 +97,29 @@ export class RepliesRepository {
     return db.reply.update({ where: { id: replyId }, data: { deletedAt: at } });
   }
 
-  findReaction(db: RepliesDb, userId: string, replyId: string, kind: ReplyReactionKind) {
+  findReplyReaction(db: RepliesDb, viewerId: string, replyId: string, kind: ReplyReactionKind) {
     return db.replyReaction.findUnique({
-      where: { userId_replyId_kind: { userId, replyId, kind } },
+      where: { userId_replyId_kind: { userId: viewerId, replyId, kind } },
       select: { kind: true },
     });
   }
 
-  addReaction(db: RepliesDb, userId: string, replyId: string, kind: ReplyReactionKind) {
-    return db.replyReaction.create({ data: { userId, replyId, kind } });
+  addReplyReaction(db: RepliesDb, viewerId: string, replyId: string, kind: ReplyReactionKind) {
+    return db.replyReaction.create({ data: { userId: viewerId, replyId, kind } });
   }
 
-  removeReaction(db: RepliesDb, userId: string, replyId: string, kind: ReplyReactionKind) {
-    return db.replyReaction.deleteMany({ where: { userId, replyId, kind } });
+  removeReplyReaction(db: RepliesDb, viewerId: string, replyId: string, kind: ReplyReactionKind) {
+    return db.replyReaction.deleteMany({ where: { userId: viewerId, replyId, kind } });
   }
 
-  findViewerKinds(db: RepliesDb, viewerId: string, replyId: string) {
+  findViewerReplyKinds(db: RepliesDb, viewerId: string, replyId: string) {
     return db.replyReaction.findMany({
       where: { userId: viewerId, replyId },
       select: { kind: true },
     });
   }
 
-  findCounters(db: RepliesDb, replyId: string) {
+  findReplyCounters(db: RepliesDb, replyId: string) {
     return db.reply.findUniqueOrThrow({
       where: { id: replyId },
       select: { likeCount: true, dislikeCount: true },

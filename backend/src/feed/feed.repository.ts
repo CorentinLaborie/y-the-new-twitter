@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { QUESTION_VIEW_INCLUDE, visibleTo } from '../questions/question-view';
-import type { FeedPosition } from './feed-cursor';
+import type { CursorPosition } from './feed-cursor';
 
 interface FeedPageQuery {
   readonly viewerId: string;
-  readonly after: FeedPosition | null;
+  readonly after: CursorPosition | null;
   readonly take: number;
   /** Questions left out of this page (the trending block of the first page). */
   readonly excludeIds: readonly string[];
@@ -41,7 +41,7 @@ export class FeedRepository {
   }
 
   /** The viewer's own reactions on these questions: at most one per question (R11). */
-  findViewerReactions(viewerId: string, questionIds: readonly string[]) {
+  findViewerQuestionReactions(viewerId: string, questionIds: readonly string[]) {
     return this.prisma.questionReaction.findMany({
       where: { userId: viewerId, questionId: { in: [...questionIds] } },
       select: { questionId: true, kind: true },

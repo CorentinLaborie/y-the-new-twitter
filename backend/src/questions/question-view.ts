@@ -13,7 +13,7 @@ export type QuestionRow = Prisma.QuestionGetPayload<{ include: typeof QUESTION_V
  * What the public may see of a question: not deleted, visible, and written by an active account (R13,
  * DEC-086, DEC-087). Every read of a question for another user goes through this filter.
  */
-export const VISIBLE_QUESTION = {
+const VISIBLE_QUESTION = {
   deletedAt: null,
   moderationStatus: 'visible',
   author: { status: 'active' },

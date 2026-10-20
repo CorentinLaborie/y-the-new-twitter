@@ -5,7 +5,7 @@ import { PrismaService } from '../../database/prisma.service';
 /** The Prisma client or a transaction opened by a service. */
 export type IdempotencyDb = Prisma.TransactionClient;
 
-export interface NewIdempotencyKey {
+interface NewIdempotencyKey {
   readonly userId: string;
   readonly key: string;
   readonly requestHash: string;

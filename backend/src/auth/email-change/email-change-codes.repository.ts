@@ -3,18 +3,18 @@ import { Prisma } from '../../database/generated/client/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CODE_MAX_ATTEMPTS } from '../verification-code';
 
-export interface OpenEmailChangeCode {
+interface OpenEmailChangeCode {
   id: string;
   codeHash: string;
   newEmail: string;
 }
 
-export interface ChangeAccount {
+interface ChangeAccount {
   email: string;
   status: string;
 }
 
-export type EmailChangeOutcome = 'changed' | 'code-used' | 'taken';
+type EmailChangeOutcome = 'changed' | 'code-used' | 'taken';
 
 /**
  * The only file of the e-mail change that queries the database (section 8.2). It owns the

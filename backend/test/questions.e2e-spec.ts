@@ -269,6 +269,7 @@ describe('Questions (e2e, B2)', () => {
     const response = await postQuestion('Compte suspendu').expect(403);
 
     expect(response.body.detail).toBe('Votre compte est suspendu.');
+    expect(response.body.code).toBe('account_suspended');
     expect(await sql(`SELECT count(*) FROM questions WHERE author_id = '${suspended}';`)).toBe('0');
   });
 });

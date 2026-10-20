@@ -3,12 +3,12 @@ import type { AccountStatus, UserRole } from '../../database/generated/client/cl
 import { type SessionUser, SessionUserRepository } from './session-user.repository';
 
 /** What a route accepts: account statuses and, optionally, roles. */
-export interface AccessRules {
+interface AccessRules {
   readonly statuses: readonly AccountStatus[];
   readonly roles?: readonly UserRole[];
 }
 
-export type AccessDecision =
+type AccessDecision =
   | { readonly allowed: true; readonly user: SessionUser }
   | { readonly allowed: false; readonly reason: 'anonymous' }
   | { readonly allowed: false; readonly reason: 'status'; readonly status: AccountStatus }

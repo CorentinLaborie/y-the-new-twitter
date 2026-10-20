@@ -19,7 +19,7 @@ import { ReactionsService } from './reactions.service';
 /** Question reactions (M2, B3). Logged-in, active accounts only: the global SessionGuard enforces it (R13). */
 @Controller('questions/:questionId/reactions')
 export class ReactionsController {
-  constructor(private readonly reactions: ReactionsService) {}
+  constructor(private readonly questionReactions: ReactionsService) {}
 
   @Put(':kind')
   @HttpCode(HttpStatus.OK)
@@ -35,7 +35,7 @@ export class ReactionsController {
     @Param('questionId', ParseUUIDPipe) questionId: string,
     @Param('kind', new ParseEnumPipe(ReactionKind)) kind: ReactionKind,
   ): Promise<ReactionResponseDto> {
-    return this.reactions.set(viewer, questionId, kind);
+    return this.questionReactions.set(viewer, questionId, kind);
   }
 
   @Delete(':kind')
@@ -52,6 +52,6 @@ export class ReactionsController {
     @Param('questionId', ParseUUIDPipe) questionId: string,
     @Param('kind', new ParseEnumPipe(ReactionKind)) kind: ReactionKind,
   ): Promise<void> {
-    return this.reactions.remove(viewer, questionId, kind);
+    return this.questionReactions.remove(viewer, questionId, kind);
   }
 }

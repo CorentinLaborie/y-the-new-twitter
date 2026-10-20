@@ -15,7 +15,7 @@ import { SignupActivationRepository } from './signup-activation.repository';
 import { SignupCodesRepository } from './signup-codes.repository';
 import { signupCodeMail } from './signup-mail';
 
-const CODE_REJECTED = 'Le code est incorrect, expiré ou a été épuisé.';
+const INVALID_CODE = 'Le code est incorrect, expiré ou a été épuisé.';
 const AGE_REFUSED = `Vous devez avoir au moins ${MINIMUM_AGE} ans pour vous inscrire.`;
 
 /** The three signup flows: create, verify, resend (sections 8.2 and 9.4). */
@@ -67,23 +67,23 @@ export class SignupService {
   async verify(dto: VerifySignupDto): Promise<void> {
     const now = new Date();
     const user = await this.users.findByEmail(dto.email);
-    const open =
+    const openCode =
       user?.status === 'pending_verification' ? await this.codes.findOpen(this.prisma, user.id, now) : null;
-    if (!user || !open) {
-      throw new UnprocessableEntityException(CODE_REJECTED);
+    if (!user || !openCode) {
+      throw new UnprocessableEntityException(INVALID_CODE);
     }
 
-    if (open.attempts >= CODE_MAX_ATTEMPTS) {
-      throw new UnprocessableEntityException(CODE_REJECTED);
+    if (openCode.attempts >= CODE_MAX_ATTEMPTS) {
+      throw new UnprocessableEntityException(INVALID_CODE);
     }
-    if (!(await verifyCode(open.codeHash, dto.code))) {
-      await this.codes.countFailedAttempt(this.prisma, open.id);
-      throw new UnprocessableEntityException(CODE_REJECTED);
+    if (!(await verifyCode(openCode.codeHash, dto.code))) {
+      await this.codes.countFailedAttempt(this.prisma, openCode.id);
+      throw new UnprocessableEntityException(INVALID_CODE);
     }
 
     const age = await this.ageVerifier.check(user.birthDate, now);
-    const used = await this.prisma.$transaction(async (tx) => {
-      if (!(await this.codes.consume(tx, open.id, now))) {
+    const consumed = await this.prisma.$transaction(async (tx) => {
+      if (!(await this.codes.consume(tx, openCode.id, now))) {
         return false;
       }
       await this.activation.recordAgeCheck(tx, user.id, age, now);
@@ -92,8 +92,8 @@ export class SignupService {
       }
       return true;
     });
-    if (!used) {
-      throw new UnprocessableEntityException(CODE_REJECTED);
+    if (!consumed) {
+      throw new UnprocessableEntityException(INVALID_CODE);
     }
     if (age.status === 'failed') {
       throw new UnprocessableEntityException(AGE_REFUSED);

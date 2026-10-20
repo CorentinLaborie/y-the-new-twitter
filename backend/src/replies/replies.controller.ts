@@ -80,7 +80,7 @@ export class RepliesController {
   @problemDetailsResponse(401, 'Not logged in.')
   @problemDetailsResponse(403, 'The reply belongs to another account.')
   @problemDetailsResponse(404, 'The reply does not exist or was already deleted.')
-  remove(@CurrentUser() author: SessionUser, @Param('replyId', ParseUUIDPipe) replyId: string): Promise<void> {
-    return this.replies.remove(author, replyId);
+  remove(@CurrentUser() viewer: SessionUser, @Param('replyId', ParseUUIDPipe) replyId: string): Promise<void> {
+    return this.replies.remove(viewer, replyId);
   }
 }

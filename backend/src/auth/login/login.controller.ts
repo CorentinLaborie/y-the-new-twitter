@@ -16,7 +16,7 @@ import { Public } from '../session/access.decorators';
 import { LoginDto } from './login.dto';
 import { LoginService } from './login.service';
 
-export interface LoginResponse {
+interface LoginResponse {
   readonly user: { readonly handle: string; readonly displayName: string };
 }
 
@@ -45,7 +45,10 @@ export class LoginController {
       case 'invalid':
         throw new UnauthorizedException('Identifiants incorrects');
       case 'unverified':
-        throw new ForbiddenException('Votre adresse e-mail n’est pas encore vérifiée.');
+        throw new ForbiddenException({
+          message: 'Votre adresse e-mail n’est pas encore vérifiée.',
+          code: 'account_pending_verification',
+        });
       case 'locked':
         res.setHeader('Retry-After', String(outcome.retryAfterSeconds));
         throw new HttpException('Trop de tentatives. Réessayez plus tard.', HttpStatus.TOO_MANY_REQUESTS);

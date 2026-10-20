@@ -45,6 +45,19 @@ describe('SessionGuard', () => {
     await expect(guard.canActivate(contextWith({}).context)).rejects.toThrow('Votre compte est suspendu.');
   });
 
+  it.each([
+    ['pending_verification', 'Votre adresse e-mail n’est pas encore vérifiée.', 'account_pending_verification'],
+    ['suspended', 'Votre compte est suspendu.', 'account_suspended'],
+    ['pending_deletion', 'Votre compte est en attente de suppression.', 'account_pending_deletion'],
+  ] as const)('answers 403 with the French message and the code of the %s status', async (status, message, code) => {
+    const { guard } = guardWith({ allowed: false, reason: 'status', status });
+
+    const error = await guard.canActivate(contextWith({}).context).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ForbiddenException);
+    expect((error as ForbiddenException).getResponse()).toEqual({ message, code });
+  });
+
   it('answers 403 when the role is not accepted', async () => {
     const { guard } = guardWith({ allowed: false, reason: 'role' });
 

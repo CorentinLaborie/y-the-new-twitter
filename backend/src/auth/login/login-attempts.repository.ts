@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import type { LoginResult } from '../../database/generated/client/client';
 
-export interface NewLoginEvent {
+interface NewLoginEvent {
   /** Null when the e-mail address matches no account. */
   userId: string | null;
   result: LoginResult;

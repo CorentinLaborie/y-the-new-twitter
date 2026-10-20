@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiExtraModels, ApiProperty, ApiResponse, getSchemaPath } from '@nestjs/swagger';
 
 /** The Problem Details body of section 8.4, as the contract documents it. ProblemDetailsFilter produces it. */
-export class ProblemDetailsDto {
+class ProblemDetailsDto {
   @ApiProperty({ example: 'about:blank' })
   readonly type!: string;
 
@@ -20,6 +20,14 @@ export class ProblemDetailsDto {
 
   @ApiProperty({ required: false })
   readonly requestId?: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'account_suspended',
+    description:
+      'Stable machine-readable code of the refusal, when it has one: account_pending_verification, account_suspended, account_pending_deletion or csrf_invalid. The detail text is in French and may change.',
+  })
+  readonly code?: string;
 }
 
 /** One documented error response of a route, with the application/problem+json media type. */

@@ -20,24 +20,29 @@ export class MentionsService {
     }
 
     const users = await this.mentions.findActiveByHandles(db, handles);
-    const userIds = users.map((user) => user.id).filter((id) => id !== authorId);
-    if (userIds.length === 0) {
+    const mentionedUserIds = users.map((user) => user.id).filter((id) => id !== authorId);
+    if (mentionedUserIds.length === 0) {
       return [];
     }
-    if (await this.mentions.findBlockBetween(db, authorId, userIds)) {
+    if (await this.mentions.findBlockBetween(db, authorId, mentionedUserIds)) {
       throw new UnprocessableEntityException(MENTION_REFUSED);
     }
 
-    return userIds;
+    return mentionedUserIds;
   }
 
   /** Stores one mention row and one notification per mentioned account. Nothing is written for no account. */
-  async record(db: MentionsDb, actorId: string, target: MentionTarget, userIds: readonly string[]): Promise<void> {
-    if (userIds.length === 0) {
+  async record(
+    db: MentionsDb,
+    actorId: string,
+    target: MentionTarget,
+    mentionedUserIds: readonly string[],
+  ): Promise<void> {
+    if (mentionedUserIds.length === 0) {
       return;
     }
 
-    await this.mentions.createMentions(db, target, userIds);
-    await this.mentions.writeMentionNotifications(db, actorId, target, userIds);
+    await this.mentions.createMentions(db, target, mentionedUserIds);
+    await this.mentions.writeMentionNotifications(db, actorId, target, mentionedUserIds);
   }
 }

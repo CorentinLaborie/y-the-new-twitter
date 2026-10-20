@@ -12,14 +12,15 @@ import { PUBLIC_KEY, ROLES_KEY, STATUSES_KEY } from './access.decorators';
 import { SessionUserService } from './session-user.service';
 import type { SessionUser } from './session-user.repository';
 
-export type SessionRequest = Request & { sessionUser?: SessionUser };
+type SessionRequest = Request & { sessionUser?: SessionUser };
 
 const DEFAULT_STATUSES: AccountStatus[] = ['active'];
 
-const STATUS_MESSAGES: Partial<Record<AccountStatus, string>> = {
-  pending_verification: 'Votre adresse e-mail n’est pas encore vérifiée.',
-  suspended: 'Votre compte est suspendu.',
-  pending_deletion: 'Votre compte est en attente de suppression.',
+/** The 403 body of a refused account status: the French message (detail) and its stable code (problem details `code`). */
+const STATUS_REFUSALS: Partial<Record<AccountStatus, { message: string; code: string }>> = {
+  pending_verification: { message: 'Votre adresse e-mail n’est pas encore vérifiée.', code: 'account_pending_verification' },
+  suspended: { message: 'Votre compte est suspendu.', code: 'account_suspended' },
+  pending_deletion: { message: 'Votre compte est en attente de suppression.', code: 'account_pending_deletion' },
 };
 
 /**
@@ -50,7 +51,7 @@ export class SessionGuard implements CanActivate {
         throw new UnauthorizedException('Connexion requise.');
       }
       if (decision.reason === 'status') {
-        throw new ForbiddenException(STATUS_MESSAGES[decision.status] ?? 'Accès refusé.');
+        throw new ForbiddenException(STATUS_REFUSALS[decision.status] ?? { message: 'Accès refusé.' });
       }
       throw new ForbiddenException('Accès refusé.');
     }

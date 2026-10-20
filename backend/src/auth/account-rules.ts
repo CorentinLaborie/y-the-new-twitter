@@ -1,5 +1,5 @@
 /** Handles that cannot be chosen (product doc section 9.1). Compared case-insensitively. */
-export const RESERVED_HANDLES: readonly string[] = [
+const RESERVED_HANDLES: readonly string[] = [
   "me",
   "admin",
   "api",

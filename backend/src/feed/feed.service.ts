@@ -41,12 +41,13 @@ export class FeedService {
     });
     const page = rows.slice(0, limit);
     const last = page.at(-1);
-    const reactions = await this.viewerReactions(viewer.id, [...trendingRows, ...page]);
-    const view = (row: QuestionRow) => toQuestionView(row, threshold, reactions.get(row.id) ?? []);
+    const viewerReactionsByQuestion = await this.viewerReactionsByQuestion(viewer.id, [...trendingRows, ...page]);
+    const toView = (row: QuestionRow) =>
+      toQuestionView(row, threshold, viewerReactionsByQuestion.get(row.id) ?? []);
 
     return {
-      trending: trendingRows.map(view),
-      items: page.map(view),
+      trending: trendingRows.map(toView),
+      questions: page.map(toView),
       nextCursor: rows.length > limit && last !== undefined ? encodeCursor(last) : null,
     };
   }
@@ -59,25 +60,28 @@ export class FeedService {
       TRENDING_COUNT,
     );
     const rows = await this.feed.findVisibleByIds(viewerId, ids);
-    const byId = new Map(rows.map((row) => [row.id, row]));
+    const rowsById = new Map(rows.map((row) => [row.id, row]));
 
     return ids.flatMap((id) => {
-      const row = byId.get(id);
+      const row = rowsById.get(id);
       return row ? [row] : [];
     });
   }
 
   /** The viewer's own reaction on each of these questions, by question id (at most one, R11). */
-  private async viewerReactions(viewerId: string, rows: readonly QuestionRow[]): Promise<Map<string, ReactionKind[]>> {
-    const found = await this.feed.findViewerReactions(
+  private async viewerReactionsByQuestion(
+    viewerId: string,
+    rows: readonly QuestionRow[],
+  ): Promise<Map<string, ReactionKind[]>> {
+    const reactions = await this.feed.findViewerQuestionReactions(
       viewerId,
       rows.map((row) => row.id),
     );
-    const kinds = new Map<string, ReactionKind[]>();
-    for (const reaction of found) {
-      kinds.set(reaction.questionId, [reaction.kind]);
+    const kindsByQuestionId = new Map<string, ReactionKind[]>();
+    for (const reaction of reactions) {
+      kindsByQuestionId.set(reaction.questionId, [reaction.kind]);
     }
 
-    return kinds;
+    return kindsByQuestionId;
   }
 }

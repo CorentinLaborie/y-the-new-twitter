@@ -107,7 +107,7 @@ describe('Question reactions (e2e, B3 to B5)', () => {
 
     expect(response.body).toEqual({
       questionId: question,
-      counts: { like: 1, dislike: 0, y: 0 },
+      counters: { like: 1, dislike: 0, y: 0 },
       viewerReactions: ['like'],
       yThreshold: 50,
       conversationOpen: false,
@@ -123,7 +123,7 @@ describe('Question reactions (e2e, B3 to B5)', () => {
     const replaced = await put(client, question, 'dislike').expect(200);
     const repeated = await put(client, question, 'dislike').expect(200);
 
-    expect(replaced.body.counts).toEqual({ like: 0, dislike: 1, y: 0 });
+    expect(replaced.body.counters).toEqual({ like: 0, dislike: 1, y: 0 });
     expect(repeated.body).toEqual(replaced.body);
     expect(await counters(question)).toBe('0,1,0');
     expect(await sql(`SELECT count(*) FROM question_reactions WHERE question_id = '${question}';`)).toBe('1');
@@ -218,8 +218,8 @@ describe('Question reactions (e2e, B3 to B5)', () => {
     const before = await put(first, question, 'like').expect(200);
     const reaching = await put(second, question, 'y').expect(200);
 
-    expect(before.body).toMatchObject({ counts: { y: 49 }, yThreshold: 50, conversationOpen: false });
-    expect(reaching.body).toMatchObject({ counts: { y: 50 }, yThreshold: 50, conversationOpen: true });
+    expect(before.body).toMatchObject({ counters: { y: 49 }, yThreshold: 50, conversationOpen: false });
+    expect(reaching.body).toMatchObject({ counters: { y: 50 }, yThreshold: 50, conversationOpen: true });
   });
 
   it('writes one conversation_opened notice to the author when the Y count reaches 50, and none after (B2)', async () => {

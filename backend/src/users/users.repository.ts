@@ -3,9 +3,9 @@ import type { Prisma } from '../database/generated/client/client';
 import { PrismaService } from '../database/prisma.service';
 
 /** The Prisma client or a transaction opened by a caller. */
-export type UsersDb = Prisma.TransactionClient;
+type UsersDb = Prisma.TransactionClient;
 
-export interface NewUser {
+interface NewUser {
   handle: string;
   displayName: string;
   email: string;

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CODE_MAX_ATTEMPTS } from '../verification-code';
 
-export interface OpenPasswordResetCode {
+interface OpenPasswordResetCode {
   id: string;
   codeHash: string;
 }

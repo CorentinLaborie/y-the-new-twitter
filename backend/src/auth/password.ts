@@ -1,6 +1,6 @@
 import { argon2id, hash, type HashOptions, verify } from "argon2";
 
-export const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
 
 // OWASP minimum for argon2id (memory 19 MiB, 2 iterations, 1 lane).

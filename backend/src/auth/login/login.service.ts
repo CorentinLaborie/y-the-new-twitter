@@ -12,10 +12,10 @@ export const MAX_FAILED_LOGINS = 5;
 /** Lock duration after the fifth failure, in milliseconds (section 9.4). */
 export const LOCK_DURATION_MS = 15 * 60 * 1000;
 /** Failures count within this window, in milliseconds (section 9.4: 5 failures in 15 minutes). */
-export const FAILURE_WINDOW_MS = 15 * 60 * 1000;
+const FAILURE_WINDOW_MS = 15 * 60 * 1000;
 const USER_AGENT_MAX_LENGTH = 255;
 
-export interface LoginAttempt {
+interface LoginAttempt {
   email: string;
   password: string;
   ipAddress: string;
@@ -23,7 +23,7 @@ export interface LoginAttempt {
 }
 
 /** What the controller turns into an HTTP answer. */
-export type LoginOutcome =
+type LoginOutcome =
   | { readonly status: 'success'; readonly user: SessionUser }
   | { readonly status: 'invalid' }
   | { readonly status: 'unverified' }

@@ -49,12 +49,12 @@ export class EmailChangeService {
   async confirmChange(userId: string, code: string): Promise<void> {
     const account = await this.activeAccount(userId);
 
-    const open = await this.codes.findOpenCode(userId);
-    if (!open || !(await this.codes.reserveAttempt(open.id)) || !(await verifyCode(open.codeHash, code))) {
+    const openCode = await this.codes.findOpenCode(userId);
+    if (!openCode || !(await this.codes.reserveAttempt(openCode.id)) || !(await verifyCode(openCode.codeHash, code))) {
       throw new UnprocessableEntityException(INVALID_CODE);
     }
 
-    const outcome = await this.codes.completeChange(open.id, userId, open.newEmail);
+    const outcome = await this.codes.completeChange(openCode.id, userId, openCode.newEmail);
     if (outcome === 'code-used') {
       throw new UnprocessableEntityException(INVALID_CODE);
     }

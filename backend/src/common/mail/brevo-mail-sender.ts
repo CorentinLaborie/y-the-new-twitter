@@ -3,7 +3,7 @@ import { MailSender, OutgoingMail } from './mail-sender';
 const BREVO_SEND_URL = 'https://api.brevo.com/v3/smtp/email';
 const REQUEST_TIMEOUT_MS = 10_000;
 
-export interface BrevoMailSenderOptions {
+interface BrevoMailSenderOptions {
   apiKey: string;
   fromAddress: string;
   /** Test seam: a fake HTTP client. Production uses the global fetch. */

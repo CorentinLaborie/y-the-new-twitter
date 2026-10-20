@@ -31,7 +31,7 @@ export class ReactionsRepository {
     });
   }
 
-  findCounters(db: ReactionsDb, questionId: string) {
+  findQuestionCounters(db: ReactionsDb, questionId: string) {
     return db.question.findUniqueOrThrow({
       where: { id: questionId },
       select: { authorId: true, likeCount: true, dislikeCount: true, yCount: true, conversationOpenedAt: true },
@@ -53,27 +53,27 @@ export class ReactionsRepository {
     });
   }
 
-  findReaction(db: ReactionsDb, userId: string, questionId: string) {
+  findQuestionReaction(db: ReactionsDb, viewerId: string, questionId: string) {
     return db.questionReaction.findUnique({
-      where: { userId_questionId: { userId, questionId } },
+      where: { userId_questionId: { userId: viewerId, questionId } },
       select: { kind: true },
     });
   }
 
   /** One reaction per user and question (R11). A new kind replaces the previous row; its date stays the day it was placed (DEC-164). */
-  setReaction(db: ReactionsDb, userId: string, questionId: string, kind: ReactionKind) {
+  setQuestionReaction(db: ReactionsDb, viewerId: string, questionId: string, kind: ReactionKind) {
     return db.questionReaction.upsert({
-      where: { userId_questionId: { userId, questionId } },
-      create: { userId, questionId, kind },
+      where: { userId_questionId: { userId: viewerId, questionId } },
+      create: { userId: viewerId, questionId, kind },
       update: { kind },
     });
   }
 
-  removeReaction(db: ReactionsDb, userId: string, questionId: string) {
-    return db.questionReaction.delete({ where: { userId_questionId: { userId, questionId } } });
+  removeQuestionReaction(db: ReactionsDb, viewerId: string, questionId: string) {
+    return db.questionReaction.delete({ where: { userId_questionId: { userId: viewerId, questionId } } });
   }
 
-  changeCounters(db: ReactionsDb, questionId: string, change: CounterChange) {
+  changeQuestionCounters(db: ReactionsDb, questionId: string, change: CounterChange) {
     return db.question.update({
       where: { id: questionId },
       data: {

@@ -150,7 +150,7 @@ describe('Login, session and logout (e2e)', () => {
     const logged = await agent.get('/api/v1/auth/session').expect(200);
     const anonymous = await request(app.getHttpServer()).get('/api/v1/auth/session').expect(200);
 
-    expect(logged.body).toEqual({ user: { handle: 'login_active', displayName: 'Compte login_active' } });
+    expect(logged.body).toEqual({ user: { handle: 'login_active', displayName: 'Compte login_active', status: 'active' } });
     expect(anonymous.body).toEqual({ user: null });
   });
 

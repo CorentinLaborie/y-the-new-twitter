@@ -74,6 +74,10 @@ paths:
       responses:
         "200":
           description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentSessionResponseDto"
       tags: &a2
         - Session
   /api/v1/auth/logout:
@@ -779,6 +783,40 @@ components:
     LoginDto:
       type: object
       properties: {}
+    CurrentUserDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: alice
+        displayName:
+          type: string
+          example: Alice
+        status:
+          type: string
+          enum:
+            - pending_verification
+            - active
+            - suspended
+            - pending_deletion
+            - deleted
+          example: active
+          description: Status of the account. A suspended account still gets its session
+            (section 3.4).
+      required:
+        - handle
+        - displayName
+        - status
+    CurrentSessionResponseDto:
+      type: object
+      properties:
+        user:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/CurrentUserDto"
+      required:
+        - user
     PasswordResetRequestDto:
       type: object
       properties: {}
@@ -811,6 +849,13 @@ components:
           example: /api/v1/questions
         requestId:
           type: string
+        code:
+          type: string
+          example: account_suspended
+          description: "Stable machine-readable code of the refusal, when it has one:
+            account_pending_verification, account_suspended,
+            account_pending_deletion or csrf_invalid. The detail text is in
+            French and may change."
       required:
         - type
         - title
@@ -935,7 +980,7 @@ components:
         questionId:
           type: string
           format: uuid
-        counts:
+        counters:
           $ref: "#/components/schemas/ReactionCountsDto"
         viewerReactions:
           type: array
@@ -957,7 +1002,7 @@ components:
           description: True once the Y count has reached yThreshold (R13).
       required:
         - questionId
-        - counts
+        - counters
         - viewerReactions
         - yThreshold
         - conversationOpen
@@ -1084,7 +1129,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/QuestionResponseDto"
-        items:
+        questions:
           type: array
           items:
             $ref: "#/components/schemas/QuestionResponseDto"
@@ -1094,5 +1139,5 @@ components:
           example: MjAyNi0xMC0yMFQxMDo0MTowMC4wMDBafGExYjJjM2Q0
       required:
         - trending
-        - items
+        - questions
         - nextCursor

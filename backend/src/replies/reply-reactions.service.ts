@@ -8,7 +8,7 @@ import { RepliesDb, RepliesRepository } from './replies.repository';
 const REPLY_NOT_FOUND = 'Réponse introuvable.';
 
 /** The change of the two counters of a reply when one reaction is added (+1) or removed (-1). */
-function counterDelta(kind: ReplyReactionKind, delta: 1 | -1): { like: number; dislike: number } {
+function replyCounterChange(kind: ReplyReactionKind, delta: 1 | -1): { like: number; dislike: number } {
   return kind === 'like' ? { like: delta, dislike: 0 } : { like: 0, dislike: delta };
 }
 
@@ -27,10 +27,10 @@ export class ReplyReactionsService {
   async set(viewer: SessionUser, replyId: string, kind: ReplyReactionKind): Promise<ReplyReactionResponseDto> {
     return this.prisma.$transaction(async (tx) => {
       await this.lockVisibleReply(tx, viewer.id, replyId);
-      const current = await this.replies.findReaction(tx, viewer.id, replyId, kind);
-      if (!current) {
-        await this.replies.addReaction(tx, viewer.id, replyId, kind);
-        await this.replies.changeReplyCounters(tx, replyId, counterDelta(kind, 1));
+      const existing = await this.replies.findReplyReaction(tx, viewer.id, replyId, kind);
+      if (!existing) {
+        await this.replies.addReplyReaction(tx, viewer.id, replyId, kind);
+        await this.replies.changeReplyCounters(tx, replyId, replyCounterChange(kind, 1));
       }
 
       return this.response(tx, viewer.id, replyId);
@@ -41,10 +41,10 @@ export class ReplyReactionsService {
   async remove(viewer: SessionUser, replyId: string, kind: ReplyReactionKind): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       await this.lockVisibleReply(tx, viewer.id, replyId);
-      const current = await this.replies.findReaction(tx, viewer.id, replyId, kind);
-      if (current) {
-        await this.replies.removeReaction(tx, viewer.id, replyId, kind);
-        await this.replies.changeReplyCounters(tx, replyId, counterDelta(kind, -1));
+      const existing = await this.replies.findReplyReaction(tx, viewer.id, replyId, kind);
+      if (existing) {
+        await this.replies.removeReplyReaction(tx, viewer.id, replyId, kind);
+        await this.replies.changeReplyCounters(tx, replyId, replyCounterChange(kind, -1));
       }
     });
   }
@@ -58,13 +58,13 @@ export class ReplyReactionsService {
   }
 
   private async response(db: RepliesDb, viewerId: string, replyId: string): Promise<ReplyReactionResponseDto> {
-    const counters = await this.replies.findCounters(db, replyId);
-    const kinds = await this.replies.findViewerKinds(db, viewerId, replyId);
+    const reply = await this.replies.findReplyCounters(db, replyId);
+    const viewerKinds = await this.replies.findViewerReplyKinds(db, viewerId, replyId);
 
     return {
       replyId,
-      counts: { like: counters.likeCount, dislike: counters.dislikeCount },
-      viewerReactions: kinds.map((row) => row.kind),
+      counts: { like: reply.likeCount, dislike: reply.dislikeCount },
+      viewerReactions: viewerKinds.map((row) => row.kind),
     };
   }
 }

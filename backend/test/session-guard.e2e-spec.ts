@@ -112,6 +112,7 @@ describe('Global session guard, with administrators (e2e)', () => {
     const response = await agent.get('/api/v1/guard-probe/account').expect(403);
 
     expect(response.body.detail).toBe('Votre compte est suspendu.');
+    expect(response.body.code).toBe('account_suspended');
   });
 
   it('lets a suspended user reach a route that declares the suspended status (banner)', async () => {
