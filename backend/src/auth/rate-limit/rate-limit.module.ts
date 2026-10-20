@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { PostgresRateLimitStorage } from './postgres-rate-limit.storage';
 
-/** Counters of the auth rate limits, kept in PostgreSQL (DEC-194). Shared by every instance of the API. */
+/** Counters of the auth rate limits and of the global limit, kept in PostgreSQL (DEC-194, DEC-212). Shared by every instance. */
 export const RATE_LIMIT_STORAGE = Symbol('RATE_LIMIT_STORAGE');
 
 /** Global, so any controller can use the AuthRateLimit decorator without importing this module. */

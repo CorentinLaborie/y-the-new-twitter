@@ -29,7 +29,9 @@ describe('Health check when the database is unreachable (e2e)', () => {
     expect(response.body.error.database.status).toBe('down');
   });
 
-  it('still starts the application and serves the API', async () => {
-    await request(app.getHttpServer()).get('/api/v1/status').expect(200);
+  it('still starts the application and serves the API, and says the global limit was not counted (DEC-212)', async () => {
+    const response = await request(app.getHttpServer()).get('/api/v1/status').expect(200);
+
+    expect(response.headers['x-ratelimit-error']).toBe('store-unavailable');
   });
 });

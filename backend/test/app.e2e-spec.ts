@@ -3,14 +3,14 @@ import { Test } from '@nestjs/testing';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import request from 'supertest';
 import { configureApp } from '../src/configure-app';
-import { startPostgres } from './support/postgres';
+import { startMigratedPostgres } from './support/postgres';
 
 describe('Application skeleton (e2e)', () => {
   let container: StartedPostgreSqlContainer;
   let app: INestApplication;
 
   beforeAll(async () => {
-    container = await startPostgres();
+    container = await startMigratedPostgres();
     // The configuration is read when AppModule is loaded, so the database URL is set before the import.
     process.env.DATABASE_URL = container.getConnectionUri();
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- loaded on purpose, after the variable above is set
