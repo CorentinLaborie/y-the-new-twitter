@@ -1,6 +1,6 @@
 # Y — Database documentation
-Schema proposal for the Y app, version 0.9 of 2026-10-19 (matches the DBML). Derived from the design boards of Desktop, Tablet and Mobile. The source of truth is [`y-database.dbml`](y-database.dbml) in this folder. Requires **PostgreSQL 18.6**, pinned by digest (DEC-070, DEC-126). The local development server listens on port 5434 (DEC-125).
-> **Status: draft.** Decisions D1 to D13 are applied as **validated defaults** (decision journal, 2026-10-16). The age check uses VerifAge (DEC-019); its exact mechanism is pending the API documentation (DEC-020, R15). Items still marked **TO CONFIRM** are open. Version 0.7 applies DEC-080 to DEC-092 to the model; version 0.8 adds `support_threads.closed_by_lift` (DEC-117); version 0.9 applies DEC-119 to DEC-124 (indexes, French full-text search, hashtag prefix index, `updated_at` set by the application); version 0.10 adds `idempotency_keys` (section 9.1, 24-hour expiry) and the 1-to-280 CHECK on `replies.body`; the worked example in section 7 must be recalculated (**À recalculer**).
+Schema proposal for the Y app, version 0.11 of 2026-10-20 (matches the DBML). Derived from the design boards of Desktop, Tablet and Mobile. The source of truth is [`y-database.dbml`](y-database.dbml) in this folder. Requires **PostgreSQL 18.6**, pinned by digest (DEC-070, DEC-126). The local development server listens on port 5434 (DEC-125).
+> **Status: draft.** Decisions D1 to D13 are applied as **validated defaults** (decision journal, 2026-10-16). The age check uses VerifAge (DEC-019); its exact mechanism is pending the API documentation (DEC-020, R15). Items still marked **TO CONFIRM** are open. Version 0.7 applies DEC-080 to DEC-092 to the model; version 0.8 adds `support_threads.closed_by_lift` (DEC-117); version 0.9 applies DEC-119 to DEC-124 (indexes, French full-text search, hashtag prefix index, `updated_at` set by the application); version 0.10 adds `idempotency_keys` (section 9.1, 24-hour expiry) and the 1-to-280 CHECK on `replies.body`; version 0.11 adds `rate_limit_counters` (section 9, DEC-194); the worked example in section 7 must be recalculated (**À recalculer**).
 
 ## Contents
 - [1. Accounts and authentication](#1-accounts-and-authentication)
@@ -11,6 +11,7 @@ Schema proposal for the Y app, version 0.9 of 2026-10-19 (matches the DBML). Der
 - [6. Notifications and moderation](#6-notifications-and-moderation)
 - [7. Administration](#7-administration)
 - [8. Contact](#8-contact)
+- [9. Rate limits](#9-rate-limits)
 - [Enums](#enums)
 - [Conventions](#conventions)
 - [Open questions](#open-questions)
@@ -862,6 +863,29 @@ Messages inside a thread, from the user or from the administrator.
 - Index on (`thread_id`, `sent_at`)
 
 **Retention:** deleted with the account at purge, with its threads (DEC-024, DEC-080).
+
+## 9. Rate limits
+Counters of the rate limits (DEC-194): the per-IP limits and the per-account code limit (product document, section 9.4).
+
+### `rate_limit_counters`
+
+One counter per limited key. Each counter is a fixed window that starts at its first hit; when the window has passed, the next hit restarts it at 1. An expired counter is ignored, and no cleanup job removes it yet. The counters are stored in PostgreSQL, so they survive a restart of the API and are shared by every instance.
+
+**Links**
+
+- None. The table has no foreign key.
+
+**Columns**
+
+| Column | Type | Required | Key | Default | Description |
+|---|---|---|---|---|---|
+| `key` | `text` | Yes | Primary key |  | Key of one counter, set by the rate-limit code (the limited IP address or account). |
+| `window_start` | `timestamptz(3)` | Yes | — |  | Start of the fixed window. Set at the first hit. |
+| `hits` | `integer` | Yes | — |  | Hits counted in the current window. |
+
+**Indexes**
+
+- Primary key on (`key`)
 
 ## Enums
 Enums are fixed lists of values stored in a column.

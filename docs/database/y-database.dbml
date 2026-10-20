@@ -2,6 +2,7 @@
 // Y — proposed database schema (PostgreSQL 18)
 // Derived from the app design boards (Landing, Auth, App feed, Explore,
 // Notifications, Messages, Bookmarks, Profile, Settings).
+// Version 0.11 — 2026-10-20: rate_limit_counters, the storage of the rate limits (DEC-194).
 // Version 0.10 — 2026-10-20: idempotency_keys (Idempotency-Key of POST, section 9.1, 24-hour expiry), replies.body length (M2 B1, B2).
 // Version 0.9 — 2026-10-19: owner decisions DEC-119 to DEC-124 (foreign key indexes,
 // French full-text search, hashtag prefix index, updated_at set by the application).
@@ -649,6 +650,18 @@ Table support_messages {
 }
 
 // -----------------------------------------------------------------------------
+// Rate limits
+// -----------------------------------------------------------------------------
+
+Table rate_limit_counters {
+  key text [pk, not null, note: 'Key of one counter, set by the rate-limit code (the limited IP address or account).']
+  window_start timestamptz(3) [not null, note: 'Start of the fixed window. Set at the first hit; the window restarts at 1 hit once its length has passed.']
+  hits integer [not null, note: 'Hits counted in the current window.']
+
+  Note: 'Storage of the rate limits (DEC-194). Shared by every instance of the API, so the counters survive a restart. An expired counter is ignored; no cleanup job removes it yet (product doc, section 9.4).'
+}
+
+// -----------------------------------------------------------------------------
 // Groups (for the diagram)
 // -----------------------------------------------------------------------------
 
@@ -702,4 +715,8 @@ TableGroup administration {
 TableGroup support {
   support_threads
   support_messages
+}
+
+TableGroup rate_limits {
+  rate_limit_counters
 }
