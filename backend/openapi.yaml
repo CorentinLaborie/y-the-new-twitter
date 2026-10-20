@@ -142,6 +142,239 @@ paths:
         "200":
           description: ""
       tags: *a4
+  /api/v1/questions:
+    post:
+      operationId: QuestionsController_create
+      parameters:
+        - name: idempotency-key
+          in: header
+          description: "Repeated with the same text, returns the first response. Same key,
+            other text: 422 (section 9.1)."
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuestionDto"
+      responses:
+        "201":
+          description: The question.
+          headers:
+            Location:
+              description: Path of the new question.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionResponseDto"
+        "400":
+          description: Malformed request, such as an empty Idempotency-Key.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "422":
+          description: The text is empty or longer than 280 characters, or the key was
+            used for another text.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - Questions
+  /api/v1/questions/{questionId}/reactions/{kind}:
+    put:
+      operationId: ReactionsController_set
+      parameters:
+        - name: questionId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: kind
+          required: true
+          in: path
+          schema:
+            enum:
+              - like
+              - dislike
+              - y
+            type: string
+      responses:
+        "200":
+          description: The counters after the reaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReactionResponseDto"
+        "400":
+          description: The question id is not a UUID, or the kind is not like, dislike or y.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The question does not exist, or it is hidden or deleted.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a5
+        - Reactions
+    delete:
+      operationId: ReactionsController_remove
+      parameters:
+        - name: questionId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: kind
+          required: true
+          in: path
+          schema:
+            enum:
+              - like
+              - dislike
+              - y
+            type: string
+      responses:
+        "204":
+          description: The reaction of this kind was removed, or there was none.
+        "400":
+          description: The question id is not a UUID, or the kind is not like, dislike or y.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The question does not exist, or it is hidden, deleted or blocked.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a5
+  /api/v1/feed:
+    get:
+      operationId: FeedController_forYou
+      parameters:
+        - name: tab
+          required: true
+          in: query
+          schema:
+            type: string
+            enum:
+              - for-you
+        - name: cursor
+          required: false
+          in: query
+          description: nextCursor of the previous page. Absent for the first page.
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+      responses:
+        "200":
+          description: One page of the feed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedPageDto"
+        "400":
+          description: Unknown tab, invalid limit or invalid cursor.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - Feed
   /health:
     get:
       operationId: HealthController_check
@@ -159,7 +392,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a5
+                    example: &a6
                       database:
                         status: up
                     additionalProperties:
@@ -185,7 +418,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a5
+                    example: *a6
                     additionalProperties:
                       type: object
                       required:
@@ -207,7 +440,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a6
+                      database: &a7
                         status: up
                     additionalProperties:
                       type: object
@@ -221,7 +454,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a7
+                      redis: &a8
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -236,8 +469,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a6
-                      redis: *a7
+                      database: *a7
+                      redis: *a8
                     additionalProperties:
                       type: object
                       required:
@@ -281,3 +514,193 @@ components:
     EmailChangeConfirmDto:
       type: object
       properties: {}
+    ProblemDetailsDto:
+      type: object
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+          example: Unprocessable Entity
+        status:
+          type: number
+          example: 422
+        detail:
+          type: string
+          example: La question doit contenir de 1 à 280 caractères.
+        instance:
+          type: string
+          example: /api/v1/questions
+        requestId:
+          type: string
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+    CreateQuestionDto:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 280
+          description: Text of the question, trimmed. Counted in characters.
+      required:
+        - text
+    QuestionAuthorDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: alice
+        displayName:
+          type: string
+          example: Alice
+      required:
+        - handle
+        - displayName
+    QuestionCountersDto:
+      type: object
+      properties:
+        like:
+          type: number
+          example: 0
+        dislike:
+          type: number
+          example: 0
+        y:
+          type: number
+          example: 0
+        reply:
+          type: number
+          example: 0
+      required:
+        - like
+        - dislike
+        - y
+        - reply
+    QuestionResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+          maxLength: 280
+        createdAt:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/QuestionAuthorDto"
+        hashtags:
+          example:
+            - online_life
+          description: "Without the #, lowercase."
+          type: array
+          items:
+            type: string
+        counters:
+          $ref: "#/components/schemas/QuestionCountersDto"
+        yThreshold:
+          type: number
+          example: 50
+          description: "Y_CONVERSATION_THRESHOLD: the Y count that opens the conversation
+            (R3)."
+        conversationOpen:
+          type: boolean
+          example: false
+          description: True once the Y count has reached yThreshold. It stays true if the
+            count drops (R13).
+        viewerReactions:
+          type: array
+          maxItems: 1
+          description: The reaction of the signed-in viewer on this question, at most one
+            (R11). Empty for anonymous views.
+          items:
+            type: string
+            enum:
+              - like
+              - dislike
+              - y
+      required:
+        - id
+        - text
+        - createdAt
+        - author
+        - hashtags
+        - counters
+        - yThreshold
+        - conversationOpen
+        - viewerReactions
+    ReactionCountsDto:
+      type: object
+      properties:
+        like:
+          type: number
+          example: 124
+        dislike:
+          type: number
+          example: 12
+        y:
+          type: number
+          example: 49
+      required:
+        - like
+        - dislike
+        - y
+    ReactionResponseDto:
+      type: object
+      properties:
+        questionId:
+          type: string
+          format: uuid
+        counts:
+          $ref: "#/components/schemas/ReactionCountsDto"
+        viewerReactions:
+          type: array
+          description: Empty when the viewer has no reaction.
+          items:
+            type: string
+            enum:
+              - like
+              - dislike
+              - y
+        yThreshold:
+          type: number
+          example: 50
+          description: "Y_CONVERSATION_THRESHOLD: the Y count that opens the conversation
+            (R3)."
+        conversationOpen:
+          type: boolean
+          example: true
+          description: True once the Y count has reached yThreshold (R13).
+      required:
+        - questionId
+        - counts
+        - viewerReactions
+        - yThreshold
+        - conversationOpen
+    FeedPageDto:
+      type: object
+      properties:
+        trending:
+          description: Trending block, first page only.
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionResponseDto"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionResponseDto"
+        nextCursor:
+          type: string
+          nullable: true
+          example: MjAyNi0xMC0yMFQxMDo0MTowMC4wMDBafGExYjJjM2Q0
+      required:
+        - trending
+        - items
+        - nextCursor

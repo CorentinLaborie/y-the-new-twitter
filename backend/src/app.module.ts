@@ -12,6 +12,9 @@ import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { SessionsModule } from './common/sessions/sessions.module';
 import { HealthModule } from './health/health.module';
+import { QuestionsModule } from './questions/questions.module';
+import { ReactionsModule } from './reactions/reactions.module';
+import { FeedModule } from './feed/feed.module';
 
 @Module({
   imports: [
@@ -25,6 +28,9 @@ import { HealthModule } from './health/health.module';
     DatabaseModule,
     SessionsModule,
     AuthModule,
+    QuestionsModule,
+    ReactionsModule,
+    FeedModule,
     HealthModule,
   ],
   controllers: [AppController],

@@ -1,5 +1,24 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
+import { BACKEND_ROOT, runAsSuperuser, startMigratedPostgres } from './support/postgres';
+
+/** The migrations that grant the maintenance role its purge rights (product doc section 10.2). */
+const MAINTENANCE_GRANT_MIGRATIONS = [
+  '20261020160000_maintenance_grants_existing_purges',
+  '20261020170000_idempotency_keys_maintenance_grant',
+  '20261020190000_maintenance_grants_content_erasure',
+];
+
+const PURGED_TABLES = [
+  'admin_audit_log',
+  'login_events',
+  'signup_codes',
+  'password_reset_codes',
+  'email_change_codes',
+  'sessions',
+  'idempotency_keys',
+];
 
 describe('Database migrations (e2e)', () => {
   let container: StartedPostgreSqlContainer;
@@ -26,13 +45,13 @@ describe('Database migrations (e2e)', () => {
     await container?.stop();
   });
 
-  it('creates the 28 tables of the reference on a fresh PostgreSQL 18', async () => {
+  it('creates the 29 tables of the reference on a fresh PostgreSQL 18', async () => {
     const result = await sql(
       `SELECT count(*) FROM information_schema.tables
        WHERE table_schema = 'public' AND table_name NOT LIKE '\\_prisma%';`,
     );
 
-    expect(result.stdout.trim()).toBe('28');
+    expect(result.stdout.trim()).toBe('29');
   });
 
   it('keeps handles unique regardless of letter case', async () => {
@@ -64,6 +83,73 @@ describe('Database migrations (e2e)', () => {
 
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toContain('users_follower_count_check');
+  });
+
+  it.each(MAINTENANCE_GRANT_MIGRATIONS)(
+    'runs %s without failing when the maintenance role does not exist yet',
+    async (folder) => {
+      const migration = readFileSync(join(BACKEND_ROOT, 'prisma', 'migrations', folder, 'migration.sql'), 'utf8');
+
+      const result = await sql(migration);
+
+      expect(result.exitCode).toBe(0);
+    },
+  );
+
+  it('grants SELECT and DELETE to the maintenance role once that role exists', async () => {
+    await sql(`CREATE ROLE y_maintenance NOLOGIN;`);
+    for (const folder of MAINTENANCE_GRANT_MIGRATIONS) {
+      const migration = readFileSync(join(BACKEND_ROOT, 'prisma', 'migrations', folder, 'migration.sql'), 'utf8');
+      expect((await sql(migration)).exitCode).toBe(0);
+    }
+
+    for (const table of PURGED_TABLES) {
+      const privileges = await sql(
+        `SELECT has_table_privilege('y_maintenance', '${table}', 'SELECT') AND has_table_privilege('y_maintenance', '${table}', 'DELETE');`,
+      );
+      expect({ table, granted: privileges.stdout.trim() }).toEqual({ table, granted: 't' });
+    }
+  });
+
+  it('accepts an empty body only on a deleted question: the placeholder of erased content (DEC-067)', async () => {
+    const userId = await insertUser('eraser');
+    const placeholder = await sql(
+      `INSERT INTO questions (author_id, body, deleted_at) VALUES ('${userId}', '', now()) RETURNING id;`,
+    );
+    const live = await sql(`INSERT INTO questions (author_id, body) VALUES ('${userId}', '');`);
+
+    expect(placeholder.exitCode).toBe(0);
+    expect(live.exitCode).not.toBe(0);
+    expect(live.stderr).toContain('questions_body_length_check');
+  });
+
+  it('refuses an empty question text', async () => {
+    const userId = await insertUser('writer');
+    const result = await sql(`INSERT INTO questions (author_id, body) VALUES ('${userId}', '');`);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('questions_body_length_check');
+  });
+
+  it('refuses an empty reply text', async () => {
+    const userId = await insertUser('replier');
+    const questionId = (
+      await sql(`INSERT INTO questions (author_id, body) VALUES ('${userId}', 'Question') RETURNING id;`)
+    ).stdout.split('\n')[0].trim();
+    const result = await sql(
+      `INSERT INTO replies (question_id, author_id, body) VALUES ('${questionId}', '${userId}', '');`,
+    );
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('replies_body_length_check');
+  });
+
+  it('refuses a question text over 280 characters', async () => {
+    const userId = await insertUser('verbose');
+    const result = await sql(`INSERT INTO questions (author_id, body) VALUES ('${userId}', '${'a'.repeat(281)}');`);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('value too long');
   });
 
   it('refuses to follow yourself', async () => {

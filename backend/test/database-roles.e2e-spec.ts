@@ -118,12 +118,20 @@ describe('Database roles (e2e)', () => {
 
   it('lets the maintenance role delete expired codes and sessions, as the retention purge does', async () => {
     // The purge (src/auth/purge) deletes these tables with the maintenance role, and only these.
-    for (const table of ['signup_codes', 'password_reset_codes', 'email_change_codes', 'sessions']) {
+    for (const table of ['signup_codes', 'password_reset_codes', 'email_change_codes', 'sessions', 'idempotency_keys']) {
       const result = await asMaintenance(`DELETE FROM ${table} WHERE expires_at < now();`);
 
       expect(result.stderr).toBe('');
       expect(result.exitCode).toBe(0);
     }
+  });
+
+  it('lets the maintenance role write only the body of questions, as the content erasure does', async () => {
+    const body = await asMaintenance(`UPDATE questions SET body = '' WHERE false;`);
+    const column = await asMaintenance(`UPDATE questions SET moderation_status = 'hidden' WHERE false;`);
+
+    expect(body.exitCode).toBe(0);
+    expect(column.stderr).toContain('permission denied for table questions');
   });
 
   it('refuses the maintenance role any other change, such as writing or deleting users', async () => {

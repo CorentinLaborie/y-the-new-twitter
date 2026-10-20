@@ -6,13 +6,21 @@ import { PurgeService } from './purge.service';
 const NOW = new Date('2026-10-19T12:00:00.000Z');
 const CODE_CUTOFF = new Date('2026-10-18T12:00:00.000Z');
 
-function fakeDatabase(counts = { signupCode: 2, passwordResetCode: 1, emailChangeCode: 0, session: 5 }) {
+function fakeDatabase(
+  counts = { signupCode: 2, passwordResetCode: 1, emailChangeCode: 0, session: 5, idempotencyKey: 4 },
+) {
   const deleteMany = (count: number) => jest.fn().mockResolvedValue({ count });
   return {
     signupCode: { deleteMany: deleteMany(counts.signupCode) },
     passwordResetCode: { deleteMany: deleteMany(counts.passwordResetCode) },
     emailChangeCode: { deleteMany: deleteMany(counts.emailChangeCode) },
     session: { deleteMany: deleteMany(counts.session) },
+    idempotencyKey: { deleteMany: deleteMany(counts.idempotencyKey) },
+    question: { findMany: jest.fn().mockResolvedValue([]), updateMany: deleteMany(0) },
+    reply: { findMany: jest.fn().mockResolvedValue([]), updateMany: deleteMany(0) },
+    questionHashtag: { deleteMany: deleteMany(0) },
+    mention: { deleteMany: deleteMany(0) },
+    $transaction: jest.fn(async (operations: Promise<unknown>[]) => Promise.all(operations)),
   };
 }
 
@@ -46,8 +54,23 @@ describe('PurgeService', () => {
     expect(database.session.deleteMany).toHaveBeenCalledWith({ where: { expiresAt: { lt: NOW } } });
   });
 
+  it('deletes idempotency keys whose 24-hour lifetime is over', async () => {
+    const database = fakeDatabase();
+    const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
+
+    await service.purgeExpired();
+
+    expect(database.idempotencyKey.deleteMany).toHaveBeenCalledWith({ where: { expiresAt: { lte: NOW } } });
+  });
+
   it('reports how many rows each table lost', async () => {
-    const database = fakeDatabase({ signupCode: 2, passwordResetCode: 1, emailChangeCode: 3, session: 5 });
+    const database = fakeDatabase({
+      signupCode: 2,
+      passwordResetCode: 1,
+      emailChangeCode: 3,
+      session: 5,
+      idempotencyKey: 4,
+    });
     const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
 
     await expect(service.purgeExpired()).resolves.toEqual({
@@ -55,6 +78,9 @@ describe('PurgeService', () => {
       passwordResetCodes: 1,
       emailChangeCodes: 3,
       sessions: 5,
+      idempotencyKeys: 4,
+      erasedQuestions: 0,
+      erasedReplies: 0,
     });
   });
 

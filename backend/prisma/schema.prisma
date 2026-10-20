@@ -3,9 +3,9 @@
 // here and live in the migration folder named *_constraints.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/database/generated/client"
-  moduleFormat = "cjs"
+  provider            = "prisma-client"
+  output              = "../src/database/generated/client"
+  moduleFormat        = "cjs"
   importFileExtension = ""
 }
 
@@ -192,6 +192,7 @@ model User {
   reviewedReports          Report[]                  @relation("ReportReviewer")
   adminMfa                 AdminMfa?
   adminBackupCodes         AdminBackupCode[]
+  idempotencyKeys          IdempotencyKey[]
   auditLogEntries          AdminAuditLog[]
   supportThreads           SupportThread[]           @relation("SupportThreadUser")
   closedSupportThreads     SupportThread[]           @relation("SupportThreadCloser")
@@ -289,6 +290,21 @@ model Session {
   @@index([userId])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+model IdempotencyKey {
+  userId      String   @map("user_id") @db.Uuid
+  key         String   @map("key") @db.VarChar(255)
+  requestHash String   @map("request_hash") @db.Char(64)
+  response    Json     @map("response") @db.JsonB
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([userId, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
 }
 
 model Follow {

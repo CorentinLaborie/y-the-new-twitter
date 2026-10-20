@@ -82,7 +82,15 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
 
     const report = await purge.purgeExpired();
 
-    expect(report).toEqual({ signupCodes: 1, passwordResetCodes: 1, emailChangeCodes: 1, sessions: 1 });
+    expect(report).toEqual({
+      signupCodes: 1,
+      passwordResetCodes: 1,
+      emailChangeCodes: 1,
+      sessions: 1,
+      idempotencyKeys: 0,
+      erasedQuestions: 0,
+      erasedReplies: 0,
+    });
     await expect(database.signupCode.count()).resolves.toBe(3);
     await expect(database.passwordResetCode.count()).resolves.toBe(0);
     await expect(database.emailChangeCode.findMany({ select: { newEmail: true } })).resolves.toEqual([
@@ -91,13 +99,69 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
     await expect(database.session.findMany({ select: { id: true } })).resolves.toEqual([{ id: 'live-session' }]);
   });
 
+  it('deletes the idempotency keys past their 24-hour lifetime, and only those', async () => {
+    const key = (name: string, expiresAt: Date) => ({
+      userId,
+      key: name,
+      requestHash: 'a'.repeat(64),
+      response: {},
+      expiresAt,
+    });
+    await database.idempotencyKey.createMany({
+      data: [key('expired-key', HOURS(1)), key('live-key', MINUTES_FROM_NOW(60))],
+    });
+
+    const report = await purge.purgeExpired();
+
+    expect(report.idempotencyKeys).toBe(1);
+    await expect(database.idempotencyKey.findMany({ select: { key: true } })).resolves.toEqual([{ key: 'live-key' }]);
+  });
+
   it('does nothing on a second run', async () => {
     await expect(purge.purgeExpired()).resolves.toEqual({
       signupCodes: 0,
       passwordResetCodes: 0,
       emailChangeCodes: 0,
       sessions: 0,
+      idempotencyKeys: 0,
+      erasedQuestions: 0,
+      erasedReplies: 0,
     });
+  });
+
+  it('erases the text and links of content deleted more than 90 days ago, and only that', async () => {
+    const tag = await database.hashtag.create({ data: { name: 'purge_erased' } });
+    const deletedLongAgo = await database.question.create({
+      data: { authorId: userId, body: 'Texte à effacer', deletedAt: HOURS(91 * 24) },
+    });
+    await database.questionHashtag.create({ data: { questionId: deletedLongAgo.id, hashtagId: tag.id } });
+    await database.mention.create({ data: { questionId: deletedLongAgo.id, mentionedUserId: userId } });
+    const reply = await database.reply.create({
+      data: { questionId: deletedLongAgo.id, authorId: userId, body: 'Réponse à effacer', deletedAt: HOURS(91 * 24) },
+    });
+    await database.mention.create({ data: { replyId: reply.id, mentionedUserId: userId } });
+    const deletedRecently = await database.question.create({
+      data: { authorId: userId, body: 'Texte conservé', deletedAt: HOURS(89 * 24) },
+    });
+    const live = await database.question.create({ data: { authorId: userId, body: 'Question vivante' } });
+
+    const report = await purge.purgeExpired();
+
+    expect(report.erasedQuestions).toBe(1);
+    expect(report.erasedReplies).toBe(1);
+    const erased = await database.question.findUnique({ where: { id: deletedLongAgo.id } });
+    expect(erased).toMatchObject({ body: '', deletedAt: HOURS(91 * 24) });
+    await expect(database.questionHashtag.count({ where: { questionId: deletedLongAgo.id } })).resolves.toBe(0);
+    await expect(database.mention.count({ where: { questionId: deletedLongAgo.id } })).resolves.toBe(0);
+    await expect(database.mention.count({ where: { replyId: reply.id } })).resolves.toBe(0);
+    await expect(database.reply.findUnique({ where: { id: reply.id } })).resolves.toMatchObject({ body: '' });
+    await expect(database.question.findUnique({ where: { id: deletedRecently.id } })).resolves.toMatchObject({
+      body: 'Texte conservé',
+    });
+    await expect(database.question.findUnique({ where: { id: live.id } })).resolves.toMatchObject({
+      body: 'Question vivante',
+    });
+    await expect(purge.purgeExpired()).resolves.toMatchObject({ erasedQuestions: 0, erasedReplies: 0 });
   });
 
   it('registers the daily job under its name', async () => {

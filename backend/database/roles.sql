@@ -8,7 +8,8 @@
 --   y_app          the application (DATABASE_URL). Reads and writes its tables, but the two logs are append-only.
 --   y_maintenance  the purge jobs (DATABASE_MAINTENANCE_URL). Deletes old rows of the two logs.
 --   y_backup       read-only, for the backup job (step 11).
--- The purges of the other tables are granted to y_maintenance when each job is built (M1 to M7).
+-- The purges of each table are granted to y_maintenance by the migration that creates the table or the purge
+-- (conditional on the role, product doc section 10.2). This script only creates the roles.
 
 CREATE ROLE y_app LOGIN PASSWORD :'app_password';
 CREATE ROLE y_maintenance LOGIN PASSWORD :'maintenance_password';
@@ -24,10 +25,17 @@ REVOKE ALL ON _prisma_migrations FROM y_app;
 -- The two logs are append-only for the application (DEC-059).
 REVOKE UPDATE, DELETE ON admin_audit_log, login_events FROM y_app;
 
--- Maintenance: delete old rows of the two logs, and expired codes and sessions for the retention purge
+-- Maintenance: delete old rows of the two logs, and expired codes, sessions and idempotency keys for the retention purge
 -- (DEC-059, DEC-065, DEC-068), and nothing else.
+-- On a fresh environment the migrations run before this script, so their conditional grants (no role yet) are
+-- skipped: this line gives the same rights. Migrations that run after the role exists grant them themselves.
 -- DELETE with a WHERE clause also needs SELECT on the columns it reads.
-GRANT SELECT, DELETE ON admin_audit_log, login_events, signup_codes, password_reset_codes, email_change_codes, sessions TO y_maintenance;
+GRANT SELECT, DELETE ON admin_audit_log, login_events, signup_codes, password_reset_codes, email_change_codes, sessions, idempotency_keys TO y_maintenance;
+-- Content erasure after 90 days (section 13, DEC-067): the text of questions and replies, and their hashtag links and mentions.
+-- Only the body is written: no other column of questions or replies is open to the purge.
+GRANT SELECT ON questions, replies TO y_maintenance;
+GRANT UPDATE (body) ON questions, replies TO y_maintenance;
+GRANT SELECT, DELETE ON question_hashtags, mentions TO y_maintenance;
 
 -- Backup: read everything, write nothing.
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO y_backup;
