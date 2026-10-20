@@ -8,7 +8,11 @@ import { ApiProperty } from '@nestjs/swagger';
  * answers 400 to any DTO failure, so a length rule here would not give the documented status.
  */
 export class CreateQuestionDto {
-  @ApiProperty({ minLength: 1, maxLength: 280, description: 'Text of the question, trimmed. Counted in characters.' })
+  @ApiProperty({
+    minLength: 1,
+    maxLength: 280,
+    description: 'Text of the question, trimmed. Counted in characters.',
+  })
   @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   text!: string;

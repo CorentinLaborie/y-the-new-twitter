@@ -26,7 +26,10 @@ describe('Password reset (e2e, B16 and B17)', () => {
     if (csrf === undefined) {
       const response = await agent.get('/api/v1/status').expect(200);
       const cookies = response.headers['set-cookie'] as unknown as string[];
-      csrf = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+      csrf = cookies
+        .find((value) => value.startsWith('y_csrf='))!
+        .split(';')[0]
+        .split('=')[1];
     }
 
     return csrf;
@@ -37,7 +40,9 @@ describe('Password reset (e2e, B16 and B17)', () => {
   }
 
   /** A new active account with its own address, and one open session row. */
-  async function createUser(status: 'active' | 'suspended' = 'active'): Promise<{ id: string; email: string }> {
+  async function createUser(
+    status: 'active' | 'suspended' = 'active',
+  ): Promise<{ id: string; email: string }> {
     counter += 1;
     const email = `reset-${counter}@example.test`;
     // psql prints the command tag ("INSERT 0 1") after the RETURNING row: the id is the first line.
@@ -149,7 +154,11 @@ describe('Password reset (e2e, B16 and B17)', () => {
       const wrong = code === '000000' ? '000001' : '000000';
 
       for (let attempt = 0; attempt < 5; attempt += 1) {
-        const response = await confirmReset({ email: user.email, code: wrong, password: NEW_PASSWORD }).expect(422);
+        const response = await confirmReset({
+          email: user.email,
+          code: wrong,
+          password: NEW_PASSWORD,
+        }).expect(422);
         expect(response.headers['content-type']).toContain('application/problem+json');
       }
       await confirmReset({ email: user.email, code, password: NEW_PASSWORD }).expect(422);
@@ -171,7 +180,11 @@ describe('Password reset (e2e, B16 and B17)', () => {
     });
 
     it('answers 422 for an unknown address', async () => {
-      await confirmReset({ email: 'nobody-at-all@example.test', code: '123456', password: NEW_PASSWORD }).expect(422);
+      await confirmReset({
+        email: 'nobody-at-all@example.test',
+        code: '123456',
+        password: NEW_PASSWORD,
+      }).expect(422);
     });
 
     it('sets the new password, closes every session of the user, and mails the change', async () => {
@@ -188,9 +201,15 @@ describe('Password reset (e2e, B16 and B17)', () => {
       expect(await verifyPassword(storedHash, OLD_PASSWORD)).toBe(false);
       expect(await sql(`SELECT count(*) FROM sessions WHERE user_id = '${user.id}';`)).toBe('0');
       expect(await sql(`SELECT count(*) FROM sessions WHERE user_id = '${other.id}';`)).toBe('1');
-      expect(await sql(`SELECT count(*) FROM password_reset_codes WHERE user_id = '${user.id}' AND consumed_at IS NOT NULL;`)).toBe('1');
+      expect(
+        await sql(
+          `SELECT count(*) FROM password_reset_codes WHERE user_id = '${user.id}' AND consumed_at IS NOT NULL;`,
+        ),
+      ).toBe('1');
 
-      const changed = mail.messages().filter((message) => message.subject === 'Votre mot de passe Y a été modifié');
+      const changed = mail
+        .messages()
+        .filter((message) => message.subject === 'Votre mot de passe Y a été modifié');
       expect(changed).toHaveLength(1);
       expect(changed[0].to).toBe(user.email);
       expect(changed[0].text).not.toContain(code);

@@ -35,7 +35,10 @@ describe('Rate-limit storage in PostgreSQL (e2e, DEC-194)', () => {
     const agent = request.agent(app.getHttpServer());
     const status = await agent.get('/api/v1/status').expect(200);
     const cookies = status.headers['set-cookie'] as unknown as string[];
-    const csrf = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+    const csrf = cookies
+      .find((value) => value.startsWith('y_csrf='))!
+      .split(';')[0]
+      .split('=')[1];
 
     return { app, agent, csrf };
   }
@@ -75,7 +78,10 @@ describe('Rate-limit storage in PostgreSQL (e2e, DEC-194)', () => {
     const blocked = await login(second).expect(429);
     expect(Number(blocked.headers['retry-after'])).toBeGreaterThan(0);
 
-    const stored = await runAsSuperuser(container, `SELECT hits FROM rate_limit_counters WHERE key LIKE 'login:%';`);
+    const stored = await runAsSuperuser(
+      container,
+      `SELECT hits FROM rate_limit_counters WHERE key LIKE 'login:%';`,
+    );
     expect(stored.stdout.trim()).toBe('21');
   });
 

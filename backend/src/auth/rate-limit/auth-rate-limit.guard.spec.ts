@@ -51,7 +51,12 @@ describe('AuthRateLimitGuard', () => {
   });
 
   it('answers 429 with Retry-After in seconds while the IP is blocked', async () => {
-    storage.increment.mockResolvedValue({ totalHits: 21, timeToExpire: 900, isBlocked: true, timeToBlockExpire: 754 });
+    storage.increment.mockResolvedValue({
+      totalHits: 21,
+      timeToExpire: 900,
+      isBlocked: true,
+      timeToBlockExpire: 754,
+    });
     const { context, response } = contextFor('login', '203.0.113.7');
 
     const outcome = guard.canActivate(context);
@@ -62,7 +67,12 @@ describe('AuthRateLimitGuard', () => {
   });
 
   it('sends at least one second in Retry-After', async () => {
-    storage.increment.mockResolvedValue({ totalHits: 11, timeToExpire: 3600, isBlocked: true, timeToBlockExpire: 0 });
+    storage.increment.mockResolvedValue({
+      totalHits: 11,
+      timeToExpire: 3600,
+      isBlocked: true,
+      timeToBlockExpire: 0,
+    });
     const { context, response } = contextFor('requestCode', '203.0.113.7');
 
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(HttpException);
@@ -82,7 +92,11 @@ describe('AuthRateLimitGuard', () => {
     await guard.canActivate(contextFor('requestCode', '198.51.100.2').context);
 
     const keys = storage.increment.mock.calls.map(([key]) => key);
-    expect(keys).toEqual(['code-request:203.0.113.7', 'code-request:203.0.113.7', 'code-request:198.51.100.2']);
+    expect(keys).toEqual([
+      'code-request:203.0.113.7',
+      'code-request:203.0.113.7',
+      'code-request:198.51.100.2',
+    ]);
   });
 
   it.each([

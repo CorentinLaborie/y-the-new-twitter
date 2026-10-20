@@ -61,13 +61,18 @@ describe('One question, share view (e2e, M3 F11)', () => {
     const agent = request.agent(app.getHttpServer());
     const response = await agent.get('/api/v1/status').expect(200);
     const cookies = response.headers['set-cookie'] as unknown as string[];
-    const token = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+    const token = cookies
+      .find((value) => value.startsWith('y_csrf='))!
+      .split(';')[0]
+      .split('=')[1];
     await agent.post(`/api/v1/session-probe/login/${userId}`).set('x-csrf-token', token).expect(201);
     return { userId, agent, token };
   }
 
   function react(client: Client, questionId: string, kind: string) {
-    return client.agent.put(`/api/v1/questions/${questionId}/reactions/${kind}`).set('x-csrf-token', client.token);
+    return client.agent
+      .put(`/api/v1/questions/${questionId}/reactions/${kind}`)
+      .set('x-csrf-token', client.token);
   }
 
   function detail(client: Client, questionId: string) {

@@ -43,7 +43,10 @@ export class FeedService {
     });
     const page = rows.slice(0, limit);
     const last = page.at(-1);
-    const viewerReactionsByQuestion = await this.viewerReactionsByQuestion(viewer.id, [...trendingRows, ...page]);
+    const viewerReactionsByQuestion = await this.viewerReactionsByQuestion(viewer.id, [
+      ...trendingRows,
+      ...page,
+    ]);
     const toView = (row: QuestionRow) =>
       toQuestionView(row, threshold, viewerReactionsByQuestion.get(row.id) ?? []);
 

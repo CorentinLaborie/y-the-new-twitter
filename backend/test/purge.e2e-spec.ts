@@ -59,12 +59,7 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
     const codeRow = (expiresAt: Date) => ({ userId, codeHash: 'hash', expiresAt });
     // Signup codes: 25 hours ago is purged; exactly 24 hours ago, 23 hours ago and the future are kept.
     await database.signupCode.createMany({
-      data: [
-        codeRow(HOURS(25)),
-        codeRow(HOURS(24)),
-        codeRow(HOURS(23)),
-        codeRow(MINUTES_FROM_NOW(15)),
-      ],
+      data: [codeRow(HOURS(25)), codeRow(HOURS(24)), codeRow(HOURS(23)), codeRow(MINUTES_FROM_NOW(15))],
     });
     await database.passwordResetCode.create({ data: codeRow(HOURS(48)) });
     await database.emailChangeCode.createMany({
@@ -96,7 +91,9 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
     await expect(database.emailChangeCode.findMany({ select: { newEmail: true } })).resolves.toEqual([
       { newEmail: 'recent-change@example.test' },
     ]);
-    await expect(database.session.findMany({ select: { id: true } })).resolves.toEqual([{ id: 'live-session' }]);
+    await expect(database.session.findMany({ select: { id: true } })).resolves.toEqual([
+      { id: 'live-session' },
+    ]);
   });
 
   it('deletes the idempotency keys past their 24-hour lifetime, and only those', async () => {
@@ -114,7 +111,9 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
     const report = await purge.purgeExpired();
 
     expect(report.idempotencyKeys).toBe(1);
-    await expect(database.idempotencyKey.findMany({ select: { key: true } })).resolves.toEqual([{ key: 'live-key' }]);
+    await expect(database.idempotencyKey.findMany({ select: { key: true } })).resolves.toEqual([
+      { key: 'live-key' },
+    ]);
   });
 
   it('does nothing on a second run', async () => {
@@ -137,7 +136,12 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
     await database.questionHashtag.create({ data: { questionId: deletedLongAgo.id, hashtagId: tag.id } });
     await database.mention.create({ data: { questionId: deletedLongAgo.id, mentionedUserId: userId } });
     const reply = await database.reply.create({
-      data: { questionId: deletedLongAgo.id, authorId: userId, body: 'Réponse à effacer', deletedAt: HOURS(91 * 24) },
+      data: {
+        questionId: deletedLongAgo.id,
+        authorId: userId,
+        body: 'Réponse à effacer',
+        deletedAt: HOURS(91 * 24),
+      },
     });
     await database.mention.create({ data: { replyId: reply.id, mentionedUserId: userId } });
     const deletedRecently = await database.question.create({
@@ -151,7 +155,9 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
     expect(report.erasedReplies).toBe(1);
     const erased = await database.question.findUnique({ where: { id: deletedLongAgo.id } });
     expect(erased).toMatchObject({ body: '', deletedAt: HOURS(91 * 24) });
-    await expect(database.questionHashtag.count({ where: { questionId: deletedLongAgo.id } })).resolves.toBe(0);
+    await expect(database.questionHashtag.count({ where: { questionId: deletedLongAgo.id } })).resolves.toBe(
+      0,
+    );
     await expect(database.mention.count({ where: { questionId: deletedLongAgo.id } })).resolves.toBe(0);
     await expect(database.mention.count({ where: { replyId: reply.id } })).resolves.toBe(0);
     await expect(database.reply.findUnique({ where: { id: reply.id } })).resolves.toMatchObject({ body: '' });

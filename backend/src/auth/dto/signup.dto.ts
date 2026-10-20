@@ -1,4 +1,4 @@
-import { Transform, Type } from "class-transformer";
+import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
@@ -12,29 +12,29 @@ import {
   Validate,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-} from "class-validator";
-import { isPasswordAllowed } from "../password";
-import { CURRENT_TERMS_VERSION, isReservedHandle } from "../account-rules";
+} from 'class-validator';
+import { isPasswordAllowed } from '../password';
+import { CURRENT_TERMS_VERSION, isReservedHandle } from '../account-rules';
 
-@ValidatorConstraint({ name: "passwordPolicy" })
+@ValidatorConstraint({ name: 'passwordPolicy' })
 class PasswordPolicy implements ValidatorConstraintInterface {
   validate(password: unknown): boolean {
-    return typeof password === "string" && isPasswordAllowed(password);
+    return typeof password === 'string' && isPasswordAllowed(password);
   }
 
   defaultMessage(): string {
-    return "Le mot de passe doit contenir de 8 à 128 caractères, dont au moins un chiffre et un caractère spécial.";
+    return 'Le mot de passe doit contenir de 8 à 128 caractères, dont au moins un chiffre et un caractère spécial.';
   }
 }
 
-@ValidatorConstraint({ name: "reservedHandle" })
+@ValidatorConstraint({ name: 'reservedHandle' })
 class NotReservedHandle implements ValidatorConstraintInterface {
   validate(handle: unknown): boolean {
-    return typeof handle === "string" && !isReservedHandle(handle);
+    return typeof handle === 'string' && !isReservedHandle(handle);
   }
 
   defaultMessage(): string {
-    return "Ce pseudo est réservé.";
+    return 'Ce pseudo est réservé.';
   }
 }
 
@@ -42,7 +42,7 @@ export class SignupDto {
   /** ASCII letters, digits and underscore only (DEC-061), 30 characters at most. */
   @IsString()
   @Matches(/^[A-Za-z0-9_]{1,30}$/, {
-    message: "Le pseudo ne contient que des lettres, chiffres et tirets bas.",
+    message: 'Le pseudo ne contient que des lettres, chiffres et tirets bas.',
   })
   @Validate(NotReservedHandle)
   handle!: string;
@@ -52,7 +52,7 @@ export class SignupDto {
   displayName!: string;
 
   @Transform(({ value }: { value: unknown }) =>
-    typeof value === "string" ? value.trim().toLowerCase() : value,
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
   @IsEmail()
   @MaxLength(254)
@@ -68,7 +68,7 @@ export class SignupDto {
 
   @IsBoolean()
   @IsIn([true], {
-    message: "Vous devez accepter les conditions d’utilisation.",
+    message: 'Vous devez accepter les conditions d’utilisation.',
   })
   termsAccepted!: boolean;
 

@@ -23,7 +23,10 @@ describe('AdminGuard', () => {
     jest.useRealTimers();
   });
 
-  function contextWith(session: Record<string, unknown>): { context: ExecutionContext; request: { session: Record<string, unknown>; sessionUser?: unknown } } {
+  function contextWith(session: Record<string, unknown>): {
+    context: ExecutionContext;
+    request: { session: Record<string, unknown>; sessionUser?: unknown };
+  } {
     const request: { session: Record<string, unknown>; sessionUser?: unknown } = { session };
     const context = {
       switchToHttp: () => ({ getRequest: () => request }),
@@ -43,7 +46,10 @@ describe('AdminGuard', () => {
     const { context } = contextWith({ userId: 'user-1' });
 
     await expect(guard.canActivate(context)).rejects.toThrow(NotFoundException);
-    expect(sessions.check).toHaveBeenCalledWith(expect.anything(), { statuses: ['active'], roles: ['admin'] });
+    expect(sessions.check).toHaveBeenCalledWith(expect.anything(), {
+      statuses: ['active'],
+      roles: ['admin'],
+    });
   });
 
   it('answers 404 to an anonymous visitor', async () => {
@@ -87,7 +93,10 @@ describe('AdminGuard', () => {
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
     expect(request.sessionUser).toEqual(ADMIN);
-    expect(request.session.admin).toEqual({ verifiedAt: verifiedAt.toISOString(), lastSeenAt: NOW.toISOString() });
+    expect(request.session.admin).toEqual({
+      verifiedAt: verifiedAt.toISOString(),
+      lastSeenAt: NOW.toISOString(),
+    });
   });
 
   it('skips the elevation check on a route that does not need it (the second-factor set-up)', async () => {

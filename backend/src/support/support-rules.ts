@@ -37,7 +37,8 @@ export function contactReferencePrefix(day: Date): string {
  */
 export function nextContactReference(day: Date, previous: string | null): string {
   const prefix = contactReferencePrefix(day);
-  const lastNumber = previous !== null && previous.startsWith(prefix) ? Number(previous.slice(prefix.length)) : 0;
+  const lastNumber =
+    previous !== null && previous.startsWith(prefix) ? Number(previous.slice(prefix.length)) : 0;
 
   return `${prefix}${(lastNumber + 1).toString().padStart(4, '0')}`;
 }

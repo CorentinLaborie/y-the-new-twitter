@@ -1,4 +1,11 @@
-import { ADMIN_IDLE_TIMEOUT_MS, ADMIN_MAX_SESSION_MS, ADMIN_MFA_SETUP_TTL_MS, isElevated, isMfaSetupOpen, startElevation } from './admin-session';
+import {
+  ADMIN_IDLE_TIMEOUT_MS,
+  ADMIN_MAX_SESSION_MS,
+  ADMIN_MFA_SETUP_TTL_MS,
+  isElevated,
+  isMfaSetupOpen,
+  startElevation,
+} from './admin-session';
 
 const NOW = new Date('2026-10-20T12:00:00.000Z');
 const MINUTE = 60 * 1000;
@@ -10,14 +17,20 @@ describe('admin session limits (DEC-036, DEC-082)', () => {
 
   it('stays elevated while the last request is under 30 minutes old', () => {
     const elevation = startElevation(new Date(NOW.getTime() - 60 * MINUTE));
-    const lastSeen = { ...elevation, lastSeenAt: new Date(NOW.getTime() - ADMIN_IDLE_TIMEOUT_MS + MINUTE).toISOString() };
+    const lastSeen = {
+      ...elevation,
+      lastSeenAt: new Date(NOW.getTime() - ADMIN_IDLE_TIMEOUT_MS + MINUTE).toISOString(),
+    };
 
     expect(isElevated(lastSeen, NOW)).toBe(true);
   });
 
   it('is not elevated after 30 minutes without a request', () => {
     const elevation = startElevation(new Date(NOW.getTime() - 10 * MINUTE));
-    const lastSeen = { ...elevation, lastSeenAt: new Date(NOW.getTime() - ADMIN_IDLE_TIMEOUT_MS - 1).toISOString() };
+    const lastSeen = {
+      ...elevation,
+      lastSeenAt: new Date(NOW.getTime() - ADMIN_IDLE_TIMEOUT_MS - 1).toISOString(),
+    };
 
     expect(isElevated(lastSeen, NOW)).toBe(false);
   });
@@ -33,7 +46,15 @@ describe('admin session limits (DEC-036, DEC-082)', () => {
     const startedAt = new Date(NOW.getTime() - ADMIN_MFA_SETUP_TTL_MS).toISOString();
 
     expect(isMfaSetupOpen({ secretEncrypted: 'x', startedAt }, NOW)).toBe(true);
-    expect(isMfaSetupOpen({ secretEncrypted: 'x', startedAt: new Date(NOW.getTime() - ADMIN_MFA_SETUP_TTL_MS - 1).toISOString() }, NOW)).toBe(false);
+    expect(
+      isMfaSetupOpen(
+        {
+          secretEncrypted: 'x',
+          startedAt: new Date(NOW.getTime() - ADMIN_MFA_SETUP_TTL_MS - 1).toISOString(),
+        },
+        NOW,
+      ),
+    ).toBe(false);
     expect(isMfaSetupOpen(undefined, NOW)).toBe(false);
   });
 });

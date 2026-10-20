@@ -24,9 +24,10 @@ export class SessionStore extends Store {
   }
 
   get(sid: string, callback: (error: unknown, session?: SessionData | null) => void): void {
-    this.prisma.session
-      .findFirst({ where: { id: sid, expiresAt: { gt: new Date() } } })
-      .then((row) => callback(null, row ? (row.data as unknown as SessionData) : null), (error: unknown) => callback(error));
+    this.prisma.session.findFirst({ where: { id: sid, expiresAt: { gt: new Date() } } }).then(
+      (row) => callback(null, row ? (row.data as unknown as SessionData) : null),
+      (error: unknown) => callback(error),
+    );
   }
 
   set(sid: string, session: SessionData, callback?: (error?: unknown) => void): void {
@@ -40,22 +41,31 @@ export class SessionStore extends Store {
         create: { id: sid, userId, data, expiresAt },
         update: { userId, data, expiresAt, lastAccessAt: new Date() },
       })
-      .then(() => callback?.(null), (error: unknown) => callback?.(error));
+      .then(
+        () => callback?.(null),
+        (error: unknown) => callback?.(error),
+      );
   }
 
   touch(sid: string, session: SessionData, callback?: (error?: unknown) => void): void {
     this.prisma.session
       .updateMany({ where: { id: sid }, data: { expiresAt: expiryOf(session), lastAccessAt: new Date() } })
-      .then(() => callback?.(null), (error: unknown) => callback?.(error));
+      .then(
+        () => callback?.(null),
+        (error: unknown) => callback?.(error),
+      );
   }
 
   destroy(sid: string, callback?: (error?: unknown) => void): void {
-    this.prisma.session
-      .deleteMany({ where: { id: sid } })
-      .then(() => callback?.(null), (error: unknown) => callback?.(error));
+    this.prisma.session.deleteMany({ where: { id: sid } }).then(
+      () => callback?.(null),
+      (error: unknown) => callback?.(error),
+    );
   }
 }
 
 function expiryOf(session: SessionData): Date {
-  return session.cookie?.expires ? new Date(session.cookie.expires) : new Date(Date.now() + SESSION_LIFETIME_MS);
+  return session.cookie?.expires
+    ? new Date(session.cookie.expires)
+    : new Date(Date.now() + SESSION_LIFETIME_MS);
 }

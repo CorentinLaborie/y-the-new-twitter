@@ -1,5 +1,15 @@
 import { plainToInstance, Type } from 'class-transformer';
-import { IsEmail, IsIn, IsInt, IsNotEmpty, IsString, IsUrl, Min, ValidateIf, validateSync } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  IsUrl,
+  Min,
+  ValidateIf,
+  validateSync,
+} from 'class-validator';
 
 const PROFILES = ['local', 'staging', 'production'] as const;
 type Profile = (typeof PROFILES)[number];

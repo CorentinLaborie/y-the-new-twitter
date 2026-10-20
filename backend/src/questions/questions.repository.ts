@@ -40,6 +40,8 @@ export class QuestionsRepository {
   }
 
   linkHashtags(db: QuestionsDb, questionId: string, hashtagIds: readonly string[]) {
-    return db.questionHashtag.createMany({ data: hashtagIds.map((hashtagId) => ({ questionId, hashtagId })) });
+    return db.questionHashtag.createMany({
+      data: hashtagIds.map((hashtagId) => ({ questionId, hashtagId })),
+    });
   }
 }

@@ -9,7 +9,10 @@ import { startMigratedPostgres } from './support/postgres';
 
 /** A session cookie with a valid signature, so that express-session asks the store for the session. */
 function signedSessionCookie(sid: string): string {
-  const signature = createHmac('sha256', process.env.SESSION_SECRET!).update(sid).digest('base64').replace(/=+$/, '');
+  const signature = createHmac('sha256', process.env.SESSION_SECRET!)
+    .update(sid)
+    .digest('base64')
+    .replace(/=+$/, '');
   return `SESSION=${encodeURIComponent(`s:${sid}.${signature}`)}`;
 }
 

@@ -55,7 +55,10 @@ describe('Login, session and logout (e2e)', () => {
 
   function cookieValue(response: request.Response, name: string): string | undefined {
     const cookies = (response.headers['set-cookie'] ?? []) as unknown as string[];
-    return cookies.find((value) => value.startsWith(`${name}=`))?.split(';')[0].split('=')[1];
+    return cookies
+      .find((value) => value.startsWith(`${name}=`))
+      ?.split(';')[0]
+      .split('=')[1];
   }
 
   /** The session ID stored in the sessions table: the signed cookie is `s:<id>.<signature>`. */
@@ -97,7 +100,9 @@ describe('Login, session and logout (e2e)', () => {
 
     expect(response.headers['content-type']).toContain('application/problem+json');
     expect(response.body.detail).toBe('Identifiants incorrects');
-    expect(await sql(`SELECT count(*) FROM login_events WHERE user_id IS NULL AND result = 'failure';`)).toBe('1');
+    expect(await sql(`SELECT count(*) FROM login_events WHERE user_id IS NULL AND result = 'failure';`)).toBe(
+      '1',
+    );
   });
 
   it('answers the same 401 for a wrong password, and counts one failure on the account', async () => {
@@ -125,7 +130,9 @@ describe('Login, session and logout (e2e)', () => {
     const response = await login('login_active@example.test', PASSWORD).expect(200);
 
     expect(response.body).toEqual({ user: { handle: 'login_active', displayName: 'Compte login_active' } });
-    const cookie = (response.headers['set-cookie'] as unknown as string[]).find((value) => value.startsWith('SESSION='));
+    const cookie = (response.headers['set-cookie'] as unknown as string[]).find((value) =>
+      value.startsWith('SESSION='),
+    );
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('SameSite=Lax');
     expect(await sql(`SELECT count(*) FROM sessions WHERE user_id = '${id}';`)).toBe('1');
@@ -151,7 +158,12 @@ describe('Login, session and logout (e2e)', () => {
     const anonymous = await request(app.getHttpServer()).get('/api/v1/auth/session').expect(200);
 
     expect(logged.body).toEqual({
-      user: { handle: 'login_active', displayName: 'Compte login_active', status: 'active', suspensionReason: null },
+      user: {
+        handle: 'login_active',
+        displayName: 'Compte login_active',
+        status: 'active',
+        suspensionReason: null,
+      },
     });
     expect(anonymous.body).toEqual({ user: null });
   });

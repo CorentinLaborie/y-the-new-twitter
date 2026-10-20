@@ -42,7 +42,10 @@ export class QuestionResponseDto {
   @ApiProperty({ type: () => QuestionCountersDto })
   readonly counters!: QuestionCountersDto;
 
-  @ApiProperty({ example: 50, description: 'Y_CONVERSATION_THRESHOLD: the Y count that opens the conversation (R3).' })
+  @ApiProperty({
+    example: 50,
+    description: 'Y_CONVERSATION_THRESHOLD: the Y count that opens the conversation (R3).',
+  })
   readonly yThreshold!: number;
 
   @ApiProperty({
@@ -55,7 +58,8 @@ export class QuestionResponseDto {
     type: [String],
     enum: ['like', 'dislike', 'y'],
     maxItems: 1,
-    description: 'The reaction of the signed-in viewer on this question, at most one (R11). Empty for anonymous views.',
+    description:
+      'The reaction of the signed-in viewer on this question, at most one (R11). Empty for anonymous views.',
   })
   readonly viewerReactions!: readonly string[];
 }

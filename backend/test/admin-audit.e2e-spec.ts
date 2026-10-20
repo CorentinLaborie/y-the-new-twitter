@@ -41,7 +41,10 @@ describe('Back-office audit log (e2e)', () => {
 
   function cookieValue(response: request.Response, name: string): string | undefined {
     const cookies = (response.headers['set-cookie'] ?? []) as unknown as string[];
-    return cookies.find((value) => value.startsWith(`${name}=`))?.split(';')[0].split('=')[1];
+    return cookies
+      .find((value) => value.startsWith(`${name}=`))
+      ?.split(';')[0]
+      .split('=')[1];
   }
 
   async function sql(statement: string): Promise<string> {
@@ -74,7 +77,10 @@ describe('Back-office audit log (e2e)', () => {
       .set('x-csrf-token', visitor.csrf)
       .send({ email: account.email, password: PASSWORD })
       .expect(200);
-    const setup = await visitor.agent.post(`${BASE}/admin/mfa/setup`).set('x-csrf-token', visitor.csrf).expect(200);
+    const setup = await visitor.agent
+      .post(`${BASE}/admin/mfa/setup`)
+      .set('x-csrf-token', visitor.csrf)
+      .expect(200);
     const confirmed = await visitor.agent
       .post(`${BASE}/admin/mfa/confirm`)
       .set('x-csrf-token', visitor.csrf)
@@ -169,7 +175,9 @@ describe('Back-office audit log (e2e)', () => {
     expect(page1.body.nextCursor).not.toBeNull();
 
     const page2 = await visitor.agent
-      .get(`${AUDIT}?limit=1&action=${AUDIT_ACTIONS.adminLogin}&cursor=${encodeURIComponent(page1.body.nextCursor)}`)
+      .get(
+        `${AUDIT}?limit=1&action=${AUDIT_ACTIONS.adminLogin}&cursor=${encodeURIComponent(page1.body.nextCursor)}`,
+      )
       .expect(200);
     expect(page2.body.items).toHaveLength(1);
     expect(page2.body.items[0].id).not.toBe(page1.body.items[0].id);

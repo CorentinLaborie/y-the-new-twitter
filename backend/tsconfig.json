@@ -3,13 +3,8 @@
     "module": "node16",
     "moduleResolution": "node16",
     "target": "ES2023",
-    "lib": [
-      "ES2023"
-    ],
-    "types": [
-      "node",
-      "jest"
-    ],
+    "lib": ["ES2023"],
+    "types": ["node", "jest"],
     "outDir": "./dist",
     "rootDir": "./",
     "declaration": false,
@@ -25,8 +20,5 @@
     "noImplicitReturns": true,
     "isolatedModules": true
   },
-  "include": [
-    "src/**/*",
-    "test/**/*"
-  ]
+  "include": ["src/**/*", "test/**/*"]
 }

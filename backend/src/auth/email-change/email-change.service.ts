@@ -54,7 +54,11 @@ export class EmailChangeService {
     const account = await this.activeAccount(userId);
 
     const openCode = await this.codes.findOpenCode(userId);
-    if (!openCode || !(await this.codes.reserveAttempt(openCode.id)) || !(await verifyCode(openCode.codeHash, code))) {
+    if (
+      !openCode ||
+      !(await this.codes.reserveAttempt(openCode.id)) ||
+      !(await verifyCode(openCode.codeHash, code))
+    ) {
       throw new UnprocessableEntityException(INVALID_CODE);
     }
 

@@ -46,7 +46,9 @@ describe('Seed script (e2e)', () => {
 
   it('keeps the counters in step with the seeded rows', async () => {
     const alice = await prisma.user.findFirstOrThrow({ where: { handle: 'demo_alice' } });
-    const question = await prisma.question.findUniqueOrThrow({ where: { id: '00000000-0000-4000-8000-000000000201' } });
+    const question = await prisma.question.findUniqueOrThrow({
+      where: { id: '00000000-0000-4000-8000-000000000201' },
+    });
 
     expect(alice.followerCount).toBe(2);
     expect(question.replyCount).toBe(1);

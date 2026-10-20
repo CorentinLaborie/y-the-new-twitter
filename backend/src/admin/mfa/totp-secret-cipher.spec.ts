@@ -53,8 +53,6 @@ describe('TotpSecretCipher (AES-256-GCM)', () => {
   it('refuses a key that is 31 bytes long', () => {
     const shortKey = Buffer.alloc(31).toString('base64');
 
-    expect(() => new TotpSecretCipher(shortKey)).toThrow(
-      'TOTP_ENCRYPTION_KEY must decode to 32 bytes.',
-    );
+    expect(() => new TotpSecretCipher(shortKey)).toThrow('TOTP_ENCRYPTION_KEY must decode to 32 bytes.');
   });
 });

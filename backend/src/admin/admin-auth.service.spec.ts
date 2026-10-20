@@ -8,7 +8,12 @@ import { AdminAuthService } from './admin-auth.service';
 import type { AdminMfaService } from './mfa/admin-mfa.service';
 
 const NOW = new Date('2026-10-20T12:00:00.000Z');
-const ATTEMPT = { email: 'admin@example.test', password: 'Abcdef1!', ipAddress: '203.0.113.7', userAgent: 'unit' };
+const ATTEMPT = {
+  email: 'admin@example.test',
+  password: 'Abcdef1!',
+  ipAddress: '203.0.113.7',
+  userAgent: 'unit',
+};
 const EVENT = { ipHash: 'hash', userAgent: 'unit' };
 const ACCOUNT = {
   id: 'admin-1',
@@ -18,7 +23,13 @@ const ACCOUNT = {
   role: 'admin',
   status: 'active',
 };
-const SESSION_USER = { id: 'admin-1', handle: 'corentin', displayName: 'Corentin', role: 'admin', status: 'active' };
+const SESSION_USER = {
+  id: 'admin-1',
+  handle: 'corentin',
+  displayName: 'Corentin',
+  role: 'admin',
+  status: 'active',
+};
 
 describe('AdminAuthService', () => {
   let loginService: { checkPassword: jest.Mock; completeLogin: jest.Mock; recordFailure: jest.Mock };
@@ -69,7 +80,10 @@ describe('AdminAuthService', () => {
   it('sends an account without a second factor to the set-up, with no e-mail alert', async () => {
     mfa.isEnrolled.mockResolvedValue(false);
 
-    await expect(service.login(ATTEMPT, undefined, NOW)).resolves.toEqual({ status: 'setup_required', user: SESSION_USER });
+    await expect(service.login(ATTEMPT, undefined, NOW)).resolves.toEqual({
+      status: 'setup_required',
+      user: SESSION_USER,
+    });
     expect(loginService.completeLogin).toHaveBeenCalledWith(ACCOUNT, EVENT);
     expect(mail.send).not.toHaveBeenCalled();
   });
@@ -92,23 +106,33 @@ describe('AdminAuthService', () => {
     mfa.verifyCode.mockResolvedValue(false);
 
     await expect(service.login(ATTEMPT, '000000', NOW)).resolves.toEqual({ status: 'invalid_code' });
-    expect(audit.append).toHaveBeenCalledWith(expect.objectContaining({ action: AUDIT_ACTIONS.adminLogin, result: 'failed' }));
+    expect(audit.append).toHaveBeenCalledWith(
+      expect.objectContaining({ action: AUDIT_ACTIONS.adminLogin, result: 'failed' }),
+    );
     expect(loginService.recordFailure).toHaveBeenCalledWith(ACCOUNT, EVENT);
     expect(loginService.completeLogin).not.toHaveBeenCalled();
   });
 
   it('signs in with a right second factor, and sends the e-mail alert to the account', async () => {
-    await expect(service.login(ATTEMPT, '123456', NOW)).resolves.toEqual({ status: 'ok', user: SESSION_USER });
+    await expect(service.login(ATTEMPT, '123456', NOW)).resolves.toEqual({
+      status: 'ok',
+      user: SESSION_USER,
+    });
     expect(mfa.verifyCode).toHaveBeenCalledWith('admin-1', '123456', NOW);
     expect(mail.send).toHaveBeenCalledWith(expect.objectContaining({ to: ACCOUNT.email }));
-    expect(audit.append).toHaveBeenCalledWith(expect.objectContaining({ actorId: 'admin-1', action: AUDIT_ACTIONS.adminLogin, result: 'ok' }));
+    expect(audit.append).toHaveBeenCalledWith(
+      expect.objectContaining({ actorId: 'admin-1', action: AUDIT_ACTIONS.adminLogin, result: 'ok' }),
+    );
   });
 
   it('still signs in when the alert e-mail cannot be sent, and logs the failure without the address', async () => {
     const logged = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     mail.send.mockRejectedValue(new Error('Brevo is down'));
 
-    await expect(service.login(ATTEMPT, '123456', NOW)).resolves.toEqual({ status: 'ok', user: SESSION_USER });
+    await expect(service.login(ATTEMPT, '123456', NOW)).resolves.toEqual({
+      status: 'ok',
+      user: SESSION_USER,
+    });
     expect(logged).toHaveBeenCalledWith('The back-office sign-in alert could not be sent.');
     expect(logged.mock.calls.flat().join(' ')).not.toContain(ACCOUNT.email);
     logged.mockRestore();
@@ -130,11 +154,15 @@ describe('AdminAuthService', () => {
 
   it('alerts the administrator by e-mail when a set-up is confirmed, and nothing on a wrong code', async () => {
     mfa.confirmSetup.mockResolvedValue(null);
-    await expect(service.confirmSetup('admin-1', { secretEncrypted: 'E', startedAt: NOW.toISOString() }, '000000', NOW)).resolves.toBeNull();
+    await expect(
+      service.confirmSetup('admin-1', { secretEncrypted: 'E', startedAt: NOW.toISOString() }, '000000', NOW),
+    ).resolves.toBeNull();
     expect(mail.send).not.toHaveBeenCalled();
 
     mfa.confirmSetup.mockResolvedValue(['ABCDE-FGHJK']);
-    await expect(service.confirmSetup('admin-1', { secretEncrypted: 'E', startedAt: NOW.toISOString() }, '123456', NOW)).resolves.toEqual(['ABCDE-FGHJK']);
+    await expect(
+      service.confirmSetup('admin-1', { secretEncrypted: 'E', startedAt: NOW.toISOString() }, '123456', NOW),
+    ).resolves.toEqual(['ABCDE-FGHJK']);
     expect(mail.send).toHaveBeenCalledWith(expect.objectContaining({ to: ACCOUNT.email }));
   });
 
@@ -142,7 +170,9 @@ describe('AdminAuthService', () => {
     users.emailOf.mockResolvedValue(null);
     mfa.confirmSetup.mockResolvedValue(['ABCDE-FGHJK']);
 
-    await expect(service.confirmSetup('admin-1', { secretEncrypted: 'E', startedAt: NOW.toISOString() }, '123456', NOW)).resolves.toEqual(['ABCDE-FGHJK']);
+    await expect(
+      service.confirmSetup('admin-1', { secretEncrypted: 'E', startedAt: NOW.toISOString() }, '123456', NOW),
+    ).resolves.toEqual(['ABCDE-FGHJK']);
     expect(mail.send).not.toHaveBeenCalled();
   });
 });

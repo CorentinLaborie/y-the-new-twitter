@@ -66,7 +66,9 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
   }
 
   /** Every page of the feed, from the first one to the last. */
-  async function walk(limit: number): Promise<{ trending: FeedItem[]; questions: FeedItem[]; pages: FeedPage[] }> {
+  async function walk(
+    limit: number,
+  ): Promise<{ trending: FeedItem[]; questions: FeedItem[]; pages: FeedPage[] }> {
     const pages: FeedPage[] = [];
     let cursor: string | null = null;
     do {
@@ -94,7 +96,10 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     agent = request.agent(app.getHttpServer());
     const status = await agent.get('/api/v1/status').expect(200);
     const cookies = status.headers['set-cookie'] as unknown as string[];
-    token = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+    token = cookies
+      .find((value) => value.startsWith('y_csrf='))!
+      .split(';')[0]
+      .split('=')[1];
 
     writer = await createUser('feed_writer');
     viewer = await createUser('feed_viewer');
@@ -107,16 +112,24 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
       `INSERT INTO questions (author_id, body, created_at)
        SELECT '${writer}', 'Question ' || g, now() - (g || ' minutes')::interval FROM generate_series(1, 45) g;`,
     );
-    await sql(`INSERT INTO questions (author_id, body, created_at) VALUES ('${writer}', 'Très ancienne', now() - interval '400 days');`);
-    await sql(`INSERT INTO questions (author_id, body, created_at) VALUES ('${writer}', 'Ancienne sans réaction', now() - interval '400 days');`);
+    await sql(
+      `INSERT INTO questions (author_id, body, created_at) VALUES ('${writer}', 'Très ancienne', now() - interval '400 days');`,
+    );
+    await sql(
+      `INSERT INTO questions (author_id, body, created_at) VALUES ('${writer}', 'Ancienne sans réaction', now() - interval '400 days');`,
+    );
     await sql(
       `INSERT INTO question_reactions (user_id, question_id, kind)
        SELECT '${viewer}', id, 'like' FROM questions WHERE body = 'Très ancienne';`,
     );
     await sql(`UPDATE questions SET like_count = 1 WHERE body = 'Très ancienne';`);
     // Not in the feed: hidden, deleted, from a suspended account, and from accounts that block the viewer or are blocked by it.
-    await sql(`INSERT INTO questions (author_id, body, moderation_status) VALUES ('${writer}', 'Cachée', 'hidden');`);
-    await sql(`INSERT INTO questions (author_id, body, deleted_at) VALUES ('${writer}', 'Supprimée', now());`);
+    await sql(
+      `INSERT INTO questions (author_id, body, moderation_status) VALUES ('${writer}', 'Cachée', 'hidden');`,
+    );
+    await sql(
+      `INSERT INTO questions (author_id, body, deleted_at) VALUES ('${writer}', 'Supprimée', now());`,
+    );
     await sql(`INSERT INTO questions (author_id, body) VALUES ('${suspended}', 'Compte suspendu');`);
     await sql(`INSERT INTO questions (author_id, body) VALUES ('${blocked}', 'Bloquée');`);
     await sql(`INSERT INTO questions (author_id, body) VALUES ('${blocking}', 'Bloqueur');`);
@@ -136,11 +149,23 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
 
     expect(Object.keys(page).sort()).toEqual(['nextCursor', 'questions', 'trending']);
     expect(page.trending.map((question) => question.text)).toEqual(['Très ancienne']);
-    expect(page.questions.map((question) => question.text)).toEqual(['Question 1', 'Question 2', 'Question 3']);
+    expect(page.questions.map((question) => question.text)).toEqual([
+      'Question 1',
+      'Question 2',
+      'Question 3',
+    ]);
     expect(page.nextCursor).not.toBeNull();
-    expect(Object.keys(page.questions[0]).sort()).toEqual(
-      ['author', 'conversationOpen', 'counters', 'createdAt', 'hashtags', 'id', 'text', 'viewerReactions', 'yThreshold'],
-    );
+    expect(Object.keys(page.questions[0]).sort()).toEqual([
+      'author',
+      'conversationOpen',
+      'counters',
+      'createdAt',
+      'hashtags',
+      'id',
+      'text',
+      'viewerReactions',
+      'yThreshold',
+    ]);
     expect(page.questions[0]).toMatchObject({
       author: { handle: 'feed_writer', displayName: 'feed_writer Test' },
       hashtags: [],
@@ -220,7 +245,7 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     expect(item).toMatchObject({ counters: { y: 49 }, yThreshold: 50, conversationOpen: false });
   });
 
-  it('gives each question the viewer\'s own reaction in viewerReactions, and nothing for the others (R11)', async () => {
+  it("gives each question the viewer's own reaction in viewerReactions, and nothing for the others (R11)", async () => {
     const page = await fetchPage(50);
     const reacted = page.trending.find((candidate) => candidate.text === 'Très ancienne');
     const notReacted = page.questions.find((candidate) => candidate.text === 'Question 2');

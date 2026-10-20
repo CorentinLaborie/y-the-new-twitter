@@ -35,7 +35,9 @@ describe('GlobalThrottlerGuard', () => {
   });
 
   it('serves a request under the limit, with no error header', async () => {
-    const increment = jest.fn().mockResolvedValue({ totalHits: 1, timeToExpire: 60, isBlocked: false, timeToBlockExpire: 0 });
+    const increment = jest
+      .fn()
+      .mockResolvedValue({ totalHits: 1, timeToExpire: 60, isBlocked: false, timeToBlockExpire: 0 });
     const { guard, res, props } = await setup(increment);
 
     await expect(guard['handleRequest'](props)).resolves.toBe(true);
@@ -45,7 +47,9 @@ describe('GlobalThrottlerGuard', () => {
   });
 
   it('refuses a request over the limit with the throttling exception', async () => {
-    const increment = jest.fn().mockResolvedValue({ totalHits: 121, timeToExpire: 30, isBlocked: true, timeToBlockExpire: 30 });
+    const increment = jest
+      .fn()
+      .mockResolvedValue({ totalHits: 121, timeToExpire: 30, isBlocked: true, timeToBlockExpire: 30 });
     const { guard, res, props } = await setup(increment);
 
     await expect(guard['handleRequest'](props)).rejects.toBeInstanceOf(ThrottlerException);
@@ -60,6 +64,9 @@ describe('GlobalThrottlerGuard', () => {
     await expect(guard['handleRequest'](props)).resolves.toBe(true);
 
     expect(res.setHeader).toHaveBeenCalledWith(RATE_LIMIT_ERROR_HEADER, STORE_UNAVAILABLE);
-    expect(error).toHaveBeenCalledWith(expect.stringContaining('counter store is unavailable'), expect.any(String));
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('counter store is unavailable'),
+      expect.any(String),
+    );
   });
 });

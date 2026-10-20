@@ -1,10 +1,4 @@
-import {
-  generateTotpSecret,
-  stepAt,
-  totpCode,
-  totpUri,
-  verifyTotp,
-} from './totp';
+import { generateTotpSecret, stepAt, totpCode, totpUri, verifyTotp } from './totp';
 
 // RFC 6238 test secret: the ASCII string "12345678901234567890", in base32.
 const RFC_SECRET = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
@@ -28,12 +22,8 @@ describe('TOTP (RFC 6238, SHA-1, 6 digits)', () => {
   });
 
   it('accepts the code of the previous and the next step', () => {
-    expect(verifyTotp(RFC_SECRET, totpCode(RFC_SECRET, NOW_STEP - 1), NOW_MS, null)).toBe(
-      NOW_STEP - 1,
-    );
-    expect(verifyTotp(RFC_SECRET, totpCode(RFC_SECRET, NOW_STEP + 1), NOW_MS, null)).toBe(
-      NOW_STEP + 1,
-    );
+    expect(verifyTotp(RFC_SECRET, totpCode(RFC_SECRET, NOW_STEP - 1), NOW_MS, null)).toBe(NOW_STEP - 1);
+    expect(verifyTotp(RFC_SECRET, totpCode(RFC_SECRET, NOW_STEP + 1), NOW_MS, null)).toBe(NOW_STEP + 1);
   });
 
   it('accepts the first step of time without looking at a negative step', () => {
@@ -77,17 +67,13 @@ describe('TOTP (RFC 6238, SHA-1, 6 digits)', () => {
   });
 
   it('builds the otpauth URI with the expected fields', () => {
-    expect(
-      totpUri({ secretBase32: RFC_SECRET, issuer: 'Y', account: 'admin@example.com' }),
-    ).toBe(
+    expect(totpUri({ secretBase32: RFC_SECRET, issuer: 'Y', account: 'admin@example.com' })).toBe(
       `otpauth://totp/Y:admin%40example.com?secret=${RFC_SECRET}&issuer=Y&algorithm=SHA1&digits=6&period=30`,
     );
   });
 
   it('encodes an issuer with a space in the URI', () => {
-    expect(
-      totpUri({ secretBase32: RFC_SECRET, issuer: 'Y Admin', account: 'admin@example.com' }),
-    ).toBe(
+    expect(totpUri({ secretBase32: RFC_SECRET, issuer: 'Y Admin', account: 'admin@example.com' })).toBe(
       `otpauth://totp/Y%20Admin:admin%40example.com?secret=${RFC_SECRET}&issuer=Y%20Admin&algorithm=SHA1&digits=6&period=30`,
     );
   });

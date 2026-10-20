@@ -10,6 +10,8 @@ import { PrismaClient } from '../../database/generated/client/client';
 @Injectable()
 export class MaintenancePrismaService extends PrismaClient {
   constructor(config: ConfigService) {
-    super({ adapter: new PrismaPg({ connectionString: config.getOrThrow<string>('DATABASE_MAINTENANCE_URL') }) });
+    super({
+      adapter: new PrismaPg({ connectionString: config.getOrThrow<string>('DATABASE_MAINTENANCE_URL') }),
+    });
   }
 }

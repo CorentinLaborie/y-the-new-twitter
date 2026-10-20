@@ -81,14 +81,17 @@ describe('PasswordResetService (B16, B17)', () => {
       expect(codes.replaceOpenCode).not.toHaveBeenCalled();
     });
 
-    it.each(['suspended', 'pending_verification', 'deleted'])('sends nothing for an account in status %s', async (status) => {
-      users.findByEmail.mockResolvedValue(userRow({ status }));
+    it.each(['suspended', 'pending_verification', 'deleted'])(
+      'sends nothing for an account in status %s',
+      async (status) => {
+        users.findByEmail.mockResolvedValue(userRow({ status }));
 
-      await service.requestCode(ACTIVE_USER.email);
+        await service.requestCode(ACTIVE_USER.email);
 
-      expect(mail.messages()).toEqual([]);
-      expect(codes.replaceOpenCode).not.toHaveBeenCalled();
-    });
+        expect(mail.messages()).toEqual([]);
+        expect(codes.replaceOpenCode).not.toHaveBeenCalled();
+      },
+    );
 
     it('counts the request on the account id, when the account exists', async () => {
       await service.requestCode(ACTIVE_USER.email);

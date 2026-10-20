@@ -24,7 +24,10 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
 
       const { res } = this.getRequestResponse(requestProps.context);
       res.setHeader(RATE_LIMIT_ERROR_HEADER, STORE_UNAVAILABLE);
-      this.storeLogger.error('Global rate limit not counted: the counter store is unavailable.', error instanceof Error ? error.stack : undefined);
+      this.storeLogger.error(
+        'Global rate limit not counted: the counter store is unavailable.',
+        error instanceof Error ? error.stack : undefined,
+      );
       return true;
     }
   }

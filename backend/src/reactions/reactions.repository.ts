@@ -34,7 +34,13 @@ export class ReactionsRepository {
   findQuestionCounters(db: ReactionsDb, questionId: string) {
     return db.question.findUniqueOrThrow({
       where: { id: questionId },
-      select: { authorId: true, likeCount: true, dislikeCount: true, yCount: true, conversationOpenedAt: true },
+      select: {
+        authorId: true,
+        likeCount: true,
+        dislikeCount: true,
+        yCount: true,
+        conversationOpenedAt: true,
+      },
     });
   }
 

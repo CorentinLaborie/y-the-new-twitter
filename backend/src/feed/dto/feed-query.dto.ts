@@ -8,7 +8,10 @@ export class FeedQueryDto {
   @IsIn(['for-you'], { message: 'Onglet inconnu : seul « for-you » est disponible.' })
   tab!: string;
 
-  @ApiPropertyOptional({ maxLength: 512, description: 'nextCursor of the previous page. Absent for the first page.' })
+  @ApiPropertyOptional({
+    maxLength: 512,
+    description: 'nextCursor of the previous page. Absent for the first page.',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(512)

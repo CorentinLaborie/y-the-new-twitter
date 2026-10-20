@@ -41,7 +41,9 @@ export class AuditLogService {
       const last = await this.repository.lastEntry(db);
       const now = new Date();
       const createdAt =
-        last !== null && now.getTime() <= last.createdAt.getTime() ? new Date(last.createdAt.getTime() + 1) : now;
+        last !== null && now.getTime() <= last.createdAt.getTime()
+          ? new Date(last.createdAt.getTime() + 1)
+          : now;
 
       await this.repository.insert(db, {
         id: randomUUID(),
@@ -125,14 +127,19 @@ function positionOf(row: AuditRow): AuditPosition {
 
 /** The cursor is the position of the last row of the page, in base64url JSON. */
 function encodeCursor(row: AuditRow): string {
-  return Buffer.from(JSON.stringify({ t: row.createdAt.toISOString(), i: row.id }), 'utf8').toString('base64url');
+  return Buffer.from(JSON.stringify({ t: row.createdAt.toISOString(), i: row.id }), 'utf8').toString(
+    'base64url',
+  );
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function decodeCursor(cursor: string): AuditPosition {
   try {
-    const value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as { t?: unknown; i?: unknown };
+    const value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as {
+      t?: unknown;
+      i?: unknown;
+    };
     if (
       typeof value.t === 'string' &&
       typeof value.i === 'string' &&

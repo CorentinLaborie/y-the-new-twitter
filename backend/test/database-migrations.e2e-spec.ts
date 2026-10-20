@@ -102,7 +102,10 @@ describe('Database migrations (e2e)', () => {
   it.each(MAINTENANCE_GRANT_MIGRATIONS)(
     'runs %s without failing when the maintenance role does not exist yet',
     async (folder) => {
-      const migration = readFileSync(join(BACKEND_ROOT, 'prisma', 'migrations', folder, 'migration.sql'), 'utf8');
+      const migration = readFileSync(
+        join(BACKEND_ROOT, 'prisma', 'migrations', folder, 'migration.sql'),
+        'utf8',
+      );
 
       const result = await sql(migration);
 
@@ -113,7 +116,10 @@ describe('Database migrations (e2e)', () => {
   it('grants SELECT and DELETE to the maintenance role once that role exists', async () => {
     await sql(`CREATE ROLE y_maintenance NOLOGIN;`);
     for (const folder of MAINTENANCE_GRANT_MIGRATIONS) {
-      const migration = readFileSync(join(BACKEND_ROOT, 'prisma', 'migrations', folder, 'migration.sql'), 'utf8');
+      const migration = readFileSync(
+        join(BACKEND_ROOT, 'prisma', 'migrations', folder, 'migration.sql'),
+        'utf8',
+      );
       expect((await sql(migration)).exitCode).toBe(0);
     }
 
@@ -149,7 +155,9 @@ describe('Database migrations (e2e)', () => {
     const userId = await insertUser('replier');
     const questionId = (
       await sql(`INSERT INTO questions (author_id, body) VALUES ('${userId}', 'Question') RETURNING id;`)
-    ).stdout.split('\n')[0].trim();
+    ).stdout
+      .split('\n')[0]
+      .trim();
     const result = await sql(
       `INSERT INTO replies (question_id, author_id, body) VALUES ('${questionId}', '${userId}', '');`,
     );
@@ -160,7 +168,9 @@ describe('Database migrations (e2e)', () => {
 
   it('refuses a question text over 280 characters', async () => {
     const userId = await insertUser('verbose');
-    const result = await sql(`INSERT INTO questions (author_id, body) VALUES ('${userId}', '${'a'.repeat(281)}');`);
+    const result = await sql(
+      `INSERT INTO questions (author_id, body) VALUES ('${userId}', '${'a'.repeat(281)}');`,
+    );
 
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toContain('value too long');
@@ -168,7 +178,9 @@ describe('Database migrations (e2e)', () => {
 
   it('refuses to follow yourself', async () => {
     const userId = await insertUser('narcissus');
-    const result = await sql(`INSERT INTO follows (follower_id, followee_id) VALUES ('${userId}', '${userId}');`);
+    const result = await sql(
+      `INSERT INTO follows (follower_id, followee_id) VALUES ('${userId}', '${userId}');`,
+    );
 
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toContain('follows_no_self_follow_check');

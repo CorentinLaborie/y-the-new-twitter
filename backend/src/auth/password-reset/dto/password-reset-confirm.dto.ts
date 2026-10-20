@@ -3,7 +3,9 @@ import { IsEmail, IsString, MaxLength } from 'class-validator';
 
 /** The password policy is checked by the service, so a refused password is a 422 and not a 400. */
 export class PasswordResetConfirmDto {
-  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   @IsEmail()
   @MaxLength(254)
   email!: string;

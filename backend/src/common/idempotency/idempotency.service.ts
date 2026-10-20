@@ -39,7 +39,12 @@ export class IdempotencyService {
    * A repeat with the same fingerprint returns the stored response. Another fingerprint under the same key is
    * refused with 422. A concurrent first request that committed first is replayed the same way.
    */
-  async run<T>(userId: string, key: string, fingerprint: string, write: (db: IdempotencyDb) => Promise<T>): Promise<T> {
+  async run<T>(
+    userId: string,
+    key: string,
+    fingerprint: string,
+    write: (db: IdempotencyDb) => Promise<T>,
+  ): Promise<T> {
     const now = new Date();
     const stored = await this.idempotency.find(userId, key);
     if (stored && stored.expiresAt > now) {
@@ -72,7 +77,10 @@ export class IdempotencyService {
 }
 
 /** The response stored under a key, when the fingerprint is the same. */
-function replay<T>(stored: { readonly requestHash: string; readonly response: Prisma.JsonValue }, fingerprint: string): T {
+function replay<T>(
+  stored: { readonly requestHash: string; readonly response: Prisma.JsonValue },
+  fingerprint: string,
+): T {
   if (stored.requestHash !== fingerprint) {
     throw new UnprocessableEntityException(KEY_REUSED_MESSAGE);
   }

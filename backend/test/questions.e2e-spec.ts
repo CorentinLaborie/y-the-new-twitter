@@ -29,7 +29,10 @@ describe('Questions (e2e, B2)', () => {
     if (csrf === undefined) {
       const response = await agent.get('/api/v1/status').expect(200);
       const cookies = response.headers['set-cookie'] as unknown as string[];
-      csrf = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+      csrf = cookies
+        .find((value) => value.startsWith('y_csrf='))!
+        .split(';')[0]
+        .split('=')[1];
     }
 
     return csrf;
@@ -63,7 +66,11 @@ describe('Questions (e2e, B2)', () => {
   }
 
   function postWithKey(text: string, key: string) {
-    return agent.post('/api/v1/questions').set('x-csrf-token', csrf!).set('Idempotency-Key', key).send({ text });
+    return agent
+      .post('/api/v1/questions')
+      .set('x-csrf-token', csrf!)
+      .set('Idempotency-Key', key)
+      .send({ text });
   }
 
   beforeAll(async () => {

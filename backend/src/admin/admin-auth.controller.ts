@@ -96,7 +96,10 @@ export class AdminAuthController {
     @Req() req: Request,
   ): Promise<{ readonly secret: string; readonly otpauthUri: string }> {
     const pending = await this.adminAuth.startSetup(user.id, user.handle);
-    req.session.adminMfaSetup = { secretEncrypted: pending.secretEncrypted, startedAt: new Date().toISOString() };
+    req.session.adminMfaSetup = {
+      secretEncrypted: pending.secretEncrypted,
+      startedAt: new Date().toISOString(),
+    };
 
     return { secret: pending.secret, otpauthUri: pending.otpauthUri };
   }
@@ -131,7 +134,10 @@ export class AdminAuthController {
   /** The signed-in administrator and when the back-office session ends: 30 minutes idle, 8 hours at most. */
   @Admin()
   @Get('session')
-  session(@CurrentUser() user: SessionUser, @Req() req: Request): {
+  session(
+    @CurrentUser() user: SessionUser,
+    @Req() req: Request,
+  ): {
     readonly user: AdminUserView;
     readonly idleExpiresAt: string;
     readonly expiresAt: string;

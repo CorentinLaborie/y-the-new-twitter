@@ -32,10 +32,7 @@ export function totpCode(secretBase32: string, step: number): string {
   const hmac = createHmac('sha1', base32Decode(secretBase32)).update(counter).digest();
   const offset = hmac[hmac.length - 1] & 0x0f;
   const binary =
-    ((hmac[offset] & 0x7f) << 24) |
-    (hmac[offset + 1] << 16) |
-    (hmac[offset + 2] << 8) |
-    hmac[offset + 3];
+    ((hmac[offset] & 0x7f) << 24) | (hmac[offset + 1] << 16) | (hmac[offset + 2] << 8) | hmac[offset + 3];
 
   return (binary % 10 ** TOTP_DIGITS).toString().padStart(TOTP_DIGITS, '0');
 }

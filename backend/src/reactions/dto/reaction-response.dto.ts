@@ -20,10 +20,17 @@ export class ReactionResponseDto {
   @ApiProperty({ type: () => ReactionCountsDto })
   readonly counters!: ReactionCountsDto;
 
-  @ApiProperty({ enum: Object.values(ReactionKind), isArray: true, description: 'Empty when the viewer has no reaction.' })
+  @ApiProperty({
+    enum: Object.values(ReactionKind),
+    isArray: true,
+    description: 'Empty when the viewer has no reaction.',
+  })
   readonly viewerReactions!: readonly ReactionKind[];
 
-  @ApiProperty({ example: 50, description: 'Y_CONVERSATION_THRESHOLD: the Y count that opens the conversation (R3).' })
+  @ApiProperty({
+    example: 50,
+    description: 'Y_CONVERSATION_THRESHOLD: the Y count that opens the conversation (R3).',
+  })
   readonly yThreshold!: number;
 
   @ApiProperty({ example: true, description: 'True once the Y count has reached yThreshold (R13).' })

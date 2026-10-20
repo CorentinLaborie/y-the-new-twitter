@@ -34,7 +34,9 @@ describe('UsersRepository counters (R13)', () => {
         data: { status: 'active', emailVerifiedAt: at, statusChangedAt: at },
       });
       expect(tx.$executeRaw).toHaveBeenCalledTimes(2);
-      expect(tx.user.update.mock.invocationCallOrder[0]).toBeLessThan(tx.$executeRaw.mock.invocationCallOrder[0]);
+      expect(tx.user.update.mock.invocationCallOrder[0]).toBeLessThan(
+        tx.$executeRaw.mock.invocationCallOrder[0],
+      );
     });
   });
 

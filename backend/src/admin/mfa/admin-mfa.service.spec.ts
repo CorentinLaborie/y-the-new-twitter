@@ -76,7 +76,10 @@ describe('AdminMfaService', () => {
 
   it('accepts the current TOTP code and moves the last used step forward', async () => {
     const secret = service.startSetup('corentin').secret;
-    repository.findByUser.mockResolvedValue({ totpSecretEncrypted: cipher.encrypt(secret), lastUsedStep: null });
+    repository.findByUser.mockResolvedValue({
+      totpSecretEncrypted: cipher.encrypt(secret),
+      lastUsedStep: null,
+    });
 
     await expect(service.verifyCode('admin-1', totpCode(secret, STEP), NOW)).resolves.toBe(true);
     expect(repository.advanceStep).toHaveBeenCalledWith('admin-1', STEP);
@@ -95,7 +98,10 @@ describe('AdminMfaService', () => {
 
   it('refuses a TOTP code when the step is taken by a concurrent request', async () => {
     const secret = service.startSetup('corentin').secret;
-    repository.findByUser.mockResolvedValue({ totpSecretEncrypted: cipher.encrypt(secret), lastUsedStep: null });
+    repository.findByUser.mockResolvedValue({
+      totpSecretEncrypted: cipher.encrypt(secret),
+      lastUsedStep: null,
+    });
     repository.advanceStep.mockResolvedValue(false);
 
     await expect(service.verifyCode('admin-1', totpCode(secret, STEP), NOW)).resolves.toBe(false);
@@ -103,7 +109,10 @@ describe('AdminMfaService', () => {
 
   it('refuses a wrong six-digit code without touching the step', async () => {
     const secret = service.startSetup('corentin').secret;
-    repository.findByUser.mockResolvedValue({ totpSecretEncrypted: cipher.encrypt(secret), lastUsedStep: null });
+    repository.findByUser.mockResolvedValue({
+      totpSecretEncrypted: cipher.encrypt(secret),
+      lastUsedStep: null,
+    });
     const wrong = totpCode(secret, STEP) === '000000' ? '111111' : '000000';
 
     await expect(service.verifyCode('admin-1', wrong, NOW)).resolves.toBe(false);
@@ -112,7 +121,10 @@ describe('AdminMfaService', () => {
 
   it('accepts a backup code by its hash, and asks the repository to consume it once', async () => {
     await expect(service.verifyCode('admin-1', 'abcde-fghjk', NOW)).resolves.toBe(true);
-    expect(repository.consumeBackupCode).toHaveBeenCalledWith('admin-1', hashBackupCode('abcde-fghjk', BACKUP_KEY));
+    expect(repository.consumeBackupCode).toHaveBeenCalledWith(
+      'admin-1',
+      hashBackupCode('abcde-fghjk', BACKUP_KEY),
+    );
     expect(repository.findByUser).not.toHaveBeenCalled();
   });
 });

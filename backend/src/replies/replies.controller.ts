@@ -42,9 +42,15 @@ export class RepliesController {
   })
   @problemDetailsResponse(400, 'The question id is not a UUID, or the Idempotency-Key is empty or too long.')
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(403, 'The account is not active (suspended, pending verification or pending deletion).')
+  @problemDetailsResponse(
+    403,
+    'The account is not active (suspended, pending verification or pending deletion).',
+  )
   @problemDetailsResponse(404, 'The question does not exist, or it is hidden, deleted or blocked.')
-  @problemDetailsResponse(422, 'The text is empty or longer than 280 characters, the conversation is not open yet, or the key was used for another request.')
+  @problemDetailsResponse(
+    422,
+    'The text is empty or longer than 280 characters, the conversation is not open yet, or the key was used for another request.',
+  )
   @problemDetailsResponse(429, 'Too many requests.')
   async create(
     @CurrentUser() author: SessionUser,
@@ -61,9 +67,15 @@ export class RepliesController {
 
   @Get('questions/:questionId/replies')
   @ApiOkResponse({ description: 'One page of replies, oldest first.', type: ReplyPageDto })
-  @problemDetailsResponse(400, 'The question id is not a UUID, the cursor is invalid, or the limit is out of range.')
+  @problemDetailsResponse(
+    400,
+    'The question id is not a UUID, the cursor is invalid, or the limit is out of range.',
+  )
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(403, 'The account is not active (suspended, pending verification or pending deletion).')
+  @problemDetailsResponse(
+    403,
+    'The account is not active (suspended, pending verification or pending deletion).',
+  )
   @problemDetailsResponse(404, 'The question does not exist, or it is hidden, deleted or blocked.')
   list(
     @CurrentUser() viewer: SessionUser,
@@ -78,8 +90,14 @@ export class RepliesController {
   @ApiNoContentResponse({ description: 'The reply was deleted.' })
   @problemDetailsResponse(400, 'The reply id is not a UUID.')
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(404, 'The reply does not exist, was already deleted, or belongs to another account.')
-  remove(@CurrentUser() viewer: SessionUser, @Param('replyId', ParseUUIDPipe) replyId: string): Promise<void> {
+  @problemDetailsResponse(
+    404,
+    'The reply does not exist, was already deleted, or belongs to another account.',
+  )
+  remove(
+    @CurrentUser() viewer: SessionUser,
+    @Param('replyId', ParseUUIDPipe) replyId: string,
+  ): Promise<void> {
     return this.replies.remove(viewer, replyId);
   }
 }

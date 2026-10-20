@@ -46,7 +46,9 @@ export class PurgeService {
     const now = this.clock.now();
     const codeCutoff = new Date(now.getTime() - CODE_RETENTION_MS);
 
-    const signupCodes = await this.database.signupCode.deleteMany({ where: { expiresAt: { lt: codeCutoff } } });
+    const signupCodes = await this.database.signupCode.deleteMany({
+      where: { expiresAt: { lt: codeCutoff } },
+    });
     const passwordResetCodes = await this.database.passwordResetCode.deleteMany({
       where: { expiresAt: { lt: codeCutoff } },
     });
@@ -54,7 +56,9 @@ export class PurgeService {
       where: { expiresAt: { lt: codeCutoff } },
     });
     const sessions = await this.database.session.deleteMany({ where: { expiresAt: { lt: now } } });
-    const idempotencyKeys = await this.database.idempotencyKey.deleteMany({ where: { expiresAt: { lte: now } } });
+    const idempotencyKeys = await this.database.idempotencyKey.deleteMany({
+      where: { expiresAt: { lte: now } },
+    });
     const erased = await this.eraseDeletedContent(now);
 
     return {
@@ -76,15 +80,23 @@ export class PurgeService {
   private async eraseDeletedContent(now: Date): Promise<{ questions: number; replies: number }> {
     const cutoff = new Date(now.getTime() - CONTENT_RETENTION_MS);
     const questions = (
-      await this.database.question.findMany({ where: { deletedAt: { lt: cutoff }, body: { not: '' } }, select: { id: true } })
+      await this.database.question.findMany({
+        where: { deletedAt: { lt: cutoff }, body: { not: '' } },
+        select: { id: true },
+      })
     ).map((row) => row.id);
     const replies = (
-      await this.database.reply.findMany({ where: { deletedAt: { lt: cutoff }, body: { not: '' } }, select: { id: true } })
+      await this.database.reply.findMany({
+        where: { deletedAt: { lt: cutoff }, body: { not: '' } },
+        select: { id: true },
+      })
     ).map((row) => row.id);
 
     await this.database.$transaction([
       this.database.questionHashtag.deleteMany({ where: { questionId: { in: questions } } }),
-      this.database.mention.deleteMany({ where: { OR: [{ questionId: { in: questions } }, { replyId: { in: replies } }] } }),
+      this.database.mention.deleteMany({
+        where: { OR: [{ questionId: { in: questions } }, { replyId: { in: replies } }] },
+      }),
       this.database.question.updateMany({ where: { id: { in: questions } }, data: { body: '' } }),
       this.database.reply.updateMany({ where: { id: { in: replies } }, data: { body: '' } }),
     ]);
@@ -122,7 +134,10 @@ export class PurgeService {
       const report = await this.purgeExpired();
       this.logger.log(`Retention purge done: ${JSON.stringify(report)}`);
     } catch (error) {
-      this.logger.error('Retention purge failed; it runs again tomorrow.', error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        'Retention purge failed; it runs again tomorrow.',
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 }

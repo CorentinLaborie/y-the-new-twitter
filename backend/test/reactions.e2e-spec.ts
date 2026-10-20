@@ -62,21 +62,30 @@ describe('Question reactions (e2e, B3 to B5)', () => {
     const agent = request.agent(app.getHttpServer());
     const response = await agent.get('/api/v1/status').expect(200);
     const cookies = response.headers['set-cookie'] as unknown as string[];
-    const token = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+    const token = cookies
+      .find((value) => value.startsWith('y_csrf='))!
+      .split(';')[0]
+      .split('=')[1];
     await agent.post(`/api/v1/session-probe/login/${userId}`).set('x-csrf-token', token).expect(201);
     return { userId, agent, token };
   }
 
   function put(client: Client, questionId: string, kind: string) {
-    return client.agent.put(`/api/v1/questions/${questionId}/reactions/${kind}`).set('x-csrf-token', client.token);
+    return client.agent
+      .put(`/api/v1/questions/${questionId}/reactions/${kind}`)
+      .set('x-csrf-token', client.token);
   }
 
   function remove(client: Client, questionId: string, kind: string) {
-    return client.agent.delete(`/api/v1/questions/${questionId}/reactions/${kind}`).set('x-csrf-token', client.token);
+    return client.agent
+      .delete(`/api/v1/questions/${questionId}/reactions/${kind}`)
+      .set('x-csrf-token', client.token);
   }
 
   function counters(questionId: string): Promise<string> {
-    return sql(`SELECT like_count || ',' || dislike_count || ',' || y_count FROM questions WHERE id = '${questionId}';`);
+    return sql(
+      `SELECT like_count || ',' || dislike_count || ',' || y_count FROM questions WHERE id = '${questionId}';`,
+    );
   }
 
   beforeAll(async () => {
@@ -98,7 +107,7 @@ describe('Question reactions (e2e, B3 to B5)', () => {
     await container?.stop();
   });
 
-  it('sets a reaction on one\'s own question (R13) and returns the counters and the Y progress', async () => {
+  it("sets a reaction on one's own question (R13) and returns the counters and the Y progress", async () => {
     const author = await createUser();
     const question = await createQuestion(author);
     const client = await clientFor(author);
@@ -134,12 +143,16 @@ describe('Question reactions (e2e, B3 to B5)', () => {
     const question = await createQuestion(author);
     const client = await clientFor(author);
     await put(client, question, 'like').expect(200);
-    await sql(`UPDATE question_reactions SET created_at = now() - interval '2 days' WHERE question_id = '${question}';`);
+    await sql(
+      `UPDATE question_reactions SET created_at = now() - interval '2 days' WHERE question_id = '${question}';`,
+    );
 
     await put(client, question, 'dislike').expect(200);
 
     expect(
-      await sql(`SELECT created_at < now() - interval '1 day' FROM question_reactions WHERE question_id = '${question}';`),
+      await sql(
+        `SELECT created_at < now() - interval '1 day' FROM question_reactions WHERE question_id = '${question}';`,
+      ),
     ).toBe('t');
   });
 
@@ -183,8 +196,12 @@ describe('Question reactions (e2e, B3 to B5)', () => {
     const question = await createQuestion(author);
     const blockedByAuthor = await clientFor(await createUser());
     const blockingAuthor = await clientFor(await createUser());
-    await sql(`INSERT INTO blocks (blocker_id, blocked_id) VALUES ('${author}', '${blockedByAuthor.userId}');`);
-    await sql(`INSERT INTO blocks (blocker_id, blocked_id) VALUES ('${blockingAuthor.userId}', '${author}');`);
+    await sql(
+      `INSERT INTO blocks (blocker_id, blocked_id) VALUES ('${author}', '${blockedByAuthor.userId}');`,
+    );
+    await sql(
+      `INSERT INTO blocks (blocker_id, blocked_id) VALUES ('${blockingAuthor.userId}', '${author}');`,
+    );
 
     await put(blockedByAuthor, question, 'like').expect(404);
     await put(blockingAuthor, question, 'like').expect(404);
@@ -268,6 +285,10 @@ describe('Question reactions (e2e, B3 to B5)', () => {
        FROM question_reactions WHERE question_id = '${question}';`,
     );
     expect(await counters(question)).toBe(rows);
-    expect(await sql(`SELECT max(c) FROM (SELECT count(*) AS c FROM question_reactions WHERE question_id = '${question}' GROUP BY user_id) t;`)).toBe('1');
+    expect(
+      await sql(
+        `SELECT max(c) FROM (SELECT count(*) AS c FROM question_reactions WHERE question_id = '${question}' GROUP BY user_id) t;`,
+      ),
+    ).toBe('1');
   });
 });

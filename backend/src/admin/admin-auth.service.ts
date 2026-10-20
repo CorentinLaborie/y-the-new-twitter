@@ -38,7 +38,11 @@ export class AdminAuthService {
     @Inject(MAIL_SENDER) private readonly mail: MailSender,
   ) {}
 
-  async login(attempt: Omit<LoginAttempt, 'adminOnly'>, code: string | undefined, now: Date): Promise<AdminLoginOutcome> {
+  async login(
+    attempt: Omit<LoginAttempt, 'adminOnly'>,
+    code: string | undefined,
+    now: Date,
+  ): Promise<AdminLoginOutcome> {
     const check = await this.loginService.checkPassword({ ...attempt, adminOnly: true });
     if (check.status !== 'ok') {
       return check;
@@ -81,7 +85,12 @@ export class AdminAuthService {
   }
 
   /** The codes in clear, or null when the code is wrong. A successful set-up is announced by e-mail, like a sign-in. */
-  async confirmSetup(userId: string, setup: AdminMfaSetup, code: string, now: Date): Promise<string[] | null> {
+  async confirmSetup(
+    userId: string,
+    setup: AdminMfaSetup,
+    code: string,
+    now: Date,
+  ): Promise<string[] | null> {
     const codes = await this.mfa.confirmSetup(userId, setup.secretEncrypted, code, now);
     if (codes !== null) {
       await this.record(userId, AUDIT_ACTIONS.mfaEnrol, 'ok');

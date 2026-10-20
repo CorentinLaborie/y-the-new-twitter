@@ -60,7 +60,10 @@ describe('Mentions and reply notifications (e2e, M3 B8, B9)', () => {
     const agent = request.agent(app.getHttpServer());
     const response = await agent.get('/api/v1/status').expect(200);
     const cookies = response.headers['set-cookie'] as unknown as string[];
-    const token = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+    const token = cookies
+      .find((value) => value.startsWith('y_csrf='))!
+      .split(';')[0]
+      .split('=')[1];
     await agent.post(`/api/v1/session-probe/login/${userId}`).set('x-csrf-token', token).expect(201);
     return { userId, agent, token };
   }
@@ -104,7 +107,9 @@ describe('Mentions and reply notifications (e2e, M3 B8, B9)', () => {
     const created = await postQuestion(client, 'Bonjour @M_BOB, @m_author, @nobody et @m_carol').expect(201);
 
     const questionId = created.body.id;
-    const mentioned = await sql(`SELECT mentioned_user_id FROM mentions WHERE question_id = '${questionId}';`);
+    const mentioned = await sql(
+      `SELECT mentioned_user_id FROM mentions WHERE question_id = '${questionId}';`,
+    );
     expect(mentioned.split('\n').sort()).toEqual([bob, carol].sort());
     expect(
       await sql(
@@ -147,7 +152,9 @@ describe('Mentions and reply notifications (e2e, M3 B8, B9)', () => {
 
     const replyId = created.body.id;
     expect(
-      await sql(`SELECT reply_id || ',' || COALESCE(question_id::text, 'null') FROM mentions WHERE mentioned_user_id = '${mentioned}';`),
+      await sql(
+        `SELECT reply_id || ',' || COALESCE(question_id::text, 'null') FROM mentions WHERE mentioned_user_id = '${mentioned}';`,
+      ),
     ).toBe(`${replyId},null`);
     expect(
       await sql(
@@ -155,7 +162,9 @@ describe('Mentions and reply notifications (e2e, M3 B8, B9)', () => {
       ),
     ).toBe(`reply_to_question,${replier}`);
     expect(
-      await sql(`SELECT type || ',' || actor_id FROM notifications WHERE reply_id = '${replyId}' AND recipient_id = '${mentioned}';`),
+      await sql(
+        `SELECT type || ',' || actor_id FROM notifications WHERE reply_id = '${replyId}' AND recipient_id = '${mentioned}';`,
+      ),
     ).toBe(`mention,${replier}`);
   });
 
@@ -168,7 +177,9 @@ describe('Mentions and reply notifications (e2e, M3 B8, B9)', () => {
     const created = await postReply(client, question, 'Merci @m_both_owner').expect(201);
 
     expect(
-      await sql(`SELECT type FROM notifications WHERE reply_id = '${created.body.id}' AND recipient_id = '${questionAuthor}';`),
+      await sql(
+        `SELECT type FROM notifications WHERE reply_id = '${created.body.id}' AND recipient_id = '${questionAuthor}';`,
+      ),
     ).toBe('mention');
   });
 

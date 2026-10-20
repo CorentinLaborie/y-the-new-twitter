@@ -29,7 +29,10 @@ export class QuestionsController {
   @ApiOkResponse({ description: 'The question, as the feed returns it.', type: QuestionResponseDto })
   @problemDetailsResponse(400, 'The question id is not a UUID.')
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(403, 'The account is not active (suspended, pending verification or pending deletion).')
+  @problemDetailsResponse(
+    403,
+    'The account is not active (suspended, pending verification or pending deletion).',
+  )
   @problemDetailsResponse(404, 'The question does not exist, or it is hidden, deleted or blocked.')
   @problemDetailsResponse(429, 'Too many requests.')
   findOne(
@@ -44,7 +47,8 @@ export class QuestionsController {
   @ApiHeader({
     name: 'idempotency-key',
     required: false,
-    description: 'Repeated with the same text, returns the first response. Same key, other text: 422 (section 9.1).',
+    description:
+      'Repeated with the same text, returns the first response. Same key, other text: 422 (section 9.1).',
   })
   @ApiCreatedResponse({
     description: 'The question.',
@@ -53,8 +57,14 @@ export class QuestionsController {
   })
   @problemDetailsResponse(400, 'Malformed request, such as an empty Idempotency-Key.')
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(403, 'The account is not active (suspended, pending verification or pending deletion).')
-  @problemDetailsResponse(422, 'The text is empty or longer than 280 characters, or the key was used for another text.')
+  @problemDetailsResponse(
+    403,
+    'The account is not active (suspended, pending verification or pending deletion).',
+  )
+  @problemDetailsResponse(
+    422,
+    'The text is empty or longer than 280 characters, or the key was used for another text.',
+  )
   @problemDetailsResponse(429, 'Too many requests.')
   async create(
     @CurrentUser() author: SessionUser,

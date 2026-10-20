@@ -5,7 +5,8 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 export const BACKEND_ROOT = join(__dirname, '..', '..');
 
 // Same PostgreSQL 18.6 image as docker-compose.yml, pinned by digest (DEC-126).
-const POSTGRES_IMAGE = 'postgres:18.6@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336';
+const POSTGRES_IMAGE =
+  'postgres:18.6@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336';
 
 /** Starts a fresh, empty PostgreSQL 18 container. */
 export function startPostgres(): Promise<StartedPostgreSqlContainer> {

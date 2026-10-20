@@ -52,7 +52,12 @@ export class AdminMfaService {
    * Checks the first code against the pending secret. On success, enrols the factor and its backup codes, and returns
    * the codes in clear: they are shown once and never stored in clear. Null when the code is wrong.
    */
-  async confirmSetup(userId: string, secretEncrypted: string, code: string, now: Date): Promise<string[] | null> {
+  async confirmSetup(
+    userId: string,
+    secretEncrypted: string,
+    code: string,
+    now: Date,
+  ): Promise<string[] | null> {
     const step = verifyTotp(this.cipher.decrypt(secretEncrypted), code.trim(), now.getTime(), null);
     if (step === null) {
       return null;

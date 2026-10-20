@@ -43,7 +43,10 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     return { agent, csrf: cookieValue(status, 'y_csrf') ?? '' };
   }
 
-  async function createAccount(handle: string, role: 'user' | 'admin'): Promise<{ id: string; email: string }> {
+  async function createAccount(
+    handle: string,
+    role: 'user' | 'admin',
+  ): Promise<{ id: string; email: string }> {
     const user = await users.create({
       handle,
       displayName: `Compte ${handle}`,
@@ -60,10 +63,16 @@ describe('Back-office sign-in and second factor (e2e)', () => {
 
   function cookieValue(response: request.Response, name: string): string | undefined {
     const cookies = (response.headers['set-cookie'] ?? []) as unknown as string[];
-    return cookies.find((value) => value.startsWith(`${name}=`))?.split(';')[0].split('=')[1];
+    return cookies
+      .find((value) => value.startsWith(`${name}=`))
+      ?.split(';')[0]
+      .split('=')[1];
   }
 
-  function adminLogin(visitor: { agent: ReturnType<typeof request.agent>; csrf: string }, body: Record<string, string>) {
+  function adminLogin(
+    visitor: { agent: ReturnType<typeof request.agent>; csrf: string },
+    body: Record<string, string>,
+  ) {
     return visitor.agent.post(`${BASE}/admin/login`).set('x-csrf-token', visitor.csrf).send(body);
   }
 
@@ -75,16 +84,25 @@ describe('Back-office sign-in and second factor (e2e)', () => {
   async function enrolAdministrator(handle: string) {
     const account = await createAccount(handle, 'admin');
     const visitor = await newVisitor();
-    await adminLogin(visitor, { email: account.email, password: PASSWORD }).expect(200, { status: 'setup_required' });
+    await adminLogin(visitor, { email: account.email, password: PASSWORD }).expect(200, {
+      status: 'setup_required',
+    });
 
-    const setup = await visitor.agent.post(`${BASE}/admin/mfa/setup`).set('x-csrf-token', visitor.csrf).expect(200);
+    const setup = await visitor.agent
+      .post(`${BASE}/admin/mfa/setup`)
+      .set('x-csrf-token', visitor.csrf)
+      .expect(200);
     const confirmed = await visitor.agent
       .post(`${BASE}/admin/mfa/confirm`)
       .set('x-csrf-token', visitor.csrf)
       .send({ code: totpCode(setup.body.secret, stepAt(Date.now())) })
       .expect(201);
 
-    return { account, secret: setup.body.secret as string, backupCodes: confirmed.body.backupCodes as string[] };
+    return {
+      account,
+      secret: setup.body.secret as string,
+      backupCodes: confirmed.body.backupCodes as string[],
+    };
   }
 
   /** The next time step: the set-up code already used the current one, and a step can be used once. */
@@ -128,10 +146,14 @@ describe('Back-office sign-in and second factor (e2e)', () => {
   it('answers 404 to a signed-in user who is not an administrator', async () => {
     await createAccount('plain_user', 'user');
     const visitor = await newVisitor();
-    await visitor.agent.post(`${BASE}/auth/login`).set('x-csrf-token', visitor.csrf).send({
-      email: 'plain_user@example.test',
-      password: PASSWORD,
-    }).expect(200);
+    await visitor.agent
+      .post(`${BASE}/auth/login`)
+      .set('x-csrf-token', visitor.csrf)
+      .send({
+        email: 'plain_user@example.test',
+        password: PASSWORD,
+      })
+      .expect(200);
 
     await visitor.agent.get(`${BASE}/admin/session`).expect(404);
   });
@@ -140,8 +162,14 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     await createAccount('wrong_pass_admin', 'admin');
     await createAccount('not_an_admin', 'user');
 
-    const wrong = await adminLogin(await newVisitor(), { email: 'wrong_pass_admin@example.test', password: WRONG_PASSWORD }).expect(401);
-    const notAdmin = await adminLogin(await newVisitor(), { email: 'not_an_admin@example.test', password: PASSWORD }).expect(401);
+    const wrong = await adminLogin(await newVisitor(), {
+      email: 'wrong_pass_admin@example.test',
+      password: WRONG_PASSWORD,
+    }).expect(401);
+    const notAdmin = await adminLogin(await newVisitor(), {
+      email: 'not_an_admin@example.test',
+      password: PASSWORD,
+    }).expect(401);
 
     expect(notAdmin.body.detail).toBe('Identifiants incorrects');
     expect(notAdmin.body.detail).toBe(wrong.body.detail);
@@ -151,10 +179,15 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     const account = await createAccount('first_admin', 'admin');
     const visitor = await newVisitor();
 
-    await adminLogin(visitor, { email: account.email, password: PASSWORD }).expect(200, { status: 'setup_required' });
+    await adminLogin(visitor, { email: account.email, password: PASSWORD }).expect(200, {
+      status: 'setup_required',
+    });
     await visitor.agent.get(`${BASE}/admin/session`).expect(401);
 
-    const setup = await visitor.agent.post(`${BASE}/admin/mfa/setup`).set('x-csrf-token', visitor.csrf).expect(200);
+    const setup = await visitor.agent
+      .post(`${BASE}/admin/mfa/setup`)
+      .set('x-csrf-token', visitor.csrf)
+      .expect(200);
     expect(setup.body.otpauthUri).toContain(`otpauth://totp/Y:first_admin?secret=${setup.body.secret}`);
 
     const confirmed = await visitor.agent
@@ -174,9 +207,13 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     const { account, secret, backupCodes } = await enrolAdministrator('stored_admin');
 
     expect(await sql(`SELECT count(*) FROM admin_mfa WHERE user_id = '${account.id}';`)).toBe('1');
-    expect(await sql(`SELECT count(*) FROM admin_mfa WHERE totp_secret_encrypted LIKE '%${secret}%';`)).toBe('0');
+    expect(await sql(`SELECT count(*) FROM admin_mfa WHERE totp_secret_encrypted LIKE '%${secret}%';`)).toBe(
+      '0',
+    );
     expect(await sql(`SELECT count(*) FROM admin_backup_codes WHERE user_id = '${account.id}';`)).toBe('10');
-    expect(await sql(`SELECT count(*) FROM admin_backup_codes WHERE code_hash = '${backupCodes[0]}';`)).toBe('0');
+    expect(await sql(`SELECT count(*) FROM admin_backup_codes WHERE code_hash = '${backupCodes[0]}';`)).toBe(
+      '0',
+    );
   });
 
   it('sends the e-mail alert on the set-up confirmation and on every later sign-in', async () => {
@@ -184,22 +221,33 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     expect(mail.messages().map((message) => message.to)).toEqual([account.email]);
 
     mail.clear();
-    await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD }).expect(200, { status: 'code_required' });
+    await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD }).expect(200, {
+      status: 'code_required',
+    });
     expect(mail.messages()).toHaveLength(0);
 
-    await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD, code: nextCode(secret) }).expect(200);
+    await adminLogin(await newVisitor(), {
+      email: account.email,
+      password: PASSWORD,
+      code: nextCode(secret),
+    }).expect(200);
     expect(mail.messages().map((message) => message.to)).toEqual([account.email]);
   });
 
   it('asks for the code after a correct password, and signs in with a fresh TOTP code', async () => {
     const { account, secret } = await enrolAdministrator('code_admin');
 
-    await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD }).expect(200, { status: 'code_required' });
-    const visitor = await newVisitor();
-    await adminLogin(visitor, { email: account.email, password: PASSWORD, code: nextCode(secret) }).expect(200, {
-      status: 'ok',
-      user: { handle: 'code_admin', displayName: 'Compte code_admin' },
+    await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD }).expect(200, {
+      status: 'code_required',
     });
+    const visitor = await newVisitor();
+    await adminLogin(visitor, { email: account.email, password: PASSWORD, code: nextCode(secret) }).expect(
+      200,
+      {
+        status: 'ok',
+        user: { handle: 'code_admin', displayName: 'Compte code_admin' },
+      },
+    );
     await visitor.agent.get(`${BASE}/admin/session`).expect(200);
   });
 
@@ -214,32 +262,61 @@ describe('Back-office sign-in and second factor (e2e)', () => {
   it('accepts a backup code once, then refuses it', async () => {
     const { account, backupCodes } = await enrolAdministrator('backup_admin');
 
-    await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD, code: backupCodes[0] }).expect(200);
-    await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD, code: backupCodes[0] }).expect(401);
-    expect(await sql(`SELECT count(*) FROM admin_backup_codes WHERE user_id = '${account.id}' AND used_at IS NOT NULL;`)).toBe('1');
+    await adminLogin(await newVisitor(), {
+      email: account.email,
+      password: PASSWORD,
+      code: backupCodes[0],
+    }).expect(200);
+    await adminLogin(await newVisitor(), {
+      email: account.email,
+      password: PASSWORD,
+      code: backupCodes[0],
+    }).expect(401);
+    expect(
+      await sql(
+        `SELECT count(*) FROM admin_backup_codes WHERE user_id = '${account.id}' AND used_at IS NOT NULL;`,
+      ),
+    ).toBe('1');
   });
 
   it('locks the account after five wrong codes, and refuses even the right password and code meanwhile', async () => {
     const { account, secret } = await enrolAdministrator('lock_admin');
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD, code: WRONG_CODE }).expect(401);
+      await adminLogin(await newVisitor(), {
+        email: account.email,
+        password: PASSWORD,
+        code: WRONG_CODE,
+      }).expect(401);
     }
 
-    const locked = await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD, code: nextCode(secret) }).expect(401);
+    const locked = await adminLogin(await newVisitor(), {
+      email: account.email,
+      password: PASSWORD,
+      code: nextCode(secret),
+    }).expect(401);
     expect(locked.body.detail).toBe('Identifiants incorrects');
-    expect(await sql(`SELECT count(*) FROM users WHERE id = '${account.id}' AND locked_until > now();`)).toBe('1');
+    expect(await sql(`SELECT count(*) FROM users WHERE id = '${account.id}' AND locked_until > now();`)).toBe(
+      '1',
+    );
   });
 
   it('ends the back-office session after 30 minutes without a request', async () => {
     const { account, secret } = await enrolAdministrator('idle_admin');
     const visitor = await newVisitor();
-    const login = await adminLogin(visitor, { email: account.email, password: PASSWORD, code: nextCode(secret) }).expect(200);
+    const login = await adminLogin(visitor, {
+      email: account.email,
+      password: PASSWORD,
+      code: nextCode(secret),
+    }).expect(200);
 
     const row = await prisma.session.findUniqueOrThrow({ where: { id: sessionIdOf(login) } });
     const data = row.data as unknown as { admin: { verifiedAt: string; lastSeenAt: string } };
     data.admin.lastSeenAt = new Date(Date.now() - ADMIN_IDLE_TIMEOUT_MS - 60_000).toISOString();
-    await prisma.session.update({ where: { id: row.id }, data: { data: data as unknown as Prisma.InputJsonObject } });
+    await prisma.session.update({
+      where: { id: row.id },
+      data: { data: data as unknown as Prisma.InputJsonObject },
+    });
 
     await visitor.agent.get(`${BASE}/admin/session`).expect(401);
   });
@@ -247,12 +324,19 @@ describe('Back-office sign-in and second factor (e2e)', () => {
   it('ends the back-office session 8 hours after the sign-in, even while it is used', async () => {
     const { account, secret } = await enrolAdministrator('long_admin');
     const visitor = await newVisitor();
-    const login = await adminLogin(visitor, { email: account.email, password: PASSWORD, code: nextCode(secret) }).expect(200);
+    const login = await adminLogin(visitor, {
+      email: account.email,
+      password: PASSWORD,
+      code: nextCode(secret),
+    }).expect(200);
 
     const row = await prisma.session.findUniqueOrThrow({ where: { id: sessionIdOf(login) } });
     const data = row.data as unknown as { admin: { verifiedAt: string; lastSeenAt: string } };
     data.admin.verifiedAt = new Date(Date.now() - ADMIN_MAX_SESSION_MS - 60_000).toISOString();
-    await prisma.session.update({ where: { id: row.id }, data: { data: data as unknown as Prisma.InputJsonObject } });
+    await prisma.session.update({
+      where: { id: row.id },
+      data: { data: data as unknown as Prisma.InputJsonObject },
+    });
 
     await visitor.agent.get(`${BASE}/admin/session`).expect(401);
   });

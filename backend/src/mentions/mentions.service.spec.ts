@@ -2,7 +2,12 @@ import { UnprocessableEntityException } from '@nestjs/common';
 import { MentionsRepository } from './mentions.repository';
 import { MentionsService } from './mentions.service';
 
-type Repository = jest.Mocked<Pick<MentionsRepository, 'findActiveByHandles' | 'findBlockBetween' | 'createMentions' | 'writeMentionNotifications'>>;
+type Repository = jest.Mocked<
+  Pick<
+    MentionsRepository,
+    'findActiveByHandles' | 'findBlockBetween' | 'createMentions' | 'writeMentionNotifications'
+  >
+>;
 
 const DB = 'tx';
 
@@ -45,7 +50,9 @@ describe('MentionsService (B8, B9)', () => {
     repository.findActiveByHandles.mockResolvedValue([{ id: 'bob-id' }]);
     repository.findBlockBetween.mockResolvedValue({ blockerId: 'bob-id' });
 
-    await expect(service.resolve(DB as never, 'alice-id', '@bob')).rejects.toThrow(UnprocessableEntityException);
+    await expect(service.resolve(DB as never, 'alice-id', '@bob')).rejects.toThrow(
+      UnprocessableEntityException,
+    );
     expect(repository.findBlockBetween).toHaveBeenCalledWith(DB, 'alice-id', ['bob-id']);
   });
 
@@ -53,12 +60,10 @@ describe('MentionsService (B8, B9)', () => {
     await service.record(DB as never, 'alice-id', { questionId: 'q-1' }, ['bob-id', 'carol-id']);
 
     expect(repository.createMentions).toHaveBeenCalledWith(DB, { questionId: 'q-1' }, ['bob-id', 'carol-id']);
-    expect(repository.writeMentionNotifications).toHaveBeenCalledWith(
-      DB,
-      'alice-id',
-      { questionId: 'q-1' },
-      ['bob-id', 'carol-id'],
-    );
+    expect(repository.writeMentionNotifications).toHaveBeenCalledWith(DB, 'alice-id', { questionId: 'q-1' }, [
+      'bob-id',
+      'carol-id',
+    ]);
   });
 
   it('writes nothing when no account is mentioned', async () => {

@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
-import { assertIdempotencyKey, IdempotencyService, requestHash } from '../common/idempotency/idempotency.service';
+import {
+  assertIdempotencyKey,
+  IdempotencyService,
+  requestHash,
+} from '../common/idempotency/idempotency.service';
 import { PrismaService } from '../database/prisma.service';
 import { decodeCursor, encodeCursor } from '../feed/feed-cursor';
 import { MentionsService } from '../mentions/mentions.service';
@@ -92,10 +96,13 @@ export class RepliesService {
         toReplyView(
           row,
           row,
-          viewerReactionRows.filter((reaction) => reaction.replyId === row.id).map((reaction) => reaction.kind),
+          viewerReactionRows
+            .filter((reaction) => reaction.replyId === row.id)
+            .map((reaction) => reaction.kind),
         ),
       ),
-      nextCursor: rows.length > limit && last ? encodeCursor({ createdAt: last.createdAt, id: last.id }) : null,
+      nextCursor:
+        rows.length > limit && last ? encodeCursor({ createdAt: last.createdAt, id: last.id }) : null,
     };
   }
 

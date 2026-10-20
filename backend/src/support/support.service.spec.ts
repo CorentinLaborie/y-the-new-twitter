@@ -42,7 +42,10 @@ describe('SupportService.sendMessage (section 3.4, DEC-078, DEC-116)', () => {
       createUserMessage: jest.fn().mockResolvedValue(undefined),
     };
     prisma = { $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback('tx')) };
-    service = new SupportService(prisma as unknown as PrismaService, repository as unknown as SupportRepository);
+    service = new SupportService(
+      prisma as unknown as PrismaService,
+      repository as unknown as SupportRepository,
+    );
   });
 
   it('opens a new thread with the next reference of the day when the account has none open', async () => {
@@ -95,7 +98,9 @@ describe('SupportService.sendMessage (section 3.4, DEC-078, DEC-116)', () => {
   });
 
   it('refuses an empty text, or one of spaces only, with 422', async () => {
-    await expect(service.sendMessage(VIEWER, { text: '   ' }, NOW)).rejects.toThrow(UnprocessableEntityException);
+    await expect(service.sendMessage(VIEWER, { text: '   ' }, NOW)).rejects.toThrow(
+      UnprocessableEntityException,
+    );
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 

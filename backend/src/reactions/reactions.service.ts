@@ -38,7 +38,11 @@ export class ReactionsService {
       const existing = await this.reactions.findQuestionReaction(tx, viewer.id, questionId);
       if (existing?.kind !== kind) {
         await this.reactions.setQuestionReaction(tx, viewer.id, questionId, kind);
-        await this.reactions.changeQuestionCounters(tx, questionId, counterChange(existing?.kind ?? null, kind));
+        await this.reactions.changeQuestionCounters(
+          tx,
+          questionId,
+          counterChange(existing?.kind ?? null, kind),
+        );
       }
 
       return this.response(tx, viewer.id, questionId);
@@ -72,7 +76,11 @@ export class ReactionsService {
   }
 
   /** The counters after the reaction. Opens the conversation first when the Y count has reached the threshold (R3). */
-  private async response(db: ReactionsDb, viewerId: string, questionId: string): Promise<ReactionResponseDto> {
+  private async response(
+    db: ReactionsDb,
+    viewerId: string,
+    questionId: string,
+  ): Promise<ReactionResponseDto> {
     const threshold = this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD');
     const question = await this.reactions.findQuestionCounters(db, questionId);
     if (question.conversationOpenedAt === null && question.yCount >= threshold) {

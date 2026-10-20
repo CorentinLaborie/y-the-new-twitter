@@ -34,10 +34,14 @@ describe('contact message rules (DEC-078, DEC-080)', () => {
   });
 
   it('continues after the greatest reference of the same day', () => {
-    expect(nextContactReference(new Date('2026-10-19T10:00:00Z'), 'CNT-20261019-0007')).toBe('CNT-20261019-0008');
+    expect(nextContactReference(new Date('2026-10-19T10:00:00Z'), 'CNT-20261019-0007')).toBe(
+      'CNT-20261019-0008',
+    );
   });
 
   it('starts again at 0001 when the last reference belongs to another day', () => {
-    expect(nextContactReference(new Date('2026-10-20T00:10:00Z'), 'CNT-20261019-0418')).toBe('CNT-20261020-0001');
+    expect(nextContactReference(new Date('2026-10-20T00:10:00Z'), 'CNT-20261019-0418')).toBe(
+      'CNT-20261020-0001',
+    );
   });
 });

@@ -11,7 +11,9 @@ import type { CreateQuestionDto } from './dto/create-question.dto';
 import { QuestionsRepository } from './questions.repository';
 import { QuestionsService } from './questions.service';
 
-type Repository = jest.Mocked<Pick<QuestionsRepository, 'createQuestion' | 'findOrCreateHashtags' | 'linkHashtags'>>;
+type Repository = jest.Mocked<
+  Pick<QuestionsRepository, 'createQuestion' | 'findOrCreateHashtags' | 'linkHashtags'>
+>;
 
 type KeyRepository = jest.Mocked<Pick<IdempotencyRepository, 'find' | 'deleteExpired' | 'save'>>;
 
@@ -61,7 +63,9 @@ describe('QuestionsService (B2, section 9.1)', () => {
         conversationOpenedAt: null,
         createdAt: CREATED_AT,
       })),
-      findOrCreateHashtags: jest.fn().mockImplementation(async (_db, names: string[]) => names.map((n) => `id-${n}`)),
+      findOrCreateHashtags: jest
+        .fn()
+        .mockImplementation(async (_db, names: string[]) => names.map((n) => `id-${n}`)),
       linkHashtags: jest.fn().mockResolvedValue({ count: 0 }),
     };
     keys = {
@@ -71,8 +75,14 @@ describe('QuestionsService (B2, section 9.1)', () => {
     };
     prisma = { $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback('tx')) };
     const config = { getOrThrow: jest.fn().mockReturnValue(50) } as unknown as ConfigService;
-    const idempotency = new IdempotencyService(prisma as unknown as PrismaService, keys as unknown as IdempotencyRepository);
-    const mentions = { resolve: jest.fn().mockResolvedValue([]), record: jest.fn().mockResolvedValue(undefined) };
+    const idempotency = new IdempotencyService(
+      prisma as unknown as PrismaService,
+      keys as unknown as IdempotencyRepository,
+    );
+    const mentions = {
+      resolve: jest.fn().mockResolvedValue([]),
+      record: jest.fn().mockResolvedValue(undefined),
+    };
     service = new QuestionsService(
       prisma as unknown as PrismaService,
       repository as unknown as QuestionsRepository,
@@ -155,7 +165,10 @@ describe('QuestionsService (B2, section 9.1)', () => {
       expect(response.id).toBe('question-1');
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
       expect(keys.deleteExpired).toHaveBeenCalledWith('tx', 'user-1', 'key-1', expect.any(Date));
-      expect(keys.save).toHaveBeenCalledWith('tx', expect.objectContaining({ key: 'key-1', requestHash: HASH_BONJOUR }));
+      expect(keys.save).toHaveBeenCalledWith(
+        'tx',
+        expect.objectContaining({ key: 'key-1', requestHash: HASH_BONJOUR }),
+      );
     });
 
     it('returns the first response, without writing, when the key and the text are the same', async () => {
@@ -177,15 +190,19 @@ describe('QuestionsService (B2, section 9.1)', () => {
         expiresAt: LIVE_KEY_EXPIRY,
       } as never);
 
-      await expect(service.create(AUTHOR, dto('Autre texte'), 'key-1')).rejects.toThrow(UnprocessableEntityException);
+      await expect(service.create(AUTHOR, dto('Autre texte'), 'key-1')).rejects.toThrow(
+        UnprocessableEntityException,
+      );
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
     it('returns the response of a concurrent request that stored the same key first', async () => {
       const winner = { id: 'question-winner', text: 'Bonjour' };
-      keys.find
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ requestHash: HASH_BONJOUR, response: winner, expiresAt: LIVE_KEY_EXPIRY } as never);
+      keys.find.mockResolvedValueOnce(null).mockResolvedValueOnce({
+        requestHash: HASH_BONJOUR,
+        response: winner,
+        expiresAt: LIVE_KEY_EXPIRY,
+      } as never);
       prisma.$transaction.mockRejectedValueOnce(uniqueViolation());
 
       await expect(service.create(AUTHOR, dto('Bonjour'), 'key-1')).resolves.toEqual(winner);
@@ -199,7 +216,9 @@ describe('QuestionsService (B2, section 9.1)', () => {
 
     it('refuses an empty key (400) and a key over 255 characters (400), before any write', async () => {
       await expect(service.create(AUTHOR, dto('Bonjour'), '')).rejects.toThrow(BadRequestException);
-      await expect(service.create(AUTHOR, dto('Bonjour'), 'k'.repeat(256))).rejects.toThrow(BadRequestException);
+      await expect(service.create(AUTHOR, dto('Bonjour'), 'k'.repeat(256))).rejects.toThrow(
+        BadRequestException,
+      );
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
   });
@@ -209,7 +228,13 @@ type DetailRepository = jest.Mocked<Pick<QuestionsRepository, 'findVisibleQuesti
 type VisibleRow = NonNullable<Awaited<ReturnType<QuestionsRepository['findVisibleQuestion']>>>;
 
 describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
-  const VIEWER: SessionUser = { id: 'viewer-1', handle: 'bob', displayName: 'Bob', role: 'user', status: 'active' };
+  const VIEWER: SessionUser = {
+    id: 'viewer-1',
+    handle: 'bob',
+    displayName: 'Bob',
+    role: 'user',
+    status: 'active',
+  };
 
   let repository: DetailRepository;
   let service: QuestionsService;

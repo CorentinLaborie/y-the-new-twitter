@@ -20,7 +20,12 @@ export class AdminMfaRepository {
   }
 
   /** Enrols the factor and its backup codes in one transaction: both exist or neither does. */
-  async enrol(userId: string, totpSecretEncrypted: string, step: number, codeHashes: string[]): Promise<void> {
+  async enrol(
+    userId: string,
+    totpSecretEncrypted: string,
+    step: number,
+    codeHashes: string[],
+  ): Promise<void> {
     await this.prisma.$transaction([
       this.prisma.adminMfa.create({
         data: { userId, totpSecretEncrypted, lastUsedStep: BigInt(step) },

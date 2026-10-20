@@ -17,7 +17,8 @@ export class SupportController {
   @HttpCode(HttpStatus.CREATED)
   @ApiBody({ type: CreateSupportMessageDto })
   @ApiCreatedResponse({
-    description: 'The message was added to the open thread of the account, or to a new thread. Returns its reference.',
+    description:
+      'The message was added to the open thread of the account, or to a new thread. Returns its reference.',
     type: SupportMessageResponseDto,
   })
   @problemDetailsResponse(400, 'The body has no text field, or the text is not a string.')

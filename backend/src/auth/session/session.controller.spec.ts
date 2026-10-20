@@ -17,9 +17,9 @@ function userWith(overrides: Partial<SessionUser>): SessionUser {
 /** A controller whose session check answers with the given user (or with no user), and whose reason lookup is mocked. */
 function controllerFor(user: SessionUser | null, reason: string | null = null) {
   const sessions = {
-    check: jest.fn().mockResolvedValue(
-      user === null ? { allowed: false, reason: 'anonymous' } : { allowed: true, user },
-    ),
+    check: jest
+      .fn()
+      .mockResolvedValue(user === null ? { allowed: false, reason: 'anonymous' } : { allowed: true, user }),
   };
   const users = { suspensionReasonOf: jest.fn().mockResolvedValue(reason) };
   const controller = new SessionController(

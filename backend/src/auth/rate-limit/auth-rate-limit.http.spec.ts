@@ -101,7 +101,10 @@ describe('AuthRateLimit over HTTP (in-memory storage)', () => {
 
   it('does not limit a route without the decorator', async () => {
     for (let attempt = 1; attempt <= 30; attempt += 1) {
-      await request(app.getHttpServer()).get('/probe/open').set('X-Forwarded-For', '203.0.113.50').expect(200);
+      await request(app.getHttpServer())
+        .get('/probe/open')
+        .set('X-Forwarded-For', '203.0.113.50')
+        .expect(200);
     }
   });
 });

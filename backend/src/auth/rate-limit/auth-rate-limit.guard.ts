@@ -2,7 +2,11 @@ import { CanActivate, ExecutionContext, HttpException, HttpStatus, Inject, Injec
 import { Reflector } from '@nestjs/core';
 import type { ThrottlerStorage } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
-import { AUTH_RATE_LIMIT_METADATA, AUTH_RATE_LIMIT_POLICIES, AuthRateLimitPolicy } from './auth-rate-limit.policies';
+import {
+  AUTH_RATE_LIMIT_METADATA,
+  AUTH_RATE_LIMIT_POLICIES,
+  AuthRateLimitPolicy,
+} from './auth-rate-limit.policies';
 import { RATE_LIMIT_STORAGE } from './rate-limit.module';
 
 /**
@@ -17,10 +21,10 @@ export class AuthRateLimitGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const policy = this.reflector.getAllAndOverride<AuthRateLimitPolicy | undefined>(AUTH_RATE_LIMIT_METADATA, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const policy = this.reflector.getAllAndOverride<AuthRateLimitPolicy | undefined>(
+      AUTH_RATE_LIMIT_METADATA,
+      [context.getHandler(), context.getClass()],
+    );
     if (policy === undefined) {
       return true;
     }

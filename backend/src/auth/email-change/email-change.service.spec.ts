@@ -129,7 +129,9 @@ describe('EmailChangeService (B18, B19)', () => {
     }
 
     it('answers 422 when there is no open code, and changes nothing', async () => {
-      await expect(service.confirmChange(USER_ID, '123456')).rejects.toBeInstanceOf(UnprocessableEntityException);
+      await expect(service.confirmChange(USER_ID, '123456')).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
 
       expect(codes.completeChange).not.toHaveBeenCalled();
     });
@@ -138,14 +140,18 @@ describe('EmailChangeService (B18, B19)', () => {
       codes.findOpenCode.mockResolvedValue(await openCodeFor('123456'));
       codes.reserveAttempt.mockResolvedValue(false);
 
-      await expect(service.confirmChange(USER_ID, '123456')).rejects.toBeInstanceOf(UnprocessableEntityException);
+      await expect(service.confirmChange(USER_ID, '123456')).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
       expect(codes.completeChange).not.toHaveBeenCalled();
     });
 
     it('answers 422 for a wrong code, keeps the address and sends no mail', async () => {
       codes.findOpenCode.mockResolvedValue(await openCodeFor('654321'));
 
-      await expect(service.confirmChange(USER_ID, '123456')).rejects.toBeInstanceOf(UnprocessableEntityException);
+      await expect(service.confirmChange(USER_ID, '123456')).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
       expect(codes.reserveAttempt).toHaveBeenCalledWith('code-1');
       expect(codes.completeChange).not.toHaveBeenCalled();
       expect(mail.messages()).toEqual([]);
@@ -175,7 +181,9 @@ describe('EmailChangeService (B18, B19)', () => {
       codes.findOpenCode.mockResolvedValue(await openCodeFor('123456'));
       codes.completeChange.mockResolvedValue('code-used');
 
-      await expect(service.confirmChange(USER_ID, '123456')).rejects.toBeInstanceOf(UnprocessableEntityException);
+      await expect(service.confirmChange(USER_ID, '123456')).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
       expect(mail.messages()).toEqual([]);
     });
   });

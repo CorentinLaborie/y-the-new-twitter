@@ -23,7 +23,13 @@ type Repository = jest.Mocked<
 
 type Users = jest.Mocked<Pick<UsersRepository, 'lockActiveAccount'>>;
 
-const VIEWER: SessionUser = { id: 'user-1', handle: 'alice', displayName: 'Alice', role: 'user', status: 'active' };
+const VIEWER: SessionUser = {
+  id: 'user-1',
+  handle: 'alice',
+  displayName: 'Alice',
+  role: 'user',
+  status: 'active',
+};
 const QUESTION_ID = '0f8c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f';
 
 describe('counterChange (B3, B4)', () => {
@@ -50,9 +56,13 @@ describe('ReactionsService (B3, B5)', () => {
     repository = {
       lockQuestion: jest.fn().mockResolvedValue(undefined),
       findVisibleQuestion: jest.fn().mockResolvedValue({ id: QUESTION_ID }),
-      findQuestionCounters: jest
-        .fn()
-        .mockResolvedValue({ authorId: 'author-1', likeCount: 3, dislikeCount: 1, yCount: 49, conversationOpenedAt: null }),
+      findQuestionCounters: jest.fn().mockResolvedValue({
+        authorId: 'author-1',
+        likeCount: 3,
+        dislikeCount: 1,
+        yCount: 49,
+        conversationOpenedAt: null,
+      }),
       findQuestionReaction: jest.fn().mockResolvedValue(null),
       setQuestionReaction: jest.fn().mockResolvedValue(undefined),
       removeQuestionReaction: jest.fn().mockResolvedValue(undefined),
@@ -95,7 +105,11 @@ describe('ReactionsService (B3, B5)', () => {
 
     expect(repository.lockQuestion).toHaveBeenCalledWith('tx', QUESTION_ID);
     expect(repository.setQuestionReaction).toHaveBeenCalledWith('tx', 'user-1', QUESTION_ID, 'y');
-    expect(repository.changeQuestionCounters).toHaveBeenCalledWith('tx', QUESTION_ID, { like: 0, dislike: 0, y: 1 });
+    expect(repository.changeQuestionCounters).toHaveBeenCalledWith('tx', QUESTION_ID, {
+      like: 0,
+      dislike: 0,
+      y: 1,
+    });
     expect(response).toEqual({
       questionId: QUESTION_ID,
       counters: { like: 3, dislike: 1, y: 49 },
@@ -106,7 +120,12 @@ describe('ReactionsService (B3, B5)', () => {
   });
 
   it('opens the conversation once, when the Y count reaches the threshold (R3)', async () => {
-    repository.findQuestionCounters.mockResolvedValue({ likeCount: 0, dislikeCount: 0, yCount: 50, conversationOpenedAt: null } as never);
+    repository.findQuestionCounters.mockResolvedValue({
+      likeCount: 0,
+      dislikeCount: 0,
+      yCount: 50,
+      conversationOpenedAt: null,
+    } as never);
 
     const response = await service.set(VIEWER, QUESTION_ID, 'y');
 
@@ -144,7 +163,7 @@ describe('ReactionsService (B3, B5)', () => {
     expect(repository.writeConversationOpened).not.toHaveBeenCalled();
   });
 
-  it('writes no notice when the author\'s own Y opens the conversation (no notification for an own action)', async () => {
+  it("writes no notice when the author's own Y opens the conversation (no notification for an own action)", async () => {
     repository.findQuestionCounters.mockResolvedValue({
       authorId: VIEWER.id,
       likeCount: 0,
@@ -180,7 +199,11 @@ describe('ReactionsService (B3, B5)', () => {
 
     await service.set(VIEWER, QUESTION_ID, 'dislike');
 
-    expect(repository.changeQuestionCounters).toHaveBeenCalledWith('tx', QUESTION_ID, { like: -1, dislike: 1, y: 0 });
+    expect(repository.changeQuestionCounters).toHaveBeenCalledWith('tx', QUESTION_ID, {
+      like: -1,
+      dislike: 1,
+      y: 0,
+    });
   });
 
   it('changes nothing when the viewer repeats the same kind', async () => {
@@ -208,6 +231,10 @@ describe('ReactionsService (B3, B5)', () => {
 
     await service.remove(VIEWER, QUESTION_ID, 'like');
     expect(repository.removeQuestionReaction).toHaveBeenCalledWith('tx', 'user-1', QUESTION_ID);
-    expect(repository.changeQuestionCounters).toHaveBeenCalledWith('tx', QUESTION_ID, { like: -1, dislike: 0, y: 0 });
+    expect(repository.changeQuestionCounters).toHaveBeenCalledWith('tx', QUESTION_ID, {
+      like: -1,
+      dislike: 0,
+      y: 0,
+    });
   });
 });

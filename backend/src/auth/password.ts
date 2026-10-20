@@ -1,4 +1,4 @@
-import { argon2id, hash, type HashOptions, verify } from "argon2";
+import { argon2id, hash, type HashOptions, verify } from 'argon2';
 
 const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
@@ -29,10 +29,7 @@ export function hashPassword(password: string): Promise<string> {
 }
 
 /** Never throws on a malformed stored hash: that is a refusal, not a server error. */
-export async function verifyPassword(
-  storedHash: string,
-  password: string,
-): Promise<boolean> {
+export async function verifyPassword(storedHash: string, password: string): Promise<boolean> {
   try {
     return await verify(storedHash, password);
   } catch {

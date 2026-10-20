@@ -1,24 +1,24 @@
 /** Handles that cannot be chosen (product doc section 9.1). Compared case-insensitively. */
 const RESERVED_HANDLES: readonly string[] = [
-  "me",
-  "admin",
-  "api",
-  "login",
-  "signup",
-  "settings",
-  "explore",
-  "home",
-  "messages",
-  "notifications",
-  "bookmarks",
-  "hashtags",
-  "suggestions",
-  "support",
-  "y",
+  'me',
+  'admin',
+  'api',
+  'login',
+  'signup',
+  'settings',
+  'explore',
+  'home',
+  'messages',
+  'notifications',
+  'bookmarks',
+  'hashtags',
+  'suggestions',
+  'support',
+  'y',
 ];
 
 /** Version of the terms of use accepted at signup (DEC-062). */
-export const CURRENT_TERMS_VERSION = "1.0";
+export const CURRENT_TERMS_VERSION = '1.0';
 
 export const MINIMUM_AGE = 18;
 
@@ -31,7 +31,7 @@ export function isReservedHandle(handle: string): boolean {
 
 /** Returns the stored form of a phone number, or null when it does not match the French format. */
 export function normalisePhone(phone: string): string | null {
-  const compact = phone.replace(/[\s.-]/g, "");
+  const compact = phone.replace(/[\s.-]/g, '');
   const match = PHONE_PATTERN.exec(compact);
   return match ? `0${match[1]}` : null;
 }
@@ -39,11 +39,7 @@ export function normalisePhone(phone: string): string | null {
 /** True when the birth date is at least MINIMUM_AGE years before `today` (R7). */
 export function isOldEnough(birthDate: Date, today: Date): boolean {
   const limit = new Date(
-    Date.UTC(
-      today.getUTCFullYear() - MINIMUM_AGE,
-      today.getUTCMonth(),
-      today.getUTCDate(),
-    ),
+    Date.UTC(today.getUTCFullYear() - MINIMUM_AGE, today.getUTCMonth(), today.getUTCDate()),
   );
   return birthDate.getTime() <= limit.getTime();
 }

@@ -78,13 +78,17 @@ describe('PostgresRateLimitStorage (section 9.4, DEC-194)', () => {
     expect(statement.values[0]).toBe('login:203.0.113.7');
     expect(statement.values.slice(1)).toEqual([WINDOW_MS, WINDOW_MS, WINDOW_MS]);
     expect(statement.sql).toContain('ON CONFLICT ("key") DO UPDATE');
-    expect(statement.sql).toMatch(/"window_start" \+ \(\?::bigint \* interval '1 millisecond'\) <= now\(\) THEN now\(\)/);
+    expect(statement.sql).toMatch(
+      /"window_start" \+ \(\?::bigint \* interval '1 millisecond'\) <= now\(\) THEN now\(\)/,
+    );
     expect(statement.sql).toMatch(/THEN 1\s+ELSE "rate_limit_counters"\."hits" \+ 1/);
   });
 
   it('lets a database error reach the caller', async () => {
     queryRaw.mockRejectedValue(new Error('database unavailable'));
 
-    await expect(storage.increment('login:203.0.113.7', WINDOW_MS, 20)).rejects.toThrow('database unavailable');
+    await expect(storage.increment('login:203.0.113.7', WINDOW_MS, 20)).rejects.toThrow(
+      'database unavailable',
+    );
   });
 });

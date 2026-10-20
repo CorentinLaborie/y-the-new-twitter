@@ -19,9 +19,7 @@ export function generateBackupCodes(count = BACKUP_CODE_COUNT): string[] {
 
 /** HMAC-SHA-256 (hex) of the normalised code, keyed with the UTF-8 bytes of key. */
 export function hashBackupCode(code: string, key: string): string {
-  return createHmac('sha256', Buffer.from(key, 'utf8'))
-    .update(normalise(code), 'utf8')
-    .digest('hex');
+  return createHmac('sha256', Buffer.from(key, 'utf8')).update(normalise(code), 'utf8').digest('hex');
 }
 
 /** True when the input has the shape of a backup code, so it can be told apart from a TOTP code. */

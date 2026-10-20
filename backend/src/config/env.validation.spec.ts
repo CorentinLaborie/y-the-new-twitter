@@ -29,7 +29,9 @@ describe('validateEnvironment', () => {
   });
 
   it('fails at startup when a secret is missing, and names only the key', () => {
-    expect(() => validateEnvironment(without('AUDIT_HMAC_KEY'))).toThrow('Invalid configuration: AUDIT_HMAC_KEY');
+    expect(() => validateEnvironment(without('AUDIT_HMAC_KEY'))).toThrow(
+      'Invalid configuration: AUDIT_HMAC_KEY',
+    );
   });
 
   it('fails at startup when the TOTP encryption key of the back-office is missing', () => {
@@ -61,14 +63,22 @@ describe('validateEnvironment', () => {
     });
 
     it('fails at startup in production when the sender address is missing or not an e-mail address', () => {
-      expect(() => validateEnvironment({ ...production, MAIL_FROM_ADDRESS: '' })).toThrow('MAIL_FROM_ADDRESS');
-      expect(() => validateEnvironment({ ...production, MAIL_FROM_ADDRESS: 'y-app@' })).toThrow('MAIL_FROM_ADDRESS');
+      expect(() => validateEnvironment({ ...production, MAIL_FROM_ADDRESS: '' })).toThrow(
+        'MAIL_FROM_ADDRESS',
+      );
+      expect(() => validateEnvironment({ ...production, MAIL_FROM_ADDRESS: 'y-app@' })).toThrow(
+        'MAIL_FROM_ADDRESS',
+      );
     });
 
     it('never prints the key in the error', () => {
       const error = (() => {
         try {
-          validateEnvironment({ ...production, MAIL_FROM_ADDRESS: 'pas-une-adresse', BREVO_API_KEY: 'sk-secret-42' });
+          validateEnvironment({
+            ...production,
+            MAIL_FROM_ADDRESS: 'pas-une-adresse',
+            BREVO_API_KEY: 'sk-secret-42',
+          });
         } catch (caught) {
           return caught as Error;
         }

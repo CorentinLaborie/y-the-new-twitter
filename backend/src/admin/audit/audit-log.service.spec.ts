@@ -43,7 +43,10 @@ describe('AuditLogService', () => {
       pageOldestFirst: jest.fn(async () => rows),
     };
     const config = { getOrThrow: jest.fn(() => KEY) };
-    service = new AuditLogService(config as unknown as ConfigService, repository as unknown as AuditLogRepository);
+    service = new AuditLogService(
+      config as unknown as ConfigService,
+      repository as unknown as AuditLogRepository,
+    );
   });
 
   afterEach(() => {
@@ -88,7 +91,11 @@ describe('AuditLogService', () => {
   });
 
   it('lists one page newest first, with a cursor that leads to the next page', async () => {
-    const page = [0, 1, 2].map((index) => ({ ...rows[0], id: `00000000-0000-4000-8000-00000000000${index}`, createdAt: new Date(index) })) as AuditRow[];
+    const page = [0, 1, 2].map((index) => ({
+      ...rows[0],
+      id: `00000000-0000-4000-8000-00000000000${index}`,
+      createdAt: new Date(index),
+    })) as AuditRow[];
     repository.page.mockResolvedValueOnce(page);
 
     const first = await service.list({ limit: 2 });
@@ -128,7 +135,9 @@ describe('AuditLogService', () => {
   });
 
   it('refuses a cursor that is not one of its own, including a malformed id', async () => {
-    const malformed = Buffer.from(JSON.stringify({ t: '2026-10-20T12:00:00.000Z', i: 'not-a-uuid' })).toString('base64url');
+    const malformed = Buffer.from(
+      JSON.stringify({ t: '2026-10-20T12:00:00.000Z', i: 'not-a-uuid' }),
+    ).toString('base64url');
 
     await expect(service.list({ limit: 2, cursor: 'garbage' })).rejects.toThrow(BadRequestException);
     await expect(service.list({ limit: 2, cursor: malformed })).rejects.toThrow(BadRequestException);

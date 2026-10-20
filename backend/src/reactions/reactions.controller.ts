@@ -27,7 +27,10 @@ export class ReactionsController {
   @ApiOkResponse({ description: 'The counters after the reaction.', type: ReactionResponseDto })
   @problemDetailsResponse(400, 'The question id is not a UUID, or the kind is not like, dislike or y.')
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(403, 'The account is not active (suspended, pending verification or pending deletion).')
+  @problemDetailsResponse(
+    403,
+    'The account is not active (suspended, pending verification or pending deletion).',
+  )
   @problemDetailsResponse(404, 'The question does not exist, or it is hidden or deleted.')
   @problemDetailsResponse(429, 'Too many requests.')
   set(
@@ -44,7 +47,10 @@ export class ReactionsController {
   @ApiNoContentResponse({ description: 'The reaction of this kind was removed, or there was none.' })
   @problemDetailsResponse(400, 'The question id is not a UUID, or the kind is not like, dislike or y.')
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(403, 'The account is not active (suspended, pending verification or pending deletion).')
+  @problemDetailsResponse(
+    403,
+    'The account is not active (suspended, pending verification or pending deletion).',
+  )
   @problemDetailsResponse(404, 'The question does not exist, or it is hidden, deleted or blocked.')
   @problemDetailsResponse(429, 'Too many requests.')
   remove(

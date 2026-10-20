@@ -1,9 +1,4 @@
-import {
-  BACKUP_CODE_COUNT,
-  generateBackupCodes,
-  hashBackupCode,
-  isBackupCodeInput,
-} from './backup-codes';
+import { BACKUP_CODE_COUNT, generateBackupCodes, hashBackupCode, isBackupCodeInput } from './backup-codes';
 
 const KEY = 'test-pepper';
 

@@ -17,6 +17,10 @@ export class ReplyReactionResponseDto {
   @ApiProperty({ type: () => ReplyReactionCountsDto })
   readonly counts!: ReplyReactionCountsDto;
 
-  @ApiProperty({ enum: Object.values(ReplyReactionKind), isArray: true, description: 'Empty when the viewer has none.' })
+  @ApiProperty({
+    enum: Object.values(ReplyReactionKind),
+    isArray: true,
+    description: 'Empty when the viewer has none.',
+  })
   readonly viewerReactions!: readonly ReplyReactionKind[];
 }

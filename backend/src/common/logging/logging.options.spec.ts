@@ -6,11 +6,14 @@ describe('Log redaction (B23)', () => {
   function logLines(write: (logger: pino.Logger) => void): string {
     const lines: string[] = [];
     const { redact } = loggingOptions.pinoHttp as pino.LoggerOptions;
-    const logger = pino({ redact }, {
-      write: (line: string) => {
-        lines.push(line);
+    const logger = pino(
+      { redact },
+      {
+        write: (line: string) => {
+          lines.push(line);
+        },
       },
-    });
+    );
     write(logger);
     return lines.join('');
   }

@@ -215,7 +215,12 @@ describe('LoginService', () => {
 
     await service.recordFailure(account(), { ipHash: 'hash', userAgent: null });
 
-    expect(attempts.recordEvent).toHaveBeenCalledWith({ userId: 'user-1', result: 'failure', ipHash: 'hash', userAgent: null });
+    expect(attempts.recordEvent).toHaveBeenCalledWith({
+      userId: 'user-1',
+      result: 'failure',
+      ipHash: 'hash',
+      userAgent: null,
+    });
     expect(attempts.countFailure).toHaveBeenCalledWith('user-1');
     const lockedUntil = attempts.lockUntil.mock.calls[0][1] as Date;
     expect(lockedUntil.getTime()).toBeGreaterThanOrEqual(before + LOCK_DURATION_MS);

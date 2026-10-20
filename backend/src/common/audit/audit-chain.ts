@@ -87,7 +87,11 @@ function sortKeys(value: unknown): unknown {
   }
 
   const record = value as Record<string, unknown>;
-  return Object.fromEntries(Object.keys(record).sort().map((key) => [key, sortKeys(record[key])]));
+  return Object.fromEntries(
+    Object.keys(record)
+      .sort()
+      .map((key) => [key, sortKeys(record[key])]),
+  );
 }
 
 function isPlainObject(value: object): boolean {

@@ -11,7 +11,12 @@ const SEED_PASSWORD_HASH = 'seed-placeholder-not-a-password-hash';
 const SEED_TERMS_VERSION = '1.0';
 
 const USERS = [
-  { id: '00000000-0000-4000-8000-000000000001', handle: 'demo_alice', displayName: 'Alice Démo', bio: 'Compte fictif.' },
+  {
+    id: '00000000-0000-4000-8000-000000000001',
+    handle: 'demo_alice',
+    displayName: 'Alice Démo',
+    bio: 'Compte fictif.',
+  },
   { id: '00000000-0000-4000-8000-000000000002', handle: 'demo_bruno', displayName: 'Bruno Démo', bio: null },
   { id: '00000000-0000-4000-8000-000000000003', handle: 'demo_chloe', displayName: 'Chloé Démo', bio: null },
 ] as const;

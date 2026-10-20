@@ -34,7 +34,10 @@ describe('E-mail change (e2e, B18 and B19)', () => {
     if (csrf === undefined) {
       const response = await agent.get('/api/v1/status').expect(200);
       const cookies = response.headers['set-cookie'] as unknown as string[];
-      csrf = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+      csrf = cookies
+        .find((value) => value.startsWith('y_csrf='))!
+        .split(';')[0]
+        .split('=')[1];
     }
 
     return csrf;
@@ -121,7 +124,9 @@ describe('E-mail change (e2e, B18 and B19)', () => {
 
       expect(response.text).toBe('');
       expect(mail.messages().map((message) => message.to)).toEqual([newEmail]);
-      const stored = await sql(`SELECT new_email, code_hash FROM email_change_codes WHERE user_id = '${user.id}';`);
+      const stored = await sql(
+        `SELECT new_email, code_hash FROM email_change_codes WHERE user_id = '${user.id}';`,
+      );
       expect(stored).toContain(newEmail);
       expect(stored).toContain('$argon2id$');
       expect(stored).not.toContain(codeSentTo(newEmail));
@@ -166,8 +171,14 @@ describe('E-mail change (e2e, B18 and B19)', () => {
 
       expect(response.text).toBe('');
       expect(await sql(`SELECT email FROM users WHERE id = '${user.id}';`)).toBe(newEmail.toLowerCase());
-      expect(await sql(`SELECT count(*) FROM email_change_codes WHERE user_id = '${user.id}' AND consumed_at IS NOT NULL;`)).toBe('1');
-      const changed = mail.messages().filter((message) => message.subject === 'Votre adresse e-mail Y a été modifiée');
+      expect(
+        await sql(
+          `SELECT count(*) FROM email_change_codes WHERE user_id = '${user.id}' AND consumed_at IS NOT NULL;`,
+        ),
+      ).toBe('1');
+      const changed = mail
+        .messages()
+        .filter((message) => message.subject === 'Votre adresse e-mail Y a été modifiée');
       expect(changed).toHaveLength(1);
       expect(changed[0].to).toBe(user.email);
       expect(changed[0].text).not.toContain(code);

@@ -64,6 +64,8 @@ import { SupportModule } from './support/support.module';
 export class AppModule implements NestModule {
   /** Helmet and the session run as Nest middleware (DEC-213): their errors are answered as Problem Details. */
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(HelmetMiddleware, SessionMiddleware).forRoutes({ path: '*splat', method: RequestMethod.ALL });
+    consumer
+      .apply(HelmetMiddleware, SessionMiddleware)
+      .forRoutes({ path: '*splat', method: RequestMethod.ALL });
   }
 }

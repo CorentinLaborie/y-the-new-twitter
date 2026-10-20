@@ -36,7 +36,10 @@ describe('Auth rate limits (e2e, section 9.4)', () => {
     agent = request.agent(app.getHttpServer());
     const status = await agent.get('/api/v1/status').expect(200);
     const cookies = status.headers['set-cookie'] as unknown as string[];
-    csrf = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+    csrf = cookies
+      .find((value) => value.startsWith('y_csrf='))!
+      .split(';')[0]
+      .split('=')[1];
   }, 180_000);
 
   afterAll(async () => {

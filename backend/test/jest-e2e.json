@@ -1,19 +1,12 @@
 {
-  "moduleFileExtensions": [
-    "js",
-    "json",
-    "ts"
-  ],
+  "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "..",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.ts$": "ts-jest"
   },
-  "setupFiles": [
-    "reflect-metadata",
-    "<rootDir>/test/setup-env.ts"
-  ],
+  "setupFiles": ["reflect-metadata", "<rootDir>/test/setup-env.ts"],
   "maxWorkers": 2,
   "testTimeout": 30000
 }

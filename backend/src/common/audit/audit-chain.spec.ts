@@ -91,7 +91,9 @@ describe('audit chain (reference test vector)', () => {
     for (const value of refused) {
       const entry = { ...firstEntry, details: { after: { value } } } as unknown as AuditEntry;
 
-      expect(() => auditMessage(entry)).toThrow('Audit details accept only strings, booleans, null, safe integers and objects.');
+      expect(() => auditMessage(entry)).toThrow(
+        'Audit details accept only strings, booleans, null, safe integers and objects.',
+      );
     }
   });
 });

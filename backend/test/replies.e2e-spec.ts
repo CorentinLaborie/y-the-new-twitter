@@ -72,13 +72,18 @@ describe('Replies and reply reactions (e2e, M3 B3 to B7)', () => {
     const agent = request.agent(app.getHttpServer());
     const response = await agent.get('/api/v1/status').expect(200);
     const cookies = response.headers['set-cookie'] as unknown as string[];
-    const token = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0].split('=')[1];
+    const token = cookies
+      .find((value) => value.startsWith('y_csrf='))!
+      .split(';')[0]
+      .split('=')[1];
     await agent.post(`/api/v1/session-probe/login/${userId}`).set('x-csrf-token', token).expect(201);
     return { userId, agent, token };
   }
 
   function postReply(client: Client, questionId: string, text: string, key?: string) {
-    const call = client.agent.post(`/api/v1/questions/${questionId}/replies`).set('x-csrf-token', client.token);
+    const call = client.agent
+      .post(`/api/v1/questions/${questionId}/replies`)
+      .set('x-csrf-token', client.token);
     return (key === undefined ? call : call.set('idempotency-key', key)).send({ text });
   }
 
@@ -87,7 +92,9 @@ describe('Replies and reply reactions (e2e, M3 B3 to B7)', () => {
   }
 
   function removeReaction(client: Client, replyId: string, kind: ReplyKind) {
-    return client.agent.delete(`/api/v1/replies/${replyId}/reactions/${kind}`).set('x-csrf-token', client.token);
+    return client.agent
+      .delete(`/api/v1/replies/${replyId}/reactions/${kind}`)
+      .set('x-csrf-token', client.token);
   }
 
   function counters(replyId: string): Promise<string> {
@@ -204,13 +211,19 @@ describe('Replies and reply reactions (e2e, M3 B3 to B7)', () => {
 
     const first = await viewer.agent.get(`/api/v1/questions/${question}/replies?limit=2`).expect(200);
     const second = await viewer.agent
-      .get(`/api/v1/questions/${question}/replies?limit=2&cursor=${encodeURIComponent(first.body.nextCursor)}`)
+      .get(
+        `/api/v1/questions/${question}/replies?limit=2&cursor=${encodeURIComponent(first.body.nextCursor)}`,
+      )
       .expect(200);
     const third = await viewer.agent
-      .get(`/api/v1/questions/${question}/replies?limit=2&cursor=${encodeURIComponent(second.body.nextCursor)}`)
+      .get(
+        `/api/v1/questions/${question}/replies?limit=2&cursor=${encodeURIComponent(second.body.nextCursor)}`,
+      )
       .expect(200);
 
-    const texts = [...first.body.items, ...second.body.items, ...third.body.items].map((reply: { text: string }) => reply.text);
+    const texts = [...first.body.items, ...second.body.items, ...third.body.items].map(
+      (reply: { text: string }) => reply.text,
+    );
     expect(texts).toEqual(['Réponse 1', 'Réponse 2', 'Réponse 3', 'Réponse 4', 'Réponse 5']);
     expect(third.body.nextCursor).toBeNull();
   });
@@ -221,8 +234,14 @@ describe('Replies and reply reactions (e2e, M3 B3 to B7)', () => {
     const replier = await clientFor(await createUser());
     const created = await postReply(replier, question, 'À supprimer').expect(201);
 
-    await replier.agent.delete(`/api/v1/replies/${created.body.id}`).set('x-csrf-token', replier.token).expect(204);
-    await replier.agent.delete(`/api/v1/replies/${created.body.id}`).set('x-csrf-token', replier.token).expect(404);
+    await replier.agent
+      .delete(`/api/v1/replies/${created.body.id}`)
+      .set('x-csrf-token', replier.token)
+      .expect(204);
+    await replier.agent
+      .delete(`/api/v1/replies/${created.body.id}`)
+      .set('x-csrf-token', replier.token)
+      .expect(404);
 
     const page = await replier.agent.get(`/api/v1/questions/${question}/replies`).expect(200);
     expect(page.body.items).toEqual([]);
@@ -236,7 +255,10 @@ describe('Replies and reply reactions (e2e, M3 B3 to B7)', () => {
     const other = await clientFor(await createUser());
     const created = await postReply(replier, question, 'Pas à toi').expect(201);
 
-    await other.agent.delete(`/api/v1/replies/${created.body.id}`).set('x-csrf-token', other.token).expect(404);
+    await other.agent
+      .delete(`/api/v1/replies/${created.body.id}`)
+      .set('x-csrf-token', other.token)
+      .expect(404);
 
     expect(await sql(`SELECT deleted_at IS NULL FROM replies WHERE id = '${created.body.id}';`)).toBe('t');
   });

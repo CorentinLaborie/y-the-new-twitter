@@ -1,4 +1,10 @@
-import { ArgumentsHost, BadRequestException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  BadRequestException,
+  ForbiddenException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ProblemDetailsFilter } from './problem-details.filter';
 
 function hostFor(originalUrl: string) {
@@ -42,16 +48,25 @@ describe('ProblemDetailsFilter', () => {
 
     filter.catch(new BadRequestException(['a must be a string', 'b is unknown']), host);
 
-    expect(json).toHaveBeenCalledWith(expect.objectContaining({ status: 400, detail: 'a must be a string; b is unknown' }));
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 400, detail: 'a must be a string; b is unknown' }),
+    );
   });
 
   it('adds the stable code of a refusal that carries one, and keeps the French detail', () => {
     const { host, json } = hostFor('/api/v1/questions');
 
-    filter.catch(new ForbiddenException({ message: 'Votre compte est suspendu.', code: 'account_suspended' }), host);
+    filter.catch(
+      new ForbiddenException({ message: 'Votre compte est suspendu.', code: 'account_suspended' }),
+      host,
+    );
 
     expect(json).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 403, detail: 'Votre compte est suspendu.', code: 'account_suspended' }),
+      expect.objectContaining({
+        status: 403,
+        detail: 'Votre compte est suspendu.',
+        code: 'account_suspended',
+      }),
     );
   });
 

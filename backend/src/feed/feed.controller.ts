@@ -16,7 +16,10 @@ export class FeedController {
   @ApiOkResponse({ description: 'One page of the feed.', type: FeedPageDto })
   @problemDetailsResponse(400, 'Unknown tab, invalid limit or invalid cursor.')
   @problemDetailsResponse(401, 'Not logged in.')
-  @problemDetailsResponse(403, 'The account is not active (suspended, pending verification or pending deletion).')
+  @problemDetailsResponse(
+    403,
+    'The account is not active (suspended, pending verification or pending deletion).',
+  )
   @problemDetailsResponse(429, 'Too many requests.')
   forYou(@CurrentUser() viewer: SessionUser, @Query() query: FeedQueryDto): Promise<FeedPageDto> {
     return this.feed.forYou(viewer, query);

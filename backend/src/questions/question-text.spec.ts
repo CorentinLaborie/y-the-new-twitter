@@ -9,7 +9,10 @@ describe('Question text (B1, B2)', () => {
 
   describe('extractHashtags', () => {
     it('returns the names without the #, lowercase, in order of first use, each once', () => {
-      expect(extractHashtags('Sujet #Online_Life, puis #irl et #online_life')).toEqual(['online_life', 'irl']);
+      expect(extractHashtags('Sujet #Online_Life, puis #irl et #online_life')).toEqual([
+        'online_life',
+        'irl',
+      ]);
     });
 
     it('returns no hashtag when the text has none', () => {

@@ -15,7 +15,8 @@ describe('Database roles (e2e)', () => {
   const passwords = { app: secret(), maintenance: secret(), backup: secret() };
 
   const asApp = (statement: string) => runAs(container, 'y_app', passwords.app, statement);
-  const asMaintenance = (statement: string) => runAs(container, 'y_maintenance', passwords.maintenance, statement);
+  const asMaintenance = (statement: string) =>
+    runAs(container, 'y_maintenance', passwords.maintenance, statement);
   const asBackup = (statement: string) => runAs(container, 'y_backup', passwords.backup, statement);
 
   beforeAll(async () => {
@@ -118,7 +119,13 @@ describe('Database roles (e2e)', () => {
 
   it('lets the maintenance role delete expired codes and sessions, as the retention purge does', async () => {
     // The purge (src/auth/purge) deletes these tables with the maintenance role, and only these.
-    for (const table of ['signup_codes', 'password_reset_codes', 'email_change_codes', 'sessions', 'idempotency_keys']) {
+    for (const table of [
+      'signup_codes',
+      'password_reset_codes',
+      'email_change_codes',
+      'sessions',
+      'idempotency_keys',
+    ]) {
       const result = await asMaintenance(`DELETE FROM ${table} WHERE expires_at < now();`);
 
       expect(result.stderr).toBe('');

@@ -26,7 +26,11 @@ export class ReplyReactionsService {
   ) {}
 
   /** Adds the viewer's reaction of this kind. Repeating a kind changes nothing. */
-  async set(viewer: SessionUser, replyId: string, kind: ReplyReactionKind): Promise<ReplyReactionResponseDto> {
+  async set(
+    viewer: SessionUser,
+    replyId: string,
+    kind: ReplyReactionKind,
+  ): Promise<ReplyReactionResponseDto> {
     return this.prisma.$transaction(async (tx) => {
       await this.lockVisibleReply(tx, viewer.id, replyId);
       const existing = await this.replies.findReplyReaction(tx, viewer.id, replyId, kind);
@@ -65,7 +69,11 @@ export class ReplyReactionsService {
     }
   }
 
-  private async response(db: RepliesDb, viewerId: string, replyId: string): Promise<ReplyReactionResponseDto> {
+  private async response(
+    db: RepliesDb,
+    viewerId: string,
+    replyId: string,
+  ): Promise<ReplyReactionResponseDto> {
     const reply = await this.replies.findReplyCounters(db, replyId);
     const viewerKinds = await this.replies.findViewerReplyKinds(db, viewerId, replyId);
 

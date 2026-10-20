@@ -18,9 +18,15 @@ const DEFAULT_STATUSES: AccountStatus[] = ['active'];
 
 /** The 403 body of a refused account status: the French message (detail) and its stable code (problem details `code`). */
 const STATUS_REFUSALS: Partial<Record<AccountStatus, { message: string; code: string }>> = {
-  pending_verification: { message: 'Votre adresse e-mail n’est pas encore vérifiée.', code: 'account_pending_verification' },
+  pending_verification: {
+    message: 'Votre adresse e-mail n’est pas encore vérifiée.',
+    code: 'account_pending_verification',
+  },
   suspended: { message: 'Votre compte est suspendu.', code: 'account_suspended' },
-  pending_deletion: { message: 'Votre compte est en attente de suppression.', code: 'account_pending_deletion' },
+  pending_deletion: {
+    message: 'Votre compte est en attente de suppression.',
+    code: 'account_pending_deletion',
+  },
 };
 
 /**
