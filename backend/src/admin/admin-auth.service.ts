@@ -6,6 +6,8 @@ import { UsersRepository } from '../users/users.repository';
 import type { AdminMfaSetup } from './admin-session';
 import { adminSignInMail } from './admin-sign-in-mail';
 import { AdminMfaService, type PendingFactor } from './mfa/admin-mfa.service';
+import { AuditLogService } from './audit/audit-log.service';
+import { AUDIT_ACTIONS, AUDIT_TARGET_TYPES, type AuditResult } from './audit/audit-log.types';
 
 /**
  * What the back-office login answers. 'invalid' and 'unverified' are the same answers as the user login. The other
@@ -32,6 +34,7 @@ export class AdminAuthService {
     private readonly loginService: LoginService,
     private readonly mfa: AdminMfaService,
     private readonly users: UsersRepository,
+    private readonly audit: AuditLogService,
     @Inject(MAIL_SENDER) private readonly mail: MailSender,
   ) {}
 
@@ -54,6 +57,7 @@ export class AdminAuthService {
 
     if (!(await this.mfa.verifyCode(check.account.id, code, now))) {
       await this.loginService.recordFailure(check.account, check.event);
+      await this.record(check.account.id, AUDIT_ACTIONS.adminLogin, 'failed');
       return { status: 'invalid_code' };
     }
 
@@ -62,6 +66,7 @@ export class AdminAuthService {
       return { status: 'invalid' };
     }
 
+    await this.record(check.account.id, AUDIT_ACTIONS.adminLogin, 'ok');
     await this.notifySignIn(check.account.email, now);
     return { status: 'ok', user: completed.user };
   }
@@ -79,6 +84,7 @@ export class AdminAuthService {
   async confirmSetup(userId: string, setup: AdminMfaSetup, code: string, now: Date): Promise<string[] | null> {
     const codes = await this.mfa.confirmSetup(userId, setup.secretEncrypted, code, now);
     if (codes !== null) {
+      await this.record(userId, AUDIT_ACTIONS.mfaEnrol, 'ok');
       const email = await this.users.emailOf(userId);
       if (email !== null) {
         await this.notifySignIn(email, now);
@@ -86,6 +92,22 @@ export class AdminAuthService {
     }
 
     return codes;
+  }
+
+  /**
+   * Writes one back-office action to the audit log. A failed write fails the request: an administrator action is not
+   * done without its trace.
+   */
+  private record(userId: string, action: string, result: AuditResult): Promise<void> {
+    return this.audit.append({
+      actorId: userId,
+      action,
+      result,
+      targetType: AUDIT_TARGET_TYPES.user,
+      targetId: userId,
+      reason: null,
+      details: null,
+    });
   }
 
   /**

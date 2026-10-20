@@ -2,6 +2,8 @@ import { ConflictException, Logger } from '@nestjs/common';
 import type { LoginService } from '../auth/login/login.service';
 import type { MailSender } from '../common/mail/mail-sender';
 import type { UsersRepository } from '../users/users.repository';
+import type { AuditLogService } from './audit/audit-log.service';
+import { AUDIT_ACTIONS } from './audit/audit-log.types';
 import { AdminAuthService } from './admin-auth.service';
 import type { AdminMfaService } from './mfa/admin-mfa.service';
 
@@ -22,6 +24,7 @@ describe('AdminAuthService', () => {
   let loginService: { checkPassword: jest.Mock; completeLogin: jest.Mock; recordFailure: jest.Mock };
   let mfa: { isEnrolled: jest.Mock; verifyCode: jest.Mock; startSetup: jest.Mock; confirmSetup: jest.Mock };
   let users: { emailOf: jest.Mock };
+  let audit: { append: jest.Mock };
   let mail: { send: jest.Mock };
   let service: AdminAuthService;
 
@@ -38,11 +41,13 @@ describe('AdminAuthService', () => {
       confirmSetup: jest.fn().mockResolvedValue(null),
     };
     users = { emailOf: jest.fn().mockResolvedValue(ACCOUNT.email) };
+    audit = { append: jest.fn().mockResolvedValue(undefined) };
     mail = { send: jest.fn().mockResolvedValue(undefined) };
     service = new AdminAuthService(
       loginService as unknown as LoginService,
       mfa as unknown as AdminMfaService,
       users as unknown as UsersRepository,
+      audit as unknown as AuditLogService,
       mail as unknown as MailSender,
     );
   });
@@ -87,6 +92,7 @@ describe('AdminAuthService', () => {
     mfa.verifyCode.mockResolvedValue(false);
 
     await expect(service.login(ATTEMPT, '000000', NOW)).resolves.toEqual({ status: 'invalid_code' });
+    expect(audit.append).toHaveBeenCalledWith(expect.objectContaining({ action: AUDIT_ACTIONS.adminLogin, result: 'failed' }));
     expect(loginService.recordFailure).toHaveBeenCalledWith(ACCOUNT, EVENT);
     expect(loginService.completeLogin).not.toHaveBeenCalled();
   });
@@ -95,6 +101,7 @@ describe('AdminAuthService', () => {
     await expect(service.login(ATTEMPT, '123456', NOW)).resolves.toEqual({ status: 'ok', user: SESSION_USER });
     expect(mfa.verifyCode).toHaveBeenCalledWith('admin-1', '123456', NOW);
     expect(mail.send).toHaveBeenCalledWith(expect.objectContaining({ to: ACCOUNT.email }));
+    expect(audit.append).toHaveBeenCalledWith(expect.objectContaining({ actorId: 'admin-1', action: AUDIT_ACTIONS.adminLogin, result: 'ok' }));
   });
 
   it('still signs in when the alert e-mail cannot be sent, and logs the failure without the address', async () => {
