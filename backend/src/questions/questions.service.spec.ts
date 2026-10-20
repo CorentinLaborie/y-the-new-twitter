@@ -1,24 +1,17 @@
-import { createHash } from 'node:crypto';
 import { BadRequestException, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
+import { IdempotencyRepository } from '../common/idempotency/idempotency.repository';
+import { IdempotencyService, requestHash } from '../common/idempotency/idempotency.service';
 import { Prisma } from '../database/generated/client/client';
 import type { PrismaService } from '../database/prisma.service';
 import type { CreateQuestionDto } from './dto/create-question.dto';
 import { QuestionsRepository } from './questions.repository';
 import { QuestionsService } from './questions.service';
 
-type Repository = jest.Mocked<
-  Pick<
-    QuestionsRepository,
-    | 'createQuestion'
-    | 'findOrCreateHashtags'
-    | 'linkHashtags'
-    | 'findIdempotencyKey'
-    | 'deleteExpiredIdempotencyKey'
-    | 'saveIdempotencyKey'
-  >
->;
+type Repository = jest.Mocked<Pick<QuestionsRepository, 'createQuestion' | 'findOrCreateHashtags' | 'linkHashtags'>>;
+
+type KeyRepository = jest.Mocked<Pick<IdempotencyRepository, 'find' | 'deleteExpired' | 'save'>>;
 
 const AUTHOR: SessionUser = {
   id: 'user-1',
@@ -33,8 +26,8 @@ const LIVE_KEY_EXPIRY = new Date(Date.now() + 60 * 60 * 1000);
 const EXPIRED_KEY_EXPIRY = new Date(Date.now() - 1000);
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** SHA-256 of the text, as the service stores it. */
-const HASH_BONJOUR = createHash('sha256').update('Bonjour').digest('hex');
+/** Fingerprint of the text on POST /questions, as the service stores it (DEC-185). */
+const HASH_BONJOUR = requestHash('POST /questions', 'Bonjour');
 
 function dto(text: string): CreateQuestionDto {
   return { text } as CreateQuestionDto;
@@ -49,6 +42,7 @@ function uniqueViolation(): Error {
 
 describe('QuestionsService (B2, section 9.1)', () => {
   let repository: Repository;
+  let keys: KeyRepository;
   let prisma: { $transaction: jest.Mock };
   let service: QuestionsService;
 
@@ -67,15 +61,19 @@ describe('QuestionsService (B2, section 9.1)', () => {
       })),
       findOrCreateHashtags: jest.fn().mockImplementation(async (_db, names: string[]) => names.map((n) => `id-${n}`)),
       linkHashtags: jest.fn().mockResolvedValue({ count: 0 }),
-      findIdempotencyKey: jest.fn().mockResolvedValue(null),
-      deleteExpiredIdempotencyKey: jest.fn().mockResolvedValue({ count: 0 }),
-      saveIdempotencyKey: jest.fn().mockResolvedValue(undefined),
+    };
+    keys = {
+      find: jest.fn().mockResolvedValue(null),
+      deleteExpired: jest.fn().mockResolvedValue({ count: 0 }),
+      save: jest.fn().mockResolvedValue(undefined),
     };
     prisma = { $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback('tx')) };
     const config = { getOrThrow: jest.fn().mockReturnValue(50) } as unknown as ConfigService;
+    const idempotency = new IdempotencyService(prisma as unknown as PrismaService, keys as unknown as IdempotencyRepository);
     service = new QuestionsService(
       prisma as unknown as PrismaService,
       repository as unknown as QuestionsRepository,
+      idempotency,
       config,
     );
   });
@@ -120,11 +118,11 @@ describe('QuestionsService (B2, section 9.1)', () => {
   });
 
   describe('Idempotency-Key', () => {
-    it('stores the key with the hash of the text and the response, in the question transaction', async () => {
+    it('stores the key with the fingerprint of the text and the response, in the question transaction', async () => {
       await service.create(AUTHOR, dto('Bonjour'), 'key-1');
 
-      expect(repository.findIdempotencyKey).toHaveBeenCalledWith('user-1', 'key-1');
-      expect(repository.saveIdempotencyKey).toHaveBeenCalledWith(
+      expect(keys.find).toHaveBeenCalledWith('user-1', 'key-1');
+      expect(keys.save).toHaveBeenCalledWith(
         'tx',
         expect.objectContaining({ userId: 'user-1', key: 'key-1', requestHash: HASH_BONJOUR }),
       );
@@ -135,14 +133,14 @@ describe('QuestionsService (B2, section 9.1)', () => {
 
       await service.create(AUTHOR, dto('Bonjour'), 'key-1');
 
-      const [, record] = repository.saveIdempotencyKey.mock.calls[0];
+      const [, record] = keys.save.mock.calls[0];
       const lifetime = record.expiresAt.getTime() - before;
       expect(lifetime).toBeGreaterThanOrEqual(DAY_MS);
       expect(lifetime).toBeLessThanOrEqual(DAY_MS + 60_000);
     });
 
     it('treats a key older than 24 hours as absent: the question is created and the key replaced', async () => {
-      repository.findIdempotencyKey.mockResolvedValue({
+      keys.find.mockResolvedValue({
         requestHash: HASH_BONJOUR,
         response: { id: 'question-old' } as unknown as Prisma.JsonValue,
         expiresAt: EXPIRED_KEY_EXPIRY,
@@ -152,16 +150,13 @@ describe('QuestionsService (B2, section 9.1)', () => {
 
       expect(response.id).toBe('question-1');
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-      expect(repository.deleteExpiredIdempotencyKey).toHaveBeenCalledWith('tx', 'user-1', 'key-1', expect.any(Date));
-      expect(repository.saveIdempotencyKey).toHaveBeenCalledWith(
-        'tx',
-        expect.objectContaining({ key: 'key-1', requestHash: HASH_BONJOUR }),
-      );
+      expect(keys.deleteExpired).toHaveBeenCalledWith('tx', 'user-1', 'key-1', expect.any(Date));
+      expect(keys.save).toHaveBeenCalledWith('tx', expect.objectContaining({ key: 'key-1', requestHash: HASH_BONJOUR }));
     });
 
     it('returns the first response, without writing, when the key and the text are the same', async () => {
       const first = { id: 'question-first', text: 'Bonjour' };
-      repository.findIdempotencyKey.mockResolvedValue({
+      keys.find.mockResolvedValue({
         requestHash: HASH_BONJOUR,
         response: first as unknown as Prisma.JsonValue,
         expiresAt: LIVE_KEY_EXPIRY,
@@ -172,21 +167,19 @@ describe('QuestionsService (B2, section 9.1)', () => {
     });
 
     it('refuses the same key with another text (422), without writing', async () => {
-      repository.findIdempotencyKey.mockResolvedValue({
+      keys.find.mockResolvedValue({
         requestHash: HASH_BONJOUR,
         response: {} as Prisma.JsonValue,
         expiresAt: LIVE_KEY_EXPIRY,
       } as never);
 
-      await expect(service.create(AUTHOR, dto('Autre texte'), 'key-1')).rejects.toThrow(
-        UnprocessableEntityException,
-      );
+      await expect(service.create(AUTHOR, dto('Autre texte'), 'key-1')).rejects.toThrow(UnprocessableEntityException);
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
     it('returns the response of a concurrent request that stored the same key first', async () => {
       const winner = { id: 'question-winner', text: 'Bonjour' };
-      repository.findIdempotencyKey
+      keys.find
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ requestHash: HASH_BONJOUR, response: winner, expiresAt: LIVE_KEY_EXPIRY } as never);
       prisma.$transaction.mockRejectedValueOnce(uniqueViolation());

@@ -1,12 +1,7 @@
-import { createHash } from 'node:crypto';
-import {
-  BadRequestException,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { UnprocessableEntityException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { assertIdempotencyKey, IdempotencyService, requestHash } from '../common/idempotency/idempotency.service';
 import type { SessionUser } from '../auth/session/session-user.repository';
-import { Prisma } from '../database/generated/client/client';
 import { PrismaService } from '../database/prisma.service';
 import type { CreateQuestionDto } from './dto/create-question.dto';
 import type { QuestionResponseDto } from './dto/question-response.dto';
@@ -15,11 +10,6 @@ import { toQuestionView } from './question-view';
 import { characterCount, extractHashtags, QUESTION_MAX_LENGTH } from './question-text';
 
 const TEXT_LENGTH_MESSAGE = 'La question doit contenir de 1 à 280 caractères.';
-const KEY_LENGTH_MESSAGE = 'L’en-tête Idempotency-Key doit contenir de 1 à 255 caractères.';
-const KEY_REUSED_MESSAGE = 'Cette clé a déjà été utilisée pour un autre texte.';
-const IDEMPOTENCY_KEY_MAX_LENGTH = 255;
-/** A key is kept 24 hours after its first use, then it is absent (owner decision, 2026-10-20). */
-const IDEMPOTENCY_KEY_LIFETIME_MS = 24 * 60 * 60 * 1000;
 
 /** Question use cases. Only active accounts reach them: the global SessionGuard checks it (R13). */
 @Injectable()
@@ -27,6 +17,7 @@ export class QuestionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly questions: QuestionsRepository,
+    private readonly idempotency: IdempotencyService,
     private readonly config: ConfigService,
   ) {}
 
@@ -45,8 +36,8 @@ export class QuestionsService {
     if (length < 1 || length > QUESTION_MAX_LENGTH) {
       throw new UnprocessableEntityException(TEXT_LENGTH_MESSAGE);
     }
-    if (idempotencyKey !== undefined && !isValidKey(idempotencyKey)) {
-      throw new BadRequestException(KEY_LENGTH_MESSAGE);
+    if (idempotencyKey !== undefined) {
+      assertIdempotencyKey(idempotencyKey);
     }
 
     const hashtags = extractHashtags(dto.text);
@@ -54,38 +45,9 @@ export class QuestionsService {
       return this.prisma.$transaction((tx) => this.insertQuestion(tx, author, dto.text, hashtags));
     }
 
-    const now = new Date();
-    const requestHash = createHash('sha256').update(dto.text).digest('hex');
-    const first = await this.questions.findIdempotencyKey(author.id, idempotencyKey);
-    if (first && first.expiresAt > now) {
-      return replay(first, requestHash);
-    }
-
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        await this.questions.deleteExpiredIdempotencyKey(tx, author.id, idempotencyKey, now);
-        const response = await this.insertQuestion(tx, author, dto.text, hashtags);
-        await this.questions.saveIdempotencyKey(tx, {
-          userId: author.id,
-          key: idempotencyKey,
-          requestHash,
-          response,
-          expiresAt: new Date(now.getTime() + IDEMPOTENCY_KEY_LIFETIME_MS),
-        });
-
-        return response;
-      });
-    } catch (error) {
-      // A concurrent request with the same key was committed first: its response is the first one.
-      const concurrent = isUniqueViolation(error)
-        ? await this.questions.findIdempotencyKey(author.id, idempotencyKey)
-        : null;
-      if (!concurrent) {
-        throw error;
-      }
-
-      return replay(concurrent, requestHash);
-    }
+    return this.idempotency.run(author.id, idempotencyKey, requestHash('POST /questions', dto.text), (tx) =>
+      this.insertQuestion(tx, author, dto.text, hashtags),
+    );
   }
 
   private async insertQuestion(
@@ -108,25 +70,4 @@ export class QuestionsService {
       [],
     );
   }
-}
-
-function isValidKey(key: string): boolean {
-  const length = characterCount(key);
-  return length >= 1 && length <= IDEMPOTENCY_KEY_MAX_LENGTH;
-}
-
-/** The first response of a key, when the text is the same. Another text under the same key is refused. */
-function replay(
-  first: { readonly requestHash: string; readonly response: Prisma.JsonValue },
-  requestHash: string,
-): QuestionResponseDto {
-  if (first.requestHash !== requestHash) {
-    throw new UnprocessableEntityException(KEY_REUSED_MESSAGE);
-  }
-
-  return first.response as unknown as QuestionResponseDto;
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
 }

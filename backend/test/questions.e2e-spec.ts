@@ -172,7 +172,7 @@ describe('Questions (e2e, B2)', () => {
     await postWithKey('Premier texte', 'key-other-text').expect(201);
     const refused = await postWithKey('Autre texte', 'key-other-text').expect(422);
 
-    expect(refused.body.detail).toBe('Cette clé a déjà été utilisée pour un autre texte.');
+    expect(refused.body.detail).toBe('Cette clé a déjà été utilisée pour une autre requête.');
     expect(await sql(`SELECT count(*) FROM questions WHERE author_id = '${author}';`)).toBe('1');
   });
 
