@@ -74,16 +74,15 @@ test('an unverified account is told to enter its code, with a link to the code p
   await expectCodePage(page);
 });
 
-test('a locked account shows the waiting time given by Retry-After', async ({ page }) => {
-  await mockAuthApi(page, {
-    'POST /auth/login': problem(429, 'Trop de tentatives. Réessayez plus tard.', { 'Retry-After': '900' }),
-  });
+test('a locked account gets the same answer as a wrong password, with no waiting time', async ({ page }) => {
+  // After five failed logins the API answers 401, like a wrong password: the page shows no lock message.
+  await mockAuthApi(page, { 'POST /auth/login': problem(401, 'Identifiants incorrects') });
 
   await page.goto('/login');
   await fillLoginAndSubmit(page);
 
-  // 900 seconds: the page must show 15 minutes.
-  await expect(notice(page)).toContainText(/15 min/i);
+  await expect(notice(page)).toContainText('Identifiants incorrects');
+  await expect(notice(page)).not.toContainText(/minute|Réessayez/i);
 });
 
 test('a visitor without session is sent to the login page from the protected zone', async ({ page }) => {

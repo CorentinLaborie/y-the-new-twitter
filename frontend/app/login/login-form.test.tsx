@@ -86,10 +86,15 @@ describe('LoginForm', () => {
     expect(takePendingEmail()).toBe('alex@exemple.fr');
   });
 
-  it('shows how long to wait after too many attempts', async () => {
+  it('shows how long to wait when this address sends too many login attempts', async () => {
     vi.mocked(login).mockResolvedValue({
       ok: false,
-      problem: { status: 429, title: 'Too Many Requests', detail: 'Locked.', retryAfterSeconds: 900 },
+      problem: {
+        status: 429,
+        title: 'Too Many Requests',
+        detail: 'Too many attempts from this address.',
+        retryAfterSeconds: 900,
+      },
     });
     render(<LoginForm />);
 
