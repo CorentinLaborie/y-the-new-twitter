@@ -51,10 +51,16 @@ export interface AuditVerification {
   checked: number;
 }
 
+/** The object an entry is about: its target type and its id (DEC-085). */
+export interface AuditTarget {
+  targetType: string;
+  targetId: string;
+}
+
 export interface AuditListOptions {
   /** The cursor of the previous page, as returned by the service. Absent on the first page. */
   cursor?: string;
-  /** Between 1 and 100. */
+  /** Between 1 and 50. */
   limit: number;
   /** Only the entries of this action. Absent: all actions. */
   action?: string;

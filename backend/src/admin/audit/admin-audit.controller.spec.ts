@@ -53,15 +53,19 @@ describe('AdminAuditController', () => {
     expect(result).toBe(verification);
   });
 
-  it('defaults the limit to 50 when it is absent', async () => {
+  it('defaults the limit to 20 when it is absent', async () => {
     const query = plainToInstance(AuditListQueryDto, {});
 
     expect(await validate(query)).toHaveLength(0);
-    expect(query.limit).toBe(50);
+    expect(query.limit).toBe(20);
   });
 
-  it('refuses a limit of 101 and an unknown action, and accepts a known action', async () => {
-    expect(await queryErrors({ limit: 101 })).toEqual(['limit']);
+  it('accepts a limit of 50, the maximum', async () => {
+    expect(await queryErrors({ limit: 50 })).toEqual([]);
+  });
+
+  it('refuses a limit of 51 and an unknown action, and accepts a known action', async () => {
+    expect(await queryErrors({ limit: 51 })).toEqual(['limit']);
     expect(await queryErrors({ action: 'auth.unknown' })).toEqual(['action']);
     expect(await queryErrors({ action: 'auth.admin_login' })).toEqual([]);
   });

@@ -1,12 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { AuditEntry, auditHmac, verifyAuditChain } from '../../common/audit/audit-chain';
+import { decodeKeysetCursor, encodeKeysetCursor } from '../../common/pagination/keyset-cursor';
 import { AuditLogRepository, AuditRow, type AuditPosition } from './audit-log.repository';
 import type {
   AuditEntryView,
   AuditListOptions,
   AuditPage,
+  AuditTarget,
   AuditVerification,
   NewAuditEntry,
 } from './audit-log.types';
@@ -62,7 +64,7 @@ export class AuditLogService {
 
   /** One page of the listing, newest first, optionally of one action. The cursor is opaque. */
   async list(options: AuditListOptions): Promise<AuditPage> {
-    const after = options.cursor === undefined ? undefined : decodeCursor(options.cursor);
+    const after = options.cursor === undefined ? undefined : decodeKeysetCursor(options.cursor);
     const rows = await this.repository.page({ after, limit: options.limit + 1, action: options.action });
 
     const pageRows = rows.slice(0, options.limit);
@@ -70,8 +72,14 @@ export class AuditLogService {
 
     return {
       items: pageRows.map(toView),
-      nextCursor: hasMore ? encodeCursor(pageRows[pageRows.length - 1]) : null,
+      nextCursor: hasMore ? encodeKeysetCursor(positionOf(pageRows[pageRows.length - 1])) : null,
     };
+  }
+
+  /** The most recent entries about one target, newest first. Used by the account view (section 3.3). */
+  async recentForTarget(target: AuditTarget, limit: number): Promise<AuditEntryView[]> {
+    const rows = await this.repository.page({ limit, target });
+    return rows.map(toView);
   }
 
   /** Checks the whole chain from the oldest kept entry (DEC-063). Rows removed by the purge are not reported. */
@@ -123,34 +131,4 @@ function toView(row: AuditRow): AuditEntryView {
 
 function positionOf(row: AuditRow): AuditPosition {
   return { createdAt: row.createdAt, id: row.id };
-}
-
-/** The cursor is the position of the last row of the page, in base64url JSON. */
-function encodeCursor(row: AuditRow): string {
-  return Buffer.from(JSON.stringify({ t: row.createdAt.toISOString(), i: row.id }), 'utf8').toString(
-    'base64url',
-  );
-}
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function decodeCursor(cursor: string): AuditPosition {
-  try {
-    const value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as {
-      t?: unknown;
-      i?: unknown;
-    };
-    if (
-      typeof value.t === 'string' &&
-      typeof value.i === 'string' &&
-      UUID_PATTERN.test(value.i) &&
-      !Number.isNaN(Date.parse(value.t))
-    ) {
-      return { createdAt: new Date(value.t), id: value.i };
-    }
-  } catch {
-    // Handled below: any value that is not a valid cursor is refused the same way.
-  }
-
-  throw new BadRequestException('Curseur invalide.');
 }

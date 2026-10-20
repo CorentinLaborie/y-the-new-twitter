@@ -8,11 +8,22 @@ import { AuditLogRepository } from './audit/audit-log.repository';
 import { AuditLogService } from './audit/audit-log.service';
 import { AdminMfaRepository } from './mfa/admin-mfa.repository';
 import { AdminMfaService } from './mfa/admin-mfa.service';
+import { AdminUsersController } from './users/admin-users.controller';
+import { AdminUsersRepository } from './users/admin-users.repository';
+import { AdminUsersService } from './users/admin-users.service';
 
 /** The back-office (DEC-036, DEC-037): the sign-in, the second factor and the admin guard. */
 @Module({
   imports: [AuthModule, UsersModule],
-  controllers: [AdminAuthController, AdminAuditController],
-  providers: [AdminAuthService, AdminMfaService, AdminMfaRepository, AuditLogService, AuditLogRepository],
+  controllers: [AdminAuthController, AdminAuditController, AdminUsersController],
+  providers: [
+    AdminAuthService,
+    AdminMfaService,
+    AdminMfaRepository,
+    AuditLogService,
+    AuditLogRepository,
+    AdminUsersService,
+    AdminUsersRepository,
+  ],
 })
 export class AdminModule {}

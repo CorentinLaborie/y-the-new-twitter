@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import type { KeysetPosition } from '../../common/pagination/keyset-cursor';
 import { Prisma } from '../../database/generated/client/client';
 import { PrismaService } from '../../database/prisma.service';
+import type { AuditTarget } from './audit-log.types';
 
 /**
  * One fixed key for the whole table (DEC-063, DEC-070). Taken with pg_advisory_xact_lock, it is released when the
@@ -26,10 +28,7 @@ export interface AuditRow {
 }
 
 /** The position after which a keyset page starts (createdAt, then id: the chain order, DEC-127). */
-export interface AuditPosition {
-  createdAt: Date;
-  id: string;
-}
+export type AuditPosition = KeysetPosition;
 
 /**
  * The only access to admin_audit_log. The table is append-only for the application account (DEC-129): this class
@@ -58,11 +57,19 @@ export class AuditLogRepository {
     });
   }
 
-  /** A page of entries, newest first, optionally of one action, strictly after `after` when it is given. */
-  page(options: { after?: AuditPosition; limit: number; action?: string }): Promise<AuditRow[]> {
+  /**
+   * A page of entries, newest first, optionally of one action or one target, strictly after `after` when it is given.
+   */
+  page(options: {
+    after?: AuditPosition;
+    limit: number;
+    action?: string;
+    target?: AuditTarget;
+  }): Promise<AuditRow[]> {
     return this.prisma.adminAuditLog.findMany({
       where: {
         ...(options.action === undefined ? {} : { action: options.action }),
+        ...(options.target === undefined ? {} : options.target),
         ...(options.after === undefined ? {} : olderThan(options.after)),
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
