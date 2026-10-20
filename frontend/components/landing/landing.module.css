@@ -1,0 +1,780 @@
+/*
+ * Visitor landing, from the boards in design/canvas-build/project: Landing-Mobile.dc.html (360 x 2584, below 600 px),
+ * Landing-Tablet.dc.html (768 x 2765, 600 px to 1023 px) and Main.dc.html (1440 x 2671, from 1024 px).
+ * The stage takes the board width as its maximum, so the layout is the board's at that width and narrower below it.
+ * Only the carousel is absolute: its frame has the board's aspect ratio and its cards are placed with the board's
+ * measures as a share of the frame width (100cqw, as the auth screens). Everything else is in normal flow, with the
+ * board's widths, gaps and type sizes.
+ */
+
+/* Mobile board: 360 px stage, one column. */
+.page,
+.footer {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.page {
+  --gutter: 16px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px var(--gutter) 0;
+  color: #1e293b;
+}
+
+.logo {
+  display: flex;
+  width: 80px;
+  height: 80px;
+  line-height: 0;
+}
+
+.logo svg {
+  width: 80px;
+  height: 80px;
+}
+
+.title {
+  width: 100%;
+  margin: 24px 0 0;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 800;
+  text-align: center;
+  color: #1e293b;
+}
+
+.tagline {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  color: #4f46e5;
+}
+
+.carousel {
+  position: relative;
+  align-self: stretch;
+  margin: 24px calc(-1 * var(--gutter)) 0;
+  overflow: hidden;
+  container-type: inline-size;
+  aspect-ratio: 360 / 220;
+}
+
+.frame {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0px 4px 8px -1px rgba(0, 0, 0, 0.1);
+}
+
+.frame img {
+  object-fit: cover;
+}
+
+.sideLeft,
+.sideRight {
+  top: calc(36 * 100cqw / 360);
+  width: calc(160 * 100cqw / 360);
+  height: calc(148 * 100cqw / 360);
+}
+
+.sideLeft {
+  left: calc(-124 * 100cqw / 360);
+}
+
+.sideRight {
+  left: calc(324 * 100cqw / 360);
+}
+
+.sideLeft img,
+.sideRight img {
+  opacity: 0.7;
+}
+
+.centerCard {
+  top: 0;
+  left: calc(48 * 100cqw / 360);
+  width: calc(264 * 100cqw / 360);
+  height: 100%;
+}
+
+.caption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  height: 60px;
+  padding: 0 12px 12px;
+  background: linear-gradient(to top, rgba(30, 41, 59, 0.6), rgba(30, 41, 59, 0));
+  font-size: 12px;
+  line-height: 16px;
+  color: #ffffff;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+
+.dotActive {
+  background: #4f46e5;
+}
+
+.actions {
+  display: flex;
+  align-self: stretch;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.actions > a {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  margin-top: 40px;
+}
+
+/* Demo band: full width of the screen on the mobile board, with the question card edge to edge. */
+.demo {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 24px 0 16px;
+  background: #4f46e5;
+}
+
+.demoIntro {
+  margin: 0 var(--gutter) 24px;
+}
+
+.demoTitle {
+  margin: 0;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.demoText {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: #e0e7ff;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.feedTitle {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.feedTitleNext {
+  margin: 12px 0 0;
+}
+
+.feedNote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: #6b7280;
+}
+
+.panel {
+  box-sizing: border-box;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0px 4px 8px -1px rgba(0, 0, 0, 0.1);
+}
+
+.panelTitle {
+  margin: 0 0 16px;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.panelText {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #6b7280;
+}
+
+.perks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 20px;
+  color: #1e293b;
+}
+
+.perks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.perks svg {
+  flex: none;
+  color: #4f46e5;
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0px 4px 8px -1px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.ctaTitle {
+  margin: 0 0 16px;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.ctaText {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #6b7280;
+}
+
+.signIn {
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: #6b7280;
+}
+
+.signIn a {
+  font-weight: 600;
+  color: #4f46e5;
+}
+
+.signIn a:hover {
+  color: #4338ca;
+}
+
+.footer {
+  margin-top: 24px;
+}
+
+/*
+ * Question cards of the demo: the design-system classes with the board's overrides (the boards set them in
+ * their style block). Desktop and tablet values here, mobile values below.
+ */
+.exampleLabel {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.preview .avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+}
+
+.preview :global(.y-qpost) {
+  padding: 24px 24px 22px;
+}
+
+.preview :global(.y-qpost.is-compact) {
+  padding: 18px 24px 16px;
+}
+
+.preview :global(.y-qpost-head) {
+  gap: 12px;
+}
+
+.preview :global(.y-qpost-who strong) {
+  font-size: 15px;
+}
+
+.preview :global(.y-qpost-who span),
+.preview :global(.y-qpost-tags) {
+  font-size: 11px;
+}
+
+.preview :global(.y-qpost-body) {
+  margin: 17px 0 18px;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.preview :global(.y-qpost.is-compact .y-qpost-body) {
+  margin: 15px 0 16px;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.preview :global(.y-qpost-actions) {
+  gap: 12px;
+}
+
+.preview :global(.y-react) {
+  height: 32px;
+  padding: 0 16px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.preview :global(.y-follow) {
+  height: 26px;
+  font-size: 11px;
+}
+
+.preview :global(.y-save) {
+  width: 32px;
+  height: 32px;
+}
+
+.preview :global(.y-convo-input) {
+  color: #6b7280;
+}
+
+.reportNarrow {
+  display: none;
+}
+
+/* Mobile board (below 600 px). */
+@media (max-width: 599px) {
+  .preview .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .preview :global(.y-qpost) {
+    padding: 16px;
+  }
+
+  .preview :global(.y-qpost.is-compact) {
+    padding: 12px;
+  }
+
+  .preview :global(.y-qpost-head) {
+    flex-wrap: wrap;
+  }
+
+  .preview :global(.y-qpost-who strong) {
+    font-size: 14px;
+  }
+
+  .preview :global(.y-qpost-tags) {
+    width: 100%;
+    margin-left: 48px;
+    justify-content: flex-start;
+  }
+
+  .preview :global(.y-qpost-body),
+  .preview :global(.y-qpost.is-compact .y-qpost-body) {
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .preview :global(.y-qpost-actions) {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .preview :global(.y-react) {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .preview :global(.y-save) {
+    width: 30px;
+    height: 30px;
+  }
+
+  .preview :global(.y-convo) {
+    margin-top: 12px;
+    padding: 12px;
+  }
+
+  .preview :global(.y-convo-title) {
+    font-size: 12px;
+  }
+
+  .preview :global(.y-convo-report) {
+    gap: 4px;
+    padding: 0 10px;
+  }
+
+  .preview :global(.y-convo-input) {
+    height: 48px;
+  }
+
+  .preview :global(.y-convo .y-qpost.is-compact .y-qpost-head) {
+    gap: 8px;
+    padding-right: 32px;
+  }
+
+  .reportWide {
+    display: none;
+  }
+
+  .reportNarrow {
+    display: inline;
+  }
+}
+
+/* Tablet board (600 px to 1023 px): 768 px stage, content 646 px. */
+@media (min-width: 600px) {
+  .page {
+    --gutter: 24px;
+
+    max-width: 768px;
+    padding-top: 40px;
+  }
+
+  .logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .logo svg {
+    width: 100px;
+    height: 100px;
+  }
+
+  .title {
+    max-width: 600px;
+    margin-top: 40px;
+    font-size: 40px;
+    line-height: 48px;
+  }
+
+  .tagline {
+    font-size: 18px;
+    line-height: 26px;
+  }
+
+  .carousel {
+    margin-top: 40px;
+    aspect-ratio: 768 / 300;
+  }
+
+  .sideLeft,
+  .sideRight {
+    top: calc(50 * 100cqw / 768);
+    width: calc(220 * 100cqw / 768);
+    height: calc(200 * 100cqw / 768);
+  }
+
+  .sideLeft {
+    left: calc(-92 * 100cqw / 768);
+  }
+
+  .sideRight {
+    left: calc(640 * 100cqw / 768);
+  }
+
+  .centerCard {
+    top: 0;
+    left: calc(144 * 100cqw / 768);
+    width: calc(480 * 100cqw / 768);
+    height: 100%;
+  }
+
+  .actions {
+    align-self: auto;
+    margin-top: 40px;
+    gap: 16px;
+  }
+
+  .actions > a {
+    flex: none;
+  }
+
+  .content {
+    width: 646px;
+    max-width: 100%;
+    margin-top: 56px;
+    gap: 40px;
+  }
+
+  .demo {
+    margin: 0;
+    padding: 24px;
+    border-radius: 24px;
+    box-shadow: 0px 4px 8px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .demoIntro {
+    margin: 0 0 24px;
+  }
+
+  .demoTitle {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .demoText {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .feed {
+    padding: 16px;
+  }
+
+  .feedTitle {
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  .feedNote {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .panel {
+    padding: 40px;
+  }
+
+  .panelTitle {
+    margin-bottom: 16px;
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .panelText {
+    margin-bottom: 24px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .perks {
+    gap: 16px;
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .perks li {
+    align-items: center;
+  }
+
+  .cta {
+    width: 100%;
+    padding: 40px;
+  }
+
+  .ctaTitle {
+    margin-bottom: 16px;
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .ctaText {
+    margin-bottom: 24px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .footer {
+    max-width: 768px;
+    margin-top: 40px;
+  }
+}
+
+/* Desktop board (from 1024 px): 1440 px stage, content 1040 px. */
+@media (min-width: 1024px) {
+  .page {
+    --gutter: 24px;
+
+    max-width: 1440px;
+    padding-top: 48px;
+  }
+
+  .footer {
+    max-width: 1440px;
+  }
+
+  .title {
+    max-width: 1240px;
+    font-size: 56px;
+    line-height: 64px;
+  }
+
+  .tagline {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  .carousel {
+    aspect-ratio: 1440 / 300;
+  }
+
+  .sideLeft,
+  .sideRight {
+    top: calc(50 * 100cqw / 1440);
+    width: calc(220 * 100cqw / 1440);
+    height: calc(200 * 100cqw / 1440);
+  }
+
+  .sideLeft {
+    left: calc(244 * 100cqw / 1440);
+  }
+
+  .sideRight {
+    left: calc(976 * 100cqw / 1440);
+  }
+
+  .centerCard {
+    top: 0;
+    left: calc(480 * 100cqw / 1440);
+    width: calc(480 * 100cqw / 1440);
+    height: 100%;
+  }
+
+  .actions {
+    margin-top: 40px;
+  }
+
+  .content {
+    width: 1040px;
+    gap: 40px;
+  }
+
+  .demo {
+    flex-direction: row;
+    align-items: center;
+    gap: 48px;
+    padding: 40px;
+  }
+
+  .demoIntro {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .demoTitle {
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .demoText {
+    margin-top: 8px;
+    font-size: 18px;
+    line-height: 26px;
+  }
+
+  .feed {
+    flex: none;
+    width: 598px;
+    padding: 16px;
+  }
+
+  .feedTitle {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .feedNote {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .panel {
+    padding: 40px;
+  }
+
+  .panelTitle {
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .panelText {
+    font-size: 18px;
+    line-height: 28px;
+  }
+
+  .perks {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .perks li {
+    align-items: center;
+  }
+
+  .cta {
+    width: 600px;
+    padding: 40px;
+  }
+
+  .ctaTitle {
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .ctaText {
+    font-size: 18px;
+    line-height: 28px;
+  }
+}

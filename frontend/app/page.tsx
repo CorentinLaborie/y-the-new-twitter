@@ -1,15 +1,11 @@
 import { Suspense } from 'react';
-import { HealthStatus } from '@/components/health-status';
-import styles from './page.module.css';
-import feedback from '@/components/feedback.module.css';
+import { LandingGate } from '@/components/landing/landing-gate';
 
-export default function Home() {
+/** "/" is the visitor landing (route table, product doc 11.1). The session is read at request time, inside Suspense. */
+export default function LandingPage() {
   return (
-    <main className={feedback.main}>
-      <h1 className={styles.title}>Y</h1>
-      <Suspense fallback={<p className={feedback.text}>Vérification de l’API…</p>}>
-        <HealthStatus />
-      </Suspense>
-    </main>
+    <Suspense fallback={null}>
+      <LandingGate />
+    </Suspense>
   );
 }

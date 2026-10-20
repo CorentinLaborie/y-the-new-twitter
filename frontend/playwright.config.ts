@@ -27,10 +27,14 @@ export default defineConfig({
       use: { ...devices['Pixel 7'] },
     },
   ],
-  webServer: {
-    command: `npm run build && npm run start -- --port ${PORT}`,
-    url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 240_000,
-  },
+  webServer: [
+    // Answers the session check of the protected pages, on the API port (see e2e/session-stub.mjs).
+    { command: 'node e2e/session-stub.mjs', port: 8080, reuseExistingServer: true },
+    {
+      command: `npm run build && npm run start -- --port ${PORT}`,
+      url: `http://localhost:${PORT}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 240_000,
+    },
+  ],
 });

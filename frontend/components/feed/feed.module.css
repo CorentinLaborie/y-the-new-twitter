@@ -1,0 +1,388 @@
+/*
+ * Home feed: composer and question cards, from the Home boards (design/canvas-build/project/App-Mobile.dc.html and
+ * App-Desktop.dc.html). Values are written for mobile first (below 768 px); the block from 768 px is the desktop
+ * and tablet values (App-Desktop, and App-Tablet which uses the same card). Same features at every size (R5).
+ */
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-16);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Composer */
+
+.composer {
+  display: flex;
+  gap: var(--space-12);
+  padding: var(--space-12);
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+}
+
+.composerBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.composerLabel {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: normal;
+  color: var(--color-foreground);
+}
+
+.textarea {
+  display: block;
+  width: 100%;
+  height: 56px;
+  box-sizing: border-box;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 14px;
+  resize: none;
+}
+
+.textarea[aria-invalid='true'] {
+  border-color: var(--color-destructive);
+}
+
+.composerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: normal;
+  color: var(--color-primary);
+}
+
+.composerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.counter {
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.counter[data-over='true'] {
+  color: var(--color-destructive-text);
+  font-weight: 600;
+}
+
+.refusal {
+  margin: 0;
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-destructive-text);
+}
+
+.submit {
+  height: 32px;
+  padding: 0 var(--space-12);
+  font-size: 13px;
+}
+
+/* Avatars: the composer's (App boards) and the card's (the question card of the design system: 36 px on mobile). */
+
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-primary);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.composerAvatar {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.cardAvatar {
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+}
+
+/* Trending block at the top of the first page: "Tendances sur 24 h", the top 10 by reactions in the last 24 h. */
+
+.trending {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.trendingTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: normal;
+  color: var(--color-foreground);
+}
+
+/* "Afficher N nouvelles questions": the pill of the boards, shown when the first page has questions not shown yet. */
+
+.newQuestions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  width: 100%;
+  height: 32px;
+  box-sizing: border-box;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  background: var(--color-card);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Question card */
+
+.card {
+  box-sizing: border-box;
+  padding: var(--space-16);
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  font-size: 11px;
+  line-height: normal;
+  color: var(--color-muted-foreground);
+}
+
+.tags {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  padding-left: 40px;
+  font-size: 11px;
+  line-height: normal;
+  color: var(--color-primary);
+}
+
+.body {
+  margin: var(--space-12) 0;
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+/* Reactions: one pill per kind (J'aime, Pas d'accord, Y), the count in the pill, the active kind filled. */
+
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 28px;
+}
+
+.reaction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reaction[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--color-accent);
+}
+
+/* While a reaction call is in flight the button stays focusable (aria-disabled, not disabled: focus would be lost). */
+.reaction[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.reaction[data-kind='like'] .glyph,
+.reaction[data-kind='y'] .glyph {
+  color: var(--color-primary);
+}
+
+.reaction[data-kind='dislike'] .glyph {
+  color: var(--color-destructive);
+}
+
+.glyph {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.progress {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.reached {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.reactionError {
+  margin: var(--space-8) 0 0;
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-destructive-text);
+}
+
+@media (min-width: 768px) {
+  .composer {
+    gap: var(--space-12);
+    padding: var(--space-16) var(--space-24);
+  }
+
+  .composerBody {
+    gap: var(--space-12);
+  }
+
+  .composerLabel {
+    font-size: 13px;
+  }
+
+  .textarea {
+    height: 72px;
+    padding: var(--space-12);
+    font-size: 15px;
+  }
+
+  .hint {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .composerActions {
+    gap: var(--space-12);
+  }
+
+  .counter {
+    font-size: 13px;
+  }
+
+  .submit {
+    height: 40px;
+    padding: 0 var(--space-16);
+    font-size: 14px;
+  }
+
+  .composerAvatar,
+  .cardAvatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .card {
+    padding: var(--space-24) var(--space-24) 22px;
+  }
+
+  .cardHead {
+    flex-wrap: nowrap;
+    gap: var(--space-12);
+  }
+
+  .tags {
+    flex-basis: auto;
+    justify-content: flex-end;
+    margin-left: auto;
+    padding-left: 0;
+  }
+
+  .name {
+    font-size: 15px;
+  }
+
+  .body {
+    margin: 17px 0 18px;
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .reactions {
+    gap: var(--space-12);
+    min-height: 32px;
+  }
+
+  .reaction {
+    height: 32px;
+    padding: 0 var(--space-16);
+    font-size: 14px;
+  }
+}
