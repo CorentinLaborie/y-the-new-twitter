@@ -9,5 +9,6 @@ import { QuestionsService } from './questions.service';
   imports: [IdempotencyModule, MentionsModule],
   controllers: [QuestionsController],
   providers: [QuestionsService, QuestionsRepository],
+  exports: [QuestionsRepository],
 })
 export class QuestionsModule {}

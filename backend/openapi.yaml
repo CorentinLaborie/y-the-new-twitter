@@ -166,6 +166,56 @@ paths:
         "200":
           description: ""
       tags: *a4
+  /api/v1/questions/{questionId}:
+    get:
+      operationId: QuestionsController_findOne
+      parameters:
+        - name: questionId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          description: The question, as the feed returns it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionResponseDto"
+        "400":
+          description: The question id is not a UUID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The question does not exist, or it is hidden, deleted or blocked.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a5
+        - Questions
   /api/v1/questions:
     post:
       operationId: QuestionsController_create
@@ -227,8 +277,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags:
-        - Questions
+      tags: *a5
   /api/v1/questions/{questionId}/reactions/{kind}:
     put:
       operationId: ReactionsController_set
@@ -285,7 +334,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a5
+      tags: &a6
         - Reactions
     delete:
       operationId: ReactionsController_remove
@@ -338,7 +387,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a5
+      tags: *a6
   /api/v1/questions/{questionId}/replies:
     post:
       operationId: RepliesController_create
@@ -412,7 +461,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a6
+      tags: &a7
         - Replies
     get:
       operationId: RepliesController_list
@@ -470,7 +519,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a6
+      tags: *a7
   /api/v1/replies/{replyId}:
     delete:
       operationId: RepliesController_remove
@@ -502,7 +551,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a6
+      tags: *a7
   /api/v1/replies/{replyId}/reactions/{kind}:
     put:
       operationId: ReplyReactionsController_set
@@ -558,7 +607,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a7
+      tags: &a8
         - ReplyReactions
     delete:
       operationId: ReplyReactionsController_remove
@@ -610,7 +659,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a7
+      tags: *a8
   /api/v1/feed:
     get:
       operationId: FeedController_forYou
@@ -688,7 +737,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a8
+                    example: &a9
                       database:
                         status: up
                     additionalProperties:
@@ -714,7 +763,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a8
+                    example: *a9
                     additionalProperties:
                       type: object
                       required:
@@ -736,7 +785,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a9
+                      database: &a10
                         status: up
                     additionalProperties:
                       type: object
@@ -750,7 +799,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a10
+                      redis: &a11
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -765,8 +814,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a9
-                      redis: *a10
+                      database: *a10
+                      redis: *a11
                     additionalProperties:
                       type: object
                       required:
@@ -877,16 +926,6 @@ components:
     EmailChangeConfirmDto:
       type: object
       properties: {}
-    CreateQuestionDto:
-      type: object
-      properties:
-        text:
-          type: string
-          minLength: 1
-          maxLength: 280
-          description: Text of the question, trimmed. Counted in characters.
-      required:
-        - text
     QuestionAuthorDto:
       type: object
       properties:
@@ -973,6 +1012,16 @@ components:
         - yThreshold
         - conversationOpen
         - viewerReactions
+    CreateQuestionDto:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 280
+          description: Text of the question, trimmed. Counted in characters.
+      required:
+        - text
     ReactionCountsDto:
       type: object
       properties:

@@ -9,6 +9,9 @@ export const QUESTION_VIEW_INCLUDE = {
 
 export type QuestionRow = Prisma.QuestionGetPayload<{ include: typeof QUESTION_VIEW_INCLUDE }>;
 
+/** The 404 message of every question route when the question is missing, hidden, deleted or blocked. */
+export const QUESTION_NOT_FOUND_MESSAGE = 'Question introuvable.';
+
 /**
  * What the public may see of a question: not deleted, visible, and written by an active account (R13,
  * DEC-086, DEC-087). Every read of a question for another user goes through this filter.

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { UnprocessableEntityException, Injectable } from '@nestjs/common';
+import { NotFoundException, UnprocessableEntityException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { assertIdempotencyKey, IdempotencyService } from '../common/idempotency/idempotency.service';
 import type { SessionUser } from '../auth/session/session-user.repository';
@@ -8,7 +8,7 @@ import { MentionsService } from '../mentions/mentions.service';
 import type { CreateQuestionDto } from './dto/create-question.dto';
 import type { QuestionResponseDto } from './dto/question-response.dto';
 import { QuestionsDb, QuestionsRepository } from './questions.repository';
-import { toQuestionView } from './question-view';
+import { QUESTION_NOT_FOUND_MESSAGE, toQuestionView } from './question-view';
 import { characterCount, extractHashtags, QUESTION_MAX_LENGTH } from './question-text';
 
 const TEXT_LENGTH_MESSAGE = 'La question doit contenir de 1 à 280 caractères.';
@@ -53,6 +53,24 @@ export class QuestionsService {
 
     return this.idempotency.run(author.id, idempotencyKey, fingerprint, (tx) =>
       this.insertQuestion(tx, author, dto.text, hashtags),
+    );
+  }
+
+  /**
+   * One question for the share view and the copied link (M3, F11). It is read with the feed's filter (visibleTo):
+   * a hidden, deleted, inactive-author or blocked question is not found (R13, R14).
+   */
+  async findVisible(viewer: SessionUser, questionId: string): Promise<QuestionResponseDto> {
+    const row = await this.questions.findVisibleQuestion(viewer.id, questionId);
+    if (row === null) {
+      throw new NotFoundException(QUESTION_NOT_FOUND_MESSAGE);
+    }
+    const reactions = await this.questions.findViewerReactions(viewer.id, [questionId]);
+
+    return toQuestionView(
+      row,
+      this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD'),
+      reactions.map((reaction) => reaction.kind),
     );
   }
 

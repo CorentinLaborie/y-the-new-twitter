@@ -41,14 +41,6 @@ export class FeedRepository {
     });
   }
 
-  /** The viewer's own reactions on these questions: at most one per question (R11). */
-  findViewerQuestionReactions(viewerId: string, questionIds: readonly string[]) {
-    return this.prisma.questionReaction.findMany({
-      where: { userId: viewerId, questionId: { in: [...questionIds] } },
-      select: { questionId: true, kind: true },
-    });
-  }
-
   /**
    * One page of the feed, newest first: every visible question (R12), minus `excludeIds`. The keyset on
    * (createdAt, id) returns each question once, even when new ones arrive between two pages.

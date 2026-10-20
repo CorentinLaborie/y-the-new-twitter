@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { BadRequestException, UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { IdempotencyRepository } from '../common/idempotency/idempotency.repository';
@@ -203,4 +203,88 @@ describe('QuestionsService (B2, section 9.1)', () => {
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
   });
+});
+
+type DetailRepository = jest.Mocked<Pick<QuestionsRepository, 'findVisibleQuestion' | 'findViewerReactions'>>;
+type VisibleRow = NonNullable<Awaited<ReturnType<QuestionsRepository['findVisibleQuestion']>>>;
+
+describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
+  const VIEWER: SessionUser = { id: 'viewer-1', handle: 'bob', displayName: 'Bob', role: 'user', status: 'active' };
+
+  let repository: DetailRepository;
+  let service: QuestionsService;
+
+  function visibleRow(overrides: Partial<VisibleRow> = {}): VisibleRow {
+    return {
+      id: 'question-1',
+      body: 'Bonjour #irl',
+      createdAt: CREATED_AT,
+      likeCount: 2,
+      dislikeCount: 0,
+      yCount: 3,
+      replyCount: 1,
+      conversationOpenedAt: CREATED_AT,
+      author: { handle: 'alice', displayName: 'Alice' },
+      hashtags: [{ hashtag: { name: 'irl' } }],
+      ...overrides,
+    } as unknown as VisibleRow;
+  }
+
+  beforeEach(() => {
+    repository = {
+      findVisibleQuestion: jest.fn().mockResolvedValue(visibleRow()),
+      findViewerReactions: jest.fn().mockResolvedValue([]),
+    } as unknown as DetailRepository;
+    const prisma = { $transaction: jest.fn() };
+    const config = { getOrThrow: jest.fn().mockReturnValue(50) } as unknown as ConfigService;
+    const idempotency = {} as IdempotencyService;
+    const mentions = { resolve: jest.fn(), record: jest.fn() };
+    service = new QuestionsService(
+      prisma as unknown as PrismaService,
+      repository as unknown as QuestionsRepository,
+      idempotency,
+      config,
+      mentions as unknown as MentionsService,
+    );
+  });
+
+  it('returns the question as the feed does: counters, Y progress and the viewer reaction', async () => {
+    repository.findViewerReactions.mockResolvedValue([{ questionId: 'question-1', kind: 'y' }] as never);
+
+    const response = await service.findVisible(VIEWER, 'question-1');
+
+    expect(repository.findVisibleQuestion).toHaveBeenCalledWith('viewer-1', 'question-1');
+    expect(repository.findViewerReactions).toHaveBeenCalledWith('viewer-1', ['question-1']);
+    expect(response).toEqual({
+      id: 'question-1',
+      text: 'Bonjour #irl',
+      createdAt: '2026-10-20T10:41:00.000Z',
+      author: { handle: 'alice', displayName: 'Alice' },
+      hashtags: ['irl'],
+      counters: { like: 2, dislike: 0, y: 3, reply: 1 },
+      yThreshold: 50,
+      conversationOpen: true,
+      viewerReactions: ['y'],
+    });
+  });
+
+  it('shows the conversation as closed and no reaction when the viewer has none', async () => {
+    repository.findVisibleQuestion.mockResolvedValue(visibleRow({ conversationOpenedAt: null, yCount: 12 }));
+
+    const response = await service.findVisible(VIEWER, 'question-1');
+
+    expect(response).toMatchObject({ conversationOpen: false, viewerReactions: [] });
+  });
+
+  // The repository applies visibleTo, so hidden, deleted, blocked and inactive questions all come back as null.
+  it.each(['hidden', 'deleted', 'blocked', 'inactive'])(
+    'answers 404 when the question is %s, and reads no reaction',
+    async () => {
+      repository.findVisibleQuestion.mockResolvedValue(null);
+
+      await expect(service.findVisible(VIEWER, 'question-1')).rejects.toThrow(NotFoundException);
+      await expect(service.findVisible(VIEWER, 'question-1')).rejects.toThrow('Question introuvable.');
+      expect(repository.findViewerReactions).not.toHaveBeenCalled();
+    },
+  );
 });

@@ -1,5 +1,16 @@
-import { Body, Controller, Headers, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
-import { ApiCreatedResponse, ApiHeader } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Res,
+} from '@nestjs/common';
+import { ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiParam } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/session/access.decorators';
 import type { SessionUser } from '../auth/session/session-user.repository';
@@ -12,6 +23,21 @@ import { QuestionsService } from './questions.service';
 @Controller('questions')
 export class QuestionsController {
   constructor(private readonly questions: QuestionsService) {}
+
+  @Get(':questionId')
+  @ApiParam({ name: 'questionId', format: 'uuid' })
+  @ApiOkResponse({ description: 'The question, as the feed returns it.', type: QuestionResponseDto })
+  @problemDetailsResponse(400, 'The question id is not a UUID.')
+  @problemDetailsResponse(401, 'Not logged in.')
+  @problemDetailsResponse(403, 'The account is not active (suspended, pending verification or pending deletion).')
+  @problemDetailsResponse(404, 'The question does not exist, or it is hidden, deleted or blocked.')
+  @problemDetailsResponse(429, 'Too many requests.')
+  findOne(
+    @CurrentUser() viewer: SessionUser,
+    @Param('questionId', ParseUUIDPipe) questionId: string,
+  ): Promise<QuestionResponseDto> {
+    return this.questions.findVisible(viewer, questionId);
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

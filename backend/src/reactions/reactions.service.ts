@@ -4,10 +4,9 @@ import type { SessionUser } from '../auth/session/session-user.repository';
 import { PrismaService } from '../database/prisma.service';
 import type { ReactionKind } from '../database/generated/client/client';
 import { ACCOUNT_NOT_ACTIVE_MESSAGE, UsersRepository } from '../users/users.repository';
+import { QUESTION_NOT_FOUND_MESSAGE } from '../questions/question-view';
 import { ReactionResponseDto } from './dto/reaction-response.dto';
 import { CounterChange, ReactionsDb, ReactionsRepository } from './reactions.repository';
-
-const QUESTION_NOT_FOUND = 'Question introuvable.';
 
 /** How the three counters change when a reaction goes from `previous` to `next` (null: none). */
 export function counterChange(previous: ReactionKind | null, next: ReactionKind | null): CounterChange {
@@ -68,7 +67,7 @@ export class ReactionsService {
     }
     await this.reactions.lockQuestion(db, questionId);
     if (!(await this.reactions.findVisibleQuestion(db, viewerId, questionId))) {
-      throw new NotFoundException(QUESTION_NOT_FOUND);
+      throw new NotFoundException(QUESTION_NOT_FOUND_MESSAGE);
     }
   }
 

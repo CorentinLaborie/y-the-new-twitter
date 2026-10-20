@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import type { ReactionKind } from '../database/generated/client/client';
 import { toQuestionView, type QuestionRow } from '../questions/question-view';
+import { QuestionsRepository } from '../questions/questions.repository';
 import { decodeCursor, encodeCursor } from './feed-cursor';
 import { FeedQueryDto } from './dto/feed-query.dto';
 import { FeedPageDto } from './dto/feed-page.dto';
@@ -25,6 +26,7 @@ const TRENDING_COUNT = 10;
 export class FeedService {
   constructor(
     private readonly feed: FeedRepository,
+    private readonly questions: QuestionsRepository,
     private readonly config: ConfigService,
   ) {}
 
@@ -73,7 +75,7 @@ export class FeedService {
     viewerId: string,
     rows: readonly QuestionRow[],
   ): Promise<Map<string, ReactionKind[]>> {
-    const reactions = await this.feed.findViewerQuestionReactions(
+    const reactions = await this.questions.findViewerReactions(
       viewerId,
       rows.map((row) => row.id),
     );
