@@ -1,4 +1,4 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, type ThrottlerStorage } from '@nestjs/throttler';
@@ -13,7 +13,9 @@ import { validateEnvironment } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { DatabaseModule } from './database/database.module';
+import { SessionMiddleware } from './common/sessions/session.middleware';
 import { SessionsModule } from './common/sessions/sessions.module';
+import { HelmetMiddleware } from './common/security/helmet.middleware';
 import { HealthModule } from './health/health.module';
 import { QuestionsModule } from './questions/questions.module';
 import { ReactionsModule } from './reactions/reactions.module';
@@ -48,6 +50,8 @@ import { SupportModule } from './support/support.module';
   ],
   controllers: [AppController],
   providers: [
+    HelmetMiddleware,
+    SessionMiddleware,
     { provide: APP_GUARD, useClass: GlobalThrottlerGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },
     {
@@ -57,4 +61,9 @@ import { SupportModule } from './support/support.module';
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  /** Helmet and the session run as Nest middleware (DEC-213): their errors are answered as Problem Details. */
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(HelmetMiddleware, SessionMiddleware).forRoutes({ path: '*splat', method: RequestMethod.ALL });
+  }
+}
