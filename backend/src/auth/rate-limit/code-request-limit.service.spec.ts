@@ -1,17 +1,30 @@
-import { ThrottlerStorageService } from '@nestjs/throttler';
+import type { ThrottlerStorage } from '@nestjs/throttler';
 import { CodeRequestLimitService } from './code-request-limit.service';
 
+/**
+ * A fixed-window counter in memory, standing in for the PostgreSQL store (its own spec covers that store).
+ * Only the count and the block matter to CodeRequestLimitService, so the window never ends in these tests.
+ */
+class CountingStorage implements ThrottlerStorage {
+  readonly counters = new Map<string, number>();
+
+  async increment(key: string, _ttl: number, limit: number) {
+    const totalHits = (this.counters.get(key) ?? 0) + 1;
+    this.counters.set(key, totalHits);
+
+    const isBlocked = totalHits > limit;
+
+    return { totalHits, timeToExpire: 3600, isBlocked, timeToBlockExpire: isBlocked ? 3600 : 0 };
+  }
+}
+
 describe('CodeRequestLimitService (section 9.4)', () => {
-  let storage: ThrottlerStorageService;
+  let storage: CountingStorage;
   let limit: CodeRequestLimitService;
 
   beforeEach(() => {
-    storage = new ThrottlerStorageService();
+    storage = new CountingStorage();
     limit = new CodeRequestLimitService(storage);
-  });
-
-  afterEach(() => {
-    storage.onApplicationShutdown();
   });
 
   it('allows 3 code requests per account, then refuses the 4th', async () => {
@@ -42,7 +55,7 @@ describe('CodeRequestLimitService (section 9.4)', () => {
   it('never keeps an unknown address in clear: its counter key is a SHA-256 hash', async () => {
     await limit.allow({ email: 'nobody@example.test' });
 
-    const keys = JSON.stringify([...storage.storage.keys()]);
+    const keys = JSON.stringify([...storage.counters.keys()]);
     expect(keys).not.toContain('nobody');
     expect(keys).toMatch(/code-request-account:email:[0-9a-f]{64}/);
   });

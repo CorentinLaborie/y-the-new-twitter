@@ -307,6 +307,16 @@ model IdempotencyKey {
   @@map("idempotency_keys")
 }
 
+/// Counters of the auth rate limits (section 9.4, DEC-194). The key is the scope and the identifier, for example
+/// "login:<ip>" or "code-request-account:id:<user id>". No cleanup job yet: an expired window is ignored, not deleted.
+model RateLimitCounter {
+  key         String   @id @map("key") @db.Text
+  windowStart DateTime @map("window_start") @db.Timestamptz(3)
+  hits        Int      @map("hits")
+
+  @@map("rate_limit_counters")
+}
+
 model Follow {
   followerId String   @map("follower_id") @db.Uuid
   followeeId String   @map("followee_id") @db.Uuid

@@ -94,9 +94,9 @@ describe('Password reset (e2e, B16 and B17)', () => {
     await container?.stop();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mail.clear();
-    resetRateLimits(app);
+    await resetRateLimits(app);
   });
 
   describe('request (B16)', () => {

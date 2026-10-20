@@ -43,9 +43,9 @@ describe('Signup: create, verify, resend (e2e)', () => {
     csrf = cookie!.split(';')[0].split('=')[1];
   }, 180_000);
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // The rate limits are per IP, and every request of this file comes from one address: each test starts empty.
-    resetRateLimits(app);
+    await resetRateLimits(app);
   });
 
   afterAll(async () => {

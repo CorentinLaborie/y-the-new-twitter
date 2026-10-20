@@ -8,7 +8,7 @@ import { RATE_LIMIT_STORAGE } from './rate-limit.module';
 export type CodeRequestAccount = { readonly userId: string } | { readonly email: string };
 
 /**
- * The per-account limit on code requests (section 9.4), counted in memory with the IP counters (DEC-141).
+ * The per-account limit on code requests (section 9.4), counted in PostgreSQL with the IP counters (DEC-194).
  * An address without an account is counted by a hash of the address, so no e-mail address is kept in clear.
  */
 @Injectable()

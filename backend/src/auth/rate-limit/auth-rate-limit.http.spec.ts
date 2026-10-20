@@ -1,9 +1,10 @@
 import { Controller, Get, INestApplication, Post } from '@nestjs/common';
+import { ThrottlerStorageService } from '@nestjs/throttler';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { ProblemDetailsFilter } from '../../common/problem-details/problem-details.filter';
 import { AuthRateLimit } from './auth-rate-limit.decorator';
-import { RateLimitModule } from './rate-limit.module';
+import { RATE_LIMIT_STORAGE, RateLimitModule } from './rate-limit.module';
 
 @Controller('probe')
 class ProbeController {
@@ -29,15 +30,21 @@ class ProbeController {
   }
 }
 
-/** Real in-memory counters, through HTTP. Trust proxy is on so each test can pick its client IP. */
-describe('AuthRateLimit over HTTP (in memory)', () => {
+/**
+ * The guard over HTTP, with the in-memory throttler storage in place of PostgreSQL: this file tests the guard, and the
+ * PostgreSQL store has its own unit and e2e specs. Trust proxy is on so each test can pick its client IP.
+ */
+describe('AuthRateLimit over HTTP (in-memory storage)', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [RateLimitModule],
       controllers: [ProbeController],
-    }).compile();
+    })
+      .overrideProvider(RATE_LIMIT_STORAGE)
+      .useValue(new ThrottlerStorageService())
+      .compile();
     app = moduleRef.createNestApplication({ logger: false });
     app.useGlobalFilters(new ProblemDetailsFilter());
     app.getHttpAdapter().getInstance().set('trust proxy', true);
