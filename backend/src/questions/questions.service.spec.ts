@@ -1,8 +1,9 @@
+import { createHash } from 'node:crypto';
 import { BadRequestException, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { IdempotencyRepository } from '../common/idempotency/idempotency.repository';
-import { IdempotencyService, requestHash } from '../common/idempotency/idempotency.service';
+import { IdempotencyService } from '../common/idempotency/idempotency.service';
 import { Prisma } from '../database/generated/client/client';
 import type { PrismaService } from '../database/prisma.service';
 import type { CreateQuestionDto } from './dto/create-question.dto';
@@ -26,8 +27,8 @@ const LIVE_KEY_EXPIRY = new Date(Date.now() + 60 * 60 * 1000);
 const EXPIRED_KEY_EXPIRY = new Date(Date.now() - 1000);
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Fingerprint of the text on POST /questions, as the service stores it (DEC-185). */
-const HASH_BONJOUR = requestHash('POST /questions', 'Bonjour');
+/** Fingerprint of the text on POST /questions: the SHA-256 of the text alone, as before DEC-185. */
+const HASH_BONJOUR = createHash('sha256').update('Bonjour').digest('hex');
 
 function dto(text: string): CreateQuestionDto {
   return { text } as CreateQuestionDto;

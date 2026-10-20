@@ -1,6 +1,7 @@
+import { createHash } from 'node:crypto';
 import { UnprocessableEntityException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { assertIdempotencyKey, IdempotencyService, requestHash } from '../common/idempotency/idempotency.service';
+import { assertIdempotencyKey, IdempotencyService } from '../common/idempotency/idempotency.service';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { PrismaService } from '../database/prisma.service';
 import type { CreateQuestionDto } from './dto/create-question.dto';
@@ -45,7 +46,10 @@ export class QuestionsService {
       return this.prisma.$transaction((tx) => this.insertQuestion(tx, author, dto.text, hashtags));
     }
 
-    return this.idempotency.run(author.id, idempotencyKey, requestHash('POST /questions', dto.text), (tx) =>
+    // The fingerprint of the text alone, as before: keys stored before DEC-185 still replay.
+    const fingerprint = createHash('sha256').update(dto.text).digest('hex');
+
+    return this.idempotency.run(author.id, idempotencyKey, fingerprint, (tx) =>
       this.insertQuestion(tx, author, dto.text, hashtags),
     );
   }
