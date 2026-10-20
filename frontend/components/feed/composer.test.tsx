@@ -73,7 +73,7 @@ describe('Composer', () => {
   });
 
   it('sends the trimmed text, then clears the composer and gives the question to the feed', async () => {
-    vi.mocked(postQuestion).mockResolvedValue({ ok: true, body: CREATED });
+    vi.mocked(postQuestion).mockResolvedValue({ ok: true, status: 200, body: CREATED });
     const onPosted = vi.fn();
     render(<Composer displayName="Alice" suspended={false} onPosted={onPosted} />);
 
@@ -106,7 +106,7 @@ describe('Composer', () => {
     const realCrypto = globalThis.crypto;
     vi.stubGlobal('crypto', { getRandomValues: realCrypto.getRandomValues.bind(realCrypto) });
     try {
-      vi.mocked(postQuestion).mockResolvedValue({ ok: true, body: CREATED });
+      vi.mocked(postQuestion).mockResolvedValue({ ok: true, status: 200, body: CREATED });
       render(<Composer displayName="Alice" suspended={false} onPosted={vi.fn()} />);
 
       typeText('Une question');

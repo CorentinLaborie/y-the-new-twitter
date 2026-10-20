@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Notice } from '@/components/auth/notice';
 import { feedFailureMessage } from '@/components/feed/feed-states';
 import styles from '@/components/feed/feed.module.css';
-import type { ApiProblem } from '@/lib/api-client';
+import type { ApiProblem, ApiResult } from '@/lib/api-client';
 import { messageForCode } from '@/lib/api-messages';
 import {
   deleteReply,
@@ -73,13 +73,9 @@ function initialList(questionId: string): ListState {
   };
 }
 
-function isApiProblem(error: unknown): error is ApiProblem {
-  return typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number';
-}
-
 /** The French text of a refusal with a known code, or the fallback text. */
-function refusalMessage(error: unknown, fallback: string): string {
-  return (isApiProblem(error) ? messageForCode(error) : null) ?? fallback;
+function refusalMessage(problem: ApiProblem, fallback: string): string {
+  return messageForCode(problem) ?? fallback;
 }
 
 /** The replies of `incoming` that `current` does not have yet, after `current`. */
@@ -145,27 +141,21 @@ export function Conversation({
       return;
     }
     let current = true;
-    listReplies(questionId, { limit: PAGE_SIZE }).then(
-      (page) => {
-        if (current) {
-          setListState({
-            ...initialList(questionId),
-            phase: 'ready',
-            replies: page.items,
-            nextCursor: page.nextCursor,
-          });
-        }
-      },
-      (problem: ApiProblem) => {
-        if (current) {
-          setListState({
-            ...initialList(questionId),
-            phase: 'failed',
-            loadError: feedFailureMessage(problem),
-          });
-        }
-      },
-    );
+    listReplies(questionId, { limit: PAGE_SIZE }).then((result) => {
+      if (!current) {
+        return;
+      }
+      setListState(
+        result.ok
+          ? {
+              ...initialList(questionId),
+              phase: 'ready',
+              replies: result.body.items,
+              nextCursor: result.body.nextCursor,
+            }
+          : { ...initialList(questionId), phase: 'failed', loadError: feedFailureMessage(result.problem) },
+      );
+    });
     return () => {
       current = false;
     };
@@ -191,22 +181,20 @@ export function Conversation({
     setListState((state) =>
       state.questionId === questionId ? { ...state, loadingMore: true, moreFailed: false } : state,
     );
-    listReplies(questionId, { cursor, limit: PAGE_SIZE }).then(
-      (page) =>
-        setListState((state) =>
-          state.questionId === questionId
-            ? {
-                ...state,
-                replies: appendNew(state.replies, page.items),
-                nextCursor: page.nextCursor,
-                loadingMore: false,
-              }
-            : state,
-        ),
-      () =>
-        setListState((state) =>
-          state.questionId === questionId ? { ...state, loadingMore: false, moreFailed: true } : state,
-        ),
+    listReplies(questionId, { cursor, limit: PAGE_SIZE }).then((result) =>
+      setListState((state) => {
+        if (state.questionId !== questionId) {
+          return state;
+        }
+        return result.ok
+          ? {
+              ...state,
+              replies: appendNew(state.replies, result.body.items),
+              nextCursor: result.body.nextCursor,
+              loadingMore: false,
+            }
+          : { ...state, loadingMore: false, moreFailed: true };
+      }),
     );
   }
 
@@ -215,8 +203,8 @@ export function Conversation({
       return;
     }
     const removing = reply.viewerReactions.includes(kind);
-    const request: Promise<ReplyReactionResult | null> = removing
-      ? removeReplyReaction(reply.id, kind).then(() => null)
+    const request: Promise<ApiResult<ReplyReactionResult | null>> = removing
+      ? removeReplyReaction(reply.id, kind).then((result) => (result.ok ? { ...result, body: null } : result))
       : setReplyReaction(reply.id, kind);
 
     // The change shows at once; the server's counters replace it when the call succeeds.
@@ -230,52 +218,52 @@ export function Conversation({
           }
         : state,
     );
-    request.then(
-      (result) =>
-        setListState((state) =>
-          state.questionId === questionId
-            ? {
-                ...state,
-                replies: mapReply(state.replies, reply.id, (current) =>
-                  result
-                    ? { ...current, counters: result.counts, viewerReactions: result.viewerReactions }
-                    : current,
-                ),
-                pendingReactionIds: withoutId(state.pendingReactionIds, reply.id),
-              }
-            : state,
-        ),
-      (error: unknown) =>
-        setListState((state) =>
-          state.questionId === questionId
-            ? {
-                ...state,
-                replies: mapReply(state.replies, reply.id, () => reply),
-                pendingReactionIds: withoutId(state.pendingReactionIds, reply.id),
-                actionError: refusalMessage(error, REACTION_FAILURE_MESSAGE),
-              }
-            : state,
-        ),
+    request.then((result) =>
+      setListState((state) => {
+        if (state.questionId !== questionId) {
+          return state;
+        }
+        return result.ok
+          ? {
+              ...state,
+              replies: mapReply(state.replies, reply.id, (current) =>
+                result.body
+                  ? {
+                      ...current,
+                      counters: result.body.counts,
+                      viewerReactions: result.body.viewerReactions,
+                    }
+                  : current,
+              ),
+              pendingReactionIds: withoutId(state.pendingReactionIds, reply.id),
+            }
+          : {
+              ...state,
+              replies: mapReply(state.replies, reply.id, () => reply),
+              pendingReactionIds: withoutId(state.pendingReactionIds, reply.id),
+              actionError: refusalMessage(result.problem, REACTION_FAILURE_MESSAGE),
+            };
+      }),
     );
   }
 
   function removeReply(reply: ReplyView) {
-    deleteReply(reply.id).then(
-      () => {
+    deleteReply(reply.id).then((result) => {
+      if (!result.ok) {
         setListState((state) =>
           state.questionId === questionId
-            ? { ...state, replies: state.replies.filter((item) => item.id !== reply.id), actionError: null }
+            ? { ...state, actionError: refusalMessage(result.problem, DELETE_FAILURE_MESSAGE) }
             : state,
         );
-        shiftCount(-1);
-      },
-      (error: unknown) =>
-        setListState((state) =>
-          state.questionId === questionId
-            ? { ...state, actionError: refusalMessage(error, DELETE_FAILURE_MESSAGE) }
-            : state,
-        ),
-    );
+        return;
+      }
+      setListState((state) =>
+        state.questionId === questionId
+          ? { ...state, replies: state.replies.filter((item) => item.id !== reply.id), actionError: null }
+          : state,
+      );
+      shiftCount(-1);
+    });
   }
 
   function handlePosted(reply: ReplyView) {

@@ -23,15 +23,8 @@ type ReplyComposerProps = {
 
 const POST_FAILURE_MESSAGE = 'Votre réponse n’a pas été publiée. Vérifiez votre connexion, puis réessayez.';
 
-function isApiProblem(error: unknown): error is ApiProblem {
-  return typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number';
-}
-
-function postFailureMessage(error: unknown): string {
-  if (isApiProblem(error)) {
-    return messageForCode(error) ?? POST_FAILURE_MESSAGE;
-  }
-  return POST_FAILURE_MESSAGE;
+function postFailureMessage(problem: ApiProblem): string {
+  return messageForCode(problem) ?? POST_FAILURE_MESSAGE;
 }
 
 /**
@@ -68,15 +61,14 @@ export function ReplyComposer({ questionId, onPosted }: ReplyComposerProps) {
     idempotencyKey.current ??= newIdempotencyKey();
     setSending(true);
     setSendError(null);
-    try {
-      const reply = await createReply(questionId, body, idempotencyKey.current);
+    const result = await createReply(questionId, body, idempotencyKey.current);
+    setSending(false);
+    if (result.ok) {
       idempotencyKey.current = null;
       setText('');
-      onPosted(reply);
-    } catch (error: unknown) {
-      setSendError(postFailureMessage(error));
-    } finally {
-      setSending(false);
+      onPosted(result.body);
+    } else {
+      setSendError(postFailureMessage(result.problem));
     }
   }
 

@@ -27,16 +27,16 @@ describe('getQuestion', () => {
       vi.fn(async () => Response.json(detail)),
     );
 
-    const question = await getQuestion(QUESTION_ID);
+    const result = await getQuestion(QUESTION_ID);
 
-    expect(question).toEqual(detail);
-    expect(question.counters.reply).toBe(4);
+    expect(result).toEqual({ ok: true, status: 200, body: detail });
+    expect(result).toMatchObject({ ok: true, body: { counters: { reply: 4 } } });
     const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
     expect(String(url)).toMatch(new RegExp(`/api/v1/questions/${QUESTION_ID}$`));
     expect(init?.method).toBe('GET');
   });
 
-  it('throws the Problem Details of a 404 (hidden or deleted question), so the page can show it', async () => {
+  it('returns the Problem Details of a 404 (hidden or deleted question), so the page can show it', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () =>
@@ -47,16 +47,19 @@ describe('getQuestion', () => {
       ),
     );
 
-    const error = await getQuestion(QUESTION_ID).catch((problem: unknown) => problem);
+    const result = await getQuestion(QUESTION_ID);
 
-    expect(error).toEqual({
-      status: 404,
-      title: 'Introuvable',
-      detail: 'Question introuvable.',
-    } satisfies ApiProblem);
+    expect(result).toEqual({
+      ok: false,
+      problem: {
+        status: 404,
+        title: 'Introuvable',
+        detail: 'Question introuvable.',
+      } satisfies ApiProblem,
+    });
   });
 
-  it('throws a network problem (status 0) when the API cannot be reached', async () => {
+  it('returns a network problem (status 0) when the API cannot be reached', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => {
@@ -64,8 +67,8 @@ describe('getQuestion', () => {
       }),
     );
 
-    const error = await getQuestion(QUESTION_ID).catch((problem: unknown) => problem);
+    const result = await getQuestion(QUESTION_ID);
 
-    expect(error).toMatchObject({ status: 0, title: 'Réseau' });
+    expect(result).toMatchObject({ ok: false, problem: { status: 0, title: 'Réseau' } });
   });
 });

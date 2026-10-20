@@ -28,6 +28,7 @@ describe('reaction calls', () => {
 
     expect(result).toEqual({
       ok: true,
+      status: 200,
       body: {
         counters: { like: 10, dislike: 2, y: 50 },
         viewerReactions: ['y'],
@@ -48,7 +49,7 @@ describe('reaction calls', () => {
 
     const result = await deleteReaction('q1', 'like');
 
-    expect(result).toEqual({ ok: true, body: {} });
+    expect(result).toEqual({ ok: true, status: 204, body: {} });
     expect(vi.mocked(fetch).mock.calls[0]?.[1]?.method).toBe('DELETE');
   });
 });

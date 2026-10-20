@@ -1,6 +1,7 @@
 /*
  * The one client of the Y API: base URL, Problem Details errors, and the CSRF token of every mutation (DEC-138).
- * Used by the account API (lib/auth-api.ts), the feed API (lib/feed-api.ts) and the health page (getHealth).
+ * Used by every API client (lib/auth-api.ts, lib/feed-api.ts, lib/replies-api.ts, lib/question-detail-api.ts,
+ * lib/session-expired.ts) and by the health page (getHealth). Every call returns an ApiResult, it never throws on an answer.
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
@@ -14,7 +15,8 @@ export type ApiProblem = {
   code?: string;
 };
 
-type ApiResult<T> = { ok: true; status: number; body: T } | { ok: false; problem: ApiProblem };
+/** The answer of a call: the body on success, the Problem Details otherwise. Calls never throw on an API answer. */
+export type ApiResult<T> = { ok: true; status: number; body: T } | { ok: false; problem: ApiProblem };
 
 type ApiMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 

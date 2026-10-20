@@ -7,10 +7,10 @@ import {
   putReaction,
   type FeedPage,
   type FeedQuestion,
-  type FeedResult,
   type ReactionKind,
   type ReactionState,
 } from '@/lib/feed-api';
+import type { ApiResult } from '@/lib/api-client';
 import { Conversation } from '@/components/conversation/conversation';
 import { Composer } from './composer';
 import { FeedIcon } from './feed-icon';
@@ -111,7 +111,7 @@ export function HomeFeed({
   /** The questions whose conversation is open under their card. */
   const [openConversations, setOpenConversations] = useState<ReadonlySet<string>>(() => new Set());
 
-  const applyFirstPage = useCallback((result: FeedResult<FeedPage>) => {
+  const applyFirstPage = useCallback((result: ApiResult<FeedPage>) => {
     setState((current) =>
       result.ok
         ? {

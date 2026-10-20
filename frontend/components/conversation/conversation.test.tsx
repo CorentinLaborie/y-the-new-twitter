@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ApiResult } from '@/lib/api-client';
 import {
   createReply,
   deleteReply,
@@ -63,8 +64,8 @@ function reply(id: string, overrides: Partial<ReplyView> = {}): ReplyView {
   };
 }
 
-function page(items: ReplyView[], nextCursor: string | null = null): ReplyPage {
-  return { items, nextCursor };
+function page(items: ReplyView[], nextCursor: string | null = null): ApiResult<ReplyPage> {
+  return { ok: true, status: 200, body: { items, nextCursor } };
 }
 
 const SERVER_ERROR = { status: 500, title: 'Erreur', detail: 'Erreur' };
@@ -153,9 +154,25 @@ describe('Conversation', () => {
     expect(screen.queryByRole('button', { name: 'Voir plus de réponses' })).not.toBeInTheDocument();
   });
 
+  it('a failed "Voir plus de réponses" keeps the replies already shown, and says so', async () => {
+    vi.mocked(listReplies)
+      .mockResolvedValueOnce(page([reply('r1'), reply('r2')], 'cursor-2'))
+      .mockResolvedValueOnce({ ok: false, problem: SERVER_ERROR });
+    openConversation({ replyCount: 5 });
+    await screen.findByText('2 réponses affichées sur 5');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Voir plus de réponses' }));
+
+    expect(
+      await screen.findByText('Les réponses suivantes n’ont pas pu être chargées. Réessayez.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Réponse r1')).toBeInTheDocument();
+    expect(screen.getByText('Réponse r2')).toBeInTheDocument();
+  });
+
   it('the first page failing shows an error card, and its retry loads the page', async () => {
     vi.mocked(listReplies)
-      .mockRejectedValueOnce(SERVER_ERROR)
+      .mockResolvedValueOnce({ ok: false, problem: SERVER_ERROR })
       .mockResolvedValueOnce(page([reply('r1')]));
     openConversation();
 
@@ -172,9 +189,9 @@ describe('Conversation', () => {
   it('a like shows at once, then the server counters replace it', async () => {
     vi.mocked(listReplies).mockResolvedValue(page([reply('r1')]));
     vi.mocked(setReplyReaction).mockResolvedValue({
-      replyId: 'r1',
-      counts: { like: 3, dislike: 0 },
-      viewerReactions: ['like'],
+      ok: true,
+      status: 200,
+      body: { replyId: 'r1', counts: { like: 3, dislike: 0 }, viewerReactions: ['like'] },
     });
     openConversation();
     await screen.findByText('Réponse r1');
@@ -201,11 +218,12 @@ describe('Conversation', () => {
 
   it('a failed reaction is rolled back, with a French message', async () => {
     vi.mocked(listReplies).mockResolvedValue(page([reply('r1')]));
-    vi.mocked(setReplyReaction).mockRejectedValue(SERVER_ERROR);
+    vi.mocked(setReplyReaction).mockResolvedValue({ ok: false, problem: SERVER_ERROR });
     openConversation();
     await screen.findByText('Réponse r1');
 
     fireEvent.click(screen.getByRole('button', { name: 'like r1' }));
+    expect(screen.getByText('likes 3')).toBeInTheDocument();
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Votre réaction n’a pas été enregistrée. Réessayez.',
@@ -216,9 +234,9 @@ describe('Conversation', () => {
   it('the two kinds are independent: a dislike on a liked reply does not remove the like', async () => {
     vi.mocked(listReplies).mockResolvedValue(page([reply('r1', { viewerReactions: ['like'] })]));
     vi.mocked(setReplyReaction).mockResolvedValue({
-      replyId: 'r1',
-      counts: { like: 2, dislike: 1 },
-      viewerReactions: ['like', 'dislike'],
+      ok: true,
+      status: 200,
+      body: { replyId: 'r1', counts: { like: 2, dislike: 1 }, viewerReactions: ['like', 'dislike'] },
     });
     openConversation();
     await screen.findByText('Réponse r1');
@@ -233,7 +251,7 @@ describe('Conversation', () => {
 
   it('clicking an active kind removes it, and only that kind', async () => {
     vi.mocked(listReplies).mockResolvedValue(page([reply('r1', { viewerReactions: ['like'] })]));
-    vi.mocked(removeReplyReaction).mockResolvedValue(undefined);
+    vi.mocked(removeReplyReaction).mockResolvedValue({ ok: true, status: 204, body: undefined });
     openConversation();
     await screen.findByText('Réponse r1');
 
@@ -248,7 +266,7 @@ describe('Conversation', () => {
 
   it('deleting a reply removes it from the list and lowers the caption count', async () => {
     vi.mocked(listReplies).mockResolvedValue(page([reply('r1'), reply('r2')], 'cursor-2'));
-    vi.mocked(deleteReply).mockResolvedValue(undefined);
+    vi.mocked(deleteReply).mockResolvedValue({ ok: true, status: 204, body: undefined });
     openConversation({ replyCount: 5 });
     expect(await screen.findByText('2 réponses affichées sur 5')).toBeInTheDocument();
 
@@ -260,9 +278,39 @@ describe('Conversation', () => {
     expect(screen.getByText('Réponse r2')).toBeInTheDocument();
   });
 
+  it('a failed removal of a like puts the like back, with a French message', async () => {
+    vi.mocked(listReplies).mockResolvedValue(page([reply('r1', { viewerReactions: ['like'] })]));
+    vi.mocked(removeReplyReaction).mockResolvedValue({ ok: false, problem: SERVER_ERROR });
+    openConversation();
+    await screen.findByText('Réponse r1');
+
+    fireEvent.click(screen.getByRole('button', { name: 'like r1' }));
+    expect(screen.getByText('likes 1')).toBeInTheDocument();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Votre réaction n’a pas été enregistrée. Réessayez.',
+    );
+    expect(screen.getByText('likes 2')).toBeInTheDocument();
+  });
+
+  it('a refused deletion with a known code shows the text of that code', async () => {
+    vi.mocked(listReplies).mockResolvedValue(page([reply('r1')]));
+    vi.mocked(deleteReply).mockResolvedValue({
+      ok: false,
+      problem: { status: 403, title: 'Interdit', detail: 'Account suspended.', code: 'account_suspended' },
+    });
+    openConversation();
+    await screen.findByText('Réponse r1');
+
+    fireEvent.click(screen.getByRole('button', { name: 'delete r1' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Votre compte est suspendu.');
+    expect(screen.getByText('Réponse r1')).toBeInTheDocument();
+  });
+
   it('a failed deletion keeps the reply and shows a French message', async () => {
     vi.mocked(listReplies).mockResolvedValue(page([reply('r1')]));
-    vi.mocked(deleteReply).mockRejectedValue(SERVER_ERROR);
+    vi.mocked(deleteReply).mockResolvedValue({ ok: false, problem: SERVER_ERROR });
     openConversation();
     await screen.findByText('Réponse r1');
 
@@ -276,7 +324,11 @@ describe('Conversation', () => {
 
   it('a posted reply is added at the end of the list and raises the caption count', async () => {
     vi.mocked(listReplies).mockResolvedValue(page([reply('r1')], 'cursor-2'));
-    vi.mocked(createReply).mockResolvedValue(reply('r9', { text: 'Ma réponse' }));
+    vi.mocked(createReply).mockResolvedValue({
+      ok: true,
+      status: 201,
+      body: reply('r9', { text: 'Ma réponse' }),
+    });
     openConversation({ replyCount: 3 });
     expect(await screen.findByText('1 réponses affichées sur 3')).toBeInTheDocument();
 
@@ -291,8 +343,12 @@ describe('Conversation', () => {
   it('reports the new reply count after a post, and after a deletion', async () => {
     const onReplyCountChange = vi.fn();
     vi.mocked(listReplies).mockResolvedValue(page([reply('r1'), reply('r2')]));
-    vi.mocked(createReply).mockResolvedValue(reply('r9', { text: 'Ma réponse' }));
-    vi.mocked(deleteReply).mockResolvedValue(undefined);
+    vi.mocked(createReply).mockResolvedValue({
+      ok: true,
+      status: 201,
+      body: reply('r9', { text: 'Ma réponse' }),
+    });
+    vi.mocked(deleteReply).mockResolvedValue({ ok: true, status: 204, body: undefined });
     openConversation({ replyCount: 2, onReplyCountChange });
     await screen.findByText('Réponse r2');
 

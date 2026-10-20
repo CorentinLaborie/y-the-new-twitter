@@ -12,11 +12,12 @@
  *   kind: like | dislike.
  *
  * The text is 1 to 280 characters, counted in Unicode code points (components/feed/question-rules.ts).
- * Unlike lib/feed-api.ts, which returns a result, the functions here return the value and throw the
- * ApiProblem (lib/api-client.ts) on any 4xx or 5xx answer.
+ * Like lib/feed-api.ts, each function returns an ApiResult (lib/api-client.ts): the body on success,
+ * the ApiProblem on any 4xx or 5xx answer. Nothing is thrown.
  */
 
 import { questionLength } from '@/components/feed/question-rules';
+import type { ApiResult } from '@/lib/api-client';
 import { protectedApiRequest } from '@/lib/session-expired';
 
 export const REPLY_MAX_LENGTH = 280;
@@ -58,21 +59,6 @@ export function isReplyTextValid(text: string): boolean {
   return length >= 1 && length <= REPLY_MAX_LENGTH;
 }
 
-type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
-
-/** The body of a successful answer. Throws the ApiProblem otherwise; a 204 gives an empty body. */
-async function callOrThrow<T>(
-  method: Method,
-  path: string,
-  options?: { body?: unknown; headers?: Record<string, string> },
-): Promise<T> {
-  const result = await protectedApiRequest<T>(method, path, options);
-  if (!result.ok) {
-    throw result.problem;
-  }
-  return result.body;
-}
-
 function repliesPath(questionId: string): string {
   return `/questions/${encodeURIComponent(questionId)}/replies`;
 }
@@ -85,8 +71,12 @@ function replyPath(replyId: string): string {
  * Posts a reply to a question. The caller keeps one Idempotency-Key per text until the post succeeds, so a
  * repeated submit returns the first reply (section 9.1 of the product document).
  */
-export function createReply(questionId: string, text: string, idempotencyKey: string): Promise<ReplyView> {
-  return callOrThrow<ReplyView>('POST', repliesPath(questionId), {
+export function createReply(
+  questionId: string,
+  text: string,
+  idempotencyKey: string,
+): Promise<ApiResult<ReplyView>> {
+  return protectedApiRequest<ReplyView>('POST', repliesPath(questionId), {
     body: { text },
     headers: { 'Idempotency-Key': idempotencyKey },
   });
@@ -96,7 +86,7 @@ export function createReply(questionId: string, text: string, idempotencyKey: st
 export function listReplies(
   questionId: string,
   { cursor, limit }: { cursor?: string; limit?: number } = {},
-): Promise<ReplyPage> {
+): Promise<ApiResult<ReplyPage>> {
   const query = new URLSearchParams();
   if (cursor) {
     query.set('cursor', cursor);
@@ -105,20 +95,23 @@ export function listReplies(
     query.set('limit', String(limit));
   }
   const search = query.toString();
-  return callOrThrow<ReplyPage>('GET', `${repliesPath(questionId)}${search ? `?${search}` : ''}`);
+  return protectedApiRequest<ReplyPage>('GET', `${repliesPath(questionId)}${search ? `?${search}` : ''}`);
 }
 
 /** Deletes a reply of the signed-in account (204). */
-export async function deleteReply(replyId: string): Promise<void> {
-  await callOrThrow<void>('DELETE', replyPath(replyId));
+export function deleteReply(replyId: string): Promise<ApiResult<void>> {
+  return protectedApiRequest<void>('DELETE', replyPath(replyId));
 }
 
 /** Sets the viewer's reaction to `kind` on a reply, replacing the previous one. The answer carries the counters. */
-export function setReplyReaction(replyId: string, kind: ReplyReactionKind): Promise<ReplyReactionResult> {
-  return callOrThrow<ReplyReactionResult>('PUT', `${replyPath(replyId)}/reactions/${kind}`);
+export function setReplyReaction(
+  replyId: string,
+  kind: ReplyReactionKind,
+): Promise<ApiResult<ReplyReactionResult>> {
+  return protectedApiRequest<ReplyReactionResult>('PUT', `${replyPath(replyId)}/reactions/${kind}`);
 }
 
 /** Removes the viewer's reaction of `kind` on a reply (204, no body). */
-export async function removeReplyReaction(replyId: string, kind: ReplyReactionKind): Promise<void> {
-  await callOrThrow<void>('DELETE', `${replyPath(replyId)}/reactions/${kind}`);
+export function removeReplyReaction(replyId: string, kind: ReplyReactionKind): Promise<ApiResult<void>> {
+  return protectedApiRequest<void>('DELETE', `${replyPath(replyId)}/reactions/${kind}`);
 }

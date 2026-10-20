@@ -29,7 +29,7 @@
  * Errors are Problem Details, read as ApiProblem (lib/api-client.ts).
  */
 
-import type { ApiProblem } from '@/lib/api-client';
+import type { ApiResult } from '@/lib/api-client';
 import { protectedApiRequest } from '@/lib/session-expired';
 
 export type ReactionKind = 'like' | 'dislike' | 'y';
@@ -57,10 +57,8 @@ export type FeedQuestion = ReactionState & {
 /** One page of the feed. `trending` (the top 10 by reactions in the last 24 h) is sent on the first page only. */
 export type FeedPage = { trending: FeedQuestion[]; questions: FeedQuestion[]; nextCursor: string | null };
 
-export type FeedResult<T> = { ok: true; body: T } | { ok: false; problem: ApiProblem };
-
 /** One page of the "Pour vous" feed. `cursor` is the nextCursor of the previous page, absent for the first one. */
-export function fetchFeedPage(cursor?: string): Promise<FeedResult<FeedPage>> {
+export function fetchFeedPage(cursor?: string): Promise<ApiResult<FeedPage>> {
   const query = new URLSearchParams({ tab: 'for-you' });
   if (cursor) {
     query.set('cursor', cursor);
@@ -72,7 +70,7 @@ export function fetchFeedPage(cursor?: string): Promise<FeedResult<FeedPage>> {
  * Posts a question. The key makes a repeated submit return the first result (Idempotency-Key, section 9.1);
  * the composer keeps one key per text until the post succeeds.
  */
-export function postQuestion(text: string, idempotencyKey: string): Promise<FeedResult<FeedQuestion>> {
+export function postQuestion(text: string, idempotencyKey: string): Promise<ApiResult<FeedQuestion>> {
   return protectedApiRequest<FeedQuestion>('POST', '/questions', {
     body: { text },
     headers: { 'Idempotency-Key': idempotencyKey },
@@ -105,19 +103,19 @@ async function sendReaction(
   method: 'PUT' | 'DELETE',
   questionId: string,
   kind: ReactionKind,
-): Promise<FeedResult<Partial<ReactionState>>> {
+): Promise<ApiResult<Partial<ReactionState>>> {
   const result = await protectedApiRequest<Partial<ReactionAnswer>>(
     method,
     `/questions/${encodeURIComponent(questionId)}/reactions/${kind}`,
   );
-  return result.ok ? { ok: true, body: toReactionState(result.body) } : result;
+  return result.ok ? { ok: true, status: result.status, body: toReactionState(result.body) } : result;
 }
 
 /** Sets the viewer's reaction to `kind` on a question, replacing the previous one (R11). The answer is the state. */
 export function putReaction(
   questionId: string,
   kind: ReactionKind,
-): Promise<FeedResult<Partial<ReactionState>>> {
+): Promise<ApiResult<Partial<ReactionState>>> {
   return sendReaction('PUT', questionId, kind);
 }
 
@@ -125,6 +123,6 @@ export function putReaction(
 export function deleteReaction(
   questionId: string,
   kind: ReactionKind,
-): Promise<FeedResult<Partial<ReactionState>>> {
+): Promise<ApiResult<Partial<ReactionState>>> {
   return sendReaction('DELETE', questionId, kind);
 }

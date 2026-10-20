@@ -56,7 +56,7 @@ describe('ShareView', () => {
   });
 
   it('has one h1 and shows the question card, then the read-only conversation with its props', async () => {
-    vi.mocked(getQuestion).mockResolvedValue(detail());
+    vi.mocked(getQuestion).mockResolvedValue({ ok: true, status: 200, body: detail() });
 
     render(<ShareView questionId={QUESTION_ID} viewerHandle="bob" />);
 
@@ -76,7 +76,7 @@ describe('ShareView', () => {
   });
 
   it('shows the not-found message with a link to /home on a 404', async () => {
-    vi.mocked(getQuestion).mockRejectedValue(NOT_FOUND_PROBLEM);
+    vi.mocked(getQuestion).mockResolvedValue({ ok: false, problem: NOT_FOUND_PROBLEM });
 
     render(<ShareView questionId={QUESTION_ID} viewerHandle="bob" />);
 
@@ -90,8 +90,11 @@ describe('ShareView', () => {
 
   it('shows the error card on another failure, and loads the question again with Réessayer', async () => {
     vi.mocked(getQuestion)
-      .mockRejectedValueOnce({ status: 500, title: 'Erreur', detail: 'Erreur serveur.' })
-      .mockResolvedValueOnce(detail({ text: 'Question après reprise' }));
+      .mockResolvedValueOnce({
+        ok: false,
+        problem: { status: 500, title: 'Erreur', detail: 'Erreur serveur.' },
+      })
+      .mockResolvedValueOnce({ ok: true, status: 200, body: detail({ text: 'Question après reprise' }) });
 
     render(<ShareView questionId={QUESTION_ID} viewerHandle="bob" />);
 
@@ -107,9 +110,10 @@ describe('ShareView', () => {
   });
 
   it('puts a reaction at once, then keeps the server counters', async () => {
-    vi.mocked(getQuestion).mockResolvedValue(detail());
+    vi.mocked(getQuestion).mockResolvedValue({ ok: true, status: 200, body: detail() });
     vi.mocked(putReaction).mockResolvedValue({
       ok: true,
+      status: 200,
       body: {
         counters: { like: 11, dislike: 2, y: 49 },
         viewerReactions: ['like'],
@@ -128,7 +132,7 @@ describe('ShareView', () => {
   });
 
   it('restores the previous reaction and shows the message when the reaction call fails', async () => {
-    vi.mocked(getQuestion).mockResolvedValue(detail());
+    vi.mocked(getQuestion).mockResolvedValue({ ok: true, status: 200, body: detail() });
     vi.mocked(putReaction).mockResolvedValue({
       ok: false,
       problem: { status: 500, title: 'Erreur', detail: 'Erreur serveur.' },

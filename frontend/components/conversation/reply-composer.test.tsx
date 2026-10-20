@@ -75,7 +75,7 @@ describe('ReplyComposer', () => {
   });
 
   it('sends the trimmed text with an Idempotency-Key, then clears the composer and gives the reply to the page', async () => {
-    vi.mocked(createReply).mockResolvedValue(POSTED);
+    vi.mocked(createReply).mockResolvedValue({ ok: true, status: 201, body: POSTED });
     const onPosted = vi.fn();
     render(<ReplyComposer questionId="q-1" onPosted={onPosted} />);
 
@@ -100,8 +100,11 @@ describe('ReplyComposer', () => {
   });
 
   it('keeps the text and shows an alert when the post fails, then retries with the same key', async () => {
-    vi.mocked(createReply).mockRejectedValueOnce({ status: 500, title: 'Erreur', detail: 'Erreur' });
-    vi.mocked(createReply).mockResolvedValueOnce(POSTED);
+    vi.mocked(createReply).mockResolvedValueOnce({
+      ok: false,
+      problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+    });
+    vi.mocked(createReply).mockResolvedValueOnce({ ok: true, status: 201, body: POSTED });
     const onPosted = vi.fn();
     render(<ReplyComposer questionId="q-1" onPosted={onPosted} />);
 
@@ -123,8 +126,11 @@ describe('ReplyComposer', () => {
   });
 
   it('uses a new Idempotency-Key when the text changes after a failed post', async () => {
-    vi.mocked(createReply).mockRejectedValueOnce({ status: 500, title: 'Erreur', detail: 'Erreur' });
-    vi.mocked(createReply).mockResolvedValueOnce(POSTED);
+    vi.mocked(createReply).mockResolvedValueOnce({
+      ok: false,
+      problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+    });
+    vi.mocked(createReply).mockResolvedValueOnce({ ok: true, status: 201, body: POSTED });
     render(<ReplyComposer questionId="q-1" onPosted={vi.fn()} />);
 
     typeText('Une réponse');
@@ -139,11 +145,14 @@ describe('ReplyComposer', () => {
   });
 
   it('shows the French text of a refusal with a known code', async () => {
-    vi.mocked(createReply).mockRejectedValueOnce({
-      status: 403,
-      title: 'Interdit',
-      detail: 'Account suspended.',
-      code: 'account_suspended',
+    vi.mocked(createReply).mockResolvedValueOnce({
+      ok: false,
+      problem: {
+        status: 403,
+        title: 'Interdit',
+        detail: 'Account suspended.',
+        code: 'account_suspended',
+      },
     });
     render(<ReplyComposer questionId="q-1" onPosted={vi.fn()} />);
 

@@ -47,7 +47,7 @@ describe('reply calls', () => {
 
     const result = await createReply(QUESTION_ID, 'Une réponse', 'key-1');
 
-    expect(result).toEqual(reply);
+    expect(result).toEqual({ ok: true, status: 201, body: reply });
     const { path, init } = firstCall();
     expect(path).toBe(`/api/v1/questions/${QUESTION_ID}/replies`);
     expect(init?.method).toBe('POST');
@@ -64,7 +64,7 @@ describe('reply calls', () => {
 
     const result = await listReplies(QUESTION_ID);
 
-    expect(result).toEqual({ items: [reply], nextCursor: null });
+    expect(result).toEqual({ ok: true, status: 200, body: { items: [reply], nextCursor: null } });
     const { path, init } = firstCall();
     expect(path).toBe(`/api/v1/questions/${QUESTION_ID}/replies`);
     expect(init?.method).toBe('GET');
@@ -81,13 +81,13 @@ describe('reply calls', () => {
     expect(firstCall().path).toBe(`/api/v1/questions/${QUESTION_ID}/replies?cursor=abc&limit=10`);
   });
 
-  it('deletes a reply and resolves without a value on 204', async () => {
+  it('deletes a reply and answers ok with 204', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(null, { status: 204 })),
     );
 
-    await expect(deleteReply(REPLY_ID)).resolves.toBeUndefined();
+    expect(await deleteReply(REPLY_ID)).toMatchObject({ ok: true, status: 204 });
 
     const { path, init } = firstCall();
     expect(path).toBe(`/api/v1/replies/${REPLY_ID}`);
@@ -103,27 +103,27 @@ describe('reply calls', () => {
 
     const result = await setReplyReaction(REPLY_ID, 'like');
 
-    expect(result).toEqual(answer);
+    expect(result).toEqual({ ok: true, status: 200, body: answer });
     const { path, init } = firstCall();
     expect(path).toBe(`/api/v1/replies/${REPLY_ID}/reactions/like`);
     expect(init?.method).toBe('PUT');
     expect(new Headers(init?.headers).get('X-CSRF-Token')).toBe('csrf-unit');
   });
 
-  it('removes a reaction and resolves without a value on 204', async () => {
+  it('removes a reaction and answers ok with 204', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(null, { status: 204 })),
     );
 
-    await expect(removeReplyReaction(REPLY_ID, 'dislike')).resolves.toBeUndefined();
+    expect(await removeReplyReaction(REPLY_ID, 'dislike')).toMatchObject({ ok: true, status: 204 });
 
     const { path, init } = firstCall();
     expect(path).toBe(`/api/v1/replies/${REPLY_ID}/reactions/dislike`);
     expect(init?.method).toBe('DELETE');
   });
 
-  it('throws the ApiProblem of a 4xx answer, with its title, detail and code', async () => {
+  it('returns the ApiProblem of a 4xx answer, with its title, detail and code', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () =>
@@ -134,26 +134,30 @@ describe('reply calls', () => {
       ),
     );
 
-    await expect(createReply(QUESTION_ID, 'x', 'key-2')).rejects.toEqual({
-      status: 422,
-      title: 'Réponse refusée',
-      detail: 'Le texte dépasse 280 caractères.',
-      code: 'reply-too-long',
+    expect(await createReply(QUESTION_ID, 'x', 'key-2')).toEqual({
+      ok: false,
+      problem: {
+        status: 422,
+        title: 'Réponse refusée',
+        detail: 'Le texte dépasse 280 caractères.',
+        code: 'reply-too-long',
+      },
     });
   });
 
-  it('throws the ApiProblem of a 5xx answer that has no body, with the default detail', async () => {
+  it('returns the ApiProblem of a 5xx answer that has no body, with the default detail', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(null, { status: 500 })),
     );
 
-    await expect(setReplyReaction(REPLY_ID, 'like')).rejects.toEqual(
-      expect.objectContaining({ status: 500, detail: 'Une erreur est survenue.' }),
-    );
+    expect(await setReplyReaction(REPLY_ID, 'like')).toEqual({
+      ok: false,
+      problem: expect.objectContaining({ status: 500, detail: 'Une erreur est survenue.' }),
+    });
   });
 
-  it('throws the ApiProblem of a 404 on the list', async () => {
+  it('returns the ApiProblem of a 404 on the list', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () =>
@@ -161,9 +165,10 @@ describe('reply calls', () => {
       ),
     );
 
-    await expect(listReplies(QUESTION_ID)).rejects.toEqual(
-      expect.objectContaining({ status: 404, title: 'Introuvable' }),
-    );
+    expect(await listReplies(QUESTION_ID)).toEqual({
+      ok: false,
+      problem: expect.objectContaining({ status: 404, title: 'Introuvable' }),
+    });
   });
 });
 

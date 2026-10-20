@@ -68,8 +68,8 @@ function page(
   questions: FeedQuestion[],
   nextCursor: string | null = null,
   trending: FeedQuestion[] = [],
-): { ok: true; body: FeedPage } {
-  return { ok: true, body: { trending, questions, nextCursor } };
+): { ok: true; status: number; body: FeedPage } {
+  return { ok: true, status: 200, body: { trending, questions, nextCursor } };
 }
 
 const failure = { ok: false as const, problem: { status: 500, title: 'Erreur', detail: 'Erreur serveur.' } };
@@ -213,6 +213,7 @@ describe('HomeFeed', () => {
     vi.mocked(fetchFeedPage).mockResolvedValue(page([question('a', 'Question existante')]));
     vi.mocked(postQuestion).mockResolvedValue({
       ok: true,
+      status: 201,
       body: question('new', 'Question tout juste postée'),
     });
 
@@ -328,7 +329,7 @@ describe('HomeFeed', () => {
     });
 
     it('sets a reaction at once, with a PUT, and shows it as pressed', async () => {
-      vi.mocked(putReaction).mockResolvedValue({ ok: true, body: {} });
+      vi.mocked(putReaction).mockResolvedValue({ ok: true, status: 200, body: {} });
       const { like } = await renderOneQuestion();
 
       fireEvent.click(like);
@@ -341,8 +342,8 @@ describe('HomeFeed', () => {
 
     it('replaces the previous reaction: the new kind is pressed, the old one is not', async () => {
       vi.mocked(putReaction)
-        .mockResolvedValueOnce({ ok: true, body: {} })
-        .mockResolvedValueOnce({ ok: true, body: {} });
+        .mockResolvedValueOnce({ ok: true, status: 200, body: {} })
+        .mockResolvedValueOnce({ ok: true, status: 200, body: {} });
       const { like, dislike } = await renderOneQuestion();
 
       fireEvent.click(like);
@@ -356,8 +357,8 @@ describe('HomeFeed', () => {
     });
 
     it('removes the reaction when the active kind is clicked again, with a DELETE', async () => {
-      vi.mocked(putReaction).mockResolvedValue({ ok: true, body: {} });
-      vi.mocked(deleteReaction).mockResolvedValue({ ok: true, body: {} });
+      vi.mocked(putReaction).mockResolvedValue({ ok: true, status: 200, body: {} });
+      vi.mocked(deleteReaction).mockResolvedValue({ ok: true, status: 200, body: {} });
       const { like } = await renderOneQuestion();
 
       fireEvent.click(like);
@@ -371,7 +372,7 @@ describe('HomeFeed', () => {
     });
 
     it('moves the Y progress when the viewer adds a Y reaction', async () => {
-      vi.mocked(putReaction).mockResolvedValue({ ok: true, body: {} });
+      vi.mocked(putReaction).mockResolvedValue({ ok: true, status: 200, body: {} });
       await renderOneQuestion();
 
       fireEvent.click(screen.getByRole('button', { name: /^49 Y$/ }));
@@ -433,8 +434,12 @@ describe('HomeFeed', () => {
         page([questionWithReplies('a', 'Question ouverte', 2, true)]),
       );
       vi.mocked(listReplies).mockResolvedValue({
-        items: [reply('r1', 'Première réponse'), reply('r2', 'Deuxième réponse')],
-        nextCursor: null,
+        ok: true,
+        status: 200,
+        body: {
+          items: [reply('r1', 'Première réponse'), reply('r2', 'Deuxième réponse')],
+          nextCursor: null,
+        },
       });
 
       render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
@@ -450,7 +455,11 @@ describe('HomeFeed', () => {
       vi.mocked(fetchFeedPage).mockResolvedValue(
         page([questionWithReplies('a', 'Question ouverte', 1, true)]),
       );
-      vi.mocked(listReplies).mockResolvedValue({ items: [reply('r1', 'Réponse visible')], nextCursor: null });
+      vi.mocked(listReplies).mockResolvedValue({
+        ok: true,
+        status: 200,
+        body: { items: [reply('r1', 'Réponse visible')], nextCursor: null },
+      });
 
       render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
       const countButton = await screen.findByRole('button', { name: '1 réponse' });
@@ -468,7 +477,11 @@ describe('HomeFeed', () => {
       vi.mocked(fetchFeedPage).mockResolvedValue(
         page([questionWithReplies('a', 'Question ouverte', 1, true)]),
       );
-      vi.mocked(listReplies).mockResolvedValue({ items: [reply('r1', 'Réponse visible')], nextCursor: null });
+      vi.mocked(listReplies).mockResolvedValue({
+        ok: true,
+        status: 200,
+        body: { items: [reply('r1', 'Réponse visible')], nextCursor: null },
+      });
 
       render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
       const countButton = await screen.findByRole('button', { name: '1 réponse' });
@@ -487,10 +500,14 @@ describe('HomeFeed', () => {
         page([questionWithReplies('a', 'Question ouverte', 2, true)]),
       );
       vi.mocked(listReplies).mockResolvedValue({
-        items: [reply('r1', 'Première réponse'), reply('r2', 'Deuxième réponse')],
-        nextCursor: null,
+        ok: true,
+        status: 200,
+        body: {
+          items: [reply('r1', 'Première réponse'), reply('r2', 'Deuxième réponse')],
+          nextCursor: null,
+        },
       });
-      vi.mocked(createReply).mockResolvedValue(reply('r9', 'Réponse posée'));
+      vi.mocked(createReply).mockResolvedValue({ ok: true, status: 201, body: reply('r9', 'Réponse posée') });
 
       render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
       fireEvent.click(await screen.findByRole('button', { name: '2 réponses' }));
@@ -510,6 +527,7 @@ describe('HomeFeed', () => {
       );
       vi.mocked(putReaction).mockResolvedValue({
         ok: true,
+        status: 200,
         body: { counters: { like: 11, dislike: 2, y: 49 }, viewerReactions: ['like'] },
       });
 
@@ -551,7 +569,7 @@ describe('HomeFeed', () => {
 
     it('lets a trending question be reacted to, and shows the change in the block', async () => {
       vi.mocked(fetchFeedPage).mockResolvedValue(page([], null, [question('t', 'Question tendance')]));
-      vi.mocked(putReaction).mockResolvedValue({ ok: true, body: {} });
+      vi.mocked(putReaction).mockResolvedValue({ ok: true, status: 200, body: {} });
 
       render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
       const block = await screen.findByRole('region', { name: 'Tendances sur 24 h' });

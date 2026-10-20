@@ -13,7 +13,6 @@ import {
   withReactions,
   withServerState,
 } from '@/components/feed/reaction-rules';
-import type { ApiProblem } from '@/lib/api-client';
 import { deleteReaction, putReaction, type FeedQuestion, type ReactionKind } from '@/lib/feed-api';
 import { getQuestion } from '@/lib/question-detail-api';
 
@@ -42,22 +41,20 @@ export function ShareView({ questionId, viewerHandle }: ShareViewProps) {
 
   useEffect(() => {
     let active = true;
-    getQuestion(questionId).then(
-      (question) => {
-        if (active) {
-          setLoad({ phase: 'ready', question, replyCount: question.counters.reply });
-        }
-      },
-      (problem: ApiProblem) => {
-        if (active) {
-          setLoad(
-            problem.status === 404
-              ? { phase: 'not-found' }
-              : { phase: 'failed', message: feedFailureMessage(problem) },
-          );
-        }
-      },
-    );
+    getQuestion(questionId).then((result) => {
+      if (!active) {
+        return;
+      }
+      if (result.ok) {
+        setLoad({ phase: 'ready', question: result.body, replyCount: result.body.counters.reply });
+      } else {
+        setLoad(
+          result.problem.status === 404
+            ? { phase: 'not-found' }
+            : { phase: 'failed', message: feedFailureMessage(result.problem) },
+        );
+      }
+    });
     return () => {
       active = false;
     };
