@@ -999,7 +999,6 @@ The names are the ones used in the code (`backend/src/config/env.validation.ts`)
 | `BACKUP_CODE_HMAC_KEY` | Secret key for the HMAC of the administrator backup codes (DEC-114) |
 | `SESSION_SECRET` | Secret that signs the session cookie (DEC-131). Never committed |
 | `BREVO_API_KEY` / `MAIL_FROM_ADDRESS` | Email provider: Brevo, free plan, 300 e-mails a day, through its API (DEC-018). Required in production, checked at startup; `MAIL_FROM_ADDRESS` must be an address of a domain validated in Brevo. Outside production, e-mails are captured, not sent |
-| `ADMIN_ALERT_EMAIL` | Address for the administrator's login alerts and daily summary |
 | `VERIFAGE_BASE_URL` / `VERIFAGE_API_KEY` | Age verification service |
 | `APP_PUBLIC_URL` | Public URL of the frontend (links in emails, CORS) |
 | `TRUST_PROXY_HOPS` | Reverse proxies in front of the API (default `0`). Behind one proxy that sets `X-Forwarded-For`, set `1`: the rate limits of section 9.4 are then per visitor, not per proxy |
