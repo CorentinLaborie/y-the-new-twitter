@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { assertIdempotencyKey, IdempotencyService } from '../common/idempotency/idempotency.service';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { PrismaService } from '../database/prisma.service';
+import { MentionsService } from '../mentions/mentions.service';
 import type { CreateQuestionDto } from './dto/create-question.dto';
 import type { QuestionResponseDto } from './dto/question-response.dto';
 import { QuestionsDb, QuestionsRepository } from './questions.repository';
@@ -20,6 +21,7 @@ export class QuestionsService {
     private readonly questions: QuestionsRepository,
     private readonly idempotency: IdempotencyService,
     private readonly config: ConfigService,
+    private readonly mentions: MentionsService,
   ) {}
 
   /**
@@ -60,9 +62,11 @@ export class QuestionsService {
     text: string,
     hashtags: readonly string[],
   ): Promise<QuestionResponseDto> {
+    const mentioned = await this.mentions.resolve(db, author.id, text);
     const question = await this.questions.createQuestion(db, author.id, text);
     const hashtagIds = await this.questions.findOrCreateHashtags(db, hashtags);
     await this.questions.linkHashtags(db, question.id, hashtagIds);
+    await this.mentions.record(db, author.id, { questionId: question.id }, mentioned);
 
     return toQuestionView(
       {

@@ -27,7 +27,14 @@ export class RepliesRepository {
   findVisibleQuestion(db: RepliesDb, viewerId: string, questionId: string) {
     return db.question.findFirst({
       where: { AND: [{ id: questionId }, visibleTo(viewerId)] },
-      select: { id: true, conversationOpenedAt: true },
+      select: { id: true, authorId: true, conversationOpenedAt: true },
+    });
+  }
+
+  /** The question's author is told of a reply (B9). Nothing is written when the author replies to their own question. */
+  writeReplyNotification(db: RepliesDb, recipientId: string, actorId: string, questionId: string, replyId: string) {
+    return db.notification.create({
+      data: { recipientId, actorId, type: 'reply_to_question', questionId, replyId },
     });
   }
 

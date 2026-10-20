@@ -9,6 +9,7 @@ import type { SessionUser } from '../auth/session/session-user.repository';
 import { assertIdempotencyKey, IdempotencyService, requestHash } from '../common/idempotency/idempotency.service';
 import { PrismaService } from '../database/prisma.service';
 import { decodeCursor, encodeCursor } from '../feed/feed-cursor';
+import { MentionsService } from '../mentions/mentions.service';
 import { characterCount } from '../questions/question-text';
 import type { CreateReplyDto } from './dto/create-reply.dto';
 import type { ReplyPageDto } from './dto/reply-page.dto';
@@ -33,6 +34,7 @@ export class RepliesService {
     private readonly replies: RepliesRepository,
     private readonly idempotency: IdempotencyService,
     private readonly config: ConfigService,
+    private readonly mentions: MentionsService,
   ) {}
 
   /**
@@ -133,8 +135,14 @@ export class RepliesService {
       throw new UnprocessableEntityException(`Les réponses s’ouvrent à ${threshold} Y.`);
     }
 
+    const mentioned = await this.mentions.resolve(db, author.id, text);
     const reply = await this.replies.createReply(db, author.id, questionId, text);
     await this.replies.changeReplyCount(db, questionId, 1);
+    const target = { questionId, replyId: reply.id };
+    await this.mentions.record(db, author.id, target, mentioned);
+    if (question.authorId !== author.id) {
+      await this.replies.writeReplyNotification(db, question.authorId, author.id, questionId, reply.id);
+    }
 
     return toReplyView(reply, reply, []);
   }

@@ -6,6 +6,7 @@ import { IdempotencyRepository } from '../common/idempotency/idempotency.reposit
 import { IdempotencyService } from '../common/idempotency/idempotency.service';
 import { Prisma } from '../database/generated/client/client';
 import type { PrismaService } from '../database/prisma.service';
+import type { MentionsService } from '../mentions/mentions.service';
 import type { CreateQuestionDto } from './dto/create-question.dto';
 import { QuestionsRepository } from './questions.repository';
 import { QuestionsService } from './questions.service';
@@ -71,11 +72,13 @@ describe('QuestionsService (B2, section 9.1)', () => {
     prisma = { $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback('tx')) };
     const config = { getOrThrow: jest.fn().mockReturnValue(50) } as unknown as ConfigService;
     const idempotency = new IdempotencyService(prisma as unknown as PrismaService, keys as unknown as IdempotencyRepository);
+    const mentions = { resolve: jest.fn().mockResolvedValue([]), record: jest.fn().mockResolvedValue(undefined) };
     service = new QuestionsService(
       prisma as unknown as PrismaService,
       repository as unknown as QuestionsRepository,
       idempotency,
       config,
+      mentions as unknown as MentionsService,
     );
   });
 
