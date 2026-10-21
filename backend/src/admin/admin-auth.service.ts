@@ -1,30 +1,34 @@
-import { ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { LoginService, type LoginAttempt } from '../auth/login/login.service';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { MAIL_SENDER, type MailSender } from '../common/mail/mail-sender';
 import { UsersRepository } from '../users/users.repository';
 import type { AdminMfaSetup } from './admin-session';
+import { adminSetupMail } from './admin-setup-mail';
 import { adminSignInMail } from './admin-sign-in-mail';
 import { AdminMfaService, type PendingFactor } from './mfa/admin-mfa.service';
+import { issueSetupToken, readSetupToken } from './mfa/setup-link';
 import { AuditLogService } from './audit/audit-log.service';
 import { AUDIT_ACTIONS, AUDIT_TARGET_TYPES, type AuditResult } from './audit/audit-log.types';
 
 /**
  * What the back-office login answers. 'invalid' and 'unverified' are the same answers as the user login. The other
  * outcomes come after a correct password: 'code_required' asks for the second factor, 'invalid_code' refuses a wrong
- * one, 'setup_required' sends an account without a second factor to the set-up, and 'ok' is a full sign-in.
+ * one, 'setup_required' means the set-up link was sent by e-mail (no session is started), and 'ok' is a full sign-in.
  */
 type AdminLoginOutcome =
   | { readonly status: 'invalid' }
   | { readonly status: 'unverified' }
   | { readonly status: 'code_required' }
   | { readonly status: 'invalid_code' }
-  | { readonly status: 'setup_required'; readonly user: SessionUser }
+  | { readonly status: 'setup_required' }
   | { readonly status: 'ok'; readonly user: SessionUser };
 
 /**
  * The back-office sign-in (DEC-036): the password, then the second factor, then an e-mail alert. An account with no
- * second factor yet is sent to the set-up first, without any elevation (DEC-082).
+ * second factor yet gets a set-up link by e-mail instead of a session (DEC-082): the set-up can only start from the
+ * mailbox, so a stolen password alone cannot enrol a factor.
  */
 @Injectable()
 export class AdminAuthService {
@@ -36,6 +40,7 @@ export class AdminAuthService {
     private readonly users: UsersRepository,
     private readonly audit: AuditLogService,
     @Inject(MAIL_SENDER) private readonly mail: MailSender,
+    private readonly config: ConfigService,
   ) {}
 
   async login(
@@ -49,10 +54,8 @@ export class AdminAuthService {
     }
 
     if (!(await this.mfa.isEnrolled(check.account.id))) {
-      const completed = await this.loginService.completeLogin(check.account, check.event);
-      return completed.status === 'success'
-        ? { status: 'setup_required', user: completed.user }
-        : { status: 'invalid' };
+      await this.sendSetupLink(check.account.id, check.account.email, now);
+      return { status: 'setup_required' };
     }
 
     if (code === undefined) {
@@ -75,13 +78,22 @@ export class AdminAuthService {
     return { status: 'ok', user: completed.user };
   }
 
-  /** A new secret for the set-up. Refused once a second factor is enrolled: it is replaced only by an explicit reset. */
-  async startSetup(userId: string, handle: string): Promise<PendingFactor> {
-    if (await this.mfa.isEnrolled(userId)) {
-      throw new ConflictException('La double authentification est déjà configurée.');
+  /**
+   * A new secret for the set-up, from a link sent by e-mail. Null for a link that is unknown, expired, or whose account
+   * has its second factor already: the answer does not say which.
+   */
+  async startSetupFromLink(token: string, now: Date): Promise<{ userId: string; pending: PendingFactor } | null> {
+    const userId = readSetupToken(token, this.config.getOrThrow<string>('SESSION_SECRET'), now);
+    if (userId === null || (await this.mfa.isEnrolled(userId))) {
+      return null;
     }
 
-    return this.mfa.startSetup(handle);
+    const handle = await this.users.handleOf(userId);
+    if (handle === null) {
+      return null;
+    }
+
+    return { userId, pending: await this.mfa.startSetup(handle) };
   }
 
   /**
@@ -135,6 +147,19 @@ export class AdminAuthService {
     }
 
     return codes;
+  }
+
+  /**
+   * Sends the set-up link to the account address. Unlike the sign-in alert, a failed send is an error: without the link
+   * the set-up cannot be done, so the login answers an error and the administrator knows to retry.
+   */
+  private async sendSetupLink(userId: string, to: string, now: Date): Promise<void> {
+    const token = issueSetupToken(userId, this.config.getOrThrow<string>('SESSION_SECRET'), now);
+    const base = this.config.get<string>('ADMIN_PUBLIC_URL') || this.config.getOrThrow<string>('APP_PUBLIC_URL');
+    const link = new URL('/admin/mfa-setup', base);
+    link.searchParams.set('token', token);
+
+    await this.mail.send(adminSetupMail(to, link.toString()));
   }
 
   /**

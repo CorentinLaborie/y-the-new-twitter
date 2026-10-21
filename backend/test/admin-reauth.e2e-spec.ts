@@ -4,7 +4,7 @@ import { ADMIN_REAUTH_WINDOW_MS } from '../src/admin/admin-session';
 import { stepAt, totpCode } from '../src/admin/mfa/totp';
 import { PrismaService } from '../src/database/prisma.service';
 import { startApp } from './support/app';
-import { BASE, createAccount, newVisitor, PASSWORD, signIn } from './support/back-office';
+import { BASE, createAccount, newVisitor, PASSWORD, setupTokenSentTo, signIn } from './support/back-office';
 import { resetRateLimits } from './support/rate-limits';
 import { startMigratedPostgres } from './support/postgres';
 
@@ -30,6 +30,7 @@ describe('Back-office re-authentication (e2e, DEC-088)', () => {
     const setup = await setupVisitor.agent
       .post(`${BASE}/admin/mfa/setup`)
       .set('x-csrf-token', setupVisitor.csrf)
+      .send({ token: setupTokenSentTo(app, account.email) })
       .expect(200);
     const confirmed = await setupVisitor.agent
       .post(`${BASE}/admin/mfa/confirm`)

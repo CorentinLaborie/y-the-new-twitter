@@ -24,6 +24,14 @@ export class AdminCodeDto {
   code!: string;
 }
 
+/** The token of the set-up link, as it came in the e-mail (admin-auth.service.ts sendSetupLink). */
+export class AdminSetupLinkDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(512)
+  token!: string;
+}
+
 /** The re-authentication: the password again, and a second-factor code (DEC-088). */
 export class AdminReauthDto extends AdminCodeDto {
   @IsString()

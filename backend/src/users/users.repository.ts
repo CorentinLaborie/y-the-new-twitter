@@ -38,6 +38,11 @@ export class UsersRepository {
     return user?.email ?? null;
   }
 
+  async handleOf(id: string): Promise<string | null> {
+    const user = await this.prisma.user.findUnique({ where: { id }, select: { handle: true } });
+    return user?.handle ?? null;
+  }
+
   /** Handles are unique regardless of case (DEC-061). */
   findByHandle(handle: string) {
     return this.prisma.user.findFirst({

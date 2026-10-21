@@ -55,7 +55,7 @@ describe('Back-office account search and view (e2e)', () => {
     await visitor.agent.get(`${ACCOUNTS}/${alice.id}`).expect(404);
   });
 
-  it('answers 401 to an administrator who has not given the second factor in this session', async () => {
+  it('answers 404 to an administrator whose password alone was given: no session is started before the second factor', async () => {
     await createAccount(app, 'gate_admin', 'admin');
     const visitor = await newVisitor(app);
     await visitor.agent
@@ -64,7 +64,7 @@ describe('Back-office account search and view (e2e)', () => {
       .send({ email: 'gate_admin@example.test', password: PASSWORD })
       .expect(200);
 
-    await visitor.agent.get(ACCOUNTS).expect(401);
+    await visitor.agent.get(ACCOUNTS).expect(404);
   });
 
   describe('once signed in as an administrator', () => {

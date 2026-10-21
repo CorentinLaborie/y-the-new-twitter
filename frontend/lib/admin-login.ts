@@ -10,7 +10,7 @@ export const CODE_REQUIRED_MESSAGE = 'Saisissez le code de votre application d�
 
 /** Shown when the account has no second factor yet: the back-office cannot set one up from this screen. */
 export const SETUP_REQUIRED_MESSAGE =
-  'La double authentification n’est pas encore configurée pour ce compte. Cette étape n’est pas disponible depuis cet écran.';
+  'La double authentification n’est pas encore configurée pour ce compte. Un lien de configuration vient de vous être envoyé par e-mail, valable 15 minutes.';
 
 type AdminLoginFailure = { kind: 'locked'; retryAfterSeconds: number } | { kind: 'error'; message: string };
 

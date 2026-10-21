@@ -12,6 +12,7 @@ import { UsersRepository } from '../src/users/users.repository';
 import { startApp } from './support/app';
 import { resetRateLimits } from './support/rate-limits';
 import { sqlAsSuperuser, startMigratedPostgres } from './support/postgres';
+import { setupTokenSentTo } from './support/back-office';
 
 const PASSWORD = 'Abcdef1!';
 const WRONG_PASSWORD = 'Abcdef1?';
@@ -78,6 +79,7 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     const setup = await visitor.agent
       .post(`${BASE}/admin/mfa/setup`)
       .set('x-csrf-token', visitor.csrf)
+      .send({ token: setupTokenSentTo(app, account.email) })
       .expect(200);
     const confirmed = await visitor.agent
       .post(`${BASE}/admin/mfa/confirm`)
@@ -162,18 +164,19 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     expect(notAdmin.body.detail).toBe(wrong.body.detail);
   });
 
-  it('sends an administrator without a second factor to the set-up, with no elevation, then elevates after the first code', async () => {
+  it('sends an administrator without a second factor a set-up link by e-mail, with no session, then signs in after the first code', async () => {
     const account = await createAccount('first_admin', 'admin');
     const visitor = await newVisitor();
 
     await adminLogin(visitor, { email: account.email, password: PASSWORD }).expect(200, {
       status: 'setup_required',
     });
-    await visitor.agent.get(`${BASE}/admin/session`).expect(401);
+    await visitor.agent.get(`${BASE}/admin/session`).expect(404);
 
     const setup = await visitor.agent
       .post(`${BASE}/admin/mfa/setup`)
       .set('x-csrf-token', visitor.csrf)
+      .send({ token: setupTokenSentTo(app, account.email) })
       .expect(200);
     expect(setup.body.otpauthUri).toContain(`otpauth://totp/Y:first_admin?secret=${setup.body.secret}`);
 
@@ -188,6 +191,22 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     expect(session.body.user).toEqual({ handle: 'first_admin', displayName: 'Compte first_admin' });
     expect(Date.parse(session.body.expiresAt) - Date.now()).toBeLessThanOrEqual(ADMIN_MAX_SESSION_MS);
     expect(Date.parse(session.body.idleExpiresAt) - Date.now()).toBeLessThanOrEqual(ADMIN_IDLE_TIMEOUT_MS);
+  });
+
+  it('refuses the set-up without a link from the mailbox, so a password alone cannot enrol a factor', async () => {
+    const account = await createAccount('no_link_admin', 'admin');
+    const visitor = await newVisitor();
+    await adminLogin(visitor, { email: account.email, password: PASSWORD }).expect(200, {
+      status: 'setup_required',
+    });
+
+    await visitor.agent
+      .post(`${BASE}/admin/mfa/setup`)
+      .set('x-csrf-token', visitor.csrf)
+      .send({ token: 'invented.token' })
+      .expect(401);
+    await visitor.agent.get(`${BASE}/admin/session`).expect(404);
+    expect(await sql(`SELECT count(*) FROM admin_mfa WHERE user_id = '${account.id}';`)).toBe('0');
   });
 
   it('stores the TOTP secret encrypted and the backup codes hashed, never in clear', async () => {
@@ -205,7 +224,8 @@ describe('Back-office sign-in and second factor (e2e)', () => {
 
   it('sends the e-mail alert on the set-up confirmation and on every later sign-in', async () => {
     const { account, secret } = await enrolAdministrator('alert_admin');
-    expect(mail.messages().map((message) => message.to)).toEqual([account.email]);
+    const alerts = () => mail.messages().filter((message) => message.subject === 'Connexion à l’administration Y');
+    expect(alerts().map((message) => message.to)).toEqual([account.email]);
 
     mail.clear();
     await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD }).expect(200, {

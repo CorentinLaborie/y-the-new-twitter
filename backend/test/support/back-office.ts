@@ -1,6 +1,8 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { stepAt, totpCode } from '../../src/admin/mfa/totp';
+import { CapturingMailSender } from '../../src/common/mail/capturing-mail-sender';
+import { MAIL_SENDER } from '../../src/common/mail/mail-sender';
 import { hashPassword } from '../../src/auth/password';
 import { PrismaService } from '../../src/database/prisma.service';
 import { UsersRepository } from '../../src/users/users.repository';
@@ -45,9 +47,24 @@ export async function createAccount(
   return { id: user.id, email: user.email };
 }
 
+/** The set-up token of the newest link sent to the address, read from the capture outbox (admin-auth.service.ts). */
+export function setupTokenSentTo(app: INestApplication, email: string): string {
+  const sent = app
+    .get<CapturingMailSender>(MAIL_SENDER)
+    .messages()
+    .filter((message) => message.to === email);
+  const match = /token=(\S+)/.exec(sent[sent.length - 1]?.text ?? '');
+  if (!match) {
+    throw new Error(`No set-up link was sent to ${email}.`);
+  }
+
+  return decodeURIComponent(match[1]);
+}
+
 /**
- * Enrols the second factor of an administrator through the API. That writes auth.mfa_enrol. Returns the backup codes,
- * which are single-use, so later sign-ins in the same test do not depend on the TOTP time window.
+ * Enrols the second factor of an administrator through the API, with the link sent by e-mail. That writes
+ * auth.mfa_enrol. Returns the backup codes, which are single-use, so later sign-ins in the same test do not depend on
+ * the TOTP time window.
  */
 export async function enrol(app: INestApplication, account: { email: string }): Promise<string[]> {
   const visitor = await newVisitor(app);
@@ -59,6 +76,7 @@ export async function enrol(app: INestApplication, account: { email: string }): 
   const setup = await visitor.agent
     .post(`${BASE}/admin/mfa/setup`)
     .set('x-csrf-token', visitor.csrf)
+    .send({ token: setupTokenSentTo(app, account.email) })
     .expect(200);
   const confirmed = await visitor.agent
     .post(`${BASE}/admin/mfa/confirm`)

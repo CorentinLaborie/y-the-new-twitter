@@ -25,7 +25,7 @@ import {
   startElevation,
 } from './admin-session';
 import { AdminAuthService } from './admin-auth.service';
-import { AdminCodeDto, AdminLoginDto, AdminReauthDto } from './admin-auth.dto';
+import { AdminCodeDto, AdminLoginDto, AdminReauthDto, AdminSetupLinkDto } from './admin-auth.dto';
 import { Admin } from './admin.decorators';
 
 interface AdminUserView {
@@ -77,8 +77,6 @@ export class AdminAuthController {
       case 'code_required':
         return { status: 'code_required' };
       case 'setup_required':
-        await regenerateSession(req);
-        req.session.userId = outcome.user.id;
         return { status: 'setup_required' };
       case 'ok':
         await regenerateSession(req);
@@ -88,33 +86,42 @@ export class AdminAuthController {
     }
   }
 
-  /** The set-up of the second factor: a secret to type into an authenticator application. Nothing is enrolled yet. */
-  @Admin({ elevated: false })
+  /**
+   * The set-up of the second factor, from the link sent by e-mail: a secret to type into an authenticator application.
+   * Nothing is enrolled yet, and the session is not signed in until the first code is confirmed.
+   */
+  @Public()
+  @AuthRateLimit('login')
   @Post('mfa/setup')
   @HttpCode(HttpStatus.OK)
   async startMfaSetup(
-    @CurrentUser() user: SessionUser,
+    @Body() body: AdminSetupLinkDto,
     @Req() req: Request,
   ): Promise<{ readonly secret: string; readonly otpauthUri: string }> {
-    const pending = await this.adminAuth.startSetup(user.id, user.handle);
+    const now = new Date();
+    const started = await this.adminAuth.startSetupFromLink(body.token, now);
+    if (started === null) {
+      throw new UnauthorizedException('Ce lien de configuration est invalide ou a expiré.');
+    }
+
     req.session.adminMfaSetup = {
-      secretEncrypted: pending.secretEncrypted,
-      startedAt: new Date().toISOString(),
+      userId: started.userId,
+      secretEncrypted: started.pending.secretEncrypted,
+      startedAt: now.toISOString(),
     };
 
-    return { secret: pending.secret, otpauthUri: pending.otpauthUri };
+    return { secret: started.pending.secret, otpauthUri: started.pending.otpauthUri };
   }
 
-  /** Confirms the set-up with a first code. The backup codes are returned once, and the session is elevated. */
-  @Admin({ elevated: false })
+  /**
+   * Confirms the set-up with a first code. The backup codes are returned once, and the session is signed in and
+   * elevated: the second factor is the proof, so the sign-in happens here, not at the login step.
+   */
+  @Public()
   @AuthRateLimit('code-confirm')
   @Post('mfa/confirm')
   @HttpCode(HttpStatus.CREATED)
-  async confirmMfaSetup(
-    @Body() body: AdminCodeDto,
-    @CurrentUser() user: SessionUser,
-    @Req() req: Request,
-  ): Promise<{ readonly backupCodes: string[] }> {
+  async confirmMfaSetup(@Body() body: AdminCodeDto, @Req() req: Request): Promise<{ readonly backupCodes: string[] }> {
     const now = new Date();
     const setup = req.session.adminMfaSetup;
     if (!isMfaSetupOpen(setup, now)) {
@@ -122,12 +129,13 @@ export class AdminAuthController {
       throw new ConflictException('Aucune configuration en cours. Recommencez.');
     }
 
-    const codes = await this.adminAuth.confirmSetup(user.id, setup, body.code, now);
+    const codes = await this.adminAuth.confirmSetup(setup.userId, setup, body.code, now);
     if (codes === null) {
       throw new UnauthorizedException('Code de vérification incorrect.');
     }
 
-    req.session.adminMfaSetup = undefined;
+    await regenerateSession(req);
+    req.session.userId = setup.userId;
     req.session.admin = startElevation(now);
     return { backupCodes: codes };
   }

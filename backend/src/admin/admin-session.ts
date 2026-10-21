@@ -14,8 +14,12 @@ interface AdminElevation {
   readonly lastSeenAt: string;
 }
 
-/** A second factor being set up: the TOTP secret, encrypted (DEC-107), until the first code is confirmed. */
+/**
+ * A second factor being set up: the TOTP secret, encrypted (DEC-107), until the first code is confirmed. The set-up
+ * belongs to the account the link was sent to. The session is not signed in until the code is confirmed.
+ */
 export interface AdminMfaSetup {
+  readonly userId: string;
   readonly secretEncrypted: string;
   readonly startedAt: string;
 }

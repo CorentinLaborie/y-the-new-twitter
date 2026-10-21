@@ -47,10 +47,11 @@ describe('admin session limits (DEC-036, DEC-082)', () => {
   it('keeps the set-up of the second factor open for 15 minutes only', () => {
     const startedAt = new Date(NOW.getTime() - ADMIN_MFA_SETUP_TTL_MS).toISOString();
 
-    expect(isMfaSetupOpen({ secretEncrypted: 'x', startedAt }, NOW)).toBe(true);
+    expect(isMfaSetupOpen({ userId: 'admin-1', secretEncrypted: 'x', startedAt }, NOW)).toBe(true);
     expect(
       isMfaSetupOpen(
         {
+          userId: 'admin-1',
           secretEncrypted: 'x',
           startedAt: new Date(NOW.getTime() - ADMIN_MFA_SETUP_TTL_MS - 1).toISOString(),
         },
