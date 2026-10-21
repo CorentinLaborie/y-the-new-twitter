@@ -25,7 +25,7 @@ class ProblemDetailsDto {
     required: false,
     example: 'account_suspended',
     description:
-      'Stable machine-readable code of the refusal, when it has one: account_pending_verification, account_suspended, account_pending_deletion or csrf_invalid. The detail text is in French and may change.',
+      'Stable machine-readable code of the refusal, when it has one: account_pending_verification, account_suspended, account_pending_deletion, csrf_invalid or reauth_required. The detail text is in French and may change.',
   })
   readonly code?: string;
 }
