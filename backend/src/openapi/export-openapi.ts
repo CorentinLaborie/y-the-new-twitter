@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { createOpenApiDocument, toYaml } from './openapi';
 
 /*
@@ -32,7 +32,16 @@ async function run(command: string | undefined): Promise<number> {
     mkdirSync(dirname(CANDIDATE), { recursive: true });
     writeFileSync(CANDIDATE, yaml);
 
-    const diff = spawnSync(OPENAPI_DIFF, [COMMITTED, CANDIDATE], { stdio: 'inherit' });
+    // Relative paths: openapi-diff reads "c:\..." as a URL on Windows and fails, so the files are named from the backend folder.
+    const diff = spawnSync(
+      OPENAPI_DIFF,
+      [relative(BACKEND_ROOT, COMMITTED), relative(BACKEND_ROOT, CANDIDATE)],
+      {
+        cwd: BACKEND_ROOT,
+        stdio: 'inherit',
+        shell: true,
+      },
+    );
     if (diff.status !== 0) {
       console.error('The API has a breaking change, or openapi-diff failed (see above).');
       return 1;
