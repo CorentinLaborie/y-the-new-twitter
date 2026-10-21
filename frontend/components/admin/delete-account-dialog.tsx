@@ -81,9 +81,9 @@ export function DeleteAccountDialog({
   return (
     <AdminDialog titleId="delete-title" title={`Supprimer le compte de @${handle} ?`} onClose={onCancel}>
       <p className={styles.dialogText}>
-        Le compte est programmé pour suppression : il sera supprimé définitivement dans 90 jours. Pendant ce délai,
-        l’utilisateur ne peut plus se connecter. Ses sessions sont fermées immédiatement, et il reçoit un e-mail avec
-        le motif.
+        Le compte est programmé pour suppression : il sera supprimé définitivement dans 90 jours. Pendant ce
+        délai, l’utilisateur ne peut plus se connecter. Ses sessions sont fermées immédiatement, et il reçoit
+        un e-mail avec le motif.
       </p>
       {message ? (
         <p role="alert" className={styles.alert}>

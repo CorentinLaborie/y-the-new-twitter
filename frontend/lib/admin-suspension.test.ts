@@ -4,13 +4,20 @@ import { needsReauthentication, REASON_MAX_LENGTH, suspensionReasonError } from 
 describe('needsReauthentication', () => {
   it('is true for the refusal that asks for a re-authentication', () => {
     expect(
-      needsReauthentication({ status: 403, title: 'Interdit', detail: 'Ré-authentification requise.', code: 'reauth_required' }),
+      needsReauthentication({
+        status: 403,
+        title: 'Interdit',
+        detail: 'Ré-authentification requise.',
+        code: 'reauth_required',
+      }),
     ).toBe(true);
   });
 
   it('is false for any other refusal, with or without a code', () => {
     expect(needsReauthentication({ status: 403, title: 'Interdit', detail: 'Accès refusé.' })).toBe(false);
-    expect(needsReauthentication({ status: 403, title: 'Interdit', detail: 'Csrf.', code: 'csrf_invalid' })).toBe(false);
+    expect(
+      needsReauthentication({ status: 403, title: 'Interdit', detail: 'Csrf.', code: 'csrf_invalid' }),
+    ).toBe(false);
   });
 });
 

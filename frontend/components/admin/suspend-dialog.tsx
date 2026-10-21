@@ -70,8 +70,8 @@ export function SuspendDialog({
   return (
     <AdminDialog titleId="suspend-title" title={`Suspendre le compte de @${handle} ?`} onClose={onCancel}>
       <p className={styles.dialogText}>
-        Le compte ne pourra plus publier, réagir ni répondre. Ses sessions sont fermées immédiatement. L’utilisateur
-        reçoit un e-mail. La suspension dure jusqu’à sa réactivation par l’administrateur.
+        Le compte ne pourra plus publier, réagir ni répondre. Ses sessions sont fermées immédiatement.
+        L’utilisateur reçoit un e-mail. La suspension dure jusqu’à sa réactivation par l’administrateur.
       </p>
       {message ? (
         <p role="alert" className={styles.alert}>

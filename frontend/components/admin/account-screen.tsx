@@ -40,7 +40,9 @@ export function AccountScreen({ id }: { id: string }) {
   const [dialog, setDialog] = useState<AccountDialog | null>(null);
 
   const showResult = useCallback((result: ApiResult<AccountView>) => {
-    setState(result.ok ? { status: 'ready', account: result.body } : { status: 'error', problem: result.problem });
+    setState(
+      result.ok ? { status: 'ready', account: result.body } : { status: 'error', problem: result.problem },
+    );
   }, []);
 
   useEffect(() => {
@@ -153,7 +155,11 @@ function AccountDetails({
                     Suspendre le compte
                   </button>
                 ) : (
-                  <button type="button" className={styles.primaryButton} onClick={() => onDialog('reactivate')}>
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={() => onDialog('reactivate')}
+                  >
                     Lever la suspension
                   </button>
                 )}

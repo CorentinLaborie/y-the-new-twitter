@@ -14,13 +14,25 @@ const RESULT = {
 
 const REAUTH_REQUIRED = {
   ok: false as const,
-  problem: { status: 403, title: 'Interdit', detail: 'Ré-authentification requise.', code: 'reauth_required' },
+  problem: {
+    status: 403,
+    title: 'Interdit',
+    detail: 'Ré-authentification requise.',
+    code: 'reauth_required',
+  },
 };
 
 function renderDialog() {
   const onReactivated = vi.fn();
   const onCancel = vi.fn();
-  render(<ReactivateDialog accountId="account-1" handle="MarkL" onReactivated={onReactivated} onCancel={onCancel} />);
+  render(
+    <ReactivateDialog
+      accountId="account-1"
+      handle="MarkL"
+      onReactivated={onReactivated}
+      onCancel={onCancel}
+    />,
+  );
   return { onReactivated, onCancel };
 }
 
@@ -108,7 +120,9 @@ describe('ReactivateDialog', () => {
     await screen.findByRole('dialog', { name: 'Confirmer votre identité' });
     fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
 
-    expect(await screen.findByRole('dialog', { name: 'Lever la suspension de @MarkL ?' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('dialog', { name: 'Lever la suspension de @MarkL ?' }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Motif (obligatoire)')).toHaveValue('Erreur de modération');
     expect(reactivateAccount).toHaveBeenCalledTimes(1);
   });

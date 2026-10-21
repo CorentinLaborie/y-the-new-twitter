@@ -91,7 +91,9 @@ export function ReactivateDialog({
           value={reason}
           onChange={(event) => setReason(event.target.value)}
           aria-invalid={reasonError ? true : undefined}
-          aria-describedby={reasonError ? 'reactivate-reason-hint reactivate-reason-error' : 'reactivate-reason-hint'}
+          aria-describedby={
+            reasonError ? 'reactivate-reason-hint reactivate-reason-error' : 'reactivate-reason-hint'
+          }
           autoFocus
         />
         <span id="reactivate-reason-hint" className={styles.fieldHint}>

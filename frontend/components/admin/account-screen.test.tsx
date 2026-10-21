@@ -1,6 +1,12 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { deleteAccount, getAccount, reactivateAccount, suspendAccount, type AccountView } from '@/lib/admin-api';
+import {
+  deleteAccount,
+  getAccount,
+  reactivateAccount,
+  suspendAccount,
+  type AccountView,
+} from '@/lib/admin-api';
 import { AccountScreen } from './account-screen';
 
 vi.mock('@/lib/admin-api', () => ({
@@ -93,7 +99,12 @@ describe('AccountScreen', () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        body: { ...ACCOUNT, status: 'active', suspensionReason: null, statusChangedAt: '2026-10-21T12:00:00.000Z' },
+        body: {
+          ...ACCOUNT,
+          status: 'active',
+          suspensionReason: null,
+          statusChangedAt: '2026-10-21T12:00:00.000Z',
+        },
       });
     vi.mocked(reactivateAccount).mockResolvedValue({
       ok: true,
@@ -170,7 +181,11 @@ describe('AccountScreen', () => {
   });
 
   it('offers the deletion of an active or a suspended account, and not of a pending one', async () => {
-    vi.mocked(getAccount).mockResolvedValueOnce({ ok: true, status: 200, body: { ...ACCOUNT, status: 'active' } });
+    vi.mocked(getAccount).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      body: { ...ACCOUNT, status: 'active' },
+    });
     const active = render(<AccountScreen id={ACCOUNT.id} />);
 
     expect(await screen.findByRole('button', { name: 'Supprimer le compte' })).toBeInTheDocument();

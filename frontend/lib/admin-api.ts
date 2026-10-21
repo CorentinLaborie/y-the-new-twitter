@@ -146,7 +146,10 @@ export type StatusChangeResult = {
  * Re-authentication of the administrator (DEC-088): the password again, and a second-factor code. Valid for 10 minutes,
  * and the sensitive actions (such as a suspension) need it.
  */
-export function reauthenticate(password: string, code: string): Promise<ApiResult<{ reauthExpiresAt: string }>> {
+export function reauthenticate(
+  password: string,
+  code: string,
+): Promise<ApiResult<{ reauthExpiresAt: string }>> {
   return apiRequest<{ reauthExpiresAt: string }>('POST', '/admin/reauth', { body: { password, code } });
 }
 

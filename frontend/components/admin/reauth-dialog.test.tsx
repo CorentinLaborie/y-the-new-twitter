@@ -8,7 +8,13 @@ vi.mock('@/lib/admin-api', () => ({ reauthenticate: vi.fn() }));
 function renderDialog() {
   const onConfirmed = vi.fn();
   const onCancel = vi.fn();
-  render(<ReauthDialog actionLabel="suspendre le compte de @MarkL" onConfirmed={onConfirmed} onCancel={onCancel} />);
+  render(
+    <ReauthDialog
+      actionLabel="suspendre le compte de @MarkL"
+      onConfirmed={onConfirmed}
+      onCancel={onCancel}
+    />,
+  );
   return { onConfirmed, onCancel };
 }
 
@@ -37,7 +43,9 @@ describe('ReauthDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
 
     expect(reauthenticate).not.toHaveBeenCalled();
-    expect(screen.getByRole('alert')).toHaveTextContent('Saisissez votre mot de passe et le code de vérification.');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Saisissez votre mot de passe et le code de vérification.',
+    );
   });
 
   it('confirms once the API accepts the password and the code, with the code trimmed', async () => {
