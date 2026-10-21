@@ -166,6 +166,25 @@ paths:
         "200":
           description: ""
       tags: *a4
+  /api/v1/users/me/deletion:
+    put:
+      operationId: AccountDeletionController_requestDeletion
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountDeletionDto"
+      responses:
+        "422":
+          description: The current password is wrong.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - AccountDeletion
   /api/v1/questions/{questionId}:
     get:
       operationId: QuestionsController_findOne
@@ -982,6 +1001,9 @@ components:
       type: object
       properties: {}
     EmailChangeConfirmDto:
+      type: object
+      properties: {}
+    AccountDeletionDto:
       type: object
       properties: {}
     QuestionAuthorDto:

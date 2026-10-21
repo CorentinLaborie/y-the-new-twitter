@@ -12,7 +12,7 @@ const IP_KEY = 'unit-ip-key';
 
 describe('LoginService', () => {
   let stored: string;
-  let users: { findByEmail: jest.Mock };
+  let users: { findByEmail: jest.Mock; cancelDeletion: jest.Mock };
   let attempts: {
     recordEvent: jest.Mock;
     countFailure: jest.Mock;
@@ -28,7 +28,7 @@ describe('LoginService', () => {
   });
 
   beforeEach(() => {
-    users = { findByEmail: jest.fn() };
+    users = { findByEmail: jest.fn(), cancelDeletion: jest.fn().mockResolvedValue(true) };
     attempts = {
       recordEvent: jest.fn().mockResolvedValue(undefined),
       countFailure: jest.fn().mockResolvedValue(undefined),
@@ -153,6 +153,56 @@ describe('LoginService', () => {
     expect(outcome).toEqual({ status: 'unverified' });
     expect(attempts.countFailuresSince).not.toHaveBeenCalled();
     expect(attempts.clearAfterSuccess).not.toHaveBeenCalled();
+  });
+
+  it('cancels a pending deletion when the login is inside the 90-day window, and answers success as active (R16)', async () => {
+    const deletionPurgeAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+    users.findByEmail.mockResolvedValue(account({ status: 'pending_deletion', deletionPurgeAt }));
+
+    const outcome = await service.login(attempt());
+
+    expect(users.cancelDeletion).toHaveBeenCalledWith('user-1', expect.any(Date));
+    expect(outcome).toEqual({
+      status: 'success',
+      user: { id: 'user-1', handle: 'alice', displayName: 'Alice', role: 'user', status: 'active' },
+    });
+    expect(attempts.recordEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'user-1', result: 'success' }),
+    );
+  });
+
+  it('refuses a login after the 90-day window, as for an unknown address, without cancelling anything (R16)', async () => {
+    users.findByEmail.mockResolvedValue(
+      account({ status: 'pending_deletion', deletionPurgeAt: new Date(Date.now() - 1000) }),
+    );
+
+    const outcome = await service.login(attempt());
+
+    expect(outcome).toEqual({ status: 'invalid' });
+    expect(users.cancelDeletion).not.toHaveBeenCalled();
+    expect(attempts.clearAfterSuccess).not.toHaveBeenCalled();
+    expect(attempts.recordEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'user-1', result: 'failure' }),
+    );
+  });
+
+  it('refuses a pending deletion that has no purge date, as a closed window', async () => {
+    users.findByEmail.mockResolvedValue(account({ status: 'pending_deletion', deletionPurgeAt: null }));
+
+    await expect(service.login(attempt())).resolves.toEqual({ status: 'invalid' });
+    expect(users.cancelDeletion).not.toHaveBeenCalled();
+  });
+
+  it('refuses the login when the window closed while the password was being checked', async () => {
+    users.findByEmail.mockResolvedValue(
+      account({ status: 'pending_deletion', deletionPurgeAt: new Date(Date.now() + 60_000) }),
+    );
+    users.cancelDeletion.mockResolvedValue(false);
+
+    const outcome = await service.login(attempt());
+
+    expect(outcome).toEqual({ status: 'invalid' });
+    expect(attempts.recordEvent).not.toHaveBeenCalledWith(expect.objectContaining({ result: 'success' }));
   });
 
   it('answers invalid for a deleted account, as for an unknown address', async () => {

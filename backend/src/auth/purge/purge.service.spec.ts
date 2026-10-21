@@ -1,13 +1,17 @@
 import { Logger } from '@nestjs/common';
+import { eraseAccount } from './account-erasure';
 import { Clock } from './clock';
 import { MaintenancePrismaService } from './maintenance-prisma.service';
 import { PURGE_JOB_NAME, PurgeService } from './purge.service';
+
+jest.mock('./account-erasure', () => ({ eraseAccount: jest.fn() }));
 
 const NOW = new Date('2026-10-19T12:00:00.000Z');
 const CODE_CUTOFF = new Date('2026-10-18T12:00:00.000Z');
 
 function fakeDatabase(
   counts = { signupCode: 2, passwordResetCode: 1, emailChangeCode: 0, session: 5, idempotencyKey: 4 },
+  dueAccounts: { id: string }[] = [],
 ) {
   const deleteMany = (count: number) => jest.fn().mockResolvedValue({ count });
   return {
@@ -16,11 +20,15 @@ function fakeDatabase(
     emailChangeCode: { deleteMany: deleteMany(counts.emailChangeCode) },
     session: { deleteMany: deleteMany(counts.session) },
     idempotencyKey: { deleteMany: deleteMany(counts.idempotencyKey) },
+    user: { findMany: jest.fn().mockResolvedValue(dueAccounts) },
     question: { findMany: jest.fn().mockResolvedValue([]), updateMany: deleteMany(0) },
     reply: { findMany: jest.fn().mockResolvedValue([]), updateMany: deleteMany(0) },
     questionHashtag: { deleteMany: deleteMany(0) },
     mention: { deleteMany: deleteMany(0) },
-    $transaction: jest.fn(async (operations: Promise<unknown>[]) => Promise.all(operations)),
+    // Array form for the batch writes, callback form for the per-account erasure (run with a placeholder client).
+    $transaction: jest.fn(async (arg: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) =>
+      typeof arg === 'function' ? arg({}) : Promise.all(arg),
+    ),
     // The lease statement returns the row when this instance takes the lease, and no row when another holds it.
     $queryRaw: jest.fn().mockResolvedValue([{ key: PURGE_JOB_NAME }]),
   };
@@ -104,6 +112,68 @@ describe('PurgeService', () => {
       idempotencyKeys: 4,
       erasedQuestions: 0,
       erasedReplies: 0,
+      purgedAccounts: 0,
+    });
+  });
+
+  describe('account purge (R16)', () => {
+    const erase = eraseAccount as jest.MockedFunction<typeof eraseAccount>;
+
+    beforeEach(() => {
+      erase.mockReset();
+    });
+
+    it('looks for the accounts pending deletion whose window has passed', async () => {
+      const database = fakeDatabase();
+      const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
+
+      await service.purgeExpired();
+
+      expect(database.user.findMany).toHaveBeenCalledWith({
+        where: { status: 'pending_deletion', deletionPurgeAt: { lte: NOW } },
+        select: { id: true },
+      });
+    });
+
+    it('erases each due account in its own transaction, with the purge date', async () => {
+      const database = fakeDatabase(
+        { signupCode: 0, passwordResetCode: 0, emailChangeCode: 0, session: 0, idempotencyKey: 0 },
+        [{ id: 'account-a' }, { id: 'account-b' }],
+      );
+      erase.mockResolvedValue(true);
+      const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
+
+      const report = await service.purgeExpired();
+
+      const perAccount = database.$transaction.mock.calls.filter(([arg]) => typeof arg === 'function');
+      expect(perAccount).toHaveLength(2);
+      expect(database.$transaction).toHaveBeenCalledWith(expect.any(Function), { timeout: 60_000 });
+      expect(erase).toHaveBeenNthCalledWith(1, {}, 'account-a', NOW);
+      expect(erase).toHaveBeenNthCalledWith(2, {}, 'account-b', NOW);
+      expect(report.purgedAccounts).toBe(2);
+    });
+
+    it('counts only the accounts that were erased, not those the erasure refused', async () => {
+      const database = fakeDatabase(undefined, [{ id: 'account-a' }, { id: 'account-b' }]);
+      erase.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+      const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
+
+      await expect(service.purgeExpired()).resolves.toMatchObject({ purgedAccounts: 1 });
+    });
+
+    it('logs a failed account and goes on with the next one', async () => {
+      const error = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+      const database = fakeDatabase(undefined, [{ id: 'account-a' }, { id: 'account-b' }]);
+      erase.mockRejectedValueOnce(new Error('deadlock')).mockResolvedValueOnce(true);
+      const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
+
+      await expect(service.purgeExpired()).resolves.toMatchObject({ purgedAccounts: 1 });
+
+      expect(erase).toHaveBeenCalledTimes(2);
+      expect(error).toHaveBeenCalledWith(
+        'Account purge failed for account-a; it runs again tomorrow.',
+        expect.any(String),
+      );
     });
   });
 

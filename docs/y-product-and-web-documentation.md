@@ -177,7 +177,7 @@ These rules are binding for every feature. They come from explicit product decis
 **Account deletion (R16)**
 1. The user asks for deletion in settings and enters their password. `status` becomes `pending_deletion`, `deletion_requested_at` is set, and `deletion_purge_at` is set to 90 days later.
 2. The account is signed out. It can no longer publish, react, reply, follow, save or message, and it cannot be followed. Its questions and replies are hidden from the public at once through the account status, not `deleted_at`, which is kept for deletion by the author and for the purge (DEC-087).
-3. For 90 days the user can cancel by logging back in: the status returns to `active` and the hidden content comes back. Proposed default.
+3. For 90 days the user can cancel by logging back in: the status returns to `active` and the hidden content comes back. A login after the window is refused. Owner decision (2026-10-20).
 4. A daily job purges accounts whose `deletion_purge_at` has passed. In one transaction per account: personal data is removed (email replaced by a unique placeholder, phone, password hash, bio, avatar and birth date cleared, display name replaced by "Compte supprimé"), the handle is replaced by a placeholder, the content is erased as in DEC-067, reactions and counters are updated, follows and blocks are removed, login events are deleted, and the account is set to `deleted`. The purge is logged.
 5. A request for erasure (GDPR, right to be deleted) follows the same path. Some data may be kept where the law requires it.
 
@@ -630,7 +630,8 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 | Method | Path | Purpose |
 |---|---|---|
 | PUT | `/users/me/deletion` | Request deletion. Requires the current password. Starts the 90-day window |
-| DELETE | `/users/me/deletion` | Cancel a deletion request, while the window is open |
+
+There is no DELETE route. The deletion is cancelled by logging in again while the window is open (R16 point 3, owner decision 2026-10-20).
 
 **Administration (R17, role `admin` required, CSRF token on mutations)**
 

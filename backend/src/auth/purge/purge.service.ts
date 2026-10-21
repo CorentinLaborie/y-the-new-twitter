@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '../../database/generated/client/client';
 import { CLOCK, type Clock } from './clock';
+import { eraseAccount } from './account-erasure';
 import { MaintenancePrismaService } from './maintenance-prisma.service';
 
 /** Codes are deleted 24 hours after they expire (section 13, DEC-068). */
@@ -16,6 +17,9 @@ const PURGE_LEASE_MS = 10 * 60 * 1000;
 
 export const PURGE_JOB_NAME = 'retention-purge';
 
+/** One account is erased in one transaction, which may take longer than the default 5 seconds (R16). */
+const ACCOUNT_PURGE_TIMEOUT_MS = 60 * 1000;
+
 interface PurgeReport {
   signupCodes: number;
   passwordResetCodes: number;
@@ -24,6 +28,7 @@ interface PurgeReport {
   idempotencyKeys: number;
   erasedQuestions: number;
   erasedReplies: number;
+  purgedAccounts: number;
 }
 
 /** Daily retention job (DEC-068): expired codes, sessions and idempotency keys, and erased deleted content. */
@@ -40,7 +45,8 @@ export class PurgeService {
 
   /**
    * Deletes the codes that expired more than 24 hours ago, the sessions and the idempotency keys whose expiry is in the past,
-   * then erases the content deleted more than 90 days ago. Each step runs on its own, in this order.
+   * erases the accounts whose 90-day window has passed (R16), then erases the content deleted more than 90 days ago.
+   * Each step runs on its own, in this order.
    */
   async purgeExpired(): Promise<PurgeReport> {
     const now = this.clock.now();
@@ -59,6 +65,7 @@ export class PurgeService {
     const idempotencyKeys = await this.database.idempotencyKey.deleteMany({
       where: { expiresAt: { lte: now } },
     });
+    const purgedAccounts = await this.purgeDueAccounts(now);
     const erased = await this.eraseDeletedContent(now);
 
     return {
@@ -69,7 +76,38 @@ export class PurgeService {
       idempotencyKeys: idempotencyKeys.count,
       erasedQuestions: erased.questions,
       erasedReplies: erased.replies,
+      purgedAccounts,
     };
+  }
+
+  /**
+   * Erases the accounts whose 90-day window has passed (R16, DEC-024): one transaction per account. A failure is logged
+   * and the account is retried the next day, without stopping the others.
+   */
+  private async purgeDueAccounts(now: Date): Promise<number> {
+    const due = await this.database.user.findMany({
+      where: { status: 'pending_deletion', deletionPurgeAt: { lte: now } },
+      select: { id: true },
+    });
+
+    let purged = 0;
+    for (const { id } of due) {
+      try {
+        const erased = await this.database.$transaction((tx) => eraseAccount(tx, id, now), {
+          timeout: ACCOUNT_PURGE_TIMEOUT_MS,
+        });
+        if (erased) {
+          purged += 1;
+        }
+      } catch (error) {
+        this.logger.error(
+          `Account purge failed for ${id}; it runs again tomorrow.`,
+          error instanceof Error ? error.stack : undefined,
+        );
+      }
+    }
+
+    return purged;
   }
 
   /**

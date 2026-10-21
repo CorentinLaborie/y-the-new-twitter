@@ -85,6 +85,7 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
       idempotencyKeys: 0,
       erasedQuestions: 0,
       erasedReplies: 0,
+      purgedAccounts: 0,
     });
     await expect(database.signupCode.count()).resolves.toBe(3);
     await expect(database.passwordResetCode.count()).resolves.toBe(0);
@@ -125,6 +126,7 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
       idempotencyKeys: 0,
       erasedQuestions: 0,
       erasedReplies: 0,
+      purgedAccounts: 0,
     });
   });
 

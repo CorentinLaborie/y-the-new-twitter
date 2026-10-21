@@ -24,6 +24,11 @@ export interface LoginAttempt {
   adminOnly?: boolean;
 }
 
+/** True while a pending deletion can still be cancelled by logging in (R16). */
+function deletionWindowOpen(account: User, now: Date): boolean {
+  return account.deletionPurgeAt !== null && account.deletionPurgeAt > now;
+}
+
 /** The fields every login_events row of one attempt carries. */
 interface LoginEventFields {
   ipHash: string;
@@ -108,16 +113,35 @@ export class LoginService {
       return { status: 'unverified' };
     }
 
+    if (account.status === 'pending_deletion' && !deletionWindowOpen(account, now)) {
+      // The 90-day window is over: refused like an unknown address, until the purge removes the account (R16).
+      await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
+      return { status: 'invalid' };
+    }
+
     return { status: 'ok', account, event };
   }
 
-  /** Clears the counters and records the success. A lock set in the meantime refuses the login. */
+  /**
+   * Clears the counters and records the success. A lock set in the meantime refuses the login. A login during the
+   * deletion window cancels the deletion: the account is active again (R16, DEC-030).
+   */
   async completeLogin(account: User, event: LoginEventFields): Promise<LoginOutcome> {
     const now = new Date();
     if (!(await this.attempts.clearAfterSuccess(account.id, now))) {
       // A concurrent failure locked the account while this password was being checked.
       await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
       return { status: 'invalid' };
+    }
+
+    let status = account.status;
+    if (status === 'pending_deletion') {
+      if (!(await this.users.cancelDeletion(account.id, now))) {
+        // The window closed while this password was being checked.
+        await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
+        return { status: 'invalid' };
+      }
+      status = 'active';
     }
 
     await this.attempts.recordEvent({ userId: account.id, result: 'success', ...event });
@@ -128,7 +152,7 @@ export class LoginService {
         handle: account.handle,
         displayName: account.displayName,
         role: account.role,
-        status: account.status,
+        status,
       },
     };
   }

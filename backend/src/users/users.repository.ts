@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { AccountStatus, Prisma } from '../database/generated/client/client';
 import { PrismaService } from '../database/prisma.service';
+import { recalculateCounters } from './recalculate-counters';
 
 /** The Prisma client or a transaction opened by a caller. */
 type UsersDb = Prisma.TransactionClient;
@@ -83,35 +84,27 @@ export class UsersRepository {
     return user;
   }
 
+  /** Brings the counters that depend on this account back to what the active accounts give (R13). */
+  recalculateCounters(db: UsersDb, userId: string): Promise<void> {
+    return recalculateCounters(db, userId);
+  }
+
   /**
-   * Brings the counters that depend on this account back to what the active accounts give (R13): the Y, like and
-   * dislike counts of the questions and the reply count of the questions this account reacted to or replied under,
-   * and the like and dislike counts of the replies it reacted to. Only active accounts are counted, and deleted
-   * replies are not. Every status change calls it in the same transaction, after writing the new status.
+   * Cancels a pending deletion (R16, DEC-030): the account is active again, and its counters count again. Only an
+   * account whose 90-day window is still open is changed. False when it is not, so the login is refused.
    */
-  async recalculateCounters(db: UsersDb, userId: string): Promise<void> {
-    // Replies first, then questions: a reply deletion locks its reply, then its question, and the recalculation
-    // takes the rows in the same order, so the two cannot wait for each other.
-    await db.$executeRaw`
-      UPDATE replies AS rp SET
-        like_count = (SELECT count(*) FROM reply_reactions r JOIN users u ON u.id = r.user_id
-                      WHERE r.reply_id = rp.id AND r.kind = 'like' AND u.status = 'active'),
-        dislike_count = (SELECT count(*) FROM reply_reactions r JOIN users u ON u.id = r.user_id
-                         WHERE r.reply_id = rp.id AND r.kind = 'dislike' AND u.status = 'active')
-      WHERE rp.id IN (SELECT reply_id FROM reply_reactions WHERE user_id = ${userId}::uuid)`;
-    await db.$executeRaw`
-      UPDATE questions AS q SET
-        like_count = (SELECT count(*) FROM question_reactions r JOIN users u ON u.id = r.user_id
-                      WHERE r.question_id = q.id AND r.kind = 'like' AND u.status = 'active'),
-        dislike_count = (SELECT count(*) FROM question_reactions r JOIN users u ON u.id = r.user_id
-                         WHERE r.question_id = q.id AND r.kind = 'dislike' AND u.status = 'active'),
-        y_count = (SELECT count(*) FROM question_reactions r JOIN users u ON u.id = r.user_id
-                   WHERE r.question_id = q.id AND r.kind = 'y' AND u.status = 'active'),
-        reply_count = (SELECT count(*) FROM replies rp JOIN users u ON u.id = rp.author_id
-                       WHERE rp.question_id = q.id AND rp.deleted_at IS NULL AND u.status = 'active')
-      WHERE q.id IN (
-        SELECT question_id FROM question_reactions WHERE user_id = ${userId}::uuid
-        UNION
-        SELECT question_id FROM replies WHERE author_id = ${userId}::uuid)`;
+  cancelDeletion(userId: string, now: Date): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const result = await tx.user.updateMany({
+        where: { id: userId, status: 'pending_deletion', deletionPurgeAt: { gt: now } },
+        data: { status: 'active', statusChangedAt: now, deletionRequestedAt: null, deletionPurgeAt: null },
+      });
+      if (result.count !== 1) {
+        return false;
+      }
+
+      await recalculateCounters(tx, userId);
+      return true;
+    });
   }
 }
