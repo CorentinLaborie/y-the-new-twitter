@@ -1,5 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, UnauthorizedException } from '@nestjs/common';
 import type { Request } from 'express';
+import { problemDetailsResponse } from '../../common/problem-details/problem-details.swagger';
 import { AuthRateLimit } from '../rate-limit/auth-rate-limit.decorator';
 import { EmailChangeConfirmDto } from './dto/email-change-confirm.dto';
 import { EmailChangeRequestDto } from './dto/email-change-request.dto';
@@ -13,8 +14,9 @@ export class EmailChangeController {
   @Post('request')
   @AuthRateLimit('code-request')
   @HttpCode(HttpStatus.ACCEPTED)
+  @problemDetailsResponse(422, 'The current password is wrong.')
   request(@Req() req: Request, @Body() body: EmailChangeRequestDto): Promise<void> {
-    return this.emailChange.requestChange(sessionUserId(req), body.newEmail);
+    return this.emailChange.requestChange(sessionUserId(req), body.newEmail, body.password);
   }
 
   @Post('confirm')

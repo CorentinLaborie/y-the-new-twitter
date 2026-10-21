@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { CapturingMailSender } from '../../common/mail/capturing-mail-sender';
 import { UsersRepository } from '../../users/users.repository';
 import { CodeRequestLimitService } from '../rate-limit/code-request-limit.service';
+import { hashPassword } from '../password';
 import { hashCode, verifyCode } from '../verification-code';
 import { EmailChangeCodesRepository } from './email-change-codes.repository';
 import { EmailChangeService } from './email-change.service';
@@ -19,6 +20,7 @@ type CodeRequests = jest.Mocked<Pick<CodeRequestLimitService, 'allow'>>;
 const USER_ID = 'user-1';
 const OLD_EMAIL = 'alice@example.test';
 const NEW_EMAIL = 'alice.new@example.test';
+const PASSWORD = 'Ancien-mot1!';
 
 function userRow(overrides: { id?: string; email?: string; status?: string } = {}) {
   return { id: USER_ID, email: OLD_EMAIL, status: 'active', ...overrides } as unknown as Awaited<
@@ -40,10 +42,15 @@ describe('EmailChangeService (B18, B19)', () => {
   let codeRequests: CodeRequests;
   let mail: CapturingMailSender;
   let service: EmailChangeService;
+  let passwordHash: string;
+
+  beforeAll(async () => {
+    passwordHash = await hashPassword(PASSWORD);
+  });
 
   beforeEach(() => {
     codes = {
-      findAccount: jest.fn().mockResolvedValue({ email: OLD_EMAIL, status: 'active' }),
+      findAccount: jest.fn().mockResolvedValue({ email: OLD_EMAIL, status: 'active', passwordHash }),
       replaceOpenCode: jest.fn().mockResolvedValue(undefined),
       findOpenCode: jest.fn().mockResolvedValue(null),
       reserveAttempt: jest.fn().mockResolvedValue(true),
@@ -63,8 +70,18 @@ describe('EmailChangeService (B18, B19)', () => {
   });
 
   describe('request', () => {
+    it('refuses a wrong password with 422, before anything is sent or stored', async () => {
+      await expect(service.requestChange(USER_ID, NEW_EMAIL, 'mauvais-mot')).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
+
+      expect(mail.messages()).toEqual([]);
+      expect(codes.replaceOpenCode).not.toHaveBeenCalled();
+      expect(codeRequests.allow).not.toHaveBeenCalled();
+    });
+
     it('sends the code to the new address only, and stores a hash', async () => {
-      await service.requestChange(USER_ID, NEW_EMAIL);
+      await service.requestChange(USER_ID, NEW_EMAIL, PASSWORD);
 
       const [sent] = mail.messages();
       const code = codeFromMail(sent.text);
@@ -81,14 +98,14 @@ describe('EmailChangeService (B18, B19)', () => {
     it('sends nothing when another account already uses the address, and keeps no code', async () => {
       users.findByEmail.mockResolvedValue(userRow({ id: 'user-2', email: NEW_EMAIL }));
 
-      await expect(service.requestChange(USER_ID, NEW_EMAIL)).resolves.toBeUndefined();
+      await expect(service.requestChange(USER_ID, NEW_EMAIL, PASSWORD)).resolves.toBeUndefined();
 
       expect(mail.messages()).toEqual([]);
       expect(codes.replaceOpenCode).not.toHaveBeenCalled();
     });
 
     it('counts the request on the account id (section 9.4)', async () => {
-      await service.requestChange(USER_ID, NEW_EMAIL);
+      await service.requestChange(USER_ID, NEW_EMAIL, PASSWORD);
 
       expect(codeRequests.allow).toHaveBeenCalledWith({ userId: USER_ID });
     });
@@ -96,30 +113,30 @@ describe('EmailChangeService (B18, B19)', () => {
     it('sends nothing and keeps the open code when the account is over its limit, and answers the same', async () => {
       codeRequests.allow.mockResolvedValue(false);
 
-      await expect(service.requestChange(USER_ID, NEW_EMAIL)).resolves.toBeUndefined();
+      await expect(service.requestChange(USER_ID, NEW_EMAIL, PASSWORD)).resolves.toBeUndefined();
 
       expect(mail.messages()).toEqual([]);
       expect(codes.replaceOpenCode).not.toHaveBeenCalled();
     });
 
     it('sends nothing when the address is the current one', async () => {
-      await service.requestChange(USER_ID, OLD_EMAIL);
+      await service.requestChange(USER_ID, OLD_EMAIL, PASSWORD);
 
       expect(mail.messages()).toEqual([]);
       expect(codes.replaceOpenCode).not.toHaveBeenCalled();
     });
 
     it('refuses an account that is not active, with 401', async () => {
-      codes.findAccount.mockResolvedValue({ email: OLD_EMAIL, status: 'suspended' });
+      codes.findAccount.mockResolvedValue({ email: OLD_EMAIL, status: 'suspended', passwordHash });
 
-      await expect(service.requestChange(USER_ID, NEW_EMAIL)).rejects.toBeInstanceOf(UnauthorizedException);
+      await expect(service.requestChange(USER_ID, NEW_EMAIL, PASSWORD)).rejects.toBeInstanceOf(UnauthorizedException);
       expect(mail.messages()).toEqual([]);
     });
 
     it('refuses a session whose account no longer exists, with 401', async () => {
       codes.findAccount.mockResolvedValue(null);
 
-      await expect(service.requestChange(USER_ID, NEW_EMAIL)).rejects.toBeInstanceOf(UnauthorizedException);
+      await expect(service.requestChange(USER_ID, NEW_EMAIL, PASSWORD)).rejects.toBeInstanceOf(UnauthorizedException);
     });
   });
 

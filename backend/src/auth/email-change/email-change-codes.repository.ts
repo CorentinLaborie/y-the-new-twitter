@@ -12,6 +12,7 @@ interface OpenEmailChangeCode {
 interface ChangeAccount {
   email: string;
   status: string;
+  passwordHash: string;
 }
 
 type EmailChangeOutcome = 'changed' | 'code-used' | 'taken';
@@ -30,7 +31,7 @@ export class EmailChangeCodesRepository {
   findAccount(userId: string): Promise<ChangeAccount | null> {
     return this.prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, status: true },
+      select: { email: true, status: true, passwordHash: true },
     });
   }
 

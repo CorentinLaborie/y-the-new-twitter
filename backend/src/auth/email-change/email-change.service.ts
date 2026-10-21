@@ -8,12 +8,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { MAIL_SENDER, type MailSender } from '../../common/mail/mail-sender';
 import { UsersRepository } from '../../users/users.repository';
+import { verifyPassword } from '../password';
 import { CodeRequestLimitService } from '../rate-limit/code-request-limit.service';
 import { generateCode, hashCode, verifyCode } from '../verification-code';
 import { addressChangedMail, newAddressCodeMail } from './email-change-mail';
 import { EmailChangeCodesRepository } from './email-change-codes.repository';
 
 const NOT_LOGGED_IN = 'Vous devez être connecté.';
+const WRONG_PASSWORD = 'Le mot de passe est incorrect.';
 const INVALID_CODE = 'Le code est incorrect ou a expiré.';
 const ADDRESS_TAKEN = 'Cette adresse e-mail est déjà utilisée.';
 
@@ -28,12 +30,17 @@ export class EmailChangeService {
   ) {}
 
   /**
-   * Sends a code to the new address only when no account uses it, it differs from the current one, and the account
-   * is under its code request limit (section 9.4). The code is hashed in every case, so the answer takes the same
-   * time. The caller always answers 202.
+   * The current password is checked first (422 when wrong), so only the account owner can start a change. Then a code
+   * is sent to the new address only when no account uses it, it differs from the current one, and the account is under
+   * its code request limit (section 9.4). The code is hashed in every case, so the answer takes the same time. The
+   * caller answers 202 once the password is right.
    */
-  async requestChange(userId: string, newEmail: string): Promise<void> {
+  async requestChange(userId: string, newEmail: string, password: string): Promise<void> {
     const account = await this.activeAccount(userId);
+    if (!(await verifyPassword(account.passwordHash, password))) {
+      throw new UnprocessableEntityException(WRONG_PASSWORD);
+    }
+
     const code = generateCode();
     const codeHash = await hashCode(code);
     const allowed = await this.codeRequests.allow({ userId });
@@ -74,7 +81,7 @@ export class EmailChangeService {
   }
 
   /** The session user must still be an active account (the guard checks it too; the service needs the row). */
-  private async activeAccount(userId: string): Promise<{ email: string }> {
+  private async activeAccount(userId: string): Promise<{ email: string; passwordHash: string }> {
     const account = await this.codes.findAccount(userId);
     if (!account || account.status !== 'active') {
       throw new UnauthorizedException(NOT_LOGGED_IN);

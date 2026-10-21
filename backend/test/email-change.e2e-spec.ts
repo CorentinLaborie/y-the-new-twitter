@@ -78,8 +78,11 @@ describe('E-mail change (e2e, B18 and B19)', () => {
   }
 
   // The token is read in beforeAll, so these helpers return the request itself (chainable with expect).
-  function requestChange(newEmail: string) {
-    return agent.post('/api/v1/auth/email-change/request').set('x-csrf-token', csrf!).send({ newEmail });
+  function requestChange(newEmail: string, password = 'Ancien-mot1!') {
+    return agent
+      .post('/api/v1/auth/email-change/request')
+      .set('x-csrf-token', csrf!)
+      .send({ newEmail, password });
   }
 
   function confirmChange(code: string) {
@@ -130,6 +133,16 @@ describe('E-mail change (e2e, B18 and B19)', () => {
       expect(stored).toContain(newEmail);
       expect(stored).toContain('$argon2id$');
       expect(stored).not.toContain(codeSentTo(newEmail));
+    });
+
+    it('answers 422 for a wrong password, and sends nothing', async () => {
+      const user = await createUser();
+      await loginAs(user.id);
+
+      await requestChange(`wrong-password-${counter}@example.test`, 'mauvais-mot').expect(422);
+
+      expect(mail.messages()).toEqual([]);
+      expect(await sql(`SELECT count(*) FROM email_change_codes WHERE user_id = '${user.id}';`)).toBe('0');
     });
 
     it('answers 202 and sends nothing when another account uses the address', async () => {
