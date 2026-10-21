@@ -152,8 +152,21 @@ export function reauthenticate(password: string, code: string): Promise<ApiResul
 
 /** Suspends an account with its reason. Needs a current re-authentication: otherwise the answer carries reauth_required. */
 export function suspendAccount(id: string, reason: string): Promise<ApiResult<StatusChangeResult>> {
+  return changeAccountStatus(id, 'suspended', reason);
+}
+
+/** Lifts the suspension of an account, with its reason. Needs a current re-authentication, as the suspension does. */
+export function reactivateAccount(id: string, reason: string): Promise<ApiResult<StatusChangeResult>> {
+  return changeAccountStatus(id, 'active', reason);
+}
+
+function changeAccountStatus(
+  id: string,
+  status: 'active' | 'suspended',
+  reason: string,
+): Promise<ApiResult<StatusChangeResult>> {
   return apiRequest<StatusChangeResult>('PUT', `/admin/users/${encodeURIComponent(id)}/status`, {
-    body: { status: 'suspended', reason },
+    body: { status, reason },
   });
 }
 

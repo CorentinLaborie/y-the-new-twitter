@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
 import { StatusLabel } from '@/components/admin/status-label';
+import { ReactivateDialog } from '@/components/admin/reactivate-dialog';
 import { SuspendDialog } from '@/components/admin/suspend-dialog';
 import styles from '@/components/admin/admin.module.css';
 import { getAccount, type AccountView } from '@/lib/admin-api';
@@ -26,12 +27,12 @@ type AccountState =
 
 /**
  * The view of one account: its details, its reports and moderated content, and its recent audit entries. The one
- * action on it is the suspension of an active account (SuspendDialog); the deletion and the e-mail reveal are not on
- * this screen yet.
+ * action on it is the suspension of an active account (SuspendDialog), or the lifting of a suspension (ReactivateDialog);
+ * the deletion and the e-mail reveal are not on this screen yet.
  */
 export function AccountScreen({ id }: { id: string }) {
   const [state, setState] = useState<AccountState>({ status: 'loading' });
-  const [suspending, setSuspending] = useState(false);
+  const [dialog, setDialog] = useState<'suspend' | 'reactivate' | null>(null);
 
   const showResult = useCallback((result: ApiResult<AccountView>) => {
     setState(result.ok ? { status: 'ready', account: result.body } : { status: 'error', problem: result.problem });
@@ -49,8 +50,8 @@ export function AccountScreen({ id }: { id: string }) {
     };
   }, [id, showResult]);
 
-  function handleSuspended() {
-    setSuspending(false);
+  function handleStatusChanged() {
+    setDialog(null);
     void getAccount(id).then(showResult);
   }
 
@@ -61,22 +62,34 @@ export function AccountScreen({ id }: { id: string }) {
       </Link>
       {state.status === 'loading' ? <AdminLoading /> : null}
       {state.status === 'error' ? <AdminLoadError problem={state.problem} /> : null}
-      {state.status === 'ready' ? (
-        <AccountDetails account={state.account} onSuspend={() => setSuspending(true)} />
-      ) : null}
-      {state.status === 'ready' && suspending ? (
+      {state.status === 'ready' ? <AccountDetails account={state.account} onDialog={setDialog} /> : null}
+      {state.status === 'ready' && dialog === 'suspend' ? (
         <SuspendDialog
           accountId={state.account.id}
           handle={state.account.handle}
-          onSuspended={handleSuspended}
-          onCancel={() => setSuspending(false)}
+          onSuspended={handleStatusChanged}
+          onCancel={() => setDialog(null)}
+        />
+      ) : null}
+      {state.status === 'ready' && dialog === 'reactivate' ? (
+        <ReactivateDialog
+          accountId={state.account.id}
+          handle={state.account.handle}
+          onReactivated={handleStatusChanged}
+          onCancel={() => setDialog(null)}
         />
       ) : null}
     </AdminPage>
   );
 }
 
-function AccountDetails({ account, onSuspend }: { account: AccountView; onSuspend: () => void }) {
+function AccountDetails({
+  account,
+  onDialog,
+}: {
+  account: AccountView;
+  onDialog: (dialog: 'suspend' | 'reactivate') => void;
+}) {
   return (
     <div className={styles.split}>
       <div className={styles.splitMain}>
@@ -115,16 +128,22 @@ function AccountDetails({ account, onSuspend }: { account: AccountView; onSuspen
           </div>
         </section>
 
-        {account.status === 'active' ? (
+        {account.status === 'active' || account.status === 'suspended' ? (
           <section className={styles.panel} aria-labelledby="account-actions-title">
             <div className={styles.panelBody}>
               <h2 className={styles.panelTitle} id="account-actions-title">
                 Actions
               </h2>
               <div className={styles.actions}>
-                <button type="button" className={styles.dangerButton} onClick={onSuspend}>
-                  Suspendre le compte
-                </button>
+                {account.status === 'active' ? (
+                  <button type="button" className={styles.dangerButton} onClick={() => onDialog('suspend')}>
+                    Suspendre le compte
+                  </button>
+                ) : (
+                  <button type="button" className={styles.primaryButton} onClick={() => onDialog('reactivate')}>
+                    Lever la suspension
+                  </button>
+                )}
               </div>
             </div>
           </section>

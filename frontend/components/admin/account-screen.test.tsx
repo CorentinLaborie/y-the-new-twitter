@@ -1,9 +1,14 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getAccount, suspendAccount, type AccountView } from '@/lib/admin-api';
+import { getAccount, reactivateAccount, suspendAccount, type AccountView } from '@/lib/admin-api';
 import { AccountScreen } from './account-screen';
 
-vi.mock('@/lib/admin-api', () => ({ getAccount: vi.fn(), suspendAccount: vi.fn(), reauthenticate: vi.fn() }));
+vi.mock('@/lib/admin-api', () => ({
+  getAccount: vi.fn(),
+  suspendAccount: vi.fn(),
+  reactivateAccount: vi.fn(),
+  reauthenticate: vi.fn(),
+}));
 
 const ACCOUNT_ID = '11111111-1111-4111-8111-111111111111';
 
@@ -51,6 +56,7 @@ describe('AccountScreen', () => {
   beforeEach(() => {
     vi.mocked(getAccount).mockReset();
     vi.mocked(suspendAccount).mockReset();
+    vi.mocked(reactivateAccount).mockReset();
   });
 
   it('offers the suspension of an active account only', async () => {
@@ -62,6 +68,7 @@ describe('AccountScreen', () => {
     const { unmount } = render(<AccountScreen id={ACCOUNT.id} />);
 
     expect(await screen.findByRole('button', { name: 'Suspendre le compte' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Lever la suspension' })).not.toBeInTheDocument();
     unmount();
 
     vi.mocked(getAccount).mockResolvedValue({ ok: true, status: 200, body: ACCOUNT });
@@ -69,6 +76,48 @@ describe('AccountScreen', () => {
 
     expect(await screen.findByText('Alice')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Suspendre le compte' })).not.toBeInTheDocument();
+  });
+
+  it('offers the lifting of a suspension for a suspended account only', async () => {
+    vi.mocked(getAccount).mockResolvedValue({ ok: true, status: 200, body: ACCOUNT });
+    render(<AccountScreen id={ACCOUNT.id} />);
+
+    expect(await screen.findByRole('button', { name: 'Lever la suspension' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Suspendre le compte' })).not.toBeInTheDocument();
+  });
+
+  it('lifts the suspension from its view, then shows the account as active', async () => {
+    vi.mocked(getAccount)
+      .mockResolvedValueOnce({ ok: true, status: 200, body: ACCOUNT })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        body: { ...ACCOUNT, status: 'active', suspensionReason: null, statusChangedAt: '2026-10-21T12:00:00.000Z' },
+      });
+    vi.mocked(reactivateAccount).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: {
+        id: ACCOUNT_ID,
+        status: 'active',
+        statusChangedAt: '2026-10-21T12:00:00.000Z',
+        suspensionReason: null,
+      },
+    });
+    render(<AccountScreen id={ACCOUNT.id} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Lever la suspension' }));
+    expect(screen.getByRole('dialog', { name: 'Lever la suspension de @AliceY ?' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Motif (obligatoire)'), {
+      target: { value: 'Erreur de modération' },
+    });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Lever la suspension' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(reactivateAccount).toHaveBeenCalledWith(ACCOUNT_ID, 'Erreur de modération');
+    expect(await screen.findByText('Actif')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Lever la suspension' })).not.toBeInTheDocument();
+    expect(getAccount).toHaveBeenCalledTimes(2);
   });
 
   it('suspends the account from its view, then shows the new status', async () => {

@@ -7,6 +7,7 @@ import {
   getAccount,
   getAdminSession,
   listAccounts,
+  reactivateAccount,
   reauthenticate,
   signOut,
   suspendAccount,
@@ -122,6 +123,14 @@ describe('admin API calls', () => {
 
     expect(apiRequest).toHaveBeenCalledWith('PUT', '/admin/users/a%2Fb%20c/status', {
       body: { status: 'suspended', reason: 'Spam répété' },
+    });
+  });
+
+  it('reactivateAccount sends the active status and the reason to the account status route', async () => {
+    await reactivateAccount('a/b c', 'Erreur de modération');
+
+    expect(apiRequest).toHaveBeenCalledWith('PUT', '/admin/users/a%2Fb%20c/status', {
+      body: { status: 'active', reason: 'Erreur de modération' },
     });
   });
 });
