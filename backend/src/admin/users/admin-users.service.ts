@@ -178,7 +178,9 @@ export class AdminUsersService {
       throw new NotFoundException('Compte introuvable.');
     }
     if (account.role === 'admin' || account.role === 'moderator') {
-      throw new ConflictException('Un administrateur ou un modérateur ne peut pas être supprimé depuis le back-office.');
+      throw new ConflictException(
+        'Un administrateur ou un modérateur ne peut pas être supprimé depuis le back-office.',
+      );
     }
     if (!canStartAdminDeletion(account.status)) {
       throw new ConflictException('La suppression n’est pas possible pour ce compte dans son statut actuel.');

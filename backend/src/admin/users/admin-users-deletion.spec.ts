@@ -84,9 +84,9 @@ describe('AdminUsersService.startDeletion (R16, owner decision 2026-10-21)', () 
     async (role) => {
       repository.findById.mockResolvedValue({ ...account('active'), role });
 
-      await expect(service.startDeletion(ACTOR_ID, TARGET_ID, { reasonCode: 'spam' }, NOW)).rejects.toBeInstanceOf(
-        ConflictException,
-      );
+      await expect(
+        service.startDeletion(ACTOR_ID, TARGET_ID, { reasonCode: 'spam' }, NOW),
+      ).rejects.toBeInstanceOf(ConflictException);
       expect(repository.startDeletion).not.toHaveBeenCalled();
       expect(audit.appendIn).not.toHaveBeenCalled();
       expect(mail.send).not.toHaveBeenCalled();
