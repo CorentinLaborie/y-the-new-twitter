@@ -1,0 +1,61 @@
+name: CI
+
+# Runs on every pull request and on pushes to main (M0 step 9). Nothing here deploys.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (lint, unit, end-to-end, API contract)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: End-to-end tests (Testcontainers, needs Docker)
+        run: npm run test:e2e
+      - name: API contract is up to date
+        run: npm run openapi:check
+
+  frontend:
+    name: Frontend (lint, typecheck, unit, build, smoke)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run build
+      - name: Install the browser for the smoke tests
+        run: npx playwright install --with-deps chromium
+      - name: Mocked end-to-end tests (desktop, tablet, mobile)
+        run: npx playwright test $(ls e2e/*.spec.ts | grep -v real-api.spec.ts) --project=desktop --project=tablet --project=mobile
