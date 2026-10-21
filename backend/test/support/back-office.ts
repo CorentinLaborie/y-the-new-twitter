@@ -78,3 +78,26 @@ export async function signIn(app: INestApplication, handle: string, backupCode: 
     .expect(200);
   return visitor;
 }
+
+/**
+ * An administrator signed in, with the backup codes that follow the first one. Each code is a single-use
+ * re-authentication, so a test does not depend on the TOTP time window.
+ */
+export async function signedInAdministrator(app: INestApplication, handle: string) {
+  const account = await createAccount(app, handle, 'admin');
+  const codes = await enrol(app, account);
+  const visitor = await signIn(app, handle, codes[0] ?? '');
+  return { visitor, userId: account.id, codes: codes.slice(1) };
+}
+
+/** A re-authentication of the administrator, with the next backup code of the queue (DEC-088). */
+export async function reauthenticateAdministrator(admin: {
+  visitor: { agent: ReturnType<typeof request.agent>; csrf: string };
+  codes: string[];
+}): Promise<void> {
+  await admin.visitor.agent
+    .post(`${BASE}/admin/reauth`)
+    .set('x-csrf-token', admin.visitor.csrf)
+    .send({ password: PASSWORD, code: admin.codes.shift() })
+    .expect(200);
+}

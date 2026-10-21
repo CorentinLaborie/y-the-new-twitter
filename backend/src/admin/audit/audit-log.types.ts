@@ -12,6 +12,10 @@ export const AUDIT_ACTIONS = {
   userDelete: 'user.delete',
   /** A contact thread closed because the suspension was lifted (DEC-116, DEC-085). */
   contactClose: 'contact.close',
+  /** An answer sent by an administrator to a suspended account, by e-mail (DEC-116). */
+  contactReply: 'contact.reply',
+  /** A decision on a report: the content is hidden, or the report is dismissed (the decision is in the details). */
+  reportDecide: 'report.decide',
 } as const;
 
 /** The result column (DEC-085): 'ok', 'failed' or 'refused'. */
@@ -21,6 +25,7 @@ export type AuditResult = 'ok' | 'failed' | 'refused';
 export const AUDIT_TARGET_TYPES = {
   user: 'user',
   contact: 'contact',
+  report: 'report',
 } as const;
 
 /** What the application gives the audit writer. The id and the time are set by the writer, before hashing. */
