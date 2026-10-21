@@ -16,6 +16,14 @@ describe('auditActionLabel', () => {
   it('keeps the code of an action that has no name yet', () => {
     expect(auditActionLabel('report.decide')).toBe('report.decide');
   });
+
+  it.each([
+    ['user.suspend', 'Suspension de compte'],
+    ['user.reactivate', 'Levée de suspension'],
+    ['contact.close', 'Fermeture de contact'],
+  ])('names the %s action in French', (action, label) => {
+    expect(auditActionLabel(action)).toBe(label);
+  });
 });
 
 describe('AUDIT_ACTION_FILTER_OPTIONS', () => {
@@ -28,6 +36,9 @@ describe('AUDIT_ACTION_FILTER_OPTIONS', () => {
       '',
       'auth.admin_login',
       'auth.mfa_enrol',
+      'user.suspend',
+      'user.reactivate',
+      'contact.close',
     ]);
   });
 });
@@ -35,6 +46,10 @@ describe('AUDIT_ACTION_FILTER_OPTIONS', () => {
 describe('auditTargetLabel', () => {
   it('names a user target as an account', () => {
     expect(auditTargetLabel('user')).toBe('Compte');
+  });
+
+  it('names a contact target as a contact', () => {
+    expect(auditTargetLabel('contact')).toBe('Contact');
   });
 
   it('keeps an unknown target type as it is', () => {

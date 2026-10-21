@@ -58,6 +58,9 @@ export const AUDIT_RESULT_LABELS: Record<AuditResult, string> = {
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'auth.admin_login': 'Connexion administrateur',
   'auth.mfa_enrol': 'Double authentification configurée',
+  'user.suspend': 'Suspension de compte',
+  'user.reactivate': 'Levée de suspension',
+  'contact.close': 'Fermeture de contact',
 };
 
 /** The options of the action filter of the audit log. The empty value means every action. */
@@ -71,7 +74,14 @@ export function auditActionLabel(action: string): string {
   return AUDIT_ACTION_LABELS[action] ?? action;
 }
 
-/** Target types of the audit log (audit-log.types.ts): 'user' is the only one written so far. */
+/** The French name of an audit target type (audit-log.types.ts), or the type itself when no name is known yet. */
 export function auditTargetLabel(targetType: string): string {
-  return targetType === 'user' ? 'Compte' : targetType;
+  switch (targetType) {
+    case 'user':
+      return 'Compte';
+    case 'contact':
+      return 'Contact';
+    default:
+      return targetType;
+  }
 }
