@@ -1,8 +1,7 @@
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { configureApp } from '../src/configure-app';
 import { PrismaService } from '../src/database/prisma.service';
+import { startApp } from './support/app';
 import { BASE, createAccount, enrol, newVisitor, PASSWORD, signIn } from './support/back-office';
 import { resetRateLimits } from './support/rate-limits';
 import { startMigratedPostgres } from './support/postgres';
@@ -20,16 +19,6 @@ describe('Back-office account search and view (e2e)', () => {
   let reporter: { id: string; email: string };
   let admin: { id: string; email: string };
   let visitor: Awaited<ReturnType<typeof signIn>>;
-
-  async function startApp(): Promise<INestApplication> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- loaded on purpose, after DATABASE_URL is set
-    const { AppModule } = require('../src/app.module') as typeof import('../src/app.module');
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    const created = moduleRef.createNestApplication({ bufferLogs: true });
-    configureApp(created);
-    await created.init();
-    return created;
-  }
 
   beforeAll(async () => {
     container = await startMigratedPostgres();

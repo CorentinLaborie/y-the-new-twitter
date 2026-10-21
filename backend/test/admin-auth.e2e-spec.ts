@@ -1,8 +1,6 @@
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import request from 'supertest';
-import { configureApp } from '../src/configure-app';
 import { ADMIN_IDLE_TIMEOUT_MS, ADMIN_MAX_SESSION_MS } from '../src/admin/admin-session';
 import { CapturingMailSender } from '../src/common/mail/capturing-mail-sender';
 import { MAIL_SENDER } from '../src/common/mail/mail-sender';
@@ -11,8 +9,9 @@ import { hashPassword } from '../src/auth/password';
 import { PrismaService } from '../src/database/prisma.service';
 import type { Prisma } from '../src/database/generated/client/client';
 import { UsersRepository } from '../src/users/users.repository';
+import { startApp } from './support/app';
 import { resetRateLimits } from './support/rate-limits';
-import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
+import { sqlAsSuperuser, startMigratedPostgres } from './support/postgres';
 
 const PASSWORD = 'Abcdef1!';
 const WRONG_PASSWORD = 'Abcdef1?';
@@ -25,16 +24,6 @@ describe('Back-office sign-in and second factor (e2e)', () => {
   let prisma: PrismaService;
   let users: UsersRepository;
   let mail: CapturingMailSender;
-
-  async function startApp(): Promise<INestApplication> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- loaded on purpose, after DATABASE_URL is set
-    const { AppModule } = require('../src/app.module') as typeof import('../src/app.module');
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    const created = moduleRef.createNestApplication({ bufferLogs: true });
-    configureApp(created);
-    await created.init();
-    return created;
-  }
 
   /** A visitor with its own cookie jar and CSRF token, so each test starts with no session. */
   async function newVisitor() {
@@ -76,9 +65,7 @@ describe('Back-office sign-in and second factor (e2e)', () => {
     return visitor.agent.post(`${BASE}/admin/login`).set('x-csrf-token', visitor.csrf).send(body);
   }
 
-  async function sql(statement: string): Promise<string> {
-    return (await runAsSuperuser(container, statement)).stdout.trim();
-  }
+  const sql = (statement: string) => sqlAsSuperuser(container, statement);
 
   /** Signs an administrator through the set-up, and returns the TOTP secret and the backup codes. */
   async function enrolAdministrator(handle: string) {

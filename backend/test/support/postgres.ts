@@ -74,3 +74,11 @@ export async function runAsSuperuser(container: StartedPostgreSqlContainer, stat
     statement,
   ]);
 }
+
+/** Runs one statement as the superuser, and answers its output without the surrounding spaces. */
+export async function sqlAsSuperuser(
+  container: StartedPostgreSqlContainer,
+  statement: string,
+): Promise<string> {
+  return (await runAsSuperuser(container, statement)).stdout.trim();
+}

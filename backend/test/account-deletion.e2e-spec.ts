@@ -1,13 +1,12 @@
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import request from 'supertest';
-import { configureApp } from '../src/configure-app';
 import { hashPassword } from '../src/auth/password';
 import { PrismaService } from '../src/database/prisma.service';
 import { UsersRepository } from '../src/users/users.repository';
+import { startApp } from './support/app';
 import { resetRateLimits } from './support/rate-limits';
-import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
+import { sqlAsSuperuser, startMigratedPostgres } from './support/postgres';
 
 const PASSWORD = 'Abcdef1!';
 const LOGIN = '/api/v1/auth/login';
@@ -26,16 +25,6 @@ describe('Account deletion request, cancellation and window (e2e, R16)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let users: UsersRepository;
-
-  async function startApp(): Promise<INestApplication> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- loaded on purpose, after DATABASE_URL is set
-    const { AppModule } = require('../src/app.module') as typeof import('../src/app.module');
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    const created = moduleRef.createNestApplication({ bufferLogs: true });
-    configureApp(created);
-    await created.init();
-    return created;
-  }
 
   /** An active account, created through the repository. Returns its id. */
   async function createActiveAccount(handle: string): Promise<string> {
@@ -79,9 +68,7 @@ describe('Account deletion request, cancellation and window (e2e, R16)', () => {
     return agent.put(DELETION).set('x-csrf-token', csrf).send({ password });
   }
 
-  async function sql(statement: string): Promise<string> {
-    return (await runAsSuperuser(container, statement)).stdout.trim();
-  }
+  const sql = (statement: string) => sqlAsSuperuser(container, statement);
 
   beforeAll(async () => {
     container = await startMigratedPostgres();

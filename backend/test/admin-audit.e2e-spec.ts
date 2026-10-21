@@ -1,12 +1,11 @@
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { configureApp } from '../src/configure-app';
 import { AuditLogService } from '../src/admin/audit/audit-log.service';
 import { AUDIT_ACTIONS, AUDIT_TARGET_TYPES } from '../src/admin/audit/audit-log.types';
+import { startApp } from './support/app';
 import { BASE, createAccount, enrol, newVisitor, PASSWORD, signIn } from './support/back-office';
 import { resetRateLimits } from './support/rate-limits';
-import { runAsSuperuser, startMigratedPostgres } from './support/postgres';
+import { sqlAsSuperuser, startMigratedPostgres } from './support/postgres';
 
 const AUDIT = `${BASE}/admin/audit-log`;
 
@@ -15,19 +14,7 @@ describe('Back-office audit log (e2e)', () => {
   let app: INestApplication;
   let audit: AuditLogService;
 
-  async function startApp(): Promise<INestApplication> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- loaded on purpose, after DATABASE_URL is set
-    const { AppModule } = require('../src/app.module') as typeof import('../src/app.module');
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    const created = moduleRef.createNestApplication({ bufferLogs: true });
-    configureApp(created);
-    await created.init();
-    return created;
-  }
-
-  async function sql(statement: string): Promise<string> {
-    return (await runAsSuperuser(container, statement)).stdout.trim();
-  }
+  const sql = (statement: string) => sqlAsSuperuser(container, statement);
 
   beforeAll(async () => {
     container = await startMigratedPostgres();
