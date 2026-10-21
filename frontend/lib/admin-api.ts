@@ -117,6 +117,22 @@ export function adminLogin(
   });
 }
 
+/** The set-up of the second factor: the secret to type into an authenticator application, and its otpauth link. */
+export type MfaSetup = { secret: string; otpauthUri: string };
+
+/** POST /admin/mfa/setup: starts the set-up with the token of the e-mail link. Nothing is enrolled yet. */
+export function startMfaSetup(token: string): Promise<ApiResult<MfaSetup>> {
+  return apiRequest<MfaSetup>('POST', '/admin/mfa/setup', { body: { token } });
+}
+
+/**
+ * POST /admin/mfa/confirm: enrols the factor with a first code. The backup codes come back once, and the session is
+ * signed in.
+ */
+export function confirmMfaSetup(code: string): Promise<ApiResult<{ backupCodes: string[] }>> {
+  return apiRequest<{ backupCodes: string[] }>('POST', '/admin/mfa/confirm', { body: { code } });
+}
+
 /** `cookie` is the SESSION cookie of the visitor when the call is made on the server (see requireAdminSession). */
 export function getAdminSession(cookie?: string): Promise<ApiResult<AdminSession>> {
   return apiRequest<AdminSession>('GET', '/admin/session', { cookie });
