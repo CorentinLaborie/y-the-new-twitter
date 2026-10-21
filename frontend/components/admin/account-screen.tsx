@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
-import { StatusLabel } from '@/components/admin/status-label';
+import { DeleteAccountDialog } from '@/components/admin/delete-account-dialog';
 import { ReactivateDialog } from '@/components/admin/reactivate-dialog';
+import { StatusLabel } from '@/components/admin/status-label';
 import { SuspendDialog } from '@/components/admin/suspend-dialog';
 import styles from '@/components/admin/admin.module.css';
 import { getAccount, type AccountView } from '@/lib/admin-api';
@@ -25,14 +26,18 @@ type AccountState =
   | { status: 'error'; problem: ApiProblem }
   | { status: 'ready'; account: AccountView };
 
+/** The dialog open on the account view: none, or one of the actions of the Actions panel. */
+type AccountDialog = 'suspend' | 'reactivate' | 'delete';
+
 /**
- * The view of one account: its details, its reports and moderated content, and its recent audit entries. The one
- * action on it is the suspension of an active account (SuspendDialog), or the lifting of a suspension (ReactivateDialog);
- * the deletion and the e-mail reveal are not on this screen yet.
+ * The view of one account: its details, its reports and moderated content, and its recent audit entries. Its actions
+ * are the suspension of an active account (SuspendDialog), the lifting of a suspension (ReactivateDialog), and the
+ * start of the deletion of an active or suspended account (DeleteAccountDialog). The e-mail reveal is not on this
+ * screen yet.
  */
 export function AccountScreen({ id }: { id: string }) {
   const [state, setState] = useState<AccountState>({ status: 'loading' });
-  const [dialog, setDialog] = useState<'suspend' | 'reactivate' | null>(null);
+  const [dialog, setDialog] = useState<AccountDialog | null>(null);
 
   const showResult = useCallback((result: ApiResult<AccountView>) => {
     setState(result.ok ? { status: 'ready', account: result.body } : { status: 'error', problem: result.problem });
@@ -50,7 +55,7 @@ export function AccountScreen({ id }: { id: string }) {
     };
   }, [id, showResult]);
 
-  function handleStatusChanged() {
+  function handleChanged() {
     setDialog(null);
     void getAccount(id).then(showResult);
   }
@@ -67,7 +72,7 @@ export function AccountScreen({ id }: { id: string }) {
         <SuspendDialog
           accountId={state.account.id}
           handle={state.account.handle}
-          onSuspended={handleStatusChanged}
+          onSuspended={handleChanged}
           onCancel={() => setDialog(null)}
         />
       ) : null}
@@ -75,7 +80,15 @@ export function AccountScreen({ id }: { id: string }) {
         <ReactivateDialog
           accountId={state.account.id}
           handle={state.account.handle}
-          onReactivated={handleStatusChanged}
+          onReactivated={handleChanged}
+          onCancel={() => setDialog(null)}
+        />
+      ) : null}
+      {state.status === 'ready' && dialog === 'delete' ? (
+        <DeleteAccountDialog
+          accountId={state.account.id}
+          handle={state.account.handle}
+          onDeleted={handleChanged}
           onCancel={() => setDialog(null)}
         />
       ) : null}
@@ -88,7 +101,7 @@ function AccountDetails({
   onDialog,
 }: {
   account: AccountView;
-  onDialog: (dialog: 'suspend' | 'reactivate') => void;
+  onDialog: (dialog: AccountDialog) => void;
 }) {
   return (
     <div className={styles.split}>
@@ -144,6 +157,9 @@ function AccountDetails({
                     Lever la suspension
                   </button>
                 )}
+                <button type="button" className={styles.dangerButton} onClick={() => onDialog('delete')}>
+                  Supprimer le compte
+                </button>
               </div>
             </div>
           </section>

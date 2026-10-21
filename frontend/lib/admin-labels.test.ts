@@ -3,6 +3,7 @@ import {
   accountStatusTone,
   ACCOUNT_STATUS_LABELS,
   AUDIT_ACTION_FILTER_OPTIONS,
+  DELETION_REASON_OPTIONS,
   auditActionLabel,
   auditResultTone,
   auditTargetLabel,
@@ -20,9 +21,22 @@ describe('auditActionLabel', () => {
   it.each([
     ['user.suspend', 'Suspension de compte'],
     ['user.reactivate', 'Levée de suspension'],
+    ['user.delete', 'Suppression de compte'],
     ['contact.close', 'Fermeture de contact'],
   ])('names the %s action in French', (action, label) => {
     expect(auditActionLabel(action)).toBe(label);
+  });
+});
+
+describe('DELETION_REASON_OPTIONS', () => {
+  it('lists the five deletion reasons in the order of the list, with French labels', () => {
+    expect(DELETION_REASON_OPTIONS).toEqual([
+      { value: 'abuse', label: 'Abus' },
+      { value: 'spam', label: 'Spam' },
+      { value: 'harassment', label: 'Harcèlement' },
+      { value: 'identity_theft', label: 'Usurpation d’identité' },
+      { value: 'other', label: 'Autre' },
+    ]);
   });
 });
 
@@ -38,6 +52,7 @@ describe('AUDIT_ACTION_FILTER_OPTIONS', () => {
       'auth.mfa_enrol',
       'user.suspend',
       'user.reactivate',
+      'user.delete',
       'contact.close',
     ]);
   });

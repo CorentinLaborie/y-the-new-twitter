@@ -10,6 +10,7 @@ import {
   reactivateAccount,
   reauthenticate,
   signOut,
+  deleteAccount,
   suspendAccount,
 } from '@/lib/admin-api';
 
@@ -131,6 +132,22 @@ describe('admin API calls', () => {
 
     expect(apiRequest).toHaveBeenCalledWith('PUT', '/admin/users/a%2Fb%20c/status', {
       body: { status: 'active', reason: 'Erreur de modération' },
+    });
+  });
+
+  it('deleteAccount sends the reason code to the deletion route of the account', async () => {
+    await deleteAccount('a/b c', 'spam');
+
+    expect(apiRequest).toHaveBeenCalledWith('PUT', '/admin/users/a%2Fb%20c/deletion', {
+      body: { reasonCode: 'spam' },
+    });
+  });
+
+  it('deleteAccount sends the free text with the reason "Autre" only', async () => {
+    await deleteAccount('account-1', 'other', 'Compte piraté');
+
+    expect(apiRequest).toHaveBeenCalledWith('PUT', '/admin/users/account-1/deletion', {
+      body: { reasonCode: 'other', otherReason: 'Compte piraté' },
     });
   });
 });

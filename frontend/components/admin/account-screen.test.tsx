@@ -1,12 +1,13 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getAccount, reactivateAccount, suspendAccount, type AccountView } from '@/lib/admin-api';
+import { deleteAccount, getAccount, reactivateAccount, suspendAccount, type AccountView } from '@/lib/admin-api';
 import { AccountScreen } from './account-screen';
 
 vi.mock('@/lib/admin-api', () => ({
   getAccount: vi.fn(),
   suspendAccount: vi.fn(),
   reactivateAccount: vi.fn(),
+  deleteAccount: vi.fn(),
   reauthenticate: vi.fn(),
 }));
 
@@ -166,6 +167,57 @@ describe('AccountScreen', () => {
     expect(screen.getByText('Connexion administrateur')).toBeInTheDocument();
     expect(screen.getByText('Double authentification configurée')).toBeInTheDocument();
     expect(screen.getByText('Échec · Code incorrect')).toBeInTheDocument();
+  });
+
+  it('offers the deletion of an active or a suspended account, and not of a pending one', async () => {
+    vi.mocked(getAccount).mockResolvedValueOnce({ ok: true, status: 200, body: { ...ACCOUNT, status: 'active' } });
+    const active = render(<AccountScreen id={ACCOUNT.id} />);
+
+    expect(await screen.findByRole('button', { name: 'Supprimer le compte' })).toBeInTheDocument();
+    active.unmount();
+
+    vi.mocked(getAccount).mockResolvedValueOnce({ ok: true, status: 200, body: ACCOUNT });
+    const suspended = render(<AccountScreen id={ACCOUNT.id} />);
+
+    expect(await screen.findByRole('button', { name: 'Supprimer le compte' })).toBeInTheDocument();
+    suspended.unmount();
+
+    vi.mocked(getAccount).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      body: { ...ACCOUNT, status: 'pending_deletion' },
+    });
+    render(<AccountScreen id={ACCOUNT.id} />);
+
+    expect(await screen.findByText('Alice')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Supprimer le compte' })).not.toBeInTheDocument();
+  });
+
+  it('deletes the account from its view with a reason, then shows the pending deletion', async () => {
+    const active = { ...ACCOUNT, status: 'active' as const, suspensionReason: null };
+    vi.mocked(getAccount)
+      .mockResolvedValueOnce({ ok: true, status: 200, body: active })
+      .mockResolvedValueOnce({ ok: true, status: 200, body: { ...ACCOUNT, status: 'pending_deletion' } });
+    vi.mocked(deleteAccount).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: {
+        id: ACCOUNT_ID,
+        status: 'pending_deletion',
+        statusChangedAt: '2026-10-21T12:00:00.000Z',
+        suspensionReason: null,
+      },
+    });
+    render(<AccountScreen id={ACCOUNT.id} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le compte' }));
+    fireEvent.change(screen.getByLabelText('Motif (obligatoire)'), { target: { value: 'spam' } });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Supprimer le compte' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(deleteAccount).toHaveBeenCalledWith(ACCOUNT_ID, 'spam', undefined);
+    expect(await screen.findByText('En attente de suppression')).toBeInTheDocument();
+    expect(getAccount).toHaveBeenCalledTimes(2);
   });
 
   it('links back to the account search', async () => {

@@ -4,7 +4,7 @@
  */
 
 import type { AccountStatus } from '@/lib/auth-api';
-import type { AdminRole, AuditResult } from '@/lib/admin-api';
+import type { AdminRole, AuditResult, DeletionReasonCode } from '@/lib/admin-api';
 
 export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
   pending_verification: 'En attente de vérification',
@@ -60,8 +60,18 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   'auth.mfa_enrol': 'Double authentification configurée',
   'user.suspend': 'Suspension de compte',
   'user.reactivate': 'Levée de suspension',
+  'user.delete': 'Suppression de compte',
   'contact.close': 'Fermeture de contact',
 };
+
+/** The reasons an administrator can pick to delete an account, in the order of the list (account-deletion-reasons.ts). */
+export const DELETION_REASON_OPTIONS: readonly { value: DeletionReasonCode; label: string }[] = [
+  { value: 'abuse', label: 'Abus' },
+  { value: 'spam', label: 'Spam' },
+  { value: 'harassment', label: 'Harcèlement' },
+  { value: 'identity_theft', label: 'Usurpation d’identité' },
+  { value: 'other', label: 'Autre' },
+];
 
 /** The options of the action filter of the audit log. The empty value means every action. */
 export const AUDIT_ACTION_FILTER_OPTIONS: readonly { value: string; label: string }[] = [

@@ -170,6 +170,23 @@ function changeAccountStatus(
   });
 }
 
+/** The reasons an administrator can pick to delete an account (the API names them, see account-deletion-reasons.ts). */
+export type DeletionReasonCode = 'abuse' | 'spam' | 'harassment' | 'identity_theft' | 'other';
+
+/**
+ * Starts the 90-day deletion window of an account, with its reason. `otherReason` is the free text, sent only with
+ * the reason "Autre". Needs a current re-authentication, as for suspendAccount.
+ */
+export function deleteAccount(
+  id: string,
+  reasonCode: DeletionReasonCode,
+  otherReason?: string,
+): Promise<ApiResult<StatusChangeResult>> {
+  return apiRequest<StatusChangeResult>('PUT', `/admin/users/${encodeURIComponent(id)}/deletion`, {
+    body: otherReason === undefined ? { reasonCode } : { reasonCode, otherReason },
+  });
+}
+
 /** Ends the session of the visitor on the server (the same route as the account sign-out). */
 export function signOut(): Promise<ApiResult<Record<string, never>>> {
   return apiRequest<Record<string, never>>('POST', '/auth/logout');
