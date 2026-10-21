@@ -1,24 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   decodeKeysetCursor,
   encodeKeysetCursor,
   type KeysetPosition,
 } from '../../common/pagination/keyset-cursor';
+import { MAIL_SENDER, type MailSender, type OutgoingMail } from '../../common/mail/mail-sender';
 import { AuditLogService } from '../audit/audit-log.service';
-import { AUDIT_TARGET_TYPES } from '../audit/audit-log.types';
+import { AUDIT_ACTIONS, AUDIT_TARGET_TYPES } from '../audit/audit-log.types';
 import { AccountRow, AdminUsersRepository } from './admin-users.repository';
-import type { AccountListItem, AccountListOptions, AccountPage, AccountView } from './admin-users.types';
+import type {
+  AccountListItem,
+  AccountListOptions,
+  AccountPage,
+  AccountView,
+  StatusChangeResult,
+} from './admin-users.types';
 import { maskEmail } from './mask-email';
+import { reactivationMail, suspensionMail } from './status-change-mail';
+import { contactThreadPlan, statusChangeKind, type RequestedAccountStatus } from './status-change';
 
 /** The audit entries the account view shows. The full history is paged in a later step. */
 const HISTORY_LIMIT = 20;
 
-/** The account search and the account view of the back-office (section 3.3). Reads only. */
+/** The account search and the account view of the back-office (section 3.3), and the status changes (DEC-077). */
 @Injectable()
 export class AdminUsersService {
+  private readonly logger = new Logger(AdminUsersService.name);
+
   constructor(
     private readonly repository: AdminUsersRepository,
     private readonly audit: AuditLogService,
+    @Inject(MAIL_SENDER) private readonly mail: MailSender,
   ) {}
 
   /** One page of accounts, newest first. The cursor is opaque; nextCursor is null on the last page. */
@@ -62,6 +74,89 @@ export class AdminUsersService {
       moderatedContentCount: activity.moderatedContentCount,
       history,
     };
+  }
+
+  /**
+   * Suspends an active account, or lifts a suspension, with a reason (DEC-077). The status, the sessions, the counters
+   * and the contact thread change in one transaction. The audit entries are written in that same transaction, and the e-mail follows the commit. Re-authentication is
+   * checked by the route (DEC-088). An administrator cannot change the status of their own account.
+   */
+  async changeStatus(
+    actorId: string,
+    targetId: string,
+    request: { status: RequestedAccountStatus; reason: string },
+    now: Date,
+  ): Promise<StatusChangeResult> {
+    if (targetId === actorId) {
+      throw new ConflictException('Vous ne pouvez pas changer le statut de votre propre compte.');
+    }
+
+    const account = await this.repository.findById(targetId);
+    if (account === null) {
+      throw new NotFoundException('Compte introuvable.');
+    }
+
+    const kind = statusChangeKind(account.status, request.status);
+    if (kind === null) {
+      throw new ConflictException('Ce changement de statut n’est pas possible pour ce compte.');
+    }
+
+    const thread = contactThreadPlan(kind, await this.repository.contactThreadOf(targetId));
+    const suspensionReason = kind === 'suspend' ? request.reason : null;
+    await this.repository.applyStatusChange({
+      userId: targetId,
+      status: request.status,
+      reason: suspensionReason,
+      now,
+      closedById: actorId,
+      thread,
+      record: async (db) => {
+        await this.audit.appendIn(db, {
+          actorId,
+          action: kind === 'suspend' ? AUDIT_ACTIONS.userSuspend : AUDIT_ACTIONS.userReactivate,
+          result: 'ok',
+          targetType: AUDIT_TARGET_TYPES.user,
+          targetId,
+          reason: request.reason,
+          details: null,
+        });
+        if (thread?.kind === 'close') {
+          await this.audit.appendIn(db, {
+            actorId,
+            action: AUDIT_ACTIONS.contactClose,
+            result: 'ok',
+            targetType: AUDIT_TARGET_TYPES.contact,
+            targetId: thread.threadId,
+            reason: null,
+            details: null,
+          });
+        }
+      },
+    });
+
+    // The e-mail is sent after the commit: it cannot be part of the transaction (R18).
+    await this.notifyStatusChange(
+      kind === 'suspend' ? suspensionMail(account.email, request.reason) : reactivationMail(account.email),
+    );
+
+    return {
+      id: targetId,
+      status: request.status,
+      statusChangedAt: now.toISOString(),
+      suspensionReason,
+    };
+  }
+
+  /**
+   * The e-mail of a status change (R18). A failed send does not undo the change, which is already written: it is logged
+   * without the address, so the failure is not silent.
+   */
+  private async notifyStatusChange(message: OutgoingMail): Promise<void> {
+    try {
+      await this.mail.send(message);
+    } catch {
+      this.logger.error('The account status e-mail could not be sent.');
+    }
   }
 }
 

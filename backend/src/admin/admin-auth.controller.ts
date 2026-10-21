@@ -19,12 +19,13 @@ import { regenerateSession } from '../common/sessions/regenerate-session';
 import {
   ADMIN_IDLE_TIMEOUT_MS,
   ADMIN_MAX_SESSION_MS,
+  ADMIN_REAUTH_WINDOW_MS,
   ADMIN_SIGN_IN_REQUIRED_MESSAGE,
   isMfaSetupOpen,
   startElevation,
 } from './admin-session';
 import { AdminAuthService } from './admin-auth.service';
-import { AdminCodeDto, AdminLoginDto } from './admin-auth.dto';
+import { AdminCodeDto, AdminLoginDto, AdminReauthDto } from './admin-auth.dto';
 import { Admin } from './admin.decorators';
 
 interface AdminUserView {
@@ -129,6 +130,38 @@ export class AdminAuthController {
     req.session.adminMfaSetup = undefined;
     req.session.admin = startElevation(now);
     return { backupCodes: codes };
+  }
+
+  /**
+   * Asks again for the password and a second-factor code, before a sensitive action (DEC-088). The proof lasts 10
+   * minutes, kept in the session. It does not extend the 8-hour elevation.
+   */
+  @Admin()
+  @AuthRateLimit('login')
+  @Post('reauth')
+  @HttpCode(HttpStatus.OK)
+  async reauthenticate(
+    @Body() body: AdminReauthDto,
+    @CurrentUser() user: SessionUser,
+    @Req() req: Request,
+  ): Promise<{ readonly reauthExpiresAt: string }> {
+    const now = new Date();
+    const outcome = await this.adminAuth.reauthenticate(
+      user.id,
+      { ipAddress: req.ip ?? '', userAgent: req.get('user-agent') },
+      { password: body.password, code: body.code },
+      now,
+    );
+
+    switch (outcome) {
+      case 'invalid':
+        throw new UnauthorizedException('Identifiants incorrects');
+      case 'invalid_code':
+        throw new UnauthorizedException('Code de vérification incorrect.');
+      case 'ok':
+        req.session.adminReauthAt = now.toISOString();
+        return { reauthExpiresAt: new Date(now.getTime() + ADMIN_REAUTH_WINDOW_MS).toISOString() };
+    }
   }
 
   /** The signed-in administrator and when the back-office session ends: 30 minutes idle, 8 hours at most. */

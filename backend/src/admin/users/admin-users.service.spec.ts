@@ -42,6 +42,7 @@ describe('AdminUsersService', () => {
     service = new AdminUsersService(
       repository as unknown as AdminUsersRepository,
       audit as unknown as AuditLogService,
+      { send: jest.fn() },
     );
   });
 

@@ -2,8 +2,10 @@ import {
   ADMIN_IDLE_TIMEOUT_MS,
   ADMIN_MAX_SESSION_MS,
   ADMIN_MFA_SETUP_TTL_MS,
+  ADMIN_REAUTH_WINDOW_MS,
   isElevated,
   isMfaSetupOpen,
+  isReauthenticated,
   startElevation,
 } from './admin-session';
 
@@ -56,5 +58,18 @@ describe('admin session limits (DEC-036, DEC-082)', () => {
       ),
     ).toBe(false);
     expect(isMfaSetupOpen(undefined, NOW)).toBe(false);
+  });
+
+  it('counts a re-authentication as current for 10 minutes only (DEC-088)', () => {
+    const reauthAt = new Date(NOW.getTime() - ADMIN_REAUTH_WINDOW_MS).toISOString();
+
+    expect(isReauthenticated(reauthAt, NOW)).toBe(true);
+    expect(isReauthenticated(new Date(NOW.getTime() - ADMIN_REAUTH_WINDOW_MS - 1).toISOString(), NOW)).toBe(
+      false,
+    );
+  });
+
+  it('is never current without a re-authentication', () => {
+    expect(isReauthenticated(undefined, NOW)).toBe(false);
   });
 });

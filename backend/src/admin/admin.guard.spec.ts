@@ -1,7 +1,13 @@
-import { ExecutionContext, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SessionUserService } from '../auth/session/session-user.service';
-import { ADMIN_IDLE_TIMEOUT_MS, ADMIN_MAX_SESSION_MS } from './admin-session';
+import { ADMIN_IDLE_TIMEOUT_MS, ADMIN_MAX_SESSION_MS, ADMIN_REAUTH_WINDOW_MS } from './admin-session';
+import { ADMIN_REAUTH_KEY } from './admin.decorators';
 import { AdminGuard } from './admin.guard';
 
 const NOW = new Date('2026-10-20T12:00:00.000Z');
@@ -15,7 +21,10 @@ describe('AdminGuard', () => {
   beforeEach(() => {
     jest.useFakeTimers({ now: NOW });
     sessions = { check: jest.fn().mockResolvedValue({ allowed: true, user: ADMIN }) };
-    reflector = { getAllAndOverride: jest.fn().mockReturnValue(true) };
+    // Elevation is required by default; a re-authentication is not, unless a test asks for it.
+    reflector = {
+      getAllAndOverride: jest.fn().mockImplementation((key: string) => key !== ADMIN_REAUTH_KEY),
+    };
     guard = new AdminGuard(reflector as unknown as Reflector, sessions as unknown as SessionUserService);
   });
 
@@ -105,5 +114,68 @@ describe('AdminGuard', () => {
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
     expect(request.sessionUser).toEqual(ADMIN);
+  });
+
+  describe('re-authentication (DEC-088)', () => {
+    /** The elevation is current; the route asks for a re-authentication or not, as the test says. */
+    function routeNeedsReauth(required: boolean): void {
+      reflector.getAllAndOverride.mockImplementation((key: string) =>
+        key === ADMIN_REAUTH_KEY ? required : true,
+      );
+    }
+
+    const current = elevation(NOW, NOW);
+
+    it('answers 403 reauth_required when the route needs a re-authentication and there is none', async () => {
+      routeNeedsReauth(true);
+      const { context } = contextWith({ userId: 'admin-1', admin: current });
+
+      const failure = await guard.canActivate(context).catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(ForbiddenException);
+      expect((failure as ForbiddenException).getResponse()).toEqual({
+        message: 'Ré-authentification requise.',
+        code: 'reauth_required',
+      });
+    });
+
+    it('answers 403 once the re-authentication is older than 10 minutes', async () => {
+      routeNeedsReauth(true);
+      const { context } = contextWith({
+        userId: 'admin-1',
+        admin: current,
+        adminReauthAt: new Date(NOW.getTime() - ADMIN_REAUTH_WINDOW_MS - 1).toISOString(),
+      });
+
+      await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('lets the route through with a re-authentication of less than 10 minutes, and keeps the elevation', async () => {
+      routeNeedsReauth(true);
+      const { context, request } = contextWith({
+        userId: 'admin-1',
+        admin: current,
+        adminReauthAt: new Date(NOW.getTime() - ADMIN_REAUTH_WINDOW_MS + 1000).toISOString(),
+      });
+
+      await expect(guard.canActivate(context)).resolves.toBe(true);
+      expect(request.session.admin).toEqual({ ...current, lastSeenAt: NOW.toISOString() });
+    });
+
+    it('does not ask for a re-authentication on a route that does not need one', async () => {
+      routeNeedsReauth(false);
+      const { context } = contextWith({ userId: 'admin-1', admin: current });
+
+      await expect(guard.canActivate(context)).resolves.toBe(true);
+    });
+
+    it('answers 401, not 403, when the elevation is missing even if a re-authentication is current', async () => {
+      routeNeedsReauth(true);
+      const { context } = contextWith({
+        userId: 'admin-1',
+        adminReauthAt: NOW.toISOString(),
+      });
+
+      await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
+    });
   });
 });

@@ -41,9 +41,14 @@ export class AuditLogRepository {
   /** Runs `work` in a transaction that holds the chain lock until it ends. */
   withChainLock<T>(work: (db: AuditDb) => Promise<T>): Promise<T> {
     return this.prisma.$transaction(async (db) => {
-      await db.$executeRaw`SELECT pg_advisory_xact_lock(${AUDIT_CHAIN_LOCK_KEY}::bigint)`;
+      await this.lockChain(db);
       return work(db);
     });
+  }
+
+  /** Takes the chain lock on a transaction the caller opened. It is released when that transaction ends. */
+  async lockChain(db: AuditDb): Promise<void> {
+    await db.$executeRaw`SELECT pg_advisory_xact_lock(${AUDIT_CHAIN_LOCK_KEY}::bigint)`;
   }
 
   /** The newest entry: the one the next entry is chained to. Null while the table is empty. */

@@ -84,6 +84,40 @@ export class AdminAuthService {
     return this.mfa.startSetup(handle);
   }
 
+  /**
+   * Checks the password and a second-factor code again, for the actions that need a fresh proof (DEC-088). The
+   * password step counts failures toward the lock, like a sign-in. A wrong code counts too.
+   */
+  async reauthenticate(
+    userId: string,
+    network: { ipAddress: string; userAgent: string | undefined },
+    proof: { password: string; code: string },
+    now: Date,
+  ): Promise<'ok' | 'invalid' | 'invalid_code'> {
+    const email = await this.users.emailOf(userId);
+    if (email === null) {
+      return 'invalid';
+    }
+
+    const check = await this.loginService.checkPassword({
+      email,
+      password: proof.password,
+      ipAddress: network.ipAddress,
+      userAgent: network.userAgent,
+      adminOnly: true,
+    });
+    if (check.status !== 'ok') {
+      return 'invalid';
+    }
+
+    if (!(await this.mfa.verifyCode(userId, proof.code, now))) {
+      await this.loginService.recordFailure(check.account, check.event);
+      return 'invalid_code';
+    }
+
+    return 'ok';
+  }
+
   /** The codes in clear, or null when the code is wrong. A successful set-up is announced by e-mail, like a sign-in. */
   async confirmSetup(
     userId: string,

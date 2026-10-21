@@ -42,3 +42,11 @@ export interface AccountView extends AccountListItem {
   /** The most recent audit entries about the account, newest first. */
   history: AuditEntryView[];
 }
+
+/** The account after a suspension or a lifting. The reason is kept only while the account is suspended (DEC-081). */
+export interface StatusChangeResult {
+  id: string;
+  status: AccountStatus;
+  statusChangedAt: string;
+  suspensionReason: string | null;
+}

@@ -4,14 +4,21 @@ export const AUDIT_ACTIONS = {
   adminLogin: 'auth.admin_login',
   /** A second factor set up and confirmed by an administrator. */
   mfaEnrol: 'auth.mfa_enrol',
+  /** An account suspended by an administrator, with the reason (DEC-077, DEC-085). */
+  userSuspend: 'user.suspend',
+  /** A suspension lifted by an administrator, with the reason (DEC-077, DEC-085). */
+  userReactivate: 'user.reactivate',
+  /** A contact thread closed because the suspension was lifted (DEC-116, DEC-085). */
+  contactClose: 'contact.close',
 } as const;
 
 /** The result column (DEC-085): 'ok', 'failed' or 'refused'. */
 export type AuditResult = 'ok' | 'failed' | 'refused';
 
-/** Targets written in 1b. The target type is the table or object the action is about (DEC-085). */
+/** The table or object an action is about (DEC-085). */
 export const AUDIT_TARGET_TYPES = {
   user: 'user',
+  contact: 'contact',
 } as const;
 
 /** What the application gives the audit writer. The id and the time are set by the writer, before hashing. */

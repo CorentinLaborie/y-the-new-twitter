@@ -2,6 +2,22 @@ import { Injectable } from '@nestjs/common';
 import type { KeysetPosition } from '../../common/pagination/keyset-cursor';
 import { AccountStatus, Prisma, UserRole } from '../../database/generated/client/client';
 import { PrismaService } from '../../database/prisma.service';
+import type { AuditDb } from '../audit/audit-log.repository';
+import type { ContactThreadPlan, ContactThreadState, RequestedAccountStatus } from './status-change';
+
+/** One status change, as the repository writes it. The rules that choose it are in the service. */
+export interface StatusChangeWrite {
+  userId: string;
+  status: RequestedAccountStatus;
+  /** The suspension reason, kept while the account is suspended. Null when the suspension is lifted. */
+  reason: string | null;
+  now: Date;
+  /** The administrator who makes the change: the one who closes a contact thread by lifting (DEC-116). */
+  closedById: string;
+  thread: ContactThreadPlan | null;
+  /** Writes the audit entries inside the same transaction: if it fails, the status change is rolled back. */
+  record: (db: AuditDb) => Promise<void>;
+}
 
 /** A row of the account search, as the database returns it. */
 export interface AccountRow {
@@ -72,6 +88,37 @@ export class AdminUsersRepository {
     });
   }
 
+  /** The contact thread a status change decides about: the open one, or the one a lifting closed (DEC-116). */
+  contactThreadOf(userId: string): Promise<ContactThreadState | null> {
+    return this.prisma.supportThread.findFirst({
+      where: {
+        userId,
+        OR: [{ status: { in: ['new', 'replied'] } }, { status: 'closed', closedByLift: true }],
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, status: true, closedByLift: true },
+    });
+  }
+
+  /**
+   * Writes a status change in one transaction: the status, the sessions of a suspended account, the counters of the
+   * questions and replies it touches (R13, DEC-192), and the contact thread (DEC-116).
+   */
+  applyStatusChange(change: StatusChangeWrite): Promise<void> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: change.userId },
+        data: { status: change.status, statusChangedAt: change.now, suspensionReason: change.reason },
+      });
+      if (change.status === 'suspended') {
+        await tx.session.deleteMany({ where: { userId: change.userId } });
+      }
+      await recountCounters(tx, change.userId);
+      await applyThreadPlan(tx, change);
+      await change.record(tx);
+    });
+  }
+
   /** The figures of the account view. The counts are read together, at the time of the request. */
   async activity(id: string, now: Date): Promise<AccountActivity> {
     const [lastLogin, activeSessionCount, reports, openReports, hiddenQuestions, hiddenReplies] =
@@ -106,6 +153,76 @@ const ACCOUNT_ROW_SELECT = {
   role: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
+
+/**
+ * Recounts the counters of the questions and replies the account touched, from the reactions and replies of the
+ * active accounts only (R13, DEC-192). Only those rows change. The counters are read in the same transaction as the
+ * status, so no reader sees a count that still includes the account.
+ */
+async function recountCounters(tx: Prisma.TransactionClient, userId: string): Promise<void> {
+  const [reactedQuestions, repliedQuestions, reactedReplies] = await Promise.all([
+    tx.questionReaction.findMany({ where: { userId }, select: { questionId: true } }),
+    tx.reply.findMany({ where: { authorId: userId }, select: { questionId: true } }),
+    tx.replyReaction.findMany({ where: { userId }, select: { replyId: true } }),
+  ]);
+  const questionIds = [
+    ...new Set([
+      ...reactedQuestions.map((row) => row.questionId),
+      ...repliedQuestions.map((row) => row.questionId),
+    ]),
+  ];
+  const replyIds = [...new Set(reactedReplies.map((row) => row.replyId))];
+
+  if (questionIds.length > 0) {
+    await tx.$executeRaw`
+      UPDATE questions AS q SET
+        like_count = (SELECT count(*)::int FROM question_reactions r JOIN users u ON u.id = r.user_id
+          WHERE r.question_id = q.id AND r.kind = 'like' AND u.status = 'active'),
+        dislike_count = (SELECT count(*)::int FROM question_reactions r JOIN users u ON u.id = r.user_id
+          WHERE r.question_id = q.id AND r.kind = 'dislike' AND u.status = 'active'),
+        y_count = (SELECT count(*)::int FROM question_reactions r JOIN users u ON u.id = r.user_id
+          WHERE r.question_id = q.id AND r.kind = 'y' AND u.status = 'active'),
+        reply_count = (SELECT count(*)::int FROM replies p JOIN users a ON a.id = p.author_id
+          WHERE p.question_id = q.id AND p.deleted_at IS NULL AND a.status = 'active')
+      WHERE q.id = ANY(${questionIds}::uuid[])`;
+  }
+
+  if (replyIds.length > 0) {
+    await tx.$executeRaw`
+      UPDATE replies AS p SET
+        like_count = (SELECT count(*)::int FROM reply_reactions r JOIN users u ON u.id = r.user_id
+          WHERE r.reply_id = p.id AND r.kind = 'like' AND u.status = 'active'),
+        dislike_count = (SELECT count(*)::int FROM reply_reactions r JOIN users u ON u.id = r.user_id
+          WHERE r.reply_id = p.id AND r.kind = 'dislike' AND u.status = 'active')
+      WHERE p.id = ANY(${replyIds}::uuid[])`;
+  }
+}
+
+/** Closes the contact thread at a lifting, or reopens the one a lifting closed (DEC-116, DEC-117). */
+async function applyThreadPlan(tx: Prisma.TransactionClient, change: StatusChangeWrite): Promise<void> {
+  if (change.thread === null) {
+    return;
+  }
+
+  if (change.thread.kind === 'close') {
+    await tx.supportThread.update({
+      where: { id: change.thread.threadId },
+      data: {
+        status: 'closed',
+        closedAt: change.now,
+        closedById: change.closedById,
+        closedByLift: true,
+        openUserId: null,
+      },
+    });
+    return;
+  }
+
+  await tx.supportThread.update({
+    where: { id: change.thread.threadId },
+    data: { status: 'new', closedAt: null, closedById: null, closedByLift: false, openUserId: change.userId },
+  });
+}
 
 /** The reports made about the questions or the replies of the account. */
 function authoredReports(id: string): Prisma.ReportWhereInput {

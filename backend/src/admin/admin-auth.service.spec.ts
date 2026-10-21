@@ -175,4 +175,50 @@ describe('AdminAuthService', () => {
     ).resolves.toEqual(['ABCDE-FGHJK']);
     expect(mail.send).not.toHaveBeenCalled();
   });
+
+  describe('reauthenticate (DEC-088)', () => {
+    const NETWORK = { ipAddress: '203.0.113.7', userAgent: 'unit' };
+    const PROOF = { password: 'Abcdef1!', code: '123456' };
+
+    it('accepts a right password and a right second factor', async () => {
+      await expect(service.reauthenticate('admin-1', NETWORK, PROOF, NOW)).resolves.toBe('ok');
+      expect(loginService.checkPassword).toHaveBeenCalledWith({
+        email: ACCOUNT.email,
+        password: PROOF.password,
+        ipAddress: NETWORK.ipAddress,
+        userAgent: NETWORK.userAgent,
+        adminOnly: true,
+      });
+      expect(mfa.verifyCode).toHaveBeenCalledWith('admin-1', '123456', NOW);
+      expect(loginService.recordFailure).not.toHaveBeenCalled();
+    });
+
+    it('refuses a wrong password without checking the second factor', async () => {
+      loginService.checkPassword.mockResolvedValue({ status: 'invalid' });
+
+      await expect(service.reauthenticate('admin-1', NETWORK, PROOF, NOW)).resolves.toBe('invalid');
+      expect(mfa.verifyCode).not.toHaveBeenCalled();
+    });
+
+    it('refuses an unverified account like a wrong password', async () => {
+      loginService.checkPassword.mockResolvedValue({ status: 'unverified' });
+
+      await expect(service.reauthenticate('admin-1', NETWORK, PROOF, NOW)).resolves.toBe('invalid');
+      expect(mfa.verifyCode).not.toHaveBeenCalled();
+    });
+
+    it('counts a wrong second factor toward the lock, and refuses it', async () => {
+      mfa.verifyCode.mockResolvedValue(false);
+
+      await expect(service.reauthenticate('admin-1', NETWORK, PROOF, NOW)).resolves.toBe('invalid_code');
+      expect(loginService.recordFailure).toHaveBeenCalledWith(ACCOUNT, EVENT);
+    });
+
+    it('refuses when the account has no address any more', async () => {
+      users.emailOf.mockResolvedValue(null);
+
+      await expect(service.reauthenticate('admin-1', NETWORK, PROOF, NOW)).resolves.toBe('invalid');
+      expect(loginService.checkPassword).not.toHaveBeenCalled();
+    });
+  });
 });

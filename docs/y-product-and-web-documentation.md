@@ -644,7 +644,7 @@ There is no DELETE route. The deletion is cancelled by logging in again while th
 | PUT | `/admin/replies/{id}/moderation` | Same as above, for replies |
 | GET | `/admin/users?q=…&status=…&cursor=…` | Search by handle or email |
 | GET | `/admin/users/{id}` | Account view |
-| PUT | `/admin/users/{id}/status` | Body `{status, reason}`: `active` or `suspended`. Suspension revokes the sessions |
+| PUT | `/admin/users/{id}/status` | Body `{status, reason}`: `active` or `suspended`. The reason is required (400 when missing). Needs a re-authentication under 10 minutes (403, code `reauth_required`). The status, the sessions, the counters, the audit entry and the contact thread change in one transaction; the e-mail follows it |
 | GET | `/admin/audit-logs?target_type=…&target_id=…&cursor=…` | Audit log, read-only |
 | GET | `/admin/deletions?cursor=…` | Accounts waiting for purge |
 

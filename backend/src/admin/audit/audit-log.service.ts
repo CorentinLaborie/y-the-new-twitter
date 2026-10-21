@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { AuditEntry, auditHmac, verifyAuditChain } from '../../common/audit/audit-chain';
 import { decodeKeysetCursor, encodeKeysetCursor } from '../../common/pagination/keyset-cursor';
-import { AuditLogRepository, AuditRow, type AuditPosition } from './audit-log.repository';
+import { AuditDb, AuditLogRepository, AuditRow, type AuditPosition } from './audit-log.repository';
 import type {
   AuditEntryView,
   AuditListOptions,
@@ -39,26 +39,38 @@ export class AuditLogService {
    * one, so the order by time is the chain order (DEC-127). The id is set here, because the hash covers it.
    */
   append(entry: NewAuditEntry): Promise<void> {
-    return this.repository.withChainLock(async (db) => {
-      const last = await this.repository.lastEntry(db);
-      const now = new Date();
-      const createdAt =
-        last !== null && now.getTime() <= last.createdAt.getTime()
-          ? new Date(last.createdAt.getTime() + 1)
-          : now;
+    return this.repository.withChainLock((db) => this.writeEntry(db, entry));
+  }
 
-      await this.repository.insert(db, {
-        id: randomUUID(),
-        actorId: entry.actorId,
-        action: entry.action,
-        result: entry.result,
-        targetType: entry.targetType,
-        targetId: entry.targetId,
-        reason: entry.reason,
-        details: entry.details,
-        createdAt,
-        prevHash: last === null ? GENESIS_HASH : auditHmac(this.key, toEntry(last)),
-      });
+  /**
+   * Appends one entry inside a transaction the caller holds. The status change writes its audit this way, so a failed
+   * audit write rolls the change back (DEC-088 trace). The chain lock is taken on that transaction.
+   */
+  async appendIn(db: AuditDb, entry: NewAuditEntry): Promise<void> {
+    await this.repository.lockChain(db);
+    await this.writeEntry(db, entry);
+  }
+
+  /** Reads the last entry and inserts the new one. The caller holds the chain lock. */
+  private async writeEntry(db: AuditDb, entry: NewAuditEntry): Promise<void> {
+    const last = await this.repository.lastEntry(db);
+    const now = new Date();
+    const createdAt =
+      last !== null && now.getTime() <= last.createdAt.getTime()
+        ? new Date(last.createdAt.getTime() + 1)
+        : now;
+
+    await this.repository.insert(db, {
+      id: randomUUID(),
+      actorId: entry.actorId,
+      action: entry.action,
+      result: entry.result,
+      targetType: entry.targetType,
+      targetId: entry.targetId,
+      reason: entry.reason,
+      details: entry.details,
+      createdAt,
+      prevHash: last === null ? GENESIS_HASH : auditHmac(this.key, toEntry(last)),
     });
   }
 

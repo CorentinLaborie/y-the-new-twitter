@@ -23,6 +23,7 @@ describe('AuditLogService', () => {
   let rows: AuditRow[];
   let repository: {
     withChainLock: jest.Mock;
+    lockChain: jest.Mock;
     lastEntry: jest.Mock;
     insert: jest.Mock;
     page: jest.Mock;
@@ -35,6 +36,7 @@ describe('AuditLogService', () => {
     rows = [];
     repository = {
       withChainLock: jest.fn((work: (db: unknown) => Promise<unknown>) => work({})),
+      lockChain: jest.fn(async () => undefined),
       lastEntry: jest.fn(async () => (rows.length === 0 ? null : rows[rows.length - 1])),
       insert: jest.fn(async (_db: unknown, row: AuditRow) => {
         rows.push(row);
@@ -62,6 +64,20 @@ describe('AuditLogService', () => {
     expect(rows[0].id).toMatch(/^[0-9a-f-]{36}$/);
     expect(rows[0].details).toBeNull();
     expect(rows[0].createdAt).toEqual(new Date('2026-10-20T12:00:00.000Z'));
+  });
+
+  it('writes inside the transaction the caller holds, with the chain lock taken on that transaction (DEC-088)', async () => {
+    const callerTransaction = { tag: 'caller' };
+
+    await service.appendIn(callerTransaction as never, NEW_ENTRY);
+
+    expect(repository.lockChain).toHaveBeenCalledWith(callerTransaction);
+    expect(repository.withChainLock).not.toHaveBeenCalled();
+    expect(repository.insert).toHaveBeenCalledWith(
+      callerTransaction,
+      expect.objectContaining({ prevHash: GENESIS }),
+    );
+    expect(rows).toHaveLength(1);
   });
 
   it('chains each entry to the HMAC of the entry before it', async () => {
