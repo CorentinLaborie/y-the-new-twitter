@@ -8,6 +8,8 @@ export const AUDIT_ACTIONS = {
   userSuspend: 'user.suspend',
   /** A suspension lifted by an administrator, with the reason (DEC-077, DEC-085). */
   userReactivate: 'user.reactivate',
+  /** A deletion window started by an administrator, with the reason and its code (R16, owner decision 2026-10-21). */
+  userDelete: 'user.delete',
   /** A contact thread closed because the suspension was lifted (DEC-116, DEC-085). */
   contactClose: 'contact.close',
 } as const;

@@ -33,6 +33,7 @@ export class AccountDeletionRepository {
           statusChangedAt: now,
           deletionRequestedAt: now,
           deletionPurgeAt: purgeAt,
+          deletionOrigin: 'user',
         },
       });
       if (result.count !== 1) {

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import type { KeysetPosition } from '../../common/pagination/keyset-cursor';
-import { AccountStatus, Prisma, UserRole } from '../../database/generated/client/client';
+import { AccountStatus, DeletionOrigin, Prisma, UserRole } from '../../database/generated/client/client';
 import { PrismaService } from '../../database/prisma.service';
+import { recalculateCounters } from '../../users/recalculate-counters';
 import type { AuditDb } from '../audit/audit-log.repository';
 import type { ContactThreadPlan, ContactThreadState, RequestedAccountStatus } from './status-change';
 
@@ -16,6 +17,18 @@ export interface StatusChangeWrite {
   closedById: string;
   thread: ContactThreadPlan | null;
   /** Writes the audit entries inside the same transaction: if it fails, the status change is rolled back. */
+  record: (db: AuditDb) => Promise<void>;
+}
+
+/** One deletion window started by an administrator, as the repository writes it. */
+export interface DeletionWrite {
+  userId: string;
+  now: Date;
+  /** The end of the window: the purge erases the account from this date (R16). */
+  purgeAt: Date;
+  /** Who started the deletion: a login cancels only the user's own (R16, DEC-030). */
+  origin: DeletionOrigin;
+  /** Writes the audit entry inside the same transaction: if it fails, the deletion is rolled back. */
   record: (db: AuditDb) => Promise<void>;
 }
 
@@ -116,6 +129,35 @@ export class AdminUsersRepository {
       await recountCounters(tx, change.userId);
       await applyThreadPlan(tx, change);
       await change.record(tx);
+    });
+  }
+
+  /**
+   * Starts the deletion window of an active or suspended account, in one transaction: the status and the purge date
+   * (the window of R16), the counters the account no longer adds to, its sessions, and the audit entry. False, with no
+   * write, when the account is no longer in one of those statuses.
+   */
+  startDeletion(change: DeletionWrite): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const result = await tx.user.updateMany({
+        where: { id: change.userId, status: { in: ['active', 'suspended'] } },
+        data: {
+          status: 'pending_deletion',
+          statusChangedAt: change.now,
+          deletionRequestedAt: change.now,
+          deletionPurgeAt: change.purgeAt,
+          deletionOrigin: change.origin,
+          suspensionReason: null,
+        },
+      });
+      if (result.count !== 1) {
+        return false;
+      }
+
+      await recalculateCounters(tx, change.userId);
+      await tx.session.deleteMany({ where: { userId: change.userId } });
+      await change.record(tx);
+      return true;
     });
   }
 

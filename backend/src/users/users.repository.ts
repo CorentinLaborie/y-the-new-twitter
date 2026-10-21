@@ -91,8 +91,20 @@ export class UsersRepository {
   cancelDeletion(userId: string, now: Date): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
       const result = await tx.user.updateMany({
-        where: { id: userId, status: 'pending_deletion', deletionPurgeAt: { gt: now } },
-        data: { status: 'active', statusChangedAt: now, deletionRequestedAt: null, deletionPurgeAt: null },
+        where: {
+          id: userId,
+          status: 'pending_deletion',
+          deletionPurgeAt: { gt: now },
+          // Only a deletion the user asked for: an administrator's deletion is not cancelled by a login (R16).
+          deletionOrigin: 'user',
+        },
+        data: {
+          status: 'active',
+          statusChangedAt: now,
+          deletionRequestedAt: null,
+          deletionPurgeAt: null,
+          deletionOrigin: null,
+        },
       });
       if (result.count !== 1) {
         return false;

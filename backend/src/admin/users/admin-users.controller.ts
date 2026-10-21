@@ -3,6 +3,7 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { CurrentUser } from '../../auth/session/access.decorators';
 import type { SessionUser } from '../../auth/session/session-user.repository';
 import { Admin } from '../admin.decorators';
+import { AdminAccountDeletionDto } from './admin-account-deletion.dto';
 import { AccountStatusDto } from './account-status.dto';
 import { AccountListQueryDto } from './admin-users.dto';
 import { AdminUsersService } from './admin-users.service';
@@ -37,5 +38,24 @@ export class AdminUsersController {
     @CurrentUser() admin: SessionUser,
   ): Promise<StatusChangeResult> {
     return this.users.changeStatus(admin.id, id, { status: body.status, reason: body.reason }, new Date());
+  }
+
+  /**
+   * Starts the 90-day deletion window of an active or suspended account, with a reason (R16). The user is e-mailed.
+   * Needs a re-authentication of the last 10 minutes (DEC-088).
+   */
+  @Admin({ reauth: true })
+  @Put(':id/deletion')
+  startDeletion(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: AdminAccountDeletionDto,
+    @CurrentUser() admin: SessionUser,
+  ): Promise<StatusChangeResult> {
+    return this.users.startDeletion(
+      admin.id,
+      id,
+      { reasonCode: body.reasonCode, otherReason: body.otherReason },
+      new Date(),
+    );
   }
 }

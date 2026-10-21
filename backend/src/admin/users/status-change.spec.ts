@@ -1,5 +1,18 @@
-import { contactThreadPlan, statusChangeKind } from './status-change';
+import { canStartAdminDeletion, contactThreadPlan, statusChangeKind } from './status-change';
 import { reactivationMail, suspensionMail } from './status-change-mail';
+
+describe('canStartAdminDeletion (R16, owner decision 2026-10-21)', () => {
+  it('allows an active or a suspended account', () => {
+    expect(canStartAdminDeletion('active')).toBe(true);
+    expect(canStartAdminDeletion('suspended')).toBe(true);
+  });
+
+  it('refuses an account already pending, erased or not yet verified', () => {
+    expect(canStartAdminDeletion('pending_deletion')).toBe(false);
+    expect(canStartAdminDeletion('deleted')).toBe(false);
+    expect(canStartAdminDeletion('pending_verification')).toBe(false);
+  });
+});
 
 describe('status change rules (DEC-077, DEC-116)', () => {
   it('suspends an active account and lifts the suspension of a suspended one', () => {

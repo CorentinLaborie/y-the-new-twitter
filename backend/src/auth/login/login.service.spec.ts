@@ -155,9 +155,11 @@ describe('LoginService', () => {
     expect(attempts.clearAfterSuccess).not.toHaveBeenCalled();
   });
 
-  it('cancels a pending deletion when the login is inside the 90-day window, and answers success as active (R16)', async () => {
+  it('cancels a deletion the user asked for when the login is inside the 90-day window, and answers success as active (R16)', async () => {
     const deletionPurgeAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
-    users.findByEmail.mockResolvedValue(account({ status: 'pending_deletion', deletionPurgeAt }));
+    users.findByEmail.mockResolvedValue(
+      account({ status: 'pending_deletion', deletionPurgeAt, deletionOrigin: 'user' }),
+    );
 
     const outcome = await service.login(attempt());
 
@@ -168,6 +170,22 @@ describe('LoginService', () => {
     });
     expect(attempts.recordEvent).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-1', result: 'success' }),
+    );
+  });
+
+  it('keeps a deletion the administrator started: a login inside the window is refused, and nothing is cancelled', async () => {
+    const deletionPurgeAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+    users.findByEmail.mockResolvedValue(
+      account({ status: 'pending_deletion', deletionPurgeAt, deletionOrigin: 'administrator' }),
+    );
+
+    const outcome = await service.login(attempt());
+
+    expect(outcome).toEqual({ status: 'invalid' });
+    expect(users.cancelDeletion).not.toHaveBeenCalled();
+    expect(attempts.clearAfterSuccess).not.toHaveBeenCalled();
+    expect(attempts.recordEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'user-1', result: 'failure' }),
     );
   });
 

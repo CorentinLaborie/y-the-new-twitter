@@ -7,6 +7,8 @@ import {
 import { MAIL_SENDER, type MailSender, type OutgoingMail } from '../../common/mail/mail-sender';
 import { AuditLogService } from '../audit/audit-log.service';
 import { AUDIT_ACTIONS, AUDIT_TARGET_TYPES } from '../audit/audit-log.types';
+import { DELETION_WINDOW_MS } from '../../auth/account-deletion/account-deletion.service';
+import { deletionReasonText, type DeletionReasonCode } from './account-deletion-reasons';
 import { AccountRow, AdminUsersRepository } from './admin-users.repository';
 import type {
   AccountListItem,
@@ -16,11 +18,18 @@ import type {
   StatusChangeResult,
 } from './admin-users.types';
 import { maskEmail } from './mask-email';
-import { reactivationMail, suspensionMail } from './status-change-mail';
-import { contactThreadPlan, statusChangeKind, type RequestedAccountStatus } from './status-change';
+import { deletionMail, reactivationMail, suspensionMail } from './status-change-mail';
+import {
+  canStartAdminDeletion,
+  contactThreadPlan,
+  statusChangeKind,
+  type RequestedAccountStatus,
+} from './status-change';
 
 /** The audit entries the account view shows. The full history is paged in a later step. */
 const HISTORY_LIMIT = 20;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** The account search and the account view of the back-office (section 3.3), and the status changes (DEC-077). */
 @Injectable()
@@ -144,6 +153,67 @@ export class AdminUsersService {
       status: request.status,
       statusChangedAt: now.toISOString(),
       suspensionReason,
+    };
+  }
+
+  /**
+   * Starts the deletion of an active or suspended account, with a reason (owner decision 2026-10-21). The account enters
+   * the 90-day window of R16 with the same purge date, the sessions close, and the purge erases the account at the end.
+   * Unlike the user's own deletion, a login does not cancel it. The audit entry and the e-mail carry the reason.
+   * Re-authentication is checked by the route. An administrator cannot delete their own account, nor an administrator
+   * or a moderator.
+   */
+  async startDeletion(
+    actorId: string,
+    targetId: string,
+    request: { reasonCode: DeletionReasonCode; otherReason?: string },
+    now: Date,
+  ): Promise<StatusChangeResult> {
+    if (targetId === actorId) {
+      throw new ConflictException('Vous ne pouvez pas supprimer votre propre compte.');
+    }
+
+    const account = await this.repository.findById(targetId);
+    if (account === null) {
+      throw new NotFoundException('Compte introuvable.');
+    }
+    if (account.role === 'admin' || account.role === 'moderator') {
+      throw new ConflictException('Un administrateur ou un modérateur ne peut pas être supprimé depuis le back-office.');
+    }
+    if (!canStartAdminDeletion(account.status)) {
+      throw new ConflictException('La suppression n’est pas possible pour ce compte dans son statut actuel.');
+    }
+
+    const reason = deletionReasonText(request.reasonCode, request.otherReason);
+    const started = await this.repository.startDeletion({
+      userId: targetId,
+      now,
+      purgeAt: new Date(now.getTime() + DELETION_WINDOW_MS),
+      origin: 'administrator',
+      record: (db) =>
+        this.audit.appendIn(db, {
+          actorId,
+          action: AUDIT_ACTIONS.userDelete,
+          result: 'ok',
+          targetType: AUDIT_TARGET_TYPES.user,
+          targetId,
+          reason,
+          details: { reasonCode: request.reasonCode },
+        }),
+    });
+    if (!started) {
+      // The status changed between the read and the write: nothing was written.
+      throw new ConflictException('La suppression n’est pas possible pour ce compte dans son statut actuel.');
+    }
+
+    // The e-mail is sent after the commit, as for a status change (R18).
+    await this.notifyStatusChange(deletionMail(account.email, reason, DELETION_WINDOW_MS / DAY_MS));
+
+    return {
+      id: targetId,
+      status: 'pending_deletion',
+      statusChangedAt: now.toISOString(),
+      suspensionReason: null,
     };
   }
 

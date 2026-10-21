@@ -24,9 +24,17 @@ export interface LoginAttempt {
   adminOnly?: boolean;
 }
 
-/** True while a pending deletion can still be cancelled by logging in (R16). */
+/** True while a pending deletion is inside its 90-day window (R16). */
 function deletionWindowOpen(account: User, now: Date): boolean {
   return account.deletionPurgeAt !== null && account.deletionPurgeAt > now;
+}
+
+/**
+ * True when a login cancels the pending deletion of this account (R16, DEC-030): only a deletion the user started, and
+ * only inside the window. A deletion an administrator started is never cancelled by a login.
+ */
+function loginCancelsDeletion(account: User, now: Date): boolean {
+  return account.deletionOrigin === 'user' && deletionWindowOpen(account, now);
 }
 
 /** The fields every login_events row of one attempt carries. */
@@ -113,8 +121,9 @@ export class LoginService {
       return { status: 'unverified' };
     }
 
-    if (account.status === 'pending_deletion' && !deletionWindowOpen(account, now)) {
-      // The 90-day window is over: refused like an unknown address, until the purge removes the account (R16).
+    if (account.status === 'pending_deletion' && !loginCancelsDeletion(account, now)) {
+      // The 90-day window is over, or an administrator started the deletion: refused like an unknown address, and
+      // until the purge removes the account (R16). Only a deletion the user started can be cancelled by a login.
       await this.attempts.recordEvent({ userId: account.id, result: 'failure', ...event });
       return { status: 'invalid' };
     }
@@ -124,7 +133,7 @@ export class LoginService {
 
   /**
    * Clears the counters and records the success. A lock set in the meantime refuses the login. A login during the
-   * deletion window cancels the deletion: the account is active again (R16, DEC-030).
+   * deletion window cancels the user's own deletion: the account is active again (R16, DEC-030).
    */
   async completeLogin(account: User, event: LoginEventFields): Promise<LoginOutcome> {
     const now = new Date();

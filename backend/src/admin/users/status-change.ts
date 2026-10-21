@@ -27,6 +27,14 @@ export function statusChangeKind(
   return null;
 }
 
+/**
+ * True when an administrator can start the deletion window of an account in this status: an active or a suspended
+ * account. A pending or erased account is already on its way, and an unverified one has no window to join.
+ */
+export function canStartAdminDeletion(current: AccountStatus): boolean {
+  return current === 'active' || current === 'suspended';
+}
+
 /** The state of the contact thread of an account, as the change needs it (DEC-116). */
 export interface ContactThreadState {
   id: string;

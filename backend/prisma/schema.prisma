@@ -23,6 +23,14 @@ enum AccountStatus {
   @@map("account_status")
 }
 
+/// Who started a pending deletion (R16): the user, whose login inside the window cancels it, or an administrator.
+enum DeletionOrigin {
+  user
+  administrator
+
+  @@map("deletion_origin")
+}
+
 enum ModerationStatus {
   visible
   hidden
@@ -140,31 +148,32 @@ enum SupportChannel {
 }
 
 model User {
-  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  handle              String        @map("handle") @db.VarChar(30)
-  displayName         String        @map("display_name") @db.VarChar(50)
-  email               String        @unique @map("email") @db.VarChar(254)
-  phone               String?       @unique @map("phone") @db.VarChar(20)
-  passwordHash        String        @map("password_hash") @db.VarChar(255)
-  birthDate           DateTime?     @map("birth_date") @db.Date
-  bio                 String?       @map("bio") @db.VarChar(160)
-  avatarUrl           String?       @map("avatar_url") @db.VarChar(2048)
-  status              AccountStatus @default(pending_verification) @map("status")
-  role                UserRole      @default(user) @map("role")
-  termsAcceptedAt     DateTime      @map("terms_accepted_at") @db.Timestamptz(3)
-  termsVersion        String        @map("terms_version") @db.VarChar(20)
-  emailVerifiedAt     DateTime?     @map("email_verified_at") @db.Timestamptz(3)
-  statusChangedAt     DateTime?     @map("status_changed_at") @db.Timestamptz(3)
-  suspensionReason    String?       @map("suspension_reason") @db.VarChar(500)
-  failedLoginCount    Int           @default(0) @map("failed_login_count")
-  lockedUntil         DateTime?     @map("locked_until") @db.Timestamptz(3)
-  deletionRequestedAt DateTime?     @map("deletion_requested_at") @db.Timestamptz(3)
-  deletionPurgeAt     DateTime?     @map("deletion_purge_at") @db.Timestamptz(3)
-  deletedAt           DateTime?     @map("deleted_at") @db.Timestamptz(3)
-  followerCount       Int           @default(0) @map("follower_count")
-  followingCount      Int           @default(0) @map("following_count")
-  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt           DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  handle              String          @map("handle") @db.VarChar(30)
+  displayName         String          @map("display_name") @db.VarChar(50)
+  email               String          @unique @map("email") @db.VarChar(254)
+  phone               String?         @unique @map("phone") @db.VarChar(20)
+  passwordHash        String          @map("password_hash") @db.VarChar(255)
+  birthDate           DateTime?       @map("birth_date") @db.Date
+  bio                 String?         @map("bio") @db.VarChar(160)
+  avatarUrl           String?         @map("avatar_url") @db.VarChar(2048)
+  status              AccountStatus   @default(pending_verification) @map("status")
+  role                UserRole        @default(user) @map("role")
+  termsAcceptedAt     DateTime        @map("terms_accepted_at") @db.Timestamptz(3)
+  termsVersion        String          @map("terms_version") @db.VarChar(20)
+  emailVerifiedAt     DateTime?       @map("email_verified_at") @db.Timestamptz(3)
+  statusChangedAt     DateTime?       @map("status_changed_at") @db.Timestamptz(3)
+  suspensionReason    String?         @map("suspension_reason") @db.VarChar(500)
+  failedLoginCount    Int             @default(0) @map("failed_login_count")
+  lockedUntil         DateTime?       @map("locked_until") @db.Timestamptz(3)
+  deletionRequestedAt DateTime?       @map("deletion_requested_at") @db.Timestamptz(3)
+  deletionPurgeAt     DateTime?       @map("deletion_purge_at") @db.Timestamptz(3)
+  deletionOrigin      DeletionOrigin? @map("deletion_origin")
+  deletedAt           DateTime?       @map("deleted_at") @db.Timestamptz(3)
+  followerCount       Int             @default(0) @map("follower_count")
+  followingCount      Int             @default(0) @map("following_count")
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   signupCodes              SignupCode[]
   passwordResetCodes       PasswordResetCode[]
