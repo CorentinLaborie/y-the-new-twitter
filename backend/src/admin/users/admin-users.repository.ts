@@ -28,6 +28,10 @@ export interface DeletionWrite {
   purgeAt: Date;
   /** Who started the deletion: a login cancels only the user's own (R16, DEC-030). */
   origin: DeletionOrigin;
+  /** The administrator who starts the deletion. */
+  actorId: string;
+  /** The open contact thread, closed with the deletion (no e-mail, not a lifting: DEC-116). Null when there is none. */
+  thread: ContactThreadPlan | null;
   /** Writes the audit entry inside the same transaction: if it fails, the deletion is rolled back. */
   record: (db: AuditDb) => Promise<void>;
 }
@@ -156,6 +160,7 @@ export class AdminUsersRepository {
 
       await recalculateCounters(tx, change.userId);
       await tx.session.deleteMany({ where: { userId: change.userId } });
+      await closeThreadAtDeletion(tx, change);
       await change.record(tx);
       return true;
     });
@@ -238,6 +243,23 @@ async function recountCounters(tx: Prisma.TransactionClient, userId: string): Pr
           WHERE r.reply_id = p.id AND r.kind = 'dislike' AND u.status = 'active')
       WHERE p.id = ANY(${replyIds}::uuid[])`;
   }
+}
+
+/** Closes the open contact thread when an administrator starts a deletion (DEC-116). It is not closed by a lifting. */
+async function closeThreadAtDeletion(tx: Prisma.TransactionClient, change: DeletionWrite): Promise<void> {
+  if (change.thread === null) {
+    return;
+  }
+  await tx.supportThread.update({
+    where: { id: change.thread.threadId },
+    data: {
+      status: 'closed',
+      closedAt: change.now,
+      closedById: change.actorId,
+      closedByLift: false,
+      openUserId: null,
+    },
+  });
 }
 
 /** Closes the contact thread at a lifting, or reopens the one a lifting closed (DEC-116, DEC-117). */

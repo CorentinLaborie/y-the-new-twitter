@@ -1,6 +1,7 @@
 import { ConflictException, Logger, NotFoundException } from '@nestjs/common';
 import { DELETION_WINDOW_MS } from '../../auth/account-deletion/account-deletion.service';
 import type { MailSender } from '../../common/mail/mail-sender';
+import { AUDIT_ACTIONS } from '../audit/audit-log.types';
 import type { AuditLogService } from '../audit/audit-log.service';
 import { AdminUsersRepository, type AccountDetails } from './admin-users.repository';
 import { AdminUsersService } from './admin-users.service';
@@ -26,7 +27,7 @@ function account(status: AccountDetails['status']): AccountDetails {
 }
 
 describe('AdminUsersService.startDeletion (R16, owner decision 2026-10-21)', () => {
-  let repository: { findById: jest.Mock; startDeletion: jest.Mock };
+  let repository: { findById: jest.Mock; contactThreadOf: jest.Mock; startDeletion: jest.Mock };
   let audit: { appendIn: jest.Mock };
   let mail: { send: jest.Mock };
   let service: AdminUsersService;
@@ -34,6 +35,7 @@ describe('AdminUsersService.startDeletion (R16, owner decision 2026-10-21)', () 
   beforeEach(() => {
     repository = {
       findById: jest.fn().mockResolvedValue(account('active')),
+      contactThreadOf: jest.fn().mockResolvedValue(null),
       // Like the real repository: the change runs its `record` callback on its own transaction.
       startDeletion: jest.fn(async (change: { record: (db: unknown) => Promise<void> }) => {
         await change.record(TRANSACTION);
@@ -114,6 +116,32 @@ describe('AdminUsersService.startDeletion (R16, owner decision 2026-10-21)', () 
         purgeAt: new Date(NOW.getTime() + DELETION_WINDOW_MS),
         origin: 'administrator',
       }),
+    );
+  });
+
+  it('closes the open contact thread with the deletion, and logs it, when there is one', async () => {
+    repository.contactThreadOf.mockResolvedValue({ id: 'thread-1', status: 'new', closedByLift: false });
+
+    await service.startDeletion(ACTOR_ID, TARGET_ID, { reasonCode: 'spam' }, NOW);
+
+    expect(repository.startDeletion).toHaveBeenCalledWith(
+      expect.objectContaining({ actorId: ACTOR_ID, thread: { kind: 'close', threadId: 'thread-1' } }),
+    );
+    expect(audit.appendIn).toHaveBeenCalledWith(
+      TRANSACTION,
+      expect.objectContaining({ action: AUDIT_ACTIONS.contactClose, targetId: 'thread-1' }),
+    );
+  });
+
+  it('leaves no thread to close when the open one is already closed', async () => {
+    repository.contactThreadOf.mockResolvedValue({ id: 'thread-1', status: 'closed', closedByLift: true });
+
+    await service.startDeletion(ACTOR_ID, TARGET_ID, { reasonCode: 'spam' }, NOW);
+
+    expect(repository.startDeletion).toHaveBeenCalledWith(expect.objectContaining({ thread: null }));
+    expect(audit.appendIn).not.toHaveBeenCalledWith(
+      TRANSACTION,
+      expect.objectContaining({ action: AUDIT_ACTIONS.contactClose }),
     );
   });
 

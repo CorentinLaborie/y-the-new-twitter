@@ -187,13 +187,20 @@ export class AdminUsersService {
     }
 
     const reason = deletionReasonText(request.reasonCode, request.otherReason);
+    const openThread = await this.repository.contactThreadOf(targetId);
+    const thread =
+      openThread !== null && openThread.status !== 'closed'
+        ? { kind: 'close' as const, threadId: openThread.id }
+        : null;
     const started = await this.repository.startDeletion({
       userId: targetId,
       now,
       purgeAt: new Date(now.getTime() + DELETION_WINDOW_MS),
       origin: 'administrator',
-      record: (db) =>
-        this.audit.appendIn(db, {
+      actorId,
+      thread,
+      record: async (db) => {
+        await this.audit.appendIn(db, {
           actorId,
           action: AUDIT_ACTIONS.userDelete,
           result: 'ok',
@@ -201,7 +208,19 @@ export class AdminUsersService {
           targetId,
           reason,
           details: { reasonCode: request.reasonCode },
-        }),
+        });
+        if (thread !== null) {
+          await this.audit.appendIn(db, {
+            actorId,
+            action: AUDIT_ACTIONS.contactClose,
+            result: 'ok',
+            targetType: AUDIT_TARGET_TYPES.contact,
+            targetId: thread.threadId,
+            reason: null,
+            details: null,
+          });
+        }
+      },
     });
     if (!started) {
       // The status changed between the read and the write: nothing was written.
