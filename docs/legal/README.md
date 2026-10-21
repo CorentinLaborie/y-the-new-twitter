@@ -12,11 +12,11 @@ Y est un **site fictif**, réalisé **uniquement pour présenter le travail de d
 |---|---|
 | [Mentions légales](mentions-legales.md) | Éditeur, hébergement (OVH), propriété intellectuelle |
 | [Conditions d'utilisation](conditions-utilisation.md) | Règles d'usage, suppression de compte (90 jours) |
-| [Politique de confidentialité](politique-confidentialite.md) | Données traitées, sous-traitants (OVH, Brevo, VerifAge), durées de conservation, droits (dont l'effacement) |
+| [Politique de confidentialité](politique-confidentialite.md) | Données traitées, sous-traitants (OVH, Brevo), durées de conservation, droits (dont l'effacement) |
 
 ## Points restant à décider ou à faire valider
 
-- **Vérification d'âge :** le fournisseur est VerifAge. Le parcours reste à préciser une fois la documentation de l'API disponible.
+- **Vérification d'âge :** la date de naissance déclarée à l'inscription, avec refus des moins de 18 ans. Pas de prestataire tiers pour l'âge.
 - **Modération :** actions possibles sur un signalement (retrait, avertissement, suspension) et voies de recours.
 - **Adresse de l'hébergeur :** à vérifier sur le site officiel d'OVH.
 - **Date d'entrée en vigueur** des conditions.

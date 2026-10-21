@@ -11,7 +11,7 @@ Les présentes conditions encadrent l'accès à Y, un réseau social de question
 ## 2. Accès et âge minimum
 
 1. L'usage de Y est réservé aux personnes âgées de **18 ans ou plus** (règle R7).
-2. La vérification de l'âge est confiée au prestataire **VerifAge**. Le parcours précis sera détaillé dans une version ultérieure de ces conditions.
+2. L'âge est vérifié à partir de la date de naissance que tu indiques à l'inscription. Y refuse l'inscription si cette date indique que tu n'as pas 18 ans. Y ne vérifie pas un justificatif : une date de naissance fausse n'est pas détectée. En déclarant une date inexacte, tu engages ta responsabilité.
 3. Seuls les comptes **actifs** peuvent publier, réagir et répondre (règle R13). Un compte non confirmé ne peut pas participer.
 
 ## 3. Compte

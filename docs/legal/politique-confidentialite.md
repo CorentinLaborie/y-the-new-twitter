@@ -20,7 +20,7 @@ Version 1.0 — 2026-10-16.
 | Contenus | Questions, réponses, messages, réactions, mentions | Utilisation |
 | Social | Abonnements, blocages, questions enregistrées | Utilisation |
 | Préférences | Réglages de notification par type | Paramètres |
-| Vérification d'âge | Référence du prestataire VerifAge, résultat (majeur ou non) | Inscription |
+| Vérification d'âge | Date de naissance déclarée, résultat (majeur ou non) | Inscription |
 | Technique | Cookie de session, cookie de protection CSRF, journaux techniques (adresse IP) | Navigation |
 
 **Ce qui n'est pas collecté :** pièce d'identité, données de localisation. Pour la vérification de l'âge, seule la référence du prestataire et le résultat sont conservés, jamais les données d'identité.
@@ -43,7 +43,6 @@ Version 1.0 — 2026-10-16.
 |---|---|---|
 | OVH SAS | Hébergement du site et de la base de données | France (Union européenne) |
 | Brevo | Envoi des e-mails (codes, notifications) | France |
-| VerifAge | Vérification de l'âge | [à confirmer] |
 
 Les données ne sont pas vendues et ne sont pas transmises à des fins publicitaires.
 
