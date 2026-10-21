@@ -134,6 +134,29 @@ export function listAuditLog(options: AuditListOptions = {}): Promise<ApiResult<
   return apiRequest<AuditPage>('GET', auditListPath(options));
 }
 
+/** The answer of PUT /admin/users/{id}/status (StatusChangeResult). */
+export type StatusChangeResult = {
+  id: string;
+  status: AccountStatus;
+  statusChangedAt: string;
+  suspensionReason: string | null;
+};
+
+/**
+ * Re-authentication of the administrator (DEC-088): the password again, and a second-factor code. Valid for 10 minutes,
+ * and the sensitive actions (such as a suspension) need it.
+ */
+export function reauthenticate(password: string, code: string): Promise<ApiResult<{ reauthExpiresAt: string }>> {
+  return apiRequest<{ reauthExpiresAt: string }>('POST', '/admin/reauth', { body: { password, code } });
+}
+
+/** Suspends an account with its reason. Needs a current re-authentication: otherwise the answer carries reauth_required. */
+export function suspendAccount(id: string, reason: string): Promise<ApiResult<StatusChangeResult>> {
+  return apiRequest<StatusChangeResult>('PUT', `/admin/users/${encodeURIComponent(id)}/status`, {
+    body: { status: 'suspended', reason },
+  });
+}
+
 /** Ends the session of the visitor on the server (the same route as the account sign-out). */
 export function signOut(): Promise<ApiResult<Record<string, never>>> {
   return apiRequest<Record<string, never>>('POST', '/auth/logout');

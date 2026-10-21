@@ -7,7 +7,9 @@ import {
   getAccount,
   getAdminSession,
   listAccounts,
+  reauthenticate,
   signOut,
+  suspendAccount,
 } from '@/lib/admin-api';
 
 vi.mock('@/lib/api-client', () => ({ apiRequest: vi.fn() }));
@@ -105,5 +107,21 @@ describe('admin API calls', () => {
     vi.mocked(apiRequest).mockResolvedValue(answer as never);
 
     await expect(signOut()).resolves.toBe(answer);
+  });
+
+  it('reauthenticate sends the password and the code to the re-authentication route', async () => {
+    await reauthenticate('Secret1234!', '123456');
+
+    expect(apiRequest).toHaveBeenCalledWith('POST', '/admin/reauth', {
+      body: { password: 'Secret1234!', code: '123456' },
+    });
+  });
+
+  it('suspendAccount sends the status and the reason to the account status route', async () => {
+    await suspendAccount('a/b c', 'Spam répété');
+
+    expect(apiRequest).toHaveBeenCalledWith('PUT', '/admin/users/a%2Fb%20c/status', {
+      body: { status: 'suspended', reason: 'Spam répété' },
+    });
   });
 });
