@@ -46,6 +46,7 @@ describe('validateEnvironment', () => {
       NODE_ENV: 'production',
       BREVO_API_KEY: 'brevo-test-key',
       MAIL_FROM_ADDRESS: 'y-app@example.com',
+      ADMIN_PUBLIC_URL: 'https://admin-y.example.com',
     };
 
     it('does not ask for them outside production', () => {
@@ -90,6 +91,16 @@ describe('validateEnvironment', () => {
     });
   });
 
+  it('requires the back-office address in production, and checks it is a URL', () => {
+    const production = { ...validConfig, NODE_ENV: 'production', BREVO_API_KEY: 'k', MAIL_FROM_ADDRESS: 'a@example.com' };
+
+    expect(() => validateEnvironment(production)).toThrow('ADMIN_PUBLIC_URL');
+    expect(() => validateEnvironment({ ...production, ADMIN_PUBLIC_URL: 'pas une url' })).toThrow('ADMIN_PUBLIC_URL');
+    expect(() =>
+      validateEnvironment({ ...production, ADMIN_PUBLIC_URL: 'https://admin-y.corentin-laborie.com' }),
+    ).not.toThrow();
+  });
+
   it('defaults the proxy hops to 0, and refuses a negative number', () => {
     expect(validateEnvironment(validConfig).TRUST_PROXY_HOPS).toBe(0);
     expect(() => validateEnvironment({ ...validConfig, TRUST_PROXY_HOPS: '-1' })).toThrow('TRUST_PROXY_HOPS');
@@ -97,6 +108,10 @@ describe('validateEnvironment', () => {
 
   it('fails when the profile is unknown', () => {
     expect(() => validateEnvironment({ ...validConfig, NODE_ENV: 'demo' })).toThrow('NODE_ENV');
+  });
+
+  it('fails when the profile is missing, instead of falling back to local', () => {
+    expect(() => validateEnvironment(without('NODE_ENV'))).toThrow('Invalid configuration: NODE_ENV');
   });
 
   it('never prints a secret value in the error', () => {

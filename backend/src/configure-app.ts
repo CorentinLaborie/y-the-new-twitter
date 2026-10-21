@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { allowedOrigins } from './config/allowed-origins';
 
 /**
  * Settings shared by the server and the end-to-end tests, so both run the same application.
@@ -13,7 +14,7 @@ export function configureApp(app: INestApplication): void {
   app.getHttpAdapter().getInstance().set('trust proxy', config.getOrThrow<number>('TRUST_PROXY_HOPS'));
   // Retry-After must be readable by the browser to show the lock delay (section 9.4).
   app.enableCors({
-    origin: config.getOrThrow<string>('APP_PUBLIC_URL'),
+    origin: allowedOrigins(config),
     credentials: true,
     exposedHeaders: ['Retry-After'],
   });

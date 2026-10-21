@@ -15,8 +15,9 @@ const PROFILES = ['local', 'staging', 'production'] as const;
 type Profile = (typeof PROFILES)[number];
 
 class EnvironmentVariables {
+  /** Required, with no default: a forgotten value must not fall back to the local profile (capture mail, no secure cookies). */
   @IsIn(PROFILES)
-  NODE_ENV: Profile = 'local';
+  NODE_ENV!: Profile;
 
   @IsString()
   @IsNotEmpty()
@@ -49,6 +50,11 @@ class EnvironmentVariables {
 
   @IsUrl({ require_tld: false })
   APP_PUBLIC_URL!: string;
+
+  /** The back-office site (DEC-217). Required in production: it is allowed to call the API from its own origin. */
+  @ValidateIf((config: EnvironmentVariables) => config.NODE_ENV === 'production')
+  @IsUrl({ require_tld: false })
+  ADMIN_PUBLIC_URL?: string;
 
   @Type(() => Number)
   @IsInt()
