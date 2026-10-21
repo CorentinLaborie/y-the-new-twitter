@@ -163,9 +163,11 @@ function AccountDetails({
                     Lever la suspension
                   </button>
                 )}
-                <button type="button" className={styles.dangerButton} onClick={() => onDialog('delete')}>
-                  Supprimer le compte
-                </button>
+                {account.role === 'user' ? (
+                  <button type="button" className={styles.dangerButton} onClick={() => onDialog('delete')}>
+                    Supprimer le compte
+                  </button>
+                ) : null}
               </div>
             </div>
           </section>

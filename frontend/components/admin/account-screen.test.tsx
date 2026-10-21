@@ -208,6 +208,21 @@ describe('AccountScreen', () => {
     expect(screen.queryByRole('button', { name: 'Supprimer le compte' })).not.toBeInTheDocument();
   });
 
+  it('does not offer the deletion of an administrator or a moderator account, which the API refuses', async () => {
+    for (const role of ['admin', 'moderator'] as const) {
+      vi.mocked(getAccount).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        body: { ...ACCOUNT, status: 'active', role },
+      });
+      const screenOfAccount = render(<AccountScreen id={ACCOUNT.id} />);
+
+      expect(await screen.findByRole('button', { name: 'Suspendre le compte' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Supprimer le compte' })).not.toBeInTheDocument();
+      screenOfAccount.unmount();
+    }
+  });
+
   it('deletes the account from its view with a reason, then shows the pending deletion', async () => {
     const active = { ...ACCOUNT, status: 'active' as const, suspensionReason: null };
     vi.mocked(getAccount)
