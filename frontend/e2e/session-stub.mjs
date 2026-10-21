@@ -6,6 +6,8 @@
 import { createServer } from 'node:http';
 
 const SIGNED_IN_COOKIE = /(?:^|;\s*)SESSION=e2e-feed(?:;|$)/;
+// The back-office guard (app/admin/(console)/session-guard.ts) reads the administrator session on the server.
+const ADMIN_COOKIE = /(?:^|;\s*)SESSION=e2e-admin(?:;|$)/;
 
 const server = createServer((request, response) => {
   if (request.method === 'GET' && request.url === '/api/v1/auth/session') {
@@ -14,6 +16,30 @@ const server = createServer((request, response) => {
     response.end(
       JSON.stringify({
         user: signedIn ? { handle: 'alice', displayName: 'Alice Martin', status: 'active' } : null,
+      }),
+    );
+    return;
+  }
+  if (request.method === 'GET' && request.url === '/api/v1/admin/session') {
+    if (ADMIN_COOKIE.test(request.headers.cookie ?? '')) {
+      const later = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      response.writeHead(200, { 'content-type': 'application/json' });
+      response.end(
+        JSON.stringify({
+          user: { handle: 'admin', displayName: 'Administrateur' },
+          idleExpiresAt: later,
+          expiresAt: later,
+        }),
+      );
+      return;
+    }
+    response.writeHead(401, { 'content-type': 'application/problem+json' });
+    response.end(
+      JSON.stringify({
+        type: 'about:blank',
+        title: 'Connexion administrateur requise',
+        status: 401,
+        detail: 'Connexion administrateur requise.',
       }),
     );
     return;
