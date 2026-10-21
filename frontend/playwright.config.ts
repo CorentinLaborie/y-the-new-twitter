@@ -6,8 +6,8 @@ const PORT = Number(process.env.E2E_PORT ?? 3000);
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  forbidOnly: false,
+  retries: 0,
   reporter: [['list']],
   use: {
     baseURL: `http://localhost:${PORT}`,

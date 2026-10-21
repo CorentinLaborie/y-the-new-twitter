@@ -316,7 +316,6 @@ flowchart LR
 | Frontend tests | Vitest, Testing Library | Current | Components and hooks. |
 | End-to-end tests | Playwright | Current | Critical flows on all three breakpoints. |
 | Containers | Docker, Docker Compose | Current | Local PostgreSQL and production images. |
-| CI | GitHub Actions | — | Build, test and lint on every pull request. |
 | E-mail | Brevo (free plan), official SDK | 300 e-mails a day; API and SDK included. On hold (DEC-110), not installed | Codes, security e-mails and the daily digest (R18, DEC-018, DEC-041). |
 
 **Pinned versions (2026-10-19, as in the repository; DEC-134)**
@@ -370,7 +369,6 @@ y/
 ├── design/                  # Y design source: boards, logos, briefs (see its STATUS.md)
 ├── archive/                 # kept for history (old Figma exports, see archive/README.md)
 ├── docker-compose.yml       # local PostgreSQL
-└── .github/workflows/       # CI
 ```
 
 Note: the design folder is `design/` (decided in M0, step 0.2), inside `y/`. The design system is shared across sites and lives outside `y/`, in `design-system/` at the project root (DEC-075). The project root also holds `personal-website/` and `my-mock-micro-investor/` (DEC-075).
@@ -518,7 +516,7 @@ Base path: `/api/v1`. JSON everywhere. Authentication by session cookie. Mutatio
 - **Times:** ISO 8601 in UTC. **Field names:** camelCase in JSON, everywhere (including `lastMessageAt`).
 - **Reserved handles:** `me`, `admin`, `api`, `login`, `signup`, `settings`, `explore`, `home`, `messages`, `notifications`, `bookmarks`, `hashtags`, `suggestions`, `support`, `y`. A handle cannot use a reserved word. A handle uses only ASCII letters, digits and underscore (DEC-061).
 - **Exceptions to plural nouns:** `/feed`, `/search`, `/auth/*`, `/admin/*` (sections), `/age-verification`, and the `me` resource (`/users/me`).
-- **OpenAPI:** the OpenAPI document (`openapi.yaml`) is generated from the code (@nestjs/swagger). Today it is served at `/api/docs` (not in production). The contract is exported to `backend/openapi.yaml` with `npm run openapi:export` and committed. `npm run openapi:check` fails on a breaking change (openapi-diff) and when the file is out of date (M0 step 7.6). The CI run comes with step 9. It is required, not optional.
+- **OpenAPI:** the OpenAPI document (`openapi.yaml`) is generated from the code (@nestjs/swagger). Today it is served at `/api/docs` (not in production). The contract is exported to `backend/openapi.yaml` with `npm run openapi:export` and committed. `npm run openapi:check` fails on a breaking change (openapi-diff) and when the file is out of date (M0 step 7.6). It is required, not optional.
 - **Versioning:** a breaking change creates `/api/v2`. The old version is marked with `Deprecation` and `Sunset` headers before removal.
 
 ### 9.2 Endpoints
@@ -919,7 +917,7 @@ Each screen below exists on desktop, tablet and mobile (rule R5). Only its conta
 | Audit and IP keys | Two separate keys, `AUDIT_HMAC_KEY` (audit chain) and `IP_HASH_KEY` (IP addresses), from the environment only. Changing `AUDIT_HMAC_KEY` makes older audit entries unverifiable unless the old key is kept (DEC-065). |
 | Backup code key | `BACKUP_CODE_HMAC_KEY`, from the environment only, never in Git. Keys the HMAC of the administrator backup codes (DEC-114). |
 | Transport | HTTPS everywhere, including staging. |
-| Dependencies | Dependabot or Renovate, and a vulnerability scan in CI. |
+| Dependencies | Dependabot or Renovate, and a vulnerability scan. |
 
 ---
 
@@ -945,13 +943,13 @@ Each screen below exists on desktop, tablet and mobile (rule R5). Only its conta
 |---|---|---|
 | Unit (backend) | Jest | Service rules: 50 Y threshold, counter updates, code expiry |
 | Integration (backend) | Jest with Supertest, Testcontainers (PostgreSQL) | Repositories, migrations, controllers with a real database |
-| API contract | openapi-diff (open source) in CI | Breaking changes fail the build (section 9.1) |
+| API contract | openapi-diff (open source) | Breaking changes fail the build (section 9.1) |
 | Unit (frontend) | Vitest, Testing Library | Components: ReactionPill, QuestionPost, YProgress, CharCounter, Dialog |
 | End-to-end | Playwright | Signup, login, post, react, reply, follow, block, message, notifications, deletion request and cancellation, on desktop, tablet and mobile sizes |
 | Visual | Playwright screenshot comparison against the design boards, on the three breakpoints | Layout parity (rule R5) |
 | Accessibility | axe in Playwright tests | Automated WCAG checks on each screen |
 | E-mail | Test mail adapter that records messages (DEC-073) | Codes, security e-mails and the daily digest are captured and checked, never sent to real addresses |
-| Security scan | OWASP Dependency-Check (dependencies), Semgrep (code) in CI | Fails on high-severity findings (proposed) |
+| Security scan | OWASP Dependency-Check (dependencies), Semgrep (code) | Fails on high-severity findings (proposed) |
 | Dynamic security | OWASP ZAP on staging | Before each production release (proposed) |
 | Load | k6 (open source) | Targets: read endpoints p95 under 300 ms and write endpoints p95 under 500 ms at 100 concurrent users (proposed). Run in M8 and before each release |
 
@@ -1012,7 +1010,7 @@ At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE
 
 ## 16. Deployment and operations
 
-> **Status (2026-10-19):** not built yet. Today the backend has `/health` (checks the database, M0 step 3.2), JSON logs with a request ID, and no Dockerfile, CI, staging or backups. Server access (OVH) is postponed by the owner, so the staging, backup and restore steps (M0 steps 10 to 12) wait for it. CI is step 9.
+> **Status (2026-10-19):** not built yet. Today the backend has `/health` (checks the database, M0 step 3.2), JSON logs with a request ID, and no Dockerfile, staging or backups. Server access (OVH) is postponed by the owner, so the staging, backup and restore steps (M0 steps 10 to 12) wait for it. CI is step 9.
 
 **Build artifacts**
 - Backend: the NestJS application compiled to JavaScript (`dist/`), packaged in a Docker image on Node.js 24.
@@ -1035,7 +1033,7 @@ At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE
 - A restore test each month on a copy of the data that contains no real personal data (section 15.1).
 
 **Release process**
-1. Merge to `main` after review and green CI.
+1. Merge to `main` after review.
 2. Tag the version (`v0.1.0`).
 3. Deploy to staging, run the end-to-end suite.
 4. Deploy to production. Keep the previous image for rollback.
@@ -1049,7 +1047,6 @@ At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE
 - Commit messages follow **Conventional Commits** (`feat(replies): add reply reactions`).
 - Every pull request has: a description of the change, the screenshots for UI work, and the tests run.
 - At least one approving review before merge. The author does not merge their own change.
-- CI must pass: build, unit tests, integration tests, lint and end-to-end smoke tests.
 
 ---
 
@@ -1057,7 +1054,7 @@ At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE
 
 | Milestone | Goal | Exit criteria |
 |---|---|---|
-| **M0 — Foundations** | Monorepo, NestJS and Next.js skeletons pinned to the versions in section 5, Docker Compose PostgreSQL, CI, initial Prisma migration from the DBML, test tooling, staging environment, backup job and rollback plan (forward-only migrations) | `docker compose up` starts everything; CI green; a backup restores on staging |
+| **M0 — Foundations** | Monorepo, NestJS and Next.js skeletons pinned to the versions in section 5, Docker Compose PostgreSQL, initial Prisma migration from the DBML, test tooling, staging environment, backup job and rollback plan (forward-only migrations) | `docker compose up` starts everything; CI green; a backup restores on staging |
 | **M1 — Accounts** | Signup, codes (expired codes purged daily), login (each attempt written to `login_events`), logout, forgot password, change email, e-mail sending through Brevo, age check from the declared birth date (DEC-216) | End-to-end signup and login tests pass; rate limiting (section 9.4) active and tested |
 | **M2 — Questions** | Post, feed "Pour vous" (trending and recent, D17), question reactions, Y progress, erasure of deleted content after 90 days (section 13) | 280-character rule enforced; counters correct under concurrent reactions; "Pour vous" shows trending and recent questions in date order |
 | **M3 — Conversations** | 50 Y opens the conversation; replies, reply reactions, "Voir plus de réponses", mentions. Notification events are written here, shown in M5 | Replies refused below 50 Y; cursor pagination verified; the events for 50 Y and mentions are stored |

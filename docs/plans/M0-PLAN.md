@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Milestone** | M0 — Foundations (product doc, section 18) |
-| **Goal** | Monorepo, NestJS and Next.js skeletons pinned to the versions in section 5, Docker Compose PostgreSQL, CI, initial Prisma migration from the DBML, test tooling, staging environment, backup job and rollback plan (forward-only migrations) |
-| **Exit criteria** | `docker compose up` starts everything. CI is green on a pull request. A backup restores on staging. |
+| **Goal** | Monorepo, NestJS and Next.js skeletons pinned to the versions in section 5, Docker Compose PostgreSQL, initial Prisma migration from the DBML, test tooling, staging environment, backup job and rollback plan (forward-only migrations) |
+| **Exit criteria** | `docker compose up` starts everything. A backup restores on staging. |
 | **Notion tasks** | Sprint 1 — M0 Foundations, project M0 (see the Notion workspace, if still in use) |
 | **Decisions applied** | DEC-043 (API conventions), DEC-069 (NestJS), DEC-070 (PostgreSQL), DEC-071 (sessions table), DEC-072 (Prisma), DEC-073 (test tooling), DEC-074 (backend libraries), DEC-056 (staging, backups, rollback). DEC-055 is replaced by DEC-069 and DEC-070. |
 
@@ -16,7 +16,7 @@ These need your decision or your account. Nothing below can start until they're 
 
 | # | Step | Why | Done when |
 |---|---|---|---|
-| 0.1 | **Approve creating the GitHub repository** | GitHub is an external service. The working rule is to ask first. CI (step 9) depends on it. | You say yes, and give the repository name. |
+| 0.1 | **Approve creating the GitHub repository** | GitHub is an external service. The working rule is to ask first. | You say yes, and give the repository name. |
 | 0.2 | **Choose the repository folder name** | The product doc said `design/`, but the folder was named `claude-design-assets/` and an empty `designs/` existed. | **Decided: `design/`.** The old name was replaced everywhere, and the empty `designs/` folder was removed. |
 | 0.3 | **Create the OVH server** (5 to 10 euros a month, France) | Needed for staging (step 10) and backups (step 11). | Server is created. You send me the SSH access method. |
 | 0.4 | **Create the Brevo account** (free plan) | Needed later for e-mail. The API and SDK are included, per DEC-018. Not needed for M0 code, but needed before M1. | Account created. API key kept out of Git. |
@@ -29,7 +29,7 @@ These need your decision or your account. Nothing below can start until they're 
 
 | # | Task | Output | Done when |
 |---|---|---|---|
-| 1.1 | Create the monorepo folders, per product doc section 6 | `backend/`, `frontend/`, `docs/` (exists), the design folder chosen in 0.2, `docker-compose.yml`, `.github/workflows/` | Folders exist. Nothing is committed yet. |
+| 1.1 | Create the monorepo folders, per product doc section 6 | `backend/`, `frontend/`, `docs/` (exists), the design folder chosen in 0.2, `docker-compose.yml` | Folders exist. Nothing is committed yet. |
 | 1.2 | Initialise Git with trunk-based rules | `.gitignore` (Node, `.env`, IDE files, `node_modules/`, `dist/`, `.next/`), a `README.md` at the root | `git status` is clean. Branch `main` exists. |
 | 1.3 | Write the contribution rules | Branch names `feat/`, `fix/`, `chore/`, `docs/`. Conventional Commits (section 17). One reviewer before merge. | Rules are written in `README.md`. |
 
@@ -107,7 +107,7 @@ These need your decision or your account. Nothing below can start until they're 
 | 7.3 | End-to-end | Playwright on the three breakpoints (desktop, tablet, mobile). One smoke test (home page loads). | Smoke test passes on all three sizes. Done 2026-10-19: Playwright 1.64.1 (`@playwright/test`), Chromium only, three viewports (desktop 1440, tablet 768, mobile Pixel 7). Tests: `frontend/e2e/home.spec.ts` (title and API status, no horizontal scroll). 6 of 6 pass. |
 | 7.4 | Accessibility | axe in the Playwright smoke test | axe reports no violation on the home page. Done 2026-10-19: `@axe-core/playwright` 4.14.0 with the WCAG 2.2 AA tags, in the Playwright smoke test on three viewports. The test also checks that axe ran rules. Test: `frontend/e2e/accessibility.spec.ts`. |
 | 7.5 | E-mail capture | A test mail adapter that records messages instead of sending them (DEC-073). Brevo is never called in tests. | A test sends a message through the adapter and reads it back. No real e-mail is sent. Done 2026-10-19: `MailSender` contract and `CapturingMailSender` (test adapter, refuses production). Brevo not wired (DEC-110). Test: `capturing-mail-sender.spec.ts`. |
-| 7.6 | API contract | `openapi-diff` (open source) in CI, comparing `openapi.yaml` with the last committed version | The check runs on a changed API. Done 2026-10-19: `npm run openapi:export` writes `backend/openapi.yaml` (committed); `npm run openapi:check` runs `openapi-diff` against it and fails on a breaking change or a stale file. Test: `openapi.e2e-spec.ts`. CI run with step 9. |
+| 7.6 | API contract | `openapi-diff` (open source), comparing `openapi.yaml` with the last committed version | The check runs on a changed API. Done 2026-10-19: `npm run openapi:export` writes `backend/openapi.yaml` (committed); `npm run openapi:check` runs `openapi-diff` against it and fails on a breaking change or a stale file. Test: `openapi.e2e-spec.ts`. CI run with step 9. |
 | 7.7 | Security scans | OWASP Dependency-Check (dependencies), Semgrep (code). OWASP ZAP is for staging later. | Both run locally without errors. Done 2026-10-19: Semgrep 1.179.0 (0 findings) and Dependency-Check 12.2.2 (780 dependencies; one HIGH finding in a test-only dependency, excepted with DEC-133). `npm run security:code` and `npm run security:dependencies`; images pinned by digest. |
 
 ---
@@ -118,16 +118,6 @@ These need your decision or your account. Nothing below can start until they're 
 |---|---|---|---|
 | 8.1 | First commit, only when you ask | Commit message in Conventional Commits, for example `chore: scaffold monorepo` | Commit exists on `main`. |
 | 8.2 | Branch protection (needs step 0.1) | `main` requires a pull request and one approving review | Setting is visible on GitHub. |
-
----
-
-## 9. Continuous integration (Claude, after 0.1)
-
-| # | Task | Output | Done when |
-|---|---|---|---|
-| 9.1 | Workflow on every pull request | GitHub Actions: backend `npm run lint && npm test && npm run test:e2e`, frontend `npm run lint && npm test && npm run build`, `openapi-diff` | A pull request shows green checks. |
-| 9.2 | Security scans in CI | Dependency-Check and Semgrep (step 7.7) | Scans run. High-severity findings fail the build (DEC-054). |
-| 9.3 | Smoke end-to-end in CI | Playwright smoke test (step 7.3) | Runs green. |
 
 ---
 
@@ -185,7 +175,6 @@ These need your decision or your account. Nothing below can start until they're 
 | # | Check | Done when |
 |---|---|---|
 | 15.1 | `docker compose up` starts PostgreSQL, backend and frontend | All three healthy |
-| 15.2 | CI is green on a pull request | Green checks visible |
 | 15.3 | A backup restores on staging | Restore result written (step 12.2) |
 | 15.4 | Health endpoint returns `ok` on local and staging | Both respond |
 
@@ -202,7 +191,6 @@ When every check is done, M0 is complete. Next milestone: **M1 — Accounts**, w
 5. **Frontend:** 6.1 to 6.5
 6. **Tests:** 7.1 to 7.7
 7. **Git:** 8.1 (on request), 8.2 (after 0.1)
-8. **CI:** 9.1 to 9.3 (after 0.1)
 9. **Staging:** 10.1 to 10.3 (after 0.3)
 10. **Backups and restore:** 11.1 to 11.4, then 12.1 to 12.2
 11. **Rollback:** 13.1

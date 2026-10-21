@@ -1,6 +1,6 @@
 # Y — Operations: rollback procedure
 
-> **Status (2026-10-19):** target procedure. Staging, the container image, the CI pipeline and the backup job come with M0 steps 9 to 11. Until then, nothing here is run in production, and the commands are checked against the local database only. The restore test (step 12) is the M0 exit check and fills in section 4.
+> **Status (2026-10-19):** target procedure. Staging, the container image and the backup job come with M0 steps 9 to 11. Until then, nothing here is run in production, and the commands are checked against the local database only. The restore test (step 12) is the M0 exit check and fills in section 4.
 
 ## 1. Principles
 
@@ -11,7 +11,7 @@
 
 ## 2. Before each deploy
 
-1. Confirm the pipeline is green (lint, tests, end-to-end tests, `openapi:check`, security scans).
+1. Confirm the checks pass locally (lint, tests, end-to-end tests, `openapi:check`, security scans).
 2. Dump the database (step 11.1, `pg_dump -Fc`, encrypted before storage, kept 14 days):
    ```bash
    pg_dump -Fc --no-owner -d "$DATABASE_URL" -f "backup-$(date -u +%Y%m%dT%H%M%SZ).dump"
@@ -76,7 +76,32 @@ Restoring loses the data written after the dump. The decision to switch is taken
 - [ ] The failed version and its logs are kept for the review.
 - [ ] The incident is written in the decision journal if it changed a rule.
 
-## 8. What is not covered yet
+## 8. Server set-up (OVH VPS, 2026-10-22)
+
+State of the production server `135.125.53.103` (Ubuntu, user `ubuntu`, SSH key only for new work). No secret is written here: each file below is owned by `ubuntu` and mode `600`.
+
+**Network**
+- DNS (OVH zone, A records): `y.corentin-laborie.com` and `admin-y.corentin-laborie.com` point to `135.125.53.103`. `corentin-laborie.com` still points to another address and is moved in a separate step.
+- Firewall (`ufw`, default deny): 22, 80 and 443 only. PostgreSQL and the application ports are bound to `127.0.0.1` and are not reachable from outside.
+- nginx (`/etc/nginx/sites-available/y.conf`): one TLS server block per host, from Let's Encrypt (certbot, automatic renewal). `/api/` goes to the backend on `127.0.0.1:8080`; everything else goes to the frontend on `127.0.0.1:3000`. `X-Forwarded-For` is overwritten with the client address, never appended. The back-office root redirects to `/admin`.
+- Security headers come from `/etc/nginx/snippets/y-security-headers.conf` (HSTS, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`). No Content-Security-Policy yet.
+
+**Database**
+- PostgreSQL 18.6 in Docker: container `y-prod-postgres-1`, compose file `/srv/y/db/docker-compose.prod.yml`, same digest as the repository. Passwords in `/srv/y/db/db.env`.
+- Migrations applied with the owner role, then `backend/database/roles.sql` (roles `y_app`, `y_maintenance`, `y_backup`). The application role cannot delete rows of `admin_audit_log`.
+
+**Services** (systemd, start at boot, restart on failure)
+- `y-backend`: `/srv/y/backend`, configuration in `/srv/y/backend/.env`, production profile. It refuses to start if a required key is missing.
+- `y-frontend`: `/srv/y/frontend`, built with `NEXT_PUBLIC_API_URL=https://y.corentin-laborie.com`.
+- `TRUST_PROXY_HOPS=1`: the backend sits behind one reverse proxy.
+
+**Personal website** (`/srv/site`): systemd unit `site` on `127.0.0.1:3001`, built with `SITE_URL=https://corentin-laborie.com`. Its contact-form keys are in `/srv/site/.env.production` (Brevo key and sender address). nginx vhost `/etc/nginx/sites-available/site.conf`, with its Let's Encrypt certificate (valid until 2027-01-19, automatic renewal) and the same security headers as Y. The root and `www` names point to `135.125.53.103`; `www` and plain HTTP redirect to `https://corentin-laborie.com`. The certificate covers both names.
+
+**Backups**: `ops/backup/backup.sh` runs every night at 03:30 (crontab of `ubuntu`). Its settings are in `/etc/y/backup.env` (mode 600, read-only role `y_backup`). Dumps are encrypted with `/etc/y/backup.key` and written to `/var/backups/y`, 14 days kept. Logs: `~/logs/y-backup.log`. A test dump was made on 2026-10-22, and restored into a scratch database (`y_restore_test`, dropped afterwards): the restore passed and the row counts matched the source. The production database was still empty, so this proves the chain, not the restore of real data. Repeat the test once data exists.
+
+**Not done yet**: a restore test with real data (the production database is still empty). The `www` name has no DNS record and no redirect.
+
+## 9. What is not covered yet
 
 - Automatic rollback: not planned for M0.
 - Restore on the staging server: step 12, after the OVH server is set up. The scripts are tested locally only.

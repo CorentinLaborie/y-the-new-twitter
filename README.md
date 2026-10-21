@@ -10,7 +10,6 @@ Monorepo for the Y social application: a NestJS backend, a Next.js frontend, the
 | `frontend/` | Next.js App Router, TypeScript strict |
 | `docs/` | Product and web documentation, database schema (DBML and reference), decision journal, M0 plan, legal texts |
 | `design/` | Design sources: canvas build, briefs and the layout script (the `archive/` folder is not versioned) |
-| `.github/workflows/` | Continuous integration (set up in M0, step 9) |
 
 Start with [`docs/README.md`](docs/README.md) for the index of the documentation.
 
