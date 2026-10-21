@@ -17,11 +17,16 @@ export function startPostgres(): Promise<StartedPostgreSqlContainer> {
 export async function startMigratedPostgres(): Promise<StartedPostgreSqlContainer> {
   const container = await startPostgres();
 
-  execFileSync(join(BACKEND_ROOT, 'node_modules', '.bin', 'prisma'), ['migrate', 'deploy'], {
-    cwd: BACKEND_ROOT,
-    env: { ...process.env, DATABASE_URL: container.getConnectionUri() },
-    stdio: 'pipe',
-  });
+  // The CLI entry is run with node: the .bin shim is a .cmd file on Windows, which execFileSync cannot start.
+  execFileSync(
+    process.execPath,
+    [join(BACKEND_ROOT, 'node_modules', 'prisma', 'build', 'index.js'), 'migrate', 'deploy'],
+    {
+      cwd: BACKEND_ROOT,
+      env: { ...process.env, DATABASE_URL: container.getConnectionUri() },
+      stdio: 'pipe',
+    },
+  );
 
   return container;
 }
