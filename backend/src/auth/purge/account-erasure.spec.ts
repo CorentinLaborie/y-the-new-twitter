@@ -29,6 +29,9 @@ function fakeTransaction(accountCount = 1) {
       findMany: rows(),
       updateMany: write('reply.updateMany'),
     },
+    message: { updateMany: write('message.updateMany') },
+    supportMessage: { deleteMany: write('supportMessage.deleteMany') },
+    supportThread: { deleteMany: write('supportThread.deleteMany') },
     questionHashtag: { deleteMany: write('questionHashtag.deleteMany') },
     mention: { deleteMany: write('mention.deleteMany') },
     questionReaction: { deleteMany: write('questionReaction.deleteMany') },
@@ -148,6 +151,27 @@ describe('eraseAccount (R16, DEC-024, DEC-067)', () => {
     expect(tx.follow.deleteMany).toHaveBeenCalledWith({
       where: { OR: [{ followerId: 'user-1' }, { followeeId: 'user-1' }] },
     });
+  });
+
+  it('empties the text of the private messages the account sent, and keeps the row (DEC-029)', async () => {
+    const { tx, calls } = fakeTransaction();
+
+    await eraseAccount(tx as unknown as ErasureDb, 'user-1', NOW);
+
+    expect(tx.message.updateMany).toHaveBeenCalledWith({ where: { senderId: 'user-1' }, data: { body: '' } });
+    expect(calls.indexOf('message.updateMany')).toBeGreaterThan(calls.indexOf('reply.updateMany'));
+  });
+
+  it('deletes the contact threads of the account with their messages (DEC-024, DEC-080)', async () => {
+    const { tx, calls } = fakeTransaction();
+
+    await eraseAccount(tx as unknown as ErasureDb, 'user-1', NOW);
+
+    expect(tx.supportMessage.deleteMany).toHaveBeenCalledWith({ where: { thread: { userId: 'user-1' } } });
+    expect(tx.supportThread.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user-1' } });
+    expect(calls.indexOf('supportMessage.deleteMany')).toBeLessThan(
+      calls.indexOf('supportThread.deleteMany'),
+    );
   });
 
   it('deletes the login events, codes, sessions and idempotency keys of the account (DEC-065)', async () => {

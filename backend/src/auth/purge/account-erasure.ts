@@ -73,6 +73,12 @@ export async function eraseAccount(db: ErasureDb, userId: string, now: Date): Pr
   await db.reply.updateMany({ where: { authorId: userId, deletedAt: null }, data: { deletedAt: now } });
   await db.reply.updateMany({ where: { authorId: userId }, data: { body: '' } });
 
+  // Private messages (DEC-029): the messages stay in the conversations of the others, their sender is the placeholder
+  // account, and their text is emptied. Contact threads (DEC-024, DEC-080) go with their messages (DEC-119).
+  await db.message.updateMany({ where: { senderId: userId }, data: { body: '' } });
+  await db.supportMessage.deleteMany({ where: { thread: { userId } } });
+  await db.supportThread.deleteMany({ where: { userId } });
+
   await db.questionReaction.deleteMany({ where: { userId } });
   await db.replyReaction.deleteMany({ where: { userId } });
 

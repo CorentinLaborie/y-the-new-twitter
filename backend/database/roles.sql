@@ -39,6 +39,9 @@ GRANT SELECT, DELETE ON question_hashtags, mentions TO y_maintenance;
 -- The retention purge takes its lease here (owner decision 2026-10-20): read, insert and take over an expired lease.
 GRANT SELECT, INSERT, UPDATE ON job_leases TO y_maintenance;
 -- Account purge (R16, DEC-024): the columns of users that the erasure writes, and the counters it moves (DEC-166).
+-- Private messages keep their row with an empty body, and contact threads are deleted with their messages (DEC-029, DEC-024).
+GRANT SELECT (sender_id), UPDATE (body) ON messages TO y_maintenance;
+GRANT SELECT, DELETE ON support_threads, support_messages TO y_maintenance;
 GRANT SELECT (id, status, deletion_purge_at, follower_count, following_count) ON users TO y_maintenance;
 GRANT UPDATE (status, status_changed_at, deleted_at, handle, display_name, email, phone, password_hash, birth_date, bio, avatar_url, suspension_reason, role, failed_login_count, locked_until, follower_count, following_count, updated_at) ON users TO y_maintenance;
 GRANT UPDATE (deleted_at, like_count, dislike_count, y_count, reply_count) ON questions TO y_maintenance;

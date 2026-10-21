@@ -22,6 +22,16 @@ const DUE_REPLY = '00000000-0000-4000-8000-0000000000a2';
 const BOB_QUESTION = '00000000-0000-4000-8000-0000000000b1';
 const WINDOW_QUESTION = '00000000-0000-4000-8000-0000000000e1';
 const TAG = '00000000-0000-4000-8000-0000000000a9';
+const CONVERSATION_WITH_DUE = '00000000-0000-4000-8000-0000000000c1';
+const CONVERSATION_OTHERS = '00000000-0000-4000-8000-0000000000c2';
+const DUE_MESSAGE = '00000000-0000-4000-8000-0000000000d1';
+const BOB_MESSAGE = '00000000-0000-4000-8000-0000000000d2';
+const CAROL_MESSAGE = '00000000-0000-4000-8000-0000000000d3';
+const DUE_THREAD = '00000000-0000-4000-8000-0000000000f1';
+const BOB_THREAD = '00000000-0000-4000-8000-0000000000f2';
+const DUE_SUPPORT_MESSAGE = '00000000-0000-4000-8000-0000000000f3';
+const DUE_ADMIN_MESSAGE = '00000000-0000-4000-8000-0000000000f4';
+const BOB_SUPPORT_MESSAGE = '00000000-0000-4000-8000-0000000000f5';
 
 describe('Account purge on PostgreSQL, as the maintenance role (e2e, R16)', () => {
   let container: StartedPostgreSqlContainer;
@@ -119,6 +129,21 @@ describe('Account purge on PostgreSQL, as the maintenance role (e2e, R16)', () =
       INSERT INTO notifications (recipient_id, actor_id, type) VALUES ('${BOB}', '${DUE}', 'follow');
       INSERT INTO login_events (user_id, result, ip_hash) VALUES ('${DUE}', 'success', repeat('0', 64));
       INSERT INTO sessions (id, user_id, data, expires_at) VALUES ('due-session', '${DUE}', '{}', '2027-01-01T00:00:00Z');
+      INSERT INTO conversations (id) VALUES ('${CONVERSATION_WITH_DUE}'), ('${CONVERSATION_OTHERS}');
+      INSERT INTO conversation_participants (conversation_id, user_id)
+      VALUES ('${CONVERSATION_WITH_DUE}', '${DUE}'), ('${CONVERSATION_WITH_DUE}', '${BOB}'),
+        ('${CONVERSATION_OTHERS}', '${BOB}'), ('${CONVERSATION_OTHERS}', '${CAROL}');
+      INSERT INTO messages (id, conversation_id, sender_id, body)
+      VALUES ('${DUE_MESSAGE}', '${CONVERSATION_WITH_DUE}', '${DUE}', 'Message privé à effacer'),
+        ('${BOB_MESSAGE}', '${CONVERSATION_WITH_DUE}', '${BOB}', 'Message de Bob'),
+        ('${CAROL_MESSAGE}', '${CONVERSATION_OTHERS}', '${CAROL}', 'Message de Carol');
+      INSERT INTO support_threads (id, reference, user_id, status, created_at, updated_at, open_user_id)
+      VALUES ('${DUE_THREAD}', 'CNT-20261021-0001', '${DUE}', 'new', now(), now(), '${DUE}'),
+        ('${BOB_THREAD}', 'CNT-20261021-0002', '${BOB}', 'closed', now(), now(), NULL);
+      INSERT INTO support_messages (id, thread_id, author_type, author_user_id, body)
+      VALUES ('${DUE_SUPPORT_MESSAGE}', '${DUE_THREAD}', 'user', '${DUE}', 'Contact à effacer'),
+        ('${DUE_ADMIN_MESSAGE}', '${DUE_THREAD}', 'admin', NULL, 'Réponse à effacer'),
+        ('${BOB_SUPPORT_MESSAGE}', '${BOB_THREAD}', 'user', '${BOB}', 'Contact de Bob');
     `);
 
     const report = await purge.purgeExpired();
@@ -156,6 +181,28 @@ describe('Account purge on PostgreSQL, as the maintenance role (e2e, R16)', () =
     expect(await sql(`SELECT count(*) FROM notifications WHERE actor_id = '${DUE}'`)).toBe('0');
     expect(await sql(`SELECT count(*) FROM login_events WHERE user_id = '${DUE}'`)).toBe('0');
     expect(await sql(`SELECT count(*) FROM sessions WHERE user_id = '${DUE}'`)).toBe('0');
+
+    // Private messages (DEC-029): the erased account's text is emptied, the row and the others' messages stay.
+    expect(await sql(`SELECT body FROM messages WHERE id = '${DUE_MESSAGE}'`)).toBe('');
+    expect(await sql(`SELECT body FROM messages WHERE id = '${BOB_MESSAGE}'`)).toBe('Message de Bob');
+    expect(await sql(`SELECT body FROM messages WHERE id = '${CAROL_MESSAGE}'`)).toBe('Message de Carol');
+    expect(
+      await sql(
+        `SELECT count(*) FROM conversation_participants WHERE conversation_id = '${CONVERSATION_WITH_DUE}'`,
+      ),
+    ).toBe('1');
+
+    // Contact threads (DEC-024, DEC-080): the erased account's threads and their messages are deleted.
+    expect(await sql(`SELECT count(*) FROM support_threads WHERE user_id = '${DUE}'`)).toBe('0');
+    expect(
+      await sql(
+        `SELECT count(*) FROM support_messages WHERE id IN ('${DUE_SUPPORT_MESSAGE}', '${DUE_ADMIN_MESSAGE}')`,
+      ),
+    ).toBe('0');
+    expect(await sql(`SELECT count(*) FROM support_threads WHERE id = '${BOB_THREAD}'`)).toBe('1');
+    expect(await sql(`SELECT body FROM support_messages WHERE id = '${BOB_SUPPORT_MESSAGE}'`)).toBe(
+      'Contact de Bob',
+    );
 
     // Counters: Bob's question loses the like and the reply of the erased account, and keeps Carol's like.
     expect(await sql(`SELECT like_count, reply_count FROM questions WHERE id = '${BOB_QUESTION}'`)).toBe(
