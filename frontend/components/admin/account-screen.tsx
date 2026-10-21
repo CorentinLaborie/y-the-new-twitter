@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
 import { StatusLabel } from '@/components/admin/status-label';
+import { SuspendDialog } from '@/components/admin/suspend-dialog';
 import styles from '@/components/admin/admin.module.css';
 import { getAccount, type AccountView } from '@/lib/admin-api';
 import {
@@ -16,7 +17,7 @@ import {
   ROLE_LABELS,
 } from '@/lib/admin-labels';
 import { formatAdminDate, formatAdminDateTime } from '@/lib/admin-format';
-import type { ApiProblem } from '@/lib/api-client';
+import type { ApiProblem, ApiResult } from '@/lib/api-client';
 
 type AccountState =
   | { status: 'loading' }
@@ -24,26 +25,34 @@ type AccountState =
   | { status: 'ready'; account: AccountView };
 
 /**
- * The view of one account: its details, its reports and moderated content, and its recent audit entries. Read only.
- * The actions on the account (suspension, deletion, e-mail reveal) are not on this screen yet.
+ * The view of one account: its details, its reports and moderated content, and its recent audit entries. The one
+ * action on it is the suspension of an active account (SuspendDialog); the deletion and the e-mail reveal are not on
+ * this screen yet.
  */
 export function AccountScreen({ id }: { id: string }) {
   const [state, setState] = useState<AccountState>({ status: 'loading' });
+  const [suspending, setSuspending] = useState(false);
+
+  const showResult = useCallback((result: ApiResult<AccountView>) => {
+    setState(result.ok ? { status: 'ready', account: result.body } : { status: 'error', problem: result.problem });
+  }, []);
 
   useEffect(() => {
     let current = true;
     getAccount(id).then((result) => {
-      if (!current) {
-        return;
+      if (current) {
+        showResult(result);
       }
-      setState(
-        result.ok ? { status: 'ready', account: result.body } : { status: 'error', problem: result.problem },
-      );
     });
     return () => {
       current = false;
     };
-  }, [id]);
+  }, [id, showResult]);
+
+  function handleSuspended() {
+    setSuspending(false);
+    void getAccount(id).then(showResult);
+  }
 
   return (
     <AdminPage title="Fiche du compte">
@@ -52,12 +61,22 @@ export function AccountScreen({ id }: { id: string }) {
       </Link>
       {state.status === 'loading' ? <AdminLoading /> : null}
       {state.status === 'error' ? <AdminLoadError problem={state.problem} /> : null}
-      {state.status === 'ready' ? <AccountDetails account={state.account} /> : null}
+      {state.status === 'ready' ? (
+        <AccountDetails account={state.account} onSuspend={() => setSuspending(true)} />
+      ) : null}
+      {state.status === 'ready' && suspending ? (
+        <SuspendDialog
+          accountId={state.account.id}
+          handle={state.account.handle}
+          onSuspended={handleSuspended}
+          onCancel={() => setSuspending(false)}
+        />
+      ) : null}
     </AdminPage>
   );
 }
 
-function AccountDetails({ account }: { account: AccountView }) {
+function AccountDetails({ account, onSuspend }: { account: AccountView; onSuspend: () => void }) {
   return (
     <div className={styles.split}>
       <div className={styles.splitMain}>
@@ -95,6 +114,21 @@ function AccountDetails({ account }: { account: AccountView }) {
             </dl>
           </div>
         </section>
+
+        {account.status === 'active' ? (
+          <section className={styles.panel} aria-labelledby="account-actions-title">
+            <div className={styles.panelBody}>
+              <h2 className={styles.panelTitle} id="account-actions-title">
+                Actions
+              </h2>
+              <div className={styles.actions}>
+                <button type="button" className={styles.dangerButton} onClick={onSuspend}>
+                  Suspendre le compte
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section className={styles.panel} aria-labelledby="account-content-title">
           <div className={styles.panelBody}>

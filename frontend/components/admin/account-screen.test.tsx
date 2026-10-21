@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getAccount, type AccountView } from '@/lib/admin-api';
+import { getAccount, suspendAccount, type AccountView } from '@/lib/admin-api';
 import { AccountScreen } from './account-screen';
 
-vi.mock('@/lib/admin-api', () => ({ getAccount: vi.fn() }));
+vi.mock('@/lib/admin-api', () => ({ getAccount: vi.fn(), suspendAccount: vi.fn(), reauthenticate: vi.fn() }));
 
 const ACCOUNT_ID = '11111111-1111-4111-8111-111111111111';
 
@@ -50,6 +50,54 @@ const ACCOUNT: AccountView = {
 describe('AccountScreen', () => {
   beforeEach(() => {
     vi.mocked(getAccount).mockReset();
+    vi.mocked(suspendAccount).mockReset();
+  });
+
+  it('offers the suspension of an active account only', async () => {
+    vi.mocked(getAccount).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...ACCOUNT, status: 'active' },
+    });
+    const { unmount } = render(<AccountScreen id={ACCOUNT.id} />);
+
+    expect(await screen.findByRole('button', { name: 'Suspendre le compte' })).toBeInTheDocument();
+    unmount();
+
+    vi.mocked(getAccount).mockResolvedValue({ ok: true, status: 200, body: ACCOUNT });
+    render(<AccountScreen id={ACCOUNT.id} />);
+
+    expect(await screen.findByText('Alice')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Suspendre le compte' })).not.toBeInTheDocument();
+  });
+
+  it('suspends the account from its view, then shows the new status', async () => {
+    const active = { ...ACCOUNT, status: 'active' as const, suspensionReason: null };
+    vi.mocked(getAccount)
+      .mockResolvedValueOnce({ ok: true, status: 200, body: active })
+      .mockResolvedValueOnce({ ok: true, status: 200, body: ACCOUNT });
+    vi.mocked(suspendAccount).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: {
+        id: ACCOUNT_ID,
+        status: 'suspended',
+        statusChangedAt: '2026-10-13T09:40:00.000Z',
+        suspensionReason: 'Suspension pour examen',
+      },
+    });
+    render(<AccountScreen id={ACCOUNT.id} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Suspendre le compte' }));
+    fireEvent.change(screen.getByLabelText('Motif (obligatoire)'), {
+      target: { value: 'Suspension pour examen' },
+    });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Suspendre le compte' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(suspendAccount).toHaveBeenCalledWith(ACCOUNT_ID, 'Suspension pour examen');
+    expect(await screen.findByText('Suspendu')).toBeInTheDocument();
+    expect(getAccount).toHaveBeenCalledTimes(2);
   });
 
   it('shows the details, the reports, the moderated content and the history of the account', async () => {

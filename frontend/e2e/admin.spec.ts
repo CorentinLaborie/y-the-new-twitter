@@ -185,6 +185,112 @@ test.describe('back-office', () => {
     await expect(page.getByRole('link', { name: 'Se reconnecter' })).toHaveAttribute('href', '/admin/login');
   });
 
+  test('suspending an account asks for the re-authentication, then suspends once it is confirmed', async ({
+    context,
+    page,
+  }) => {
+    await context.addCookies([ADMIN_COOKIE]);
+    let suspended = false;
+    const reauthRequired = {
+      status: 403,
+      body: {
+        type: 'about:blank',
+        title: 'Interdit',
+        status: 403,
+        detail: 'Ré-authentification requise.',
+        code: 'reauth_required',
+      },
+      headers: { 'content-type': 'application/problem+json' },
+    };
+    const calls = await mockAdminApi(page, {
+      [`GET /admin/users/${ALICE_ID}`]: () => ({
+        status: 200,
+        body: suspended
+          ? {
+              ...ACCOUNT_VIEW,
+              status: 'suspended',
+              suspensionReason: 'Spam répété',
+              statusChangedAt: '2026-10-21T12:00:00.000Z',
+            }
+          : ACCOUNT_VIEW,
+      }),
+      [`PUT /admin/users/${ALICE_ID}/status`]: () => {
+        if (!calls.some((call) => call.method === 'POST' && call.path === '/admin/reauth')) {
+          return reauthRequired;
+        }
+        suspended = true;
+        return {
+          status: 200,
+          body: {
+            id: ALICE_ID,
+            status: 'suspended',
+            statusChangedAt: '2026-10-21T12:00:00.000Z',
+            suspensionReason: 'Spam répété',
+          },
+        };
+      },
+      'POST /admin/reauth': { status: 200, body: { reauthExpiresAt: '2026-10-21T12:10:00.000Z' } },
+    });
+    await page.goto(`/admin/users/${ALICE_ID}`);
+
+    await page.getByRole('button', { name: 'Suspendre le compte' }).click();
+    await page.getByLabel('Motif (obligatoire)').fill('Spam répété');
+    await page
+      .getByRole('dialog', { name: 'Suspendre le compte de @AliceY ?' })
+      .getByRole('button', { name: 'Suspendre le compte' })
+      .click();
+
+    const reauth = page.getByRole('dialog', { name: 'Confirmer votre identité' });
+    await expect(reauth).toBeVisible();
+    await page.getByLabel('Mot de passe', { exact: true }).fill('Secret1234!');
+    await page.getByLabel('Code à 6 chiffres').fill('123456');
+    await reauth.getByRole('button', { name: 'Confirmer' }).click();
+
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByText('Suspendu', { exact: true })).toBeVisible();
+    const suspension = calls.filter((call) => call.method === 'PUT');
+    expect(suspension).toHaveLength(2);
+    expect(suspension[1]?.body).toEqual({ status: 'suspended', reason: 'Spam répété' });
+  });
+
+  test('a wrong code in the re-authentication keeps the dialog open, with the API message', async ({
+    context,
+    page,
+  }) => {
+    await context.addCookies([ADMIN_COOKIE]);
+    await mockAdminApi(page, {
+      [`GET /admin/users/${ALICE_ID}`]: { status: 200, body: ACCOUNT_VIEW },
+      [`PUT /admin/users/${ALICE_ID}/status`]: {
+        status: 403,
+        body: {
+          type: 'about:blank',
+          title: 'Interdit',
+          status: 403,
+          detail: 'Ré-authentification requise.',
+          code: 'reauth_required',
+        },
+        headers: { 'content-type': 'application/problem+json' },
+      },
+      'POST /admin/reauth': adminProblem(401, 'Code de vérification incorrect.'),
+    });
+    await page.goto(`/admin/users/${ALICE_ID}`);
+
+    await page.getByRole('button', { name: 'Suspendre le compte' }).click();
+    await page.getByLabel('Motif (obligatoire)').fill('Spam répété');
+    await page
+      .getByRole('dialog', { name: 'Suspendre le compte de @AliceY ?' })
+      .getByRole('button', { name: 'Suspendre le compte' })
+      .click();
+
+    const reauth = page.getByRole('dialog', { name: 'Confirmer votre identité' });
+    await page.getByLabel('Mot de passe', { exact: true }).fill('Secret1234!');
+    await page.getByLabel('Code à 6 chiffres').fill('000000');
+    await reauth.getByRole('button', { name: 'Confirmer' }).click();
+
+    await expect(formAlert(page)).toContainText('Code de vérification incorrect.');
+    await expect(reauth).toBeVisible();
+  });
+
   test('the login screen has no accessibility violation', async ({ page }) => {
     await page.goto('/admin/login');
 
