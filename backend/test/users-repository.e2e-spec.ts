@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { PrismaService } from '../src/database/prisma.service';
+import { recalculateCounters } from '../src/users/recalculate-counters';
 import { UsersRepository } from '../src/users/users.repository';
 import { startMigratedPostgres } from './support/postgres';
 
@@ -121,7 +122,7 @@ describe('UsersRepository (e2e)', () => {
     const suspend = (status: 'suspended' | 'active') =>
       prisma.$transaction(async (tx) => {
         await tx.user.update({ where: { id: reactor.id }, data: { status } });
-        await repository.recalculateCounters(tx, reactor.id);
+        await recalculateCounters(tx, reactor.id);
       });
 
     await suspend('suspended');

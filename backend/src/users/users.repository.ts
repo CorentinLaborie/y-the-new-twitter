@@ -79,14 +79,9 @@ export class UsersRepository {
       where: { id: userId },
       data: { status: 'active', emailVerifiedAt: at, statusChangedAt: at },
     });
-    await this.recalculateCounters(db, userId);
+    await recalculateCounters(db, userId);
 
     return user;
-  }
-
-  /** Brings the counters that depend on this account back to what the active accounts give (R13). */
-  recalculateCounters(db: UsersDb, userId: string): Promise<void> {
-    return recalculateCounters(db, userId);
   }
 
   /**

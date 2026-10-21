@@ -3,7 +3,7 @@ import type { AccountStatus } from '../../database/generated/client/client';
 import { PrismaService } from '../../database/prisma.service';
 import { recalculateCounters } from '../../users/recalculate-counters';
 
-export interface DeletionAccount {
+interface DeletionAccount {
   passwordHash: string;
   status: AccountStatus;
 }
