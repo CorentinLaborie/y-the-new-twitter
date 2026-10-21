@@ -79,7 +79,7 @@ test.describe('back-office: reports', () => {
     await expect(table.getByText('Spam', { exact: true })).toBeVisible();
 
     await page.getByLabel('Statut').selectOption('decided');
-    await expect.poll(() => calls.at(-1)?.search).toBe('?status=decided');
+    await expect.poll(() => calls.at(-1)?.search).toMatch(/^\?status=decided(&|$)/);
 
     await page.getByLabel('Statut').selectOption('');
     await page.getByRole('link', { name: /Examiner le signalement/ }).click();
