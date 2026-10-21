@@ -27,8 +27,9 @@ type ApiRequestOptions = {
   headers?: Record<string, string>;
 };
 
+/** The API names the cookie y_csrf locally and __Host-y_csrf elsewhere (backend csrf.guard.ts). */
 function readCsrfToken(cookieHeader: string): string | null {
-  const match = /(?:^|;\s*)y_csrf=([^;]+)/.exec(cookieHeader);
+  const match = /(?:^|;\s*)(?:__Host-)?y_csrf=([^;]+)/.exec(cookieHeader);
   return match ? decodeURIComponent(match[1]) : null;
 }
 
