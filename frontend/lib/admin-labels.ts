@@ -4,7 +4,17 @@
  */
 
 import type { AccountStatus } from '@/lib/auth-api';
-import type { AdminRole, AuditResult, DeletionReasonCode } from '@/lib/admin-api';
+import type {
+  AdminRole,
+  AuditResult,
+  DeletionReasonCode,
+  ModerationStatus,
+  ReportDecision,
+  ReportReason,
+  ReportStatus,
+  ReportTargetType,
+  SupportStatus,
+} from '@/lib/admin-api';
 
 export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
   pending_verification: 'En attente de vérification',
@@ -62,7 +72,93 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   'user.reactivate': 'Levée de suspension',
   'user.delete': 'Suppression de compte',
   'contact.close': 'Fermeture de contact',
+  'contact.reply': 'Réponse envoyée au compte',
+  'report.decide': 'Décision sur un signalement',
 };
+
+export const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
+  open: 'Ouvert',
+  resolved: 'Résolu',
+  dismissed: 'Rejeté',
+};
+
+export function reportStatusTone(status: ReportStatus): StatusTone {
+  switch (status) {
+    case 'open':
+      return 'open';
+    case 'resolved':
+      return 'ok';
+    case 'dismissed':
+      return 'neutral';
+  }
+}
+
+export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+  spam: 'Spam',
+  harassment: 'Harcèlement',
+  hate: 'Haine',
+  illegal_content: 'Contenu illicite',
+  misinformation: 'Désinformation',
+  other: 'Autre',
+};
+
+/** The reasons of the report list filter, in the order of the design. The empty value means every reason. */
+export const REPORT_REASON_FILTER_OPTIONS: readonly { value: ReportReason | ''; label: string }[] = [
+  { value: '', label: 'Tous les motifs' },
+  ...(Object.keys(REPORT_REASON_LABELS) as ReportReason[]).map((value) => ({
+    value,
+    label: REPORT_REASON_LABELS[value],
+  })),
+];
+
+/** The statuses of the report list filter. The empty value means every status. */
+export const REPORT_STATUS_FILTER_OPTIONS: readonly { value: 'open' | 'decided' | ''; label: string }[] = [
+  { value: '', label: 'Tous les statuts' },
+  { value: 'open', label: 'Ouverts' },
+  { value: 'decided', label: 'Décidés' },
+];
+
+/** The French text of a decision recorded on a report. */
+export const REPORT_DECISION_LABELS: Record<ReportDecision, string> = {
+  content_hidden: 'Contenu masqué',
+  no_action: 'Signalement rejeté',
+};
+
+/** The kind of content of a report, as the list names it. */
+export const REPORT_TARGET_LABELS: Record<ReportTargetType, string> = {
+  question: 'Question',
+  reply: 'Réponse',
+};
+
+export const REPORT_MODERATION_LABELS: Record<ModerationStatus, string> = {
+  visible: 'Visible',
+  hidden: 'Contenu masqué',
+  removed: 'Contenu supprimé',
+};
+
+export const SUPPORT_STATUS_LABELS: Record<SupportStatus, string> = {
+  new: 'Nouveau',
+  replied: 'Répondu',
+  closed: 'Traité',
+};
+
+export function supportStatusTone(status: SupportStatus): StatusTone {
+  switch (status) {
+    case 'new':
+      return 'open';
+    case 'replied':
+      return 'neutral';
+    case 'closed':
+      return 'ok';
+  }
+}
+
+/** The statuses of the thread list filter. The empty value means every status. */
+export const SUPPORT_STATUS_FILTER_OPTIONS: readonly { value: 'open' | 'closed' | ''; label: string }[] = [
+  { value: '', label: 'Tous les statuts' },
+  { value: 'open', label: 'Ouverts' },
+  { value: 'closed', label: 'Traités' },
+];
 
 /** The reasons an administrator can pick to delete an account, in the order of the list (account-deletion-reasons.ts). */
 export const DELETION_REASON_OPTIONS: readonly { value: DeletionReasonCode; label: string }[] = [
@@ -91,6 +187,8 @@ export function auditTargetLabel(targetType: string): string {
       return 'Compte';
     case 'contact':
       return 'Contact';
+    case 'report':
+      return 'Signalement';
     default:
       return targetType;
   }

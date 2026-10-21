@@ -7,6 +7,9 @@ import {
   auditActionLabel,
   auditResultTone,
   auditTargetLabel,
+  REPORT_REASON_FILTER_OPTIONS,
+  reportStatusTone,
+  supportStatusTone,
 } from '@/lib/admin-labels';
 
 describe('auditActionLabel', () => {
@@ -15,7 +18,7 @@ describe('auditActionLabel', () => {
   });
 
   it('keeps the code of an action that has no name yet', () => {
-    expect(auditActionLabel('report.decide')).toBe('report.decide');
+    expect(auditActionLabel('user.unknown')).toBe('user.unknown');
   });
 
   it.each([
@@ -23,6 +26,8 @@ describe('auditActionLabel', () => {
     ['user.reactivate', 'Levée de suspension'],
     ['user.delete', 'Suppression de compte'],
     ['contact.close', 'Fermeture de contact'],
+    ['contact.reply', 'Réponse envoyée au compte'],
+    ['report.decide', 'Décision sur un signalement'],
   ])('names the %s action in French', (action, label) => {
     expect(auditActionLabel(action)).toBe(label);
   });
@@ -54,6 +59,8 @@ describe('AUDIT_ACTION_FILTER_OPTIONS', () => {
       'user.reactivate',
       'user.delete',
       'contact.close',
+      'contact.reply',
+      'report.decide',
     ]);
   });
 });
@@ -96,5 +103,28 @@ describe('auditResultTone', () => {
     expect(auditResultTone('ok')).toBe('ok');
     expect(auditResultTone('refused')).toBe('open');
     expect(auditResultTone('failed')).toBe('danger');
+  });
+});
+
+describe('report and contact labels', () => {
+  it('gives each report status its tone', () => {
+    expect(reportStatusTone('open')).toBe('open');
+    expect(reportStatusTone('resolved')).toBe('ok');
+    expect(reportStatusTone('dismissed')).toBe('neutral');
+  });
+
+  it('gives each contact status its tone', () => {
+    expect(supportStatusTone('new')).toBe('open');
+    expect(supportStatusTone('replied')).toBe('neutral');
+    expect(supportStatusTone('closed')).toBe('ok');
+  });
+
+  it('names the report target type in French', () => {
+    expect(auditTargetLabel('report')).toBe('Signalement');
+  });
+
+  it('gives the reason filter the empty value first, then every reason', () => {
+    expect(REPORT_REASON_FILTER_OPTIONS[0]).toEqual({ value: '', label: 'Tous les motifs' });
+    expect(REPORT_REASON_FILTER_OPTIONS).toHaveLength(7);
   });
 });

@@ -43,7 +43,7 @@ describe('AuditScreen', () => {
     expect(within(table).getByText('Échec')).toBeInTheDocument();
     expect(within(table).getByText('Code incorrect')).toBeInTheDocument();
     expect(within(table).getByText('—')).toBeInTheDocument();
-    expect(within(table).getByText('16/10/2026 08h12')).toBeInTheDocument();
+    expect(within(table).getByText('16/10/2026 10h12')).toBeInTheDocument();
   });
 
   it('reads the log again with the action chosen', async () => {
@@ -53,7 +53,7 @@ describe('AuditScreen', () => {
       body: { items: [LOGIN], nextCursor: null },
     });
     render(<AuditScreen />);
-    await screen.findByText('16/10/2026 08h12');
+    await screen.findByText('16/10/2026 10h12');
 
     fireEvent.change(screen.getByLabelText('Type d’action'), { target: { value: 'auth.mfa_enrol' } });
 
@@ -65,7 +65,7 @@ describe('AuditScreen', () => {
       .mockResolvedValueOnce({ ok: true, status: 200, body: { items: [LOGIN], nextCursor: 'next-1' } })
       .mockResolvedValueOnce({ ok: true, status: 200, body: { items: [REFUSED_LOGIN], nextCursor: null } });
     render(<AuditScreen />);
-    await screen.findByText('16/10/2026 08h12');
+    await screen.findByText('16/10/2026 10h12');
 
     fireEvent.click(screen.getByRole('button', { name: 'Charger plus d’entrées' }));
 

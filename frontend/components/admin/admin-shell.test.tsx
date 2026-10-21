@@ -43,6 +43,11 @@ describe('AdminShell', () => {
 
     expect(screen.getByRole('link', { name: 'Journal d’audit' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Comptes' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: 'Signalements' })).toHaveAttribute('href', '/admin/reports');
+    expect(screen.getByRole('link', { name: 'Tribunal des bannis' })).toHaveAttribute(
+      'href',
+      '/admin/support',
+    );
     expect(screen.getByText('Administrateur')).toBeInTheDocument();
     expect(screen.getByText('@admin')).toBeInTheDocument();
     expect(screen.getByText('Contenu')).toBeInTheDocument();

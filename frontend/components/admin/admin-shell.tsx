@@ -10,6 +10,8 @@ import styles from './admin.module.css';
 
 const ADMIN_NAV_ITEMS = [
   { href: '/admin', label: 'Tableau de bord' },
+  { href: '/admin/reports', label: 'Signalements' },
+  { href: '/admin/support', label: 'Tribunal des bannis' },
   { href: '/admin/users', label: 'Comptes' },
   { href: '/admin/audit', label: 'Journal d’audit' },
 ] as const;

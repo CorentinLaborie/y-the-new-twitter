@@ -4,14 +4,24 @@ import {
   accountListPath,
   adminLogin,
   auditListPath,
+  closeSupportThread,
+  decideReport,
   getAccount,
   getAdminSession,
+  getDashboard,
+  getReport,
+  getSupportThread,
   listAccounts,
+  listReports,
+  listSupportThreads,
   reactivateAccount,
   reauthenticate,
+  reportListPath,
+  replySupportThread,
   signOut,
   deleteAccount,
   suspendAccount,
+  supportListPath,
 } from '@/lib/admin-api';
 
 vi.mock('@/lib/api-client', () => ({ apiRequest: vi.fn() }));
@@ -47,6 +57,75 @@ describe('auditListPath', () => {
     expect(auditListPath({ action: 'auth.admin_login', limit: 50 })).toBe(
       '/admin/audit-log?limit=50&action=auth.admin_login',
     );
+  });
+});
+
+describe('reportListPath', () => {
+  it('builds the first page without parameters', () => {
+    expect(reportListPath()).toBe('/admin/reports');
+  });
+
+  it('keeps only the parameters that are set, in the order of the filters', () => {
+    expect(reportListPath({ status: 'open', reason: 'spam', cursor: 'abc', limit: 20 })).toBe(
+      '/admin/reports?status=open&reason=spam&cursor=abc&limit=20',
+    );
+  });
+});
+
+describe('supportListPath', () => {
+  it('builds the first page without parameters, and with the closed filter', () => {
+    expect(supportListPath()).toBe('/admin/support-threads');
+    expect(supportListPath({ status: 'closed' })).toBe('/admin/support-threads?status=closed');
+  });
+});
+
+describe('report, contact and dashboard calls', () => {
+  beforeEach(() => {
+    vi.mocked(apiRequest).mockReset();
+    vi.mocked(apiRequest).mockResolvedValue(ANSWER);
+  });
+
+  it('listReports reads the report list', async () => {
+    await listReports({ status: 'decided' });
+    expect(apiRequest).toHaveBeenCalledWith('GET', '/admin/reports?status=decided');
+  });
+
+  it('getReport reads one report', async () => {
+    await getReport('2c1d0e9f-8a7b-4c6d-9e5f-1a2b3c4d5e6f');
+    expect(apiRequest).toHaveBeenCalledWith('GET', '/admin/reports/2c1d0e9f-8a7b-4c6d-9e5f-1a2b3c4d5e6f');
+  });
+
+  it('decideReport sends the decision, and the note only when it is given', async () => {
+    await decideReport('r1', 'hide', 'Injure');
+    expect(apiRequest).toHaveBeenLastCalledWith('PUT', '/admin/reports/r1/decision', {
+      body: { decision: 'hide', note: 'Injure' },
+    });
+
+    await decideReport('r1', 'dismiss');
+    expect(apiRequest).toHaveBeenLastCalledWith('PUT', '/admin/reports/r1/decision', {
+      body: { decision: 'dismiss' },
+    });
+  });
+
+  it('listSupportThreads, getSupportThread, replySupportThread and closeSupportThread call their routes', async () => {
+    await listSupportThreads({ status: 'open' });
+    expect(apiRequest).toHaveBeenLastCalledWith('GET', '/admin/support-threads?status=open');
+
+    await getSupportThread('t1');
+    expect(apiRequest).toHaveBeenLastCalledWith('GET', '/admin/support-threads/t1');
+
+    await replySupportThread('t1', 'Bonjour');
+    expect(apiRequest).toHaveBeenLastCalledWith('POST', '/admin/support-threads/t1/messages', {
+      body: { text: 'Bonjour' },
+    });
+
+    await closeSupportThread('t1');
+    expect(apiRequest).toHaveBeenLastCalledWith('PUT', '/admin/support-threads/t1/close');
+  });
+
+  it('getDashboard reads the indicators', async () => {
+    await getDashboard();
+    expect(apiRequest).toHaveBeenCalledWith('GET', '/admin/dashboard');
   });
 });
 

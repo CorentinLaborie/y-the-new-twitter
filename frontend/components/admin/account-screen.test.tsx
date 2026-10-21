@@ -172,7 +172,7 @@ describe('AccountScreen', () => {
     expect(screen.getByText('Suspension pour examen')).toBeInTheDocument();
     expect(screen.getByText('a***@d***.fr')).toBeInTheDocument();
     // The last login, and the history entry of the same moment.
-    expect(screen.getAllByText('16/10/2026 08h12')).toHaveLength(2);
+    expect(screen.getAllByText('16/10/2026 10h12')).toHaveLength(2);
     expect(screen.getByText('Signalements reçus').nextSibling).toHaveTextContent('3');
     expect(screen.getByText('Contenus masqués ou retirés').nextSibling).toHaveTextContent('2');
     expect(screen.getByText('Connexion administrateur')).toBeInTheDocument();
