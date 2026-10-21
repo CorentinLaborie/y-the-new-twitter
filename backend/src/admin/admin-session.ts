@@ -25,7 +25,7 @@ declare module 'express-session' {
     admin?: AdminElevation;
     adminMfaSetup?: AdminMfaSetup;
     /** When the administrator last re-authenticated, as an ISO string. Kept apart from the elevation (DEC-082). */
-    adminReauthAt?: string;
+    reauth_at?: string;
   }
 }
 

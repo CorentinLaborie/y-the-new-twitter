@@ -159,7 +159,7 @@ export class AdminAuthController {
       case 'invalid_code':
         throw new UnauthorizedException('Code de vérification incorrect.');
       case 'ok':
-        req.session.adminReauthAt = now.toISOString();
+        req.session.reauth_at = now.toISOString();
         return { reauthExpiresAt: new Date(now.getTime() + ADMIN_REAUTH_WINDOW_MS).toISOString() };
     }
   }

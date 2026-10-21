@@ -16,8 +16,8 @@ import { ADMIN_ELEVATION_KEY, ADMIN_REAUTH_KEY } from './admin.decorators';
 type AdminRequest = Request & { sessionUser?: SessionUser };
 
 /** The answer of a route that needs a re-authentication which is missing or older than 10 minutes (DEC-088). */
-export const ADMIN_REAUTH_REQUIRED_MESSAGE = 'Ré-authentification requise.';
-export const ADMIN_REAUTH_REQUIRED_CODE = 'reauth_required';
+const ADMIN_REAUTH_REQUIRED_MESSAGE = 'Ré-authentification requise.';
+const ADMIN_REAUTH_REQUIRED_CODE = 'reauth_required';
 
 /**
  * Guard of the back-office routes. Anyone who is not an active administrator gets 404, so the back-office is not
@@ -39,9 +39,9 @@ export class AdminGuard implements CanActivate {
     }
 
     const targets = [context.getHandler(), context.getClass()];
+    const now = new Date();
     const elevationRequired = this.reflector.getAllAndOverride<boolean>(ADMIN_ELEVATION_KEY, targets) ?? true;
     if (elevationRequired) {
-      const now = new Date();
       const elevation = request.session.admin;
       if (elevation === undefined || !isElevated(elevation, now)) {
         request.session.admin = undefined;
@@ -49,14 +49,14 @@ export class AdminGuard implements CanActivate {
       }
       // Each request of the back-office keeps the 30-minute idle timer running.
       request.session.admin = { ...elevation, lastSeenAt: now.toISOString() };
+    }
 
-      const reauthRequired = this.reflector.getAllAndOverride<boolean>(ADMIN_REAUTH_KEY, targets) ?? false;
-      if (reauthRequired && !isReauthenticated(request.session.adminReauthAt, now)) {
-        throw new ForbiddenException({
-          message: ADMIN_REAUTH_REQUIRED_MESSAGE,
-          code: ADMIN_REAUTH_REQUIRED_CODE,
-        });
-      }
+    const reauthRequired = this.reflector.getAllAndOverride<boolean>(ADMIN_REAUTH_KEY, targets) ?? false;
+    if (reauthRequired && !isReauthenticated(request.session.reauth_at, now)) {
+      throw new ForbiddenException({
+        message: ADMIN_REAUTH_REQUIRED_MESSAGE,
+        code: ADMIN_REAUTH_REQUIRED_CODE,
+      });
     }
 
     request.sessionUser = decision.user;

@@ -1,14 +1,13 @@
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import request from 'supertest';
-import { configureApp } from '../src/configure-app';
 import { ADMIN_REAUTH_WINDOW_MS } from '../src/admin/admin-session';
 import { AuditLogService } from '../src/admin/audit/audit-log.service';
 import { CapturingMailSender } from '../src/common/mail/capturing-mail-sender';
 import { MAIL_SENDER } from '../src/common/mail/mail-sender';
 import { PrismaService } from '../src/database/prisma.service';
 import type { Prisma } from '../src/database/generated/client/client';
+import { startApp } from './support/app';
 import { BASE, createAccount, enrol, newVisitor, PASSWORD, signIn } from './support/back-office';
 import { resetRateLimits } from './support/rate-limits';
 import { startMigratedPostgres } from './support/postgres';
@@ -22,16 +21,6 @@ describe('Back-office suspension and reactivation (e2e, DEC-077, DEC-088, DEC-11
   let app: INestApplication;
   let prisma: PrismaService;
   let mail: CapturingMailSender;
-
-  async function startApp(): Promise<INestApplication> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- loaded on purpose, after DATABASE_URL is set
-    const { AppModule } = require('../src/app.module') as typeof import('../src/app.module');
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    const created = moduleRef.createNestApplication({ bufferLogs: true });
-    configureApp(created);
-    await created.init();
-    return created;
-  }
 
   /**
    * A signed-in administrator. The backup codes after the first one are the queue of re-authentications: each one is
@@ -145,8 +134,8 @@ describe('Back-office suspension and reactivation (e2e, DEC-077, DEC-088, DEC-11
       where: { userId: admin.userId },
       orderBy: { lastAccessAt: 'desc' },
     });
-    const data = row.data as unknown as { adminReauthAt: string };
-    data.adminReauthAt = new Date(Date.now() - ADMIN_REAUTH_WINDOW_MS - 60_000).toISOString();
+    const data = row.data as unknown as { reauth_at: string };
+    data.reauth_at = new Date(Date.now() - ADMIN_REAUTH_WINDOW_MS - 60_000).toISOString();
     await prisma.session.update({
       where: { id: row.id },
       data: { data: data as unknown as Prisma.InputJsonObject },

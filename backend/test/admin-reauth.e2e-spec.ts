@@ -1,10 +1,9 @@
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { configureApp } from '../src/configure-app';
 import { ADMIN_REAUTH_WINDOW_MS } from '../src/admin/admin-session';
 import { stepAt, totpCode } from '../src/admin/mfa/totp';
 import { PrismaService } from '../src/database/prisma.service';
+import { startApp } from './support/app';
 import { BASE, createAccount, newVisitor, PASSWORD, signIn } from './support/back-office';
 import { resetRateLimits } from './support/rate-limits';
 import { startMigratedPostgres } from './support/postgres';
@@ -15,16 +14,6 @@ describe('Back-office re-authentication (e2e, DEC-088)', () => {
   let container: StartedPostgreSqlContainer;
   let app: INestApplication;
   let prisma: PrismaService;
-
-  async function startApp(): Promise<INestApplication> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- loaded on purpose, after DATABASE_URL is set
-    const { AppModule } = require('../src/app.module') as typeof import('../src/app.module');
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    const created = moduleRef.createNestApplication({ bufferLogs: true });
-    configureApp(created);
-    await created.init();
-    return created;
-  }
 
   /**
    * An administrator with a second factor, signed in with a backup code. The TOTP secret is returned, so a later
@@ -93,7 +82,7 @@ describe('Back-office re-authentication (e2e, DEC-088)', () => {
       .expect(401);
 
     expect(response.body.detail).toBe('Identifiants incorrects');
-    expect((await sessionOf(userId)).data).not.toHaveProperty('adminReauthAt');
+    expect((await sessionOf(userId)).data).not.toHaveProperty('reauth_at');
   });
 
   it('refuses a wrong second factor with 401, and stores no re-authentication', async () => {
@@ -106,7 +95,7 @@ describe('Back-office re-authentication (e2e, DEC-088)', () => {
       .expect(401);
 
     expect(response.body.detail).toBe('Code de vérification incorrect.');
-    expect((await sessionOf(userId)).data).not.toHaveProperty('adminReauthAt');
+    expect((await sessionOf(userId)).data).not.toHaveProperty('reauth_at');
   });
 
   it('answers 400 when the password or the code is missing (validation, as elsewhere in the API)', async () => {
@@ -135,9 +124,9 @@ describe('Back-office re-authentication (e2e, DEC-088)', () => {
 
     const data = (await sessionOf(userId)).data as unknown as {
       admin: { verifiedAt: string };
-      adminReauthAt: string;
+      reauth_at: string;
     };
-    expect(Date.now() - Date.parse(data.adminReauthAt)).toBeLessThan(60_000);
+    expect(Date.now() - Date.parse(data.reauth_at)).toBeLessThan(60_000);
     expect(data.admin.verifiedAt).toBe(before.admin.verifiedAt);
   });
 

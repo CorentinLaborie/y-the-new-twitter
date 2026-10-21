@@ -143,7 +143,7 @@ describe('AdminGuard', () => {
       const { context } = contextWith({
         userId: 'admin-1',
         admin: current,
-        adminReauthAt: new Date(NOW.getTime() - ADMIN_REAUTH_WINDOW_MS - 1).toISOString(),
+        reauth_at: new Date(NOW.getTime() - ADMIN_REAUTH_WINDOW_MS - 1).toISOString(),
       });
 
       await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
@@ -154,11 +154,25 @@ describe('AdminGuard', () => {
       const { context, request } = contextWith({
         userId: 'admin-1',
         admin: current,
-        adminReauthAt: new Date(NOW.getTime() - ADMIN_REAUTH_WINDOW_MS + 1000).toISOString(),
+        reauth_at: new Date(NOW.getTime() - ADMIN_REAUTH_WINDOW_MS + 1000).toISOString(),
       });
 
       await expect(guard.canActivate(context)).resolves.toBe(true);
       expect(request.session.admin).toEqual({ ...current, lastSeenAt: NOW.toISOString() });
+    });
+
+    it('answers 403 when the route needs a re-authentication but not an elevation, and none is current', async () => {
+      reflector.getAllAndOverride.mockImplementation((key: string) => key === ADMIN_REAUTH_KEY);
+      const { context } = contextWith({ userId: 'admin-1' });
+
+      await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('lets the route through without an elevation when the re-authentication is current', async () => {
+      reflector.getAllAndOverride.mockImplementation((key: string) => key === ADMIN_REAUTH_KEY);
+      const { context } = contextWith({ userId: 'admin-1', reauth_at: NOW.toISOString() });
+
+      await expect(guard.canActivate(context)).resolves.toBe(true);
     });
 
     it('does not ask for a re-authentication on a route that does not need one', async () => {
@@ -172,7 +186,7 @@ describe('AdminGuard', () => {
       routeNeedsReauth(true);
       const { context } = contextWith({
         userId: 'admin-1',
-        adminReauthAt: NOW.toISOString(),
+        reauth_at: NOW.toISOString(),
       });
 
       await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
