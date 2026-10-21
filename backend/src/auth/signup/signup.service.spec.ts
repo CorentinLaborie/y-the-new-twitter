@@ -136,7 +136,7 @@ describe('SignupService', () => {
     it('activates the account and records the age check for an adult', async () => {
       const { service, codes, activation, users, ageVerifier } = await withOpenCode();
       ageVerifier.check.mockResolvedValue({
-        provider: 'VerifAge',
+        provider: 'declared',
         status: 'verified',
         providerReference: null,
       });
@@ -155,7 +155,7 @@ describe('SignupService', () => {
     it('refuses an under-age account, records the refusal and does not activate it', async () => {
       const { service, activation, users, ageVerifier } = await withOpenCode();
       ageVerifier.check.mockResolvedValue({
-        provider: 'VerifAge',
+        provider: 'declared',
         status: 'failed',
         providerReference: null,
       });

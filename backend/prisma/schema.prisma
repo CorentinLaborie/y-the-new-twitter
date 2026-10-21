@@ -261,7 +261,7 @@ model EmailChangeCode {
 model AgeVerification {
   id                String         @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   userId            String         @unique @map("user_id") @db.Uuid
-  provider          String         @default("VerifAge") @map("provider") @db.VarChar(50)
+  provider          String         @default("declared") @map("provider") @db.VarChar(50)
   providerReference String?        @map("provider_reference") @db.VarChar(255)
   status            AgeCheckStatus @default(pending) @map("status")
   checkedAt         DateTime?      @map("checked_at") @db.Timestamptz(3)

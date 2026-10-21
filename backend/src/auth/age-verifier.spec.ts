@@ -1,13 +1,13 @@
-import { MockAgeVerifier } from './age-verifier';
+import { DeclaredAgeVerifier } from './age-verifier';
 
-describe('MockAgeVerifier (R7, DEC-021)', () => {
-  const verifier = new MockAgeVerifier();
+describe('DeclaredAgeVerifier (R7, owner decision 2026-10-21)', () => {
+  const verifier = new DeclaredAgeVerifier();
   const today = new Date('2026-10-19T00:00:00Z');
 
   it('verifies someone who turns 18 on or before today', async () => {
     const result = await verifier.check(new Date('2008-10-19'), today);
 
-    expect(result).toEqual({ provider: 'VerifAge', status: 'verified', providerReference: null });
+    expect(result).toEqual({ provider: 'declared', status: 'verified', providerReference: null });
   });
 
   it('refuses someone who turns 18 tomorrow', async () => {

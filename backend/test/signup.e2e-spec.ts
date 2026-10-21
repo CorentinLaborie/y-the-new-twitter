@@ -154,7 +154,7 @@ describe('Signup: create, verify, resend (e2e)', () => {
       await sql(
         `SELECT a.provider || ' ' || a.status FROM age_verifications a JOIN users u ON u.id = a.user_id WHERE u.email = '${name.email}';`,
       ),
-    ).toBe('VerifAge verified');
+    ).toBe('declared verified');
   });
 
   it('keeps the account pending after five wrong codes, even when the sixth code is right', async () => {

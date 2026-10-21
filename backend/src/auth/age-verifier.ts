@@ -9,18 +9,21 @@ export interface AgeCheckResult {
   providerReference: string | null;
 }
 
-/** The age decision. The real provider (VerifAge) waits for its documentation (DEC-021). */
+/** The age decision. */
 export interface AgeVerifier {
   check(birthDate: Date | null, today: Date): Promise<AgeCheckResult>;
 }
 
-/** Stands in for VerifAge until its documentation is available: decides from the birth date alone. */
-export class MockAgeVerifier implements AgeVerifier {
+/**
+ * Decides from the birth date the user declared at signup (owner decision 2026-10-21: no external age provider, since
+ * VerifAge has no key). A false declaration is not detected: the rule is 18 or more, declared by the user.
+ */
+export class DeclaredAgeVerifier implements AgeVerifier {
   check(birthDate: Date | null, today: Date): Promise<AgeCheckResult> {
     const adult = birthDate !== null && isOldEnough(birthDate, today);
 
     return Promise.resolve({
-      provider: 'VerifAge',
+      provider: 'declared',
       status: adult ? 'verified' : 'failed',
       providerReference: null,
     });

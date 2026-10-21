@@ -7,7 +7,7 @@ import { CodeRequestLimitService } from './rate-limit/code-request-limit.service
 import { BrevoMailSender } from '../common/mail/brevo-mail-sender';
 import { CapturingMailSender } from '../common/mail/capturing-mail-sender';
 import { MAIL_SENDER } from '../common/mail/mail-sender';
-import { AGE_VERIFIER, MockAgeVerifier } from './age-verifier';
+import { AGE_VERIFIER, DeclaredAgeVerifier } from './age-verifier';
 import { SignupController } from './signup/signup.controller';
 import { SignupService } from './signup/signup.service';
 import { SignupCodesRepository } from './signup/signup-codes.repository';
@@ -72,7 +72,7 @@ import { AccountDeletionService } from './account-deletion/account-deletion.serv
         });
       },
     },
-    { provide: AGE_VERIFIER, useClass: MockAgeVerifier },
+    { provide: AGE_VERIFIER, useClass: DeclaredAgeVerifier },
     SignupService,
     SignupCodesRepository,
     SignupActivationRepository,
