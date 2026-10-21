@@ -12,8 +12,7 @@ export const CODE_REQUIRED_MESSAGE = 'Saisissez le code de votre application d�
 export const SETUP_REQUIRED_MESSAGE =
   'La double authentification n’est pas encore configurée pour ce compte. Cette étape n’est pas disponible depuis cet écran.';
 
-export type AdminLoginFailure =
-  { kind: 'locked'; retryAfterSeconds: number } | { kind: 'error'; message: string };
+type AdminLoginFailure = { kind: 'locked'; retryAfterSeconds: number } | { kind: 'error'; message: string };
 
 /**
  * A 429 is the lock after too many failures: the form is disabled until the Retry-After delay has passed. Any other

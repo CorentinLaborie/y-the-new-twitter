@@ -1,5 +1,18 @@
-import { describe, expect, it } from 'vitest';
-import { accountListPath, auditListPath } from '@/lib/admin-api';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { apiRequest } from '@/lib/api-client';
+import {
+  accountListPath,
+  adminLogin,
+  auditListPath,
+  getAccount,
+  getAdminSession,
+  listAccounts,
+  signOut,
+} from '@/lib/admin-api';
+
+vi.mock('@/lib/api-client', () => ({ apiRequest: vi.fn() }));
+
+const ANSWER = { ok: true, status: 200, body: {} } as never;
 
 describe('accountListPath', () => {
   it('builds the first page without parameters', () => {
@@ -30,5 +43,67 @@ describe('auditListPath', () => {
     expect(auditListPath({ action: 'auth.admin_login', limit: 50 })).toBe(
       '/admin/audit-log?limit=50&action=auth.admin_login',
     );
+  });
+});
+
+describe('admin API calls', () => {
+  beforeEach(() => {
+    vi.mocked(apiRequest).mockReset();
+    vi.mocked(apiRequest).mockResolvedValue(ANSWER);
+  });
+
+  it('adminLogin sends the password alone while no code is typed', async () => {
+    await adminLogin('admin@example.test', 'Abcdef1!');
+
+    expect(apiRequest).toHaveBeenCalledWith('POST', '/admin/login', {
+      body: { email: 'admin@example.test', password: 'Abcdef1!' },
+    });
+  });
+
+  it('adminLogin sends the code with the password once the administrator has typed one', async () => {
+    await adminLogin('admin@example.test', 'Abcdef1!', '123456');
+
+    expect(apiRequest).toHaveBeenCalledWith('POST', '/admin/login', {
+      body: { email: 'admin@example.test', password: 'Abcdef1!', code: '123456' },
+    });
+  });
+
+  it('adminLogin treats an empty code as no code', async () => {
+    await adminLogin('admin@example.test', 'Abcdef1!', '');
+
+    expect(apiRequest).toHaveBeenCalledWith('POST', '/admin/login', {
+      body: { email: 'admin@example.test', password: 'Abcdef1!' },
+    });
+  });
+
+  it('getAdminSession forwards the SESSION cookie when it is called on the server', async () => {
+    await getAdminSession('SESSION=signed-id');
+
+    expect(apiRequest).toHaveBeenCalledWith('GET', '/admin/session', { cookie: 'SESSION=signed-id' });
+  });
+
+  it('listAccounts calls the search with the parameters that are set', async () => {
+    await listAccounts({ q: 'alice', limit: 20 });
+
+    expect(apiRequest).toHaveBeenCalledWith('GET', '/admin/users?q=alice&limit=20');
+  });
+
+  it('getAccount encodes the account id in the path', async () => {
+    await getAccount('a/b c');
+
+    expect(apiRequest).toHaveBeenCalledWith('GET', '/admin/users/a%2Fb%20c');
+  });
+
+  it('signOut ends the session through the account sign-out route', async () => {
+    await signOut();
+
+    expect(apiRequest).toHaveBeenCalledWith('POST', '/auth/logout');
+  });
+
+  it('returns the answer of the shared client unchanged', async () => {
+    const answer = { ok: false, problem: { status: 0, title: 'Réseau', detail: 'Injoignable.' } };
+    vi.mocked(apiRequest).mockResolvedValue(answer as never);
+
+    await expect(signOut()).resolves.toBe(answer);
   });
 });

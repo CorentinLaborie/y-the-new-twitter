@@ -2,9 +2,7 @@ import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getAdminSession, type AdminSession } from '@/lib/admin-api';
-
-/** Name of the session cookie set by the API (backend, sessions). The back-office uses the same session. */
-const SESSION_COOKIE = 'SESSION';
+import { SESSION_COOKIE } from '@/lib/session';
 
 const ADMIN_LOGIN_PATH = '/admin/login';
 
