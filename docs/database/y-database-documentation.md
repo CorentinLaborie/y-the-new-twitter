@@ -1,6 +1,6 @@
 # Y — Database documentation
 Schema proposal for the Y app, version 0.11 of 2026-10-20 (matches the DBML). Derived from the design boards of Desktop, Tablet and Mobile. The source of truth is [`y-database.dbml`](y-database.dbml) in this folder. Requires **PostgreSQL 18.6**, pinned by digest (DEC-070, DEC-126). The local development server listens on port 5434 (DEC-125).
-> **Status: draft.** Decisions D1 to D13 are applied as **validated defaults** (decision journal, 2026-10-16). The age check uses VerifAge (DEC-019); its exact mechanism is pending the API documentation (DEC-020, R15). Items still marked **TO CONFIRM** are open. Version 0.7 applies DEC-080 to DEC-092 to the model; version 0.8 adds `support_threads.closed_by_lift` (DEC-117); version 0.9 applies DEC-119 to DEC-124 (indexes, French full-text search, hashtag prefix index, `updated_at` set by the application); version 0.10 adds `idempotency_keys` (section 9.1, 24-hour expiry) and the 1-to-280 CHECK on `replies.body`; version 0.11 adds `rate_limit_counters` (section 9, DEC-194); the worked example in section 7 must be recalculated (**À recalculer**).
+> **Status: draft.** Decisions D1 to D13 are applied as **validated defaults** (decision journal, 2026-10-16). The age check uses the birth date declared at signup (DEC-216, R15). Items still marked **TO CONFIRM** are open. Version 0.7 applies DEC-080 to DEC-092 to the model; version 0.8 adds `support_threads.closed_by_lift` (DEC-117); version 0.9 applies DEC-119 to DEC-124 (indexes, French full-text search, hashtag prefix index, `updated_at` set by the application); version 0.10 adds `idempotency_keys` (section 9.1, 24-hour expiry) and the 1-to-280 CHECK on `replies.body`; version 0.11 adds `rate_limit_counters` (section 9, DEC-194); the worked example in section 7 must be recalculated (**À recalculer**).
 
 ## Contents
 - [1. Accounts and authentication](#1-accounts-and-authentication)
@@ -90,7 +90,7 @@ Every person with an account. This is the central table: almost every other tabl
 | `email` | `varchar(254)` | Yes | Unique |  | Login email address. Unique, stored in lowercase. Replaced by a unique placeholder at purge (DEC-024). |
 | `phone` | `varchar(20)` | No | Unique |  | Optional (D2). Stored normalised, e.g. 0601020304. Not used for login in v1. Not editable in v1 (DEC-105). |
 | `password_hash` | `varchar(255)` | Yes | — |  | Hash of the password. The plain password is never stored. Replaced by an unusable value at purge (DEC-024). |
-| `birth_date` | `date` | No | — |  | Date of birth. Signup rejects users under 18. Null after purge. Age check: VerifAge (DEC-019). |
+| `birth_date` | `date` | No | — |  | Date of birth, declared at signup. Signup rejects users under 18. Null after purge (DEC-216). |
 | `bio` | `varchar(160)` | No | — |  | Short profile biography. Maximum 160 characters (D3). |
 | `avatar_url` | `varchar(2048)` | No | — |  | Link to the profile picture. |
 | `status` | `account_status` | Yes | — | `pending_verification` | `pending_verification`, `active`, `suspended` (by the administrator), `pending_deletion` (90-day window, R16) or `deleted` (purged). Only `active` accounts can post, react, reply, follow or bookmark (R13, DEC-086). Content of accounts that are not `active` is hidden from others (DEC-086, DEC-087). |
@@ -190,7 +190,7 @@ One-time codes that confirm a new email address («Modifier e-mail»). The new a
 
 ### `age_verifications`
 
-Result of the 18+ age check through the VerifAge service (DEC-019). Each user has at most one. The mechanism (callback with server-side confirmation, DEC-020) waits for the VerifAge API documentation.
+Result of the 18+ age check from the declared birth date (DEC-216). Each user has at most one.
 
 **Links**
 
@@ -202,7 +202,7 @@ Result of the 18+ age check through the VerifAge service (DEC-019). Each user ha
 |---|---|---|---|---|---|
 | `id` | `uuid` | Yes | Primary key | generated (UUID) | Unique identifier of the check. |
 | `user_id` | `uuid` | Yes | Unique, FK → `users.id` |  | The user who was checked. Unique: one check per user. |
-| `provider` | `varchar(50)` | Yes | — | `VerifAge` | Name of the age-verification service. |
+| `provider` | `varchar(50)` | Yes | — | `declared` | Source of the age check: `declared` (DEC-216). |
 | `provider_reference` | `varchar(255)` | No | — |  | Reference returned by the provider, used to find the check again. No identity data is stored here. |
 | `status` | `age_check_status` | Yes | — | `pending` | Result: pending, verified or failed. |
 | `checked_at` | `timestamptz(3)` | No | — |  | When the result was received. |
@@ -995,5 +995,5 @@ Enums are fixed lists of values stored in a column.
 These points are still open (no decision recorded):
 - Targets of reports beyond questions and replies: messages, profiles and mentions are not reportable in v1.
 - Account rules that need a legal review: the 90-day window, the fate of content at purge, and the retention periods (privacy policy, section 6).
-- Age check (R15): the provider is VerifAge; the mechanism waits for the API documentation (DEC-020).
+- Age check (R15): the birth date declared at signup decides (DEC-216).
 - Contact (DEC-080): the default `none` of `support_messages.channel` is confirmed on 2026-10-19: messages stay in the site database and are handled only from the administration panel. The meaning of `replied` and `closed` and their transitions are set by DEC-116. How to tell a thread closed by a lifting from one closed by hand is set by DEC-117 (`closed_by_lift`).

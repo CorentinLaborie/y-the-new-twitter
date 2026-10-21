@@ -8,7 +8,7 @@
 | **Audience** | Product owner, designers, frontend and backend developers, reviewers |
 | **Companion documents** | [`database/y-database.dbml`](database/y-database.dbml) (schema source), [`database/y-database-documentation.md`](database/y-database-documentation.md) (column reference) |
 
-> **Status:** Draft. The product scope is defined by the design boards and this document (full list). The technical stack and API are proposals until the project is scaffolded. Decisions are recorded in section 19 and in the decision journal (`docs/decisions/journal-decisions.md`). The age check uses VerifAge (R7, DEC-019); its exact mechanism waits for the VerifAge API documentation (DEC-020).
+> **Status:** Draft. The product scope is defined by the design boards and this document (full list). The technical stack and API are proposals until the project is scaffolded. Decisions are recorded in section 19 and in the decision journal (`docs/decisions/journal-decisions.md`). The age check uses the birth date declared at signup (R7, DEC-216), with no external provider.
 
 ---
 
@@ -75,7 +75,7 @@ These rules are binding for every feature. They come from explicit product decis
 | R4 | Questions are grouped and sorted **by hashtags only**. Never add topic categories (for example "Philosophie · Tendance"). | Product decision, 2026-10-15 |
 | R5 | **Feature parity**: Desktop, Tablet and Mobile expose the same features and actions. Layout adapts; features are never dropped. Overflow actions go into menus or modals. | Product decision, 2026-10-15 |
 | R6 | **Y mirrors X (Twitter)**. Do not invent pages or flows X does not have. Prefer inline expansion over new pages ("Voir plus de réponses" loads more replies inline). The only exception is the share view `/questions/{id}`, reachable from a shared link and never from navigation (D4). | Product decision, 2026-10-15; D4 (proposed default) |
-| R7 | Users must be **18 or older**. Signup rejects younger birth dates, and the age check goes through VerifAge. | Landing page |
+| R7 | Users must be **18 or older**. Signup rejects younger birth dates. The age is the birth date declared at signup (DEC-216). | Landing page |
 | R8 | The UI is in **French**. Copy must not contain lorem ipsum or invented statistics. | Design boards |
 | R9 | The UI is **light theme only**. | Design system |
 | R10 | Notification times are relative ("il y a 2 h") for recent events. | Product decision, 2026-10-15 |
@@ -83,7 +83,7 @@ These rules are binding for every feature. They come from explicit product decis
 | R12 | A question that does not reach 50 Y **stays forever** in the feed, trends and search, like any post. Nothing is archived or deleted automatically. It can keep receiving reactions. Replies open only at 50 Y (R3). | Decision of the product owner, 2026-10-16 |
 | R13 | Only **`active` accounts** can post, react, reply, follow and save. Accounts in any other status (suspended, pending deletion, deleted, pending verification) are hidden from every feed, search, trend, suggestion, explore list and notification of other users (DEC-086). There is **no account-age condition and no quota** on actions. A user **may react to their own question**. Only `active` accounts count toward the 50 Y threshold: the reactions and replies of an account that stops being active leave the counters (Y, likes, dislikes, replies) in the same transaction as the status change, and come back when it is active again. An open conversation **stays open** even if Y counts drop. | Decision of the product owner, 2026-10-16; DEC-086, 2026-10-19 |
 | R14 | A user can **block** another account. Blocked content is hidden both ways, neither can follow, message or mention the other, and **blocking removes follows in both directions**. Blocking is in v1. | Decision of the product owner, 2026-10-16 (D12) |
-| R15 | **Age check with VerifAge.** The provider is chosen (DEC-019). The verification mechanism is **on hold**: it waits for the VerifAge API documentation, requested from the provider by the owner (DEC-020). R7 stays binding. | Decision of 2026-10-16 |
+| R15 | **Age check by declared birth date.** No external provider (DEC-216): the birth date declared at signup decides, 18 or older. A false declaration is not detected. | Decision of 2026-10-21 |
 | R16 | **Account deletion with a 90-day window.** On request, the account is suspended for deletion: it can no longer publish, react, reply or message. Its data is kept for 90 days, during which the user can cancel by logging back in. After 90 days, the account and its personal data are purged. This also serves as the GDPR right to erasure. | Decision of the product owner, 2026-10-16 (DEC-024) |
 | R17 | **Moderation is handled by the sole administrator** through the back-office (section 3.3). Moderation actions (hide, remove, restore, suspend) are logged and reversible where stated. | Decision of 2026-10-16 (DEC-025) |
 | R18 | **Email is used only for what matters.** Sent immediately: codes (signup, password, email change), password changed, email changed, deletion requested or cancelled, account suspended or reactivated, administrator login alert. Notifications (replies, reactions, follows, mentions) are **never** sent one by one: they are grouped into one **daily digest**, sent only when there is something new. The administrator's daily summary follows the same rule: sent only when reports are open. Brevo's free plan allows 300 e-mails a day (DEC-018). | Decision of the product owner, 2026-10-16 (DEC-041) |
@@ -96,12 +96,12 @@ These rules are binding for every feature. They come from explicit product decis
 
 | Area | Feature | Notes |
 |---|---|---|
-| Account | Signup with username, display name, date of birth, email, optional phone, password, terms acceptance | Display name is required and can be changed later (DEC-083). Phone optional, labelled « Téléphone (facultatif) » (D2, DEC-100). Date of birth is stored for the age check (VerifAge, R15) |
+| Account | Signup with username, display name, date of birth, email, optional phone, password, terms acceptance | Display name is required and can be changed later (DEC-083). Phone optional, labelled « Téléphone (facultatif) » (D2, DEC-100). Date of birth is stored for the age check (declared, R15, DEC-216) |
 | Account | Email verification with a 6-digit code | Resend creates a new code |
 | Account | Login with email address and password | No phone field: the form is labelled « Adresse e-mail » (DEC-094). Phone login is out of v1 (D2, DEC-007) |
 | Account | Forgot password | Code by email |
 | Account | Change email | Code sent to the new address |
-| Account | Age check (18+) | VerifAge (R7, R15). Mechanism pending the API documentation (section 3.2) |
+| Account | Age check (18+) | Declared birth date (R7, R15, DEC-216) |
 | Account | Logout with confirmation | |
 | Feed | "Pour vous" tab (M2): most trending and most recent questions, from everyone | Definition in D17 |
 | Feed | "Abonnements" tab (M4): followed accounts, newest first. "Pour vous" also gains followed accounts' trending and recent questions in M4 | Follows arrive in M4 |
@@ -143,7 +143,7 @@ These rules are binding for every feature. They come from explicit product decis
 2. The API validates the data and creates the account with status `pending_verification`.
 3. A 6-digit code is emailed. The user enters it on the code screen.
 4. On success, the account becomes `active`. On error, the user can resend the code.
-5. **Age check (VerifAge).** The provider is chosen. The exact flow is defined once the VerifAge API documentation is available (R7, R15, DEC-019, DEC-020).
+5. **Age check (declared birth date).** The birth date declared at signup decides; no provider is used (R7, R15, DEC-216).
 
 **Login**
 1. User enters email address and password (DEC-094).
@@ -264,7 +264,7 @@ flowchart LR
     end
     subgraph External
         M[Email provider]
-        V[VerifAge API]
+        V[Date de naissance déclarée]
     end
 
     B -->|HTTPS| N
@@ -433,7 +433,7 @@ Organize by feature, then by layer. The tree is the target. Today `src/` holds `
 ```
 src/
 ├── auth/            # signup, login, codes, password reset, email change
-├── age/             # VerifAge integration
+├── age/             # age decision from the declared birth date
 ├── users/           # profiles, follows
 ├── questions/       # posts, feed, counters
 ├── replies/         # replies and reply reactions
@@ -539,8 +539,6 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 | POST | `/auth/password-reset/confirm` | Validate the code and set a new password |
 | POST | `/auth/email-change/request` | Send a code to the new address |
 | POST | `/auth/email-change/confirm` | Validate the code and switch the email |
-| POST | `/age-verification` | Start the VerifAge check. Returns the URL to redirect the user to (provider chosen, DEC-019; exact mechanism pending the API documentation, DEC-020) |
-| POST | `/webhooks/verifage` | Result sent by VerifAge, server to server. Signature checked before any change. Not callable by users (DEC-020, proposed) |
 
 **Account and profiles**
 
@@ -912,7 +910,7 @@ Each screen below exists on desktop, tablet and mobile (rule R5). Only its conta
 | CSRF | Enabled for all mutations, with a double-submit token (DEC-138). The cookie is `y_csrf` and the header is `X-CSRF-Token`. The frontend reads the cookie, and first makes a safe request to `/api/v1/status` when the cookie is missing (DEC-149). |
 | CORS | Allow only the frontend origin. |
 | Input | Validate every request DTO. Escape user content on render (React does this by default). Never render raw HTML from users. |
-| Age | 18+ at signup. VerifAge is the source of the age decision. Store the provider reference, never identity documents. |
+| Age | 18+ at signup, from the declared birth date (DEC-216). Store the age result, never identity documents. |
 | Personal data | Minimize collection. Email and phone are visible only to the account owner. The administrator sees the email masked, revealed only by a logged action (section 3.3). |
 | Administration | Separate `/admin` area, role checked on the server, non-discoverable, TOTP two-factor login, short sessions, re-authentication for sensitive actions, append-only audit log (section 3.3). |
 | Deletion | Soft delete for content (moderation). After 90 days, the text and links of deleted content are erased, and the row stays as a placeholder for replies from others (DEC-067). Account deletion: 90-day window, then purge (R16, DEC-024). Needs legal review. Logs and backups follow the retention table below and the privacy policy. |
@@ -1000,13 +998,14 @@ The names are the ones used in the code (`backend/src/config/env.validation.ts`)
 | `BACKUP_CODE_HMAC_KEY` | Secret key for the HMAC of the administrator backup codes (DEC-114) |
 | `SESSION_SECRET` | Secret that signs the session cookie (DEC-131). Never committed |
 | `BREVO_API_KEY` / `MAIL_FROM_ADDRESS` | Email provider: Brevo, free plan, 300 e-mails a day, through its API (DEC-018). Required in production, checked at startup; `MAIL_FROM_ADDRESS` must be an address of a domain validated in Brevo. Outside production, e-mails are captured, not sent |
-| `VERIFAGE_BASE_URL` / `VERIFAGE_API_KEY` | Age verification service |
 | `APP_PUBLIC_URL` | Public URL of the frontend (links in emails, CORS) |
 | `TRUST_PROXY_HOPS` | Reverse proxies in front of the API (default `0`). Behind one proxy that sets `X-Forwarded-For`, set `1`: the rate limits of section 9.4 are then per visitor, not per proxy |
 | `Y_CONVERSATION_THRESHOLD` | Number of Y that opens a conversation (default `50`) |
 | `Y_CODE_TTL_MINUTES` | Validity of the signup and reset codes, in minutes (default `15`) |
 
-At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `SESSION_SECRET`, `APP_PUBLIC_URL`, `TRUST_PROXY_HOPS`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`, and in production also `BREVO_API_KEY` and `MAIL_FROM_ADDRESS`. A missing or invalid value stops the start, and only its name is printed. The e-mail and VerifAge keys are not checked yet: they come with their steps (M1).
+At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `SESSION_SECRET`, `APP_PUBLIC_URL`, `TRUST_PROXY_HOPS`, `Y_CONVERSATION_THRESHOLD` and `Y_CODE_TTL_MINUTES`, and in production also `BREVO_API_KEY` and `MAIL_FROM_ADDRESS`. A missing or invalid value stops the start, and only its name is printed. No age-provider key exists (DEC-216). The e-mail key is checked in production only.
+
+**Domains (DEC-217).** Personal site at `corentin-laborie.com`. Y at `y.corentin-laborie.com`. Micro-investor at `my-micro-investor.corentin-laborie.com`. Back-offices: `admin-y.corentin-laborie.com` and `admin-micro.corentin-laborie.com`, each on its own host, all under one wildcard certificate `*.corentin-laborie.com`. Back-office origins are allowed in CORS only.
 | `Y_CODE_TTL_MINUTES` | Lifetime of codes (default `15`, D8) |
 
 ---
@@ -1059,7 +1058,7 @@ At startup, the backend checks `NODE_ENV`, `DATABASE_URL`, `DATABASE_MAINTENANCE
 | Milestone | Goal | Exit criteria |
 |---|---|---|
 | **M0 — Foundations** | Monorepo, NestJS and Next.js skeletons pinned to the versions in section 5, Docker Compose PostgreSQL, CI, initial Prisma migration from the DBML, test tooling, staging environment, backup job and rollback plan (forward-only migrations) | `docker compose up` starts everything; CI green; a backup restores on staging |
-| **M1 — Accounts** | Signup, codes (expired codes purged daily), login (each attempt written to `login_events`), logout, forgot password, change email, e-mail sending through Brevo, age check (mock provider until the VerifAge documentation is available, DEC-021) | End-to-end signup and login tests pass; rate limiting (section 9.4) active and tested |
+| **M1 — Accounts** | Signup, codes (expired codes purged daily), login (each attempt written to `login_events`), logout, forgot password, change email, e-mail sending through Brevo, age check from the declared birth date (DEC-216) | End-to-end signup and login tests pass; rate limiting (section 9.4) active and tested |
 | **M2 — Questions** | Post, feed "Pour vous" (trending and recent, D17), question reactions, Y progress, erasure of deleted content after 90 days (section 13) | 280-character rule enforced; counters correct under concurrent reactions; "Pour vous" shows trending and recent questions in date order |
 | **M3 — Conversations** | 50 Y opens the conversation; replies, reply reactions, "Voir plus de réponses", mentions. Notification events are written here, shown in M5 | Replies refused below 50 Y; cursor pagination verified; the events for 50 Y and mentions are stored |
 | **M4 — Social and discovery** | Follows, block, the "Abonnements" tab, followed accounts in "Pour vous", unfollow in the "⋯" menu, profiles, followers lists, suggestions, hashtags, trends, search, Signets and the Save button | Explore and profile flows pass on all breakpoints; "Abonnements" lists followed accounts only; "Pour vous" mixes in followed accounts; blocking removes follows in both directions |
@@ -1089,7 +1088,7 @@ A feature is built in the milestone where what it needs already exists. This tab
 | Retention purge (login events, audit log) | `login_events`, `admin_audit_log` | M7 | DEC-059, DEC-066 |
 | Audit hash chain | `admin_audit_log.prev_hash` | M7 | DEC-063, DEC-064, DEC-127, DEC-128 |
 | Account deletion request and purge | Users, purge job | M7 | Logged by the audit log (M7) |
-| Age check | VerifAge provider | M1, with a mock until the API documentation is available | Decision DEC-020 on hold |
+| Age check | Declared birth date (no provider) | M1 | Decision DEC-216 |
 | Login and sign-up e-mails | Brevo | M1 | Rule R18 |
 
 ---
@@ -1114,12 +1113,12 @@ Status of each decision: **validated default** (owner validation recorded in the
 | D12 | Blocking and muting | Out of v1 / include | Feature scope, section 1.4 | Blocking included in v1 (R14). Muting of accounts out of scope. Conversation mute included (D5) |
 | D13 | Hosting provider | To choose | Deployment | OVH, data in France (DEC-017). Cost accepted by the owner (DEC-044) |
 | D14 | Email provider | To choose | Codes, notifications, admin alerts | Brevo, free plan, 300 e-mails per day. API and SDK included, confirmed by the owner (DEC-018) |
-| D15 | Age verification provider | To choose | Signup | VerifAge (DEC-019). Mechanism: callback with server-side confirmation (DEC-020), pending the API documentation |
+| D15 | Age verification | Declared birth date | Signup | No external provider (DEC-216) |
 | D16 | Administration | Public area / separate area | Back-office | Separate `/admin` area for the sole administrator, with two-factor login (DEC-025) |
 | D17 | "Pour vous" feed | Defined by the owner, 2026-10-16 | Feed, API `/feed?tab=for-you` | Most trending and most recent questions, from everyone and from followed accounts (followed accounts from M4). Shown newest first. Trending = most reactions in the last 24 hours (confirmed by the owner, DEC-046). "Abonnements" tab (M4): followed accounts, newest first |
 | D18 | Rate-limit values | Proposed values in section 9.4 | Security, API | Retained as proposed defaults (DEC-040) |
 
-**Age check (R7, R15):** the provider is chosen (VerifAge). The exact mechanism waits for the VerifAge API documentation, which has not been found online and must be requested from the provider (DEC-020).
+**Age check (R7, R15):** the birth date declared at signup decides; no external provider is used (DEC-216). A false declaration is not detected.
 
 ---
 

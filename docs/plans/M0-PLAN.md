@@ -20,7 +20,7 @@ These need your decision or your account. Nothing below can start until they're 
 | 0.2 | **Choose the repository folder name** | The product doc said `design/`, but the folder was named `claude-design-assets/` and an empty `designs/` existed. | **Decided: `design/`.** The old name was replaced everywhere, and the empty `designs/` folder was removed. |
 | 0.3 | **Create the OVH server** (5 to 10 euros a month, France) | Needed for staging (step 10) and backups (step 11). | Server is created. You send me the SSH access method. |
 | 0.4 | **Create the Brevo account** (free plan) | Needed later for e-mail. The API and SDK are included, per DEC-018. Not needed for M0 code, but needed before M1. | Account created. API key kept out of Git. |
-| 0.5 | **Request the VerifAge API documentation** | Needed for the age check in M1 (DEC-020). M1 uses a mock until then (DEC-021). | Documentation received. |
+| 0.5 | **Age check provider** | No external provider: the birth date declared at signup decides (DEC-216). | Decision recorded. |
 | 0.6 | **Confirm the "Pour vous" trending rule** | Needed in M2, not M0. Tracked in D17. | Done: confirmed by the owner, "most reactions in the last 24 hours" (DEC-046). |
 
 ---
@@ -189,13 +189,13 @@ These need your decision or your account. Nothing below can start until they're 
 | 15.3 | A backup restores on staging | Restore result written (step 12.2) |
 | 15.4 | Health endpoint returns `ok` on local and staging | Both respond |
 
-When every check is done, M0 is complete. Next milestone: **M1 — Accounts**, which needs the VerifAge documentation (step 0.5) for the real age check.
+When every check is done, M0 is complete. Next milestone: **M1 — Accounts**, with the age check from the declared birth date (DEC-216).
 
 ---
 
 ## Order at a glance
 
-1. **You:** 0.1 to 0.6 (GitHub, folder name, OVH, Brevo, VerifAge documentation, trending rule)
+1. **You:** 0.1 to 0.6 (GitHub, folder name, OVH, Brevo, age check provider (DEC-216), trending rule)
 2. **Repository:** 1.1 to 1.3, then 2.1 to 2.3
 3. **Backend:** 3.1 to 3.10
 4. **Database:** 4.1 to 4.7, then 5.1

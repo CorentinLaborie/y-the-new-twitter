@@ -76,9 +76,9 @@ Le projet utilise **Brevo**, un service d'envoi d'e-mails, avec son outil offici
 
 ---
 
-## 8. Le vérificateur d'âge : VerifAge
+## 8. La vérification de l'âge
 
-Y est réservé aux adultes. Pour s'en assurer, Y demande à un service extérieur, **VerifAge**, de vérifier l'âge. C'est comme un agent à la porte qui regarde une pièce d'identité, sans que Y ait besoin de la garder.
+Y est réservé aux adultes. À l'inscription, la personne indique sa date de naissance. Y refuse l'inscription si elle n'a pas 18 ans. Y ne demande aucune pièce d'identité.
 
 ---
 
@@ -109,7 +109,7 @@ Plus tard, quand une réponse arrive ou qu'un message est envoyé, le serveur pe
 | npm | La liste de courses | Installe les bibliothèques |
 | Jest, Supertest, Testcontainers | Le contrôle qualité | Vérifie que le code marche |
 | Brevo | Le facteur | Envoie les e-mails (codes, alertes) |
-| VerifAge | Le vérificateur d'âge | Confirme que l'utilisateur est adulte |
+| Date de naissance | La vérification de l'âge | Confirme que l'utilisateur a 18 ans ou plus |
 | Docker | La boîte de transport | Fait fonctionner partout la même chose |
 
 **Le plus important à retenir :** la salle (frontend) et la cuisine (backend) se parlent par des bons de commande (l'API). La cuisine range tout dans l'armoire (la base de données). Chaque outil a un seul travail, et c'est ce qui rend l'ensemble facile à faire grandir.

@@ -174,7 +174,7 @@ Table users {
   email varchar(254) [unique, not null, note: 'Login by email and password (D2). Stored lowercase. At purge (DEC-024) replaced by a unique placeholder.']
   phone varchar(20) [unique, note: 'Optional (D2). Stored normalised, shown as 0601020304. Not used for login in v1. Not editable in v1 (DEC-105).']
   password_hash varchar(255) [not null, note: 'Never store plain text. Min 8 chars enforced at app level. Replaced by an unusable value at purge (DEC-024).']
-  birth_date date [note: 'Signup rejects under 18. Set to null at purge (DEC-024). Age check: VerifAge (DEC-019).']
+  birth_date date [note: 'Signup rejects under 18. Set to null at purge (DEC-024). Age: declared birth date (DEC-216).']
   bio varchar(160) [note: 'Maximum 160 characters (D3).']
   avatar_url varchar(2048)
   status account_status [not null, default: 'pending_verification', note: 'Only active accounts can post, react, reply, follow or bookmark (R13, DEC-086).']
@@ -250,11 +250,11 @@ Table email_change_codes {
 Table age_verifications {
   id uuid [pk, default: `gen_random_uuid()`]
   user_id uuid [unique, not null, ref: - users.id]
-  provider varchar(50) [not null, default: 'VerifAge']
+  provider varchar(50) [not null, default: 'declared']
   provider_reference varchar(255) [note: 'External id, never the raw identity data.']
   status age_check_status [not null, default: 'pending']
   checked_at timestamptz(3)
-  Note: 'Provider VerifAge chosen (DEC-019). The mechanism (callback with server-side confirmation, DEC-020) waits for the VerifAge API documentation. Structure ready.'
+  Note: 'Provider declared: the age is the birth date declared at signup (DEC-216).'
 }
 
 Table login_events {

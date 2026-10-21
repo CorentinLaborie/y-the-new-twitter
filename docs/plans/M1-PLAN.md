@@ -2,7 +2,7 @@
 
 > **Status (2026-10-19):** decisions validated (DEC-136 to DEC-141). Building locally. Steps are validated one by one, and each validated step is committed on its own (owner rule).
 >
-> **Not done in M1, on purpose:** the real VerifAge check (documentation pending, step 0.5), the Brevo account (on hold, DEC-110), the settings screens (M7, DEC-140), and the CI and staging steps of M0 (8 to 12, 15), which wait for the end.
+> **Not done in M1, on purpose:** a real age-provider check (none chosen, DEC-216), the Brevo account (on hold, DEC-110), the settings screens (M7, DEC-140), and the CI and staging steps of M0 (8 to 12, 15), which wait for the end.
 
 Exit criteria (roadmap, section 18): end-to-end signup and login tests pass; rate limiting (section 9.4) active and tested.
 
@@ -15,7 +15,7 @@ Exit criteria (roadmap, section 18): end-to-end signup and login tests pass; rat
 | Codes | 6 digits, hashed with argon2, expiry, 5 attempts, single use | DEC-137 |
 | Unverified account | Cannot log in until the e-mail code is validated | DEC-137 |
 | Signup order | E-mail code, then age check | DEC-137 |
-| VerifAge | Mock chosen by birth date (under 18: refused), until the real documentation | DEC-137, DEC-021 |
+| Age | Declared birth date, under 18 refused, no external provider | DEC-137, DEC-216 |
 | Tests | Supertest reads the capture outbox for codes; Playwright uses a mocked API | DEC-139 |
 | Settings screens | Endpoints in M1, screens in M7 | DEC-140 |
 | Rate limits and Brevo | Account counters in the database, IP limits in memory; Brevo adapter tested with a fake HTTP, never called locally | DEC-141 |
@@ -27,7 +27,7 @@ Base path `/api/v1`. Errors are Problem Details (`application/problem+json`). Co
 | Method and path | Body | Success | Errors |
 |---|---|---|---|
 | `POST /auth/signup` | `handle`, `displayName`, `email`, `password`, `birthDate` (YYYY-MM-DD), `termsAccepted: true`, `termsVersion: "1.0"`, optional `phone` | 202, empty body, **the same whether the e-mail exists or not** | 400/422 rule violations; 409 when the handle is taken |
-| `POST /auth/signup/verify` | `email`, `code` | 200, account `active`, age check run (mock) | 422 wrong, expired or exhausted code; 422 age refused |
+| `POST /auth/signup/verify` | `email`, `code` | 200, account `active`, age check run (declared birth date) | 422 wrong, expired or exhausted code; 422 age refused |
 | `POST /auth/signup/resend` | `email` | 202, empty body, same answer in every case | 429 |
 | `POST /auth/login` | `email`, `password` | 200 `{ user: { handle, displayName } }` and a `SESSION` cookie | 401 generic "Identifiants incorrects"; 403 account not verified; 429 with `Retry-After` when locked or too many attempts |
 | `POST /auth/logout` | none | 204 | |
@@ -57,7 +57,7 @@ Rules: the handle is ASCII, 30 characters at most, unique regardless of case. Th
 | B7 | `POST /auth/signup`: creates a `pending_verification` account, sends the code. Same answer whether the e-mail exists or not (section 9.4) | Test |
 | B8 | `POST /auth/signup/verify`: checks the code, 5 attempts, moves the account to `active` | Test |
 | B9 | `POST /auth/signup/resend`: new code, old code invalidated | Test |
-| B10 | Age check: `AgeVerifier` interface, mock by birth date, `age_verifications` row | Test |
+| B10 | Age check: `AgeVerifier` interface, declared birth date, `age_verifications` row | Test |
 
 ### Login and session
 | # | Task | Done when |

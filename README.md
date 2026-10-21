@@ -61,6 +61,12 @@ psql -U <owner> -d <db> -v db=<db> -v app_password=â€¦ -v maintenance_password=â
 
 Further reading: [docs index](docs/README.md), [rollback procedure](docs/operations.md), [product doc](docs/y-product-and-web-documentation.md).
 
+### Production (server)
+
+- Variables to define on the server, never in Git: the same list as `.env.example`, with real values. Required at startup: `NODE_ENV=production`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `TOTP_ENCRYPTION_KEY`, `SESSION_SECRET`, `BREVO_API_KEY`, `MAIL_FROM_ADDRESS`, `APP_PUBLIC_URL`. `TRUST_PROXY_HOPS` is `1` behind one reverse proxy.
+- Backups and restore checks: see [ops/backup/README.md](ops/backup/README.md).
+- Age check: the birth date declared at signup, refused under 18 (decision DEC-216).
+
 ## Contribution rules
 
 - The branch `main` is the trunk. Work happens on short-lived branches.

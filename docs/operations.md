@@ -44,6 +44,8 @@ A migration that broke data, or that the old version cannot run with, is **never
 
 ## 5. Restoring the database from a dump
 
+The backups are written by ops/backup/backup.sh (encrypted with openssl, 14 days kept). The restore check is ops/backup/restore.sh, which decrypts a dump into a scratch database and compares row counts with the source.
+
 The restore always goes to a **new** database. The damaged database is kept until the restore is checked, then removed by a person, not by a script.
 
 ```bash
@@ -77,5 +79,6 @@ Restoring loses the data written after the dump. The decision to switch is taken
 ## 8. What is not covered yet
 
 - Automatic rollback: not planned for M0.
-- Restore on the staging server: step 12, after the OVH server is set up (postponed by the owner).
+- Restore on the staging server: step 12, after the OVH server is set up. The scripts are tested locally only.
+- The nightly backup job (cron) is not installed yet: it is set up on the server with the encryption key, which never goes to Git (M0 step 11).
 - Rollback of the e-mail provider: no provider is connected yet (DEC-110).
