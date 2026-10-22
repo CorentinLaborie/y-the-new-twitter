@@ -33,6 +33,8 @@ const RESERVED_HANDLES: readonly string[] = [
 const HANDLE_PATTERN = /^[A-Za-z0-9_]+$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const BIRTH_DATE_PATTERN = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+/** The value of a native `<input type="date">`. */
+const ISO_BIRTH_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 /** Same French format as normalisePhone in account-rules.ts, once spaces, dots and dashes are removed. */
 const PHONE_PATTERN = /^(?:\+33|0)[1-9]\d{8}$/;
 const CODE_PATTERN = /^\d{6}$/;
@@ -122,15 +124,24 @@ export function validatePasswordConfirmation(password: string, confirmation: str
   return undefined;
 }
 
-/** Converts JJ/MM/AAAA to YYYY-MM-DD. Returns null when the text is not a real calendar date. */
+/**
+ * Reads a birth date given as YYYY-MM-DD (native date input) or JJ/MM/AAAA, and returns it as YYYY-MM-DD.
+ * Returns null when the text is not a real calendar date.
+ */
 export function toIsoBirthDate(value: string): string | null {
-  const match = BIRTH_DATE_PATTERN.exec(value.trim());
-  if (!match) {
+  const text = value.trim();
+  const iso = ISO_BIRTH_DATE_PATTERN.exec(text);
+  const french = BIRTH_DATE_PATTERN.exec(text);
+  let year: number;
+  let month: number;
+  let day: number;
+  if (iso) {
+    [year, month, day] = [iso[1], iso[2], iso[3]].map(Number);
+  } else if (french) {
+    [day, month, year] = [french[1], french[2], french[3]].map(Number);
+  } else {
     return null;
   }
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
   const date = new Date(Date.UTC(year, month - 1, day));
   if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
     return null;

@@ -14,7 +14,7 @@ function fillValidForm() {
     target: { value: 'Jeannot Dupont' },
   });
   fireEvent.change(screen.getByLabelText('Identifiant'), { target: { value: 'Jeannot45' } });
-  fireEvent.change(screen.getByLabelText('Date de naissance'), { target: { value: '01/02/1990' } });
+  fireEvent.change(screen.getByLabelText('Date de naissance'), { target: { value: '1990-02-01' } });
   fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: '  Jeannot@Exemple.fr ' } });
   fireEvent.change(screen.getByLabelText('Mot de passe'), { target: { value: 'Secret-42!' } });
   fireEvent.change(screen.getByLabelText('Confirmer le mot de passe'), { target: { value: 'Secret-42!' } });
@@ -38,6 +38,7 @@ describe('SignupForm', () => {
 
     expect(await screen.findByText('Le nom affiché est obligatoire.')).toBeInTheDocument();
     expect(screen.getByText('Le pseudo est obligatoire.')).toBeInTheDocument();
+    expect(screen.getByText('La date de naissance est obligatoire.')).toBeInTheDocument();
     expect(screen.getByText('Confirmez votre mot de passe.')).toBeInTheDocument();
     expect(screen.getByText('Vous devez accepter les conditions d’utilisation.')).toBeInTheDocument();
     expect(screen.getByLabelText('Nom affiché (obligatoire)')).toHaveFocus();
@@ -62,6 +63,29 @@ describe('SignupForm', () => {
       termsAccepted: true,
       termsVersion: '1.0',
     });
+  });
+
+  it('uses a native date picker for the birth date, which cannot go past today', () => {
+    render(<SignupForm />);
+
+    const birthDate = screen.getByLabelText('Date de naissance');
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    expect(birthDate).toHaveAttribute('type', 'date');
+    expect(birthDate).toHaveAttribute('max', today);
+  });
+
+  it('refuses a birth date under 18 before calling the API', async () => {
+    render(<SignupForm />);
+
+    fillValidForm();
+    fireEvent.change(screen.getByLabelText('Date de naissance'), { target: { value: '2012-03-04' } });
+    submit();
+
+    expect(await screen.findByText('Vous devez avoir au moins 18 ans.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Date de naissance')).toHaveFocus();
+    expect(signup).not.toHaveBeenCalled();
   });
 
   it('puts a taken handle under the handle field', async () => {

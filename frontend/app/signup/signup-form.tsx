@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import { Button } from '@/components/auth/button';
 import { Checkbox } from '@/components/auth/checkbox';
 import { signupProblemMessage } from '@/components/auth/messages';
@@ -33,6 +33,23 @@ const FIELD_ORDER: readonly SignupField[] = [
   'termsAccepted',
 ];
 
+/** Today in the visitor's time zone as YYYY-MM-DD, the latest birth date the date picker accepts. */
+function todayIsoDate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+/** The date does not change while the page is open, so nothing has to be subscribed to. */
+function subscribeToNothing(): () => void {
+  return () => {};
+}
+
+function noDateOnServer(): undefined {
+  return undefined;
+}
+
 const EMPTY_VALUES: SignupValues = {
   displayName: '',
   handle: '',
@@ -51,6 +68,8 @@ export function SignupForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const inputs = useRef<Partial<Record<SignupField, HTMLInputElement | null>>>({});
+  // The date is read on the visitor's side only: the prerendered page has no `max`.
+  const latestBirthDate = useSyncExternalStore(subscribeToNothing, todayIsoDate, noDateOnServer);
 
   function setField<Field extends SignupField>(field: Field, value: SignupValues[Field]) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -145,10 +164,9 @@ export function SignupForm() {
           id="birthDate"
           name="birthDate"
           label="Date de naissance"
-          placeholder="JJ/MM/AAAA"
-          icon="calendar"
+          type="date"
+          max={latestBirthDate}
           autoComplete="bday"
-          inputMode="numeric"
           value={values.birthDate}
           onChange={(event) => setField('birthDate', event.target.value)}
           error={errors.birthDate}

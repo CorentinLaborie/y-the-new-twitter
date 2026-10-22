@@ -4,19 +4,14 @@ import { bodyOf, expectCodePage, mockAuthApi, notice, problem, ui } from './auth
 const EMAIL = 'nouvel.utilisateur@example.com';
 const ADULT_BIRTH_DATE = '1990-05-12';
 
-// The form takes the date as JJ/MM/AAAA; the API receives the ISO form (AAAA-MM-JJ).
-function frenchDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split('-');
-  return `${day}/${month}/${year}`;
-}
-
 async function fillSignupAndSubmit(page: Page, email: string, birthDate: string): Promise<void> {
   await page.getByLabel(ui.handle, { exact: true }).fill('alice');
   await page.getByLabel(ui.displayName, { exact: true }).fill('Alice');
   await page.getByLabel(ui.signupEmail, { exact: true }).fill(email);
   await page.getByLabel(ui.password, { exact: true }).fill('Secret1234!');
   await page.getByLabel(ui.passwordConfirm, { exact: true }).fill('Secret1234!');
-  await page.getByLabel(ui.birthDate, { exact: true }).fill(frenchDate(birthDate));
+  // The native date input takes and returns YYYY-MM-DD, the same format the API receives.
+  await page.getByLabel(ui.birthDate, { exact: true }).fill(birthDate);
   await page.getByLabel(ui.terms, { exact: true }).check();
   await page.getByRole('button', { name: ui.submitSignup, exact: true }).click();
 }

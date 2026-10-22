@@ -119,8 +119,14 @@ describe('birth date (18 years minimum, R7)', () => {
     expect(toIsoBirthDate('31/12/2000')).toBe('2000-12-31');
   });
 
+  it('keeps the YYYY-MM-DD value of the native date input', () => {
+    expect(toIsoBirthDate('1990-02-01')).toBe('1990-02-01');
+    expect(validateBirthDate('2008-10-19', TODAY)).toBeUndefined();
+  });
+
   it('rejects text that is not a real calendar date', () => {
-    expect(toIsoBirthDate('1990-02-01')).toBeNull();
+    expect(toIsoBirthDate('1990/02/01')).toBeNull();
+    expect(toIsoBirthDate('1990-02-31')).toBeNull();
     expect(toIsoBirthDate('31/02/1990')).toBeNull();
     expect(toIsoBirthDate('29/02/2001')).toBeNull();
   });
@@ -132,7 +138,7 @@ describe('birth date (18 years minimum, R7)', () => {
 
   it('gives the format and empty-field messages', () => {
     expect(validateBirthDate('', TODAY)).toBe('La date de naissance est obligatoire.');
-    expect(validateBirthDate('1990-02-01', TODAY)).toBe('Date invalide. Utilisez le format JJ/MM/AAAA.');
+    expect(validateBirthDate('1990/02/01', TODAY)).toBe('Date invalide. Utilisez le format JJ/MM/AAAA.');
   });
 });
 
