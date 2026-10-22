@@ -5,6 +5,7 @@ describe('isProtectedPath', () => {
   it('protects the routes of the protected area and their sub-paths', () => {
     expect(isProtectedPath('/home')).toBe(true);
     expect(isProtectedPath('/home/details')).toBe(true);
+    expect(isProtectedPath('/notifications')).toBe(true);
   });
 
   it('does not protect public pages, including names that only start the same way', () => {
