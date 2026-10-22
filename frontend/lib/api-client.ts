@@ -12,7 +12,9 @@ export function apiBaseUrl(
   configured: string | undefined = process.env.NEXT_PUBLIC_API_URL,
   nodeEnv: string | undefined = process.env.NODE_ENV,
 ): string {
-  if (configured) {
+  // An empty value means the API is on the same host as the page: requests are then relative, so the CSRF cookie of
+  // the back-office host stays on that host.
+  if (configured !== undefined) {
     return configured;
   }
   if (nodeEnv === 'production') {

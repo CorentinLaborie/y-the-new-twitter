@@ -71,6 +71,10 @@ describe('apiBaseUrl', () => {
     expect(apiBaseUrl('https://y.corentin-laborie.com', 'production')).toBe('https://y.corentin-laborie.com');
   });
 
+  it('keeps an empty address: the API is then on the same host as the page', () => {
+    expect(apiBaseUrl('', 'production')).toBe('');
+  });
+
   it('refuses a production build without an address, instead of calling localhost', () => {
     expect(() => apiBaseUrl(undefined, 'production')).toThrow('NEXT_PUBLIC_API_URL is required');
   });
