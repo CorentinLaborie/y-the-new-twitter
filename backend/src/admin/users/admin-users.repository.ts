@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import type { KeysetPosition } from '../../common/pagination/keyset-cursor';
 import { AccountStatus, DeletionOrigin, Prisma, UserRole } from '../../database/generated/client/client';
 import { PrismaService } from '../../database/prisma.service';
@@ -9,6 +9,8 @@ import type { ContactThreadPlan, ContactThreadState, RequestedAccountStatus } fr
 /** One status change, as the repository writes it. The rules that choose it are in the service. */
 export interface StatusChangeWrite {
   userId: string;
+  /** The status the change was decided from. The write only applies while the account still has it (no lost update). */
+  expectedStatus: AccountStatus;
   status: RequestedAccountStatus;
   /** The suspension reason, kept while the account is suspended. Null when the suspension is lifted. */
   reason: string | null;
@@ -123,10 +125,14 @@ export class AdminUsersRepository {
    */
   applyStatusChange(change: StatusChangeWrite): Promise<void> {
     return this.prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: change.userId },
+      const { count } = await tx.user.updateMany({
+        where: { id: change.userId, status: change.expectedStatus },
         data: { status: change.status, statusChangedAt: change.now, suspensionReason: change.reason },
       });
+      if (count !== 1) {
+        // Another change (a deletion, a suspension) landed between the read and this write: nothing is written.
+        throw new ConflictException('Le statut du compte a changé entre-temps. Actualisez la page.');
+      }
       if (change.status === 'suspended') {
         await tx.session.deleteMany({ where: { userId: change.userId } });
       }

@@ -59,6 +59,23 @@ describe('AdminUsersService.changeStatus (DEC-077, DEC-116, R13, R18)', () => {
     expect(repository.applyStatusChange).not.toHaveBeenCalled();
   });
 
+  it('refuses to suspend an administrator or a moderator, with no write', async () => {
+    for (const role of ['admin', 'moderator'] as const) {
+      repository.findById.mockResolvedValue({ ...account('active'), role });
+
+      await expect(
+        service.changeStatus(ACTOR_ID, TARGET_ID, { status: 'suspended', reason: 'Test' }, NOW),
+      ).rejects.toBeInstanceOf(ConflictException);
+    }
+    expect(repository.applyStatusChange).not.toHaveBeenCalled();
+  });
+
+  it('writes the change only from the status it was decided from (no lost update)', async () => {
+    await service.changeStatus(ACTOR_ID, TARGET_ID, { status: 'suspended', reason: 'Test' }, NOW);
+
+    expect(repository.applyStatusChange).toHaveBeenCalledWith(expect.objectContaining({ expectedStatus: 'active' }));
+  });
+
   it('answers 404 to an unknown account, with no write', async () => {
     repository.findById.mockResolvedValue(null);
 

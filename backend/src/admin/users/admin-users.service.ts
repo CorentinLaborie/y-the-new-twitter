@@ -109,11 +109,15 @@ export class AdminUsersService {
     if (kind === null) {
       throw new ConflictException('Ce changement de statut n’est pas possible pour ce compte.');
     }
+    if (kind === 'suspend' && (account.role === 'admin' || account.role === 'moderator')) {
+      throw new ConflictException('Un administrateur ou un modérateur ne peut pas être suspendu depuis le back-office.');
+    }
 
     const thread = contactThreadPlan(kind, await this.repository.contactThreadOf(targetId));
     const suspensionReason = kind === 'suspend' ? request.reason : null;
     await this.repository.applyStatusChange({
       userId: targetId,
+      expectedStatus: account.status,
       status: request.status,
       reason: suspensionReason,
       now,
