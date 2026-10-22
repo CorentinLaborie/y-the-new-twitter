@@ -77,7 +77,7 @@ export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
   const describedBy = tooLong ? `${hintId} ${refusalId}` : hintId;
 
   return (
-    <form className={styles.composer} onSubmit={handleSubmit}>
+    <form id="composer" className={styles.composer} onSubmit={handleSubmit}>
       <span className={`${styles.avatar} ${styles.composerAvatar}`} aria-hidden="true">
         {avatarInitial(displayName)}
       </span>

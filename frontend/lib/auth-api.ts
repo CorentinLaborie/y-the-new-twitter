@@ -39,6 +39,8 @@ export const login = (email: string, password: string) =>
 /** `cookie` is the SESSION cookie of the visitor when the call is made on the server (see requireSession). */
 export const getSession = (cookie?: string) =>
   apiRequest<{ user: SessionUser | null }>('GET', '/auth/session', { cookie });
+/** Ends the session of the visitor on the server (the CSRF token is sent by the shared client). */
+export const logout = () => apiRequest<Record<string, never>>('POST', '/auth/logout');
 export const requestPasswordReset = (email: string) =>
   apiRequest<Record<string, never>>('POST', '/auth/password-reset/request', { body: { email } });
 export const confirmPasswordReset = (email: string, code: string, password: string) =>
