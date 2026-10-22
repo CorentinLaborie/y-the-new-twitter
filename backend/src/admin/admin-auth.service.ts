@@ -1,9 +1,7 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { LoginService, type LoginAttempt } from '../auth/login/login.service';
 import type { SessionUser } from '../auth/session/session-user.repository';
-import { MAIL_SENDER, type MailSender } from '../common/mail/mail-sender';
 import { UsersRepository } from '../users/users.repository';
-import { adminSignInMail } from './admin-sign-in-mail';
 import { AuditLogService } from './audit/audit-log.service';
 import { AUDIT_ACTIONS, AUDIT_TARGET_TYPES, type AuditResult } from './audit/audit-log.types';
 
@@ -17,21 +15,19 @@ type AdminLoginOutcome =
   | { readonly status: 'ok'; readonly user: SessionUser };
 
 /**
- * The back-office sign-in (DEC-036): the email and the password of an active administrator, then an e-mail alert.
+ * The back-office sign-in (DEC-036): the email and the password of an active administrator. Each sign-in is written to
+ * the audit log; no e-mail is sent for it.
  * The second factor is not used.
  */
 @Injectable()
 export class AdminAuthService {
-  private readonly logger = new Logger(AdminAuthService.name);
-
   constructor(
     private readonly loginService: LoginService,
     private readonly users: UsersRepository,
     private readonly audit: AuditLogService,
-    @Inject(MAIL_SENDER) private readonly mail: MailSender,
   ) {}
 
-  async login(attempt: Omit<LoginAttempt, 'adminOnly'>, now: Date): Promise<AdminLoginOutcome> {
+  async login(attempt: Omit<LoginAttempt, 'adminOnly'>): Promise<AdminLoginOutcome> {
     const check = await this.loginService.checkPassword({ ...attempt, adminOnly: true });
     if (check.status !== 'ok') {
       return check;
@@ -43,7 +39,6 @@ export class AdminAuthService {
     }
 
     await this.record(check.account.id, AUDIT_ACTIONS.adminLogin, 'ok');
-    await this.notifySignIn(check.account.email, now);
     return { status: 'ok', user: completed.user };
   }
 
@@ -82,17 +77,5 @@ export class AdminAuthService {
       reason: null,
       details: null,
     });
-  }
-
-  /**
-   * An alert the administrator must see. A failed send does not refuse the sign-in, but it is logged without the
-   * address, so the failure is not silent.
-   */
-  private async notifySignIn(to: string, at: Date): Promise<void> {
-    try {
-      await this.mail.send(adminSignInMail(to, at));
-    } catch {
-      this.logger.error('The back-office sign-in alert could not be sent.');
-    }
   }
 }

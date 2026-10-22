@@ -58,7 +58,6 @@ export class AdminAuthController {
         ipAddress: req.ip ?? '',
         userAgent: req.get('user-agent'),
       },
-      now,
     );
 
     switch (outcome.status) {
