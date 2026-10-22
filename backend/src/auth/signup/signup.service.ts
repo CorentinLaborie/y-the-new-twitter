@@ -75,11 +75,10 @@ export class SignupService {
       throw new UnprocessableEntityException(INVALID_CODE);
     }
 
-    if (openCode.attempts >= CODE_MAX_ATTEMPTS) {
+    if (!(await this.codes.reserveAttempt(this.prisma, openCode.id, CODE_MAX_ATTEMPTS, now))) {
       throw new UnprocessableEntityException(INVALID_CODE);
     }
     if (!(await verifyCode(openCode.codeHash, dto.code))) {
-      await this.codes.countFailedAttempt(this.prisma, openCode.id);
       throw new UnprocessableEntityException(INVALID_CODE);
     }
 

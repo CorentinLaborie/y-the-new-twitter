@@ -25,12 +25,17 @@ export class SignupCodesRepository {
     });
   }
 
-  /** Counts a wrong code. The check on the count is made by the service (DEC-137). */
-  countFailedAttempt(db: Db, id: string) {
-    return db.signupCode.update({
-      where: { id },
+  /**
+   * Reserves one attempt before the code is checked, in one write: concurrent requests cannot all pass the limit
+   * (DEC-137). False when the attempts are used up, or the code was used or expired in the meantime.
+   */
+  async reserveAttempt(db: Db, id: string, maxAttempts: number, now: Date): Promise<boolean> {
+    const result = await db.signupCode.updateMany({
+      where: { id, consumedAt: null, expiresAt: { gt: now }, attempts: { lt: maxAttempts } },
       data: { attempts: { increment: 1 } },
     });
+
+    return result.count === 1;
   }
 
   /** Marks the code used. Returns false when another request used it first (single use). */

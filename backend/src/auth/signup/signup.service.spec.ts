@@ -15,7 +15,7 @@ function build() {
   const codes = {
     create: jest.fn() as Mock,
     findOpen: jest.fn() as Mock,
-    countFailedAttempt: jest.fn() as Mock,
+    reserveAttempt: jest.fn().mockResolvedValue(true) as Mock,
     consume: jest.fn() as Mock,
     invalidateOpen: jest.fn() as Mock,
   };
@@ -114,18 +114,19 @@ describe('SignupService', () => {
       return built;
     }
 
-    it('refuses a wrong code and counts the attempt', async () => {
+    it('reserves the attempt before checking, and refuses a wrong code', async () => {
       const { service, codes, users } = await withOpenCode();
 
       await expect(service.verify({ email: 'alice@example.test', code: '654321' })).rejects.toBeInstanceOf(
         UnprocessableEntityException,
       );
-      expect(codes.countFailedAttempt).toHaveBeenCalledWith(expect.anything(), 'code-1');
+      expect(codes.reserveAttempt).toHaveBeenCalledWith(expect.anything(), 'code-1', 5, expect.any(Date));
       expect(users.activate).not.toHaveBeenCalled();
     });
 
-    it('refuses the right code once five attempts were used', async () => {
-      const { service, ageVerifier } = await withOpenCode(5);
+    it('refuses the right code once the attempts are reserved up, without checking it', async () => {
+      const { service, codes, ageVerifier } = await withOpenCode(5);
+      codes.reserveAttempt.mockResolvedValue(false);
 
       await expect(service.verify({ email: 'alice@example.test', code: '123456' })).rejects.toBeInstanceOf(
         UnprocessableEntityException,
