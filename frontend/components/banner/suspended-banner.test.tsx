@@ -6,6 +6,7 @@ import { SuspendedBanner } from './suspended-banner';
 vi.mock('@/lib/auth-api', () => ({ getSession: vi.fn() }));
 
 const SENTENCE = 'Pour toute question, contactez-nous à l’adresse indiquée dans les mentions légales.';
+const RESTRICTIONS = 'Vous ne pouvez plus publier, réagir, répondre, suivre ni enregistrer\\.';
 
 function answerWith(user: SessionUser) {
   vi.mocked(getSession).mockResolvedValue({ ok: true, status: 200, body: { user } });
@@ -51,6 +52,7 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
     render(<SuspendedBanner />);
 
     expect(await screen.findByText(/Votre compte est suspendu\./)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(RESTRICTIONS))).toBeInTheDocument();
     expect(screen.getByText(new RegExp(SENTENCE))).toBeInTheDocument();
     expect(screen.queryByText(/Motif/)).not.toBeInTheDocument();
   });
@@ -75,6 +77,7 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
     render(<SuspendedBanner />);
 
     expect(await screen.findByText(/Votre compte est suspendu\. Motif : Spam répété\./)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(RESTRICTIONS))).toBeInTheDocument();
   });
 
   it('opens the contact form from the button, and closes it again', async () => {
@@ -88,6 +91,9 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
     fireEvent.click(toggle);
 
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.getByText('Expliquez votre situation : l’administrateur vous répond par e-mail, à l’adresse de votre compte.'),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Votre message')).toBeInTheDocument();
     expect(screen.getByText('0/1000')).toBeInTheDocument();
 

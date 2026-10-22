@@ -47,8 +47,8 @@ export function SuspendedBanner() {
   return (
     <section className={styles.banner} aria-labelledby={titleId}>
       <p id={titleId} className={styles.text}>
-        Votre compte est suspendu.{reasonText} Pour toute question, contactez-nous à l’adresse indiquée dans
-        les mentions légales.
+        Votre compte est suspendu.{reasonText} Vous ne pouvez plus publier, réagir, répondre, suivre ni
+        enregistrer. Pour toute question, contactez-nous à l’adresse indiquée dans les mentions légales.
       </p>
       <button
         type="button"
@@ -60,7 +60,14 @@ export function SuspendedBanner() {
         Contacter l’administrateur
       </button>
       <div id={formId} className={styles.form} hidden={!formOpen}>
-        {formOpen ? <ContactForm /> : null}
+        {formOpen ? (
+          <>
+            <p className={styles.text}>
+              Expliquez votre situation : l’administrateur vous répond par e-mail, à l’adresse de votre compte.
+            </p>
+            <ContactForm />
+          </>
+        ) : null}
       </div>
     </section>
   );
