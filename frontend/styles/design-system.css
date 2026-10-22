@@ -28,7 +28,7 @@
 .y-btn-md { height: 40px; padding: 0 var(--space-16, 16px); font-size: 14px; }
 .y-btn-lg { height: 48px; padding: 0 var(--space-24, 24px); font-size: 16px; }
 .y-btn-rounded { border-radius: 6px; }
-.y-btn-pill { border-radius: var(--radius-full, 9999px); }
+.y-btn-pill { border-radius: 6px; }
 .y-btn-pill.y-btn-sm { height: 34px; }
 .y-btn-pill.y-btn-lg { height: 52px; font-size: 17px; font-weight: 700; }
 .y-btn-block { display: flex; width: 100%; }
@@ -86,7 +86,7 @@
 .y-check input:focus-visible { outline: 2px solid var(--ring, #4f46e5); outline-offset: 2px; }
 
 /* FollowButton */
-.y-follow { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-4, 4px); box-sizing: border-box; height: 22px; padding: 0 var(--space-8, 8px); border: 1px solid var(--border, #e2e8f0); border-radius: var(--radius-full, 9999px); background: var(--card, #ffffff); color: var(--primary, #4f46e5); cursor: pointer; font-family: var(--font-sans, "Inter", system-ui, sans-serif); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.y-follow { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-4, 4px); box-sizing: border-box; height: 22px; padding: 0 var(--space-8, 8px); border: 1px solid var(--border, #e2e8f0); border-radius: 6px; background: var(--card, #ffffff); color: var(--primary, #4f46e5); cursor: pointer; font-family: var(--font-sans, "Inter", system-ui, sans-serif); font-size: 12px; font-weight: 600; white-space: nowrap; }
 .y-follow.is-followed { background: var(--accent, #e0e7ff); border-color: var(--primary, #4f46e5); }
 .y-follow.is-icon-only { width: 30px; height: 30px; padding: 0; }
 
