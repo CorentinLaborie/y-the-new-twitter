@@ -10,6 +10,8 @@
 
 > **Status:** Draft. The product scope is defined by the design boards and this document (full list). The technical stack and API are proposals until the project is scaffolded. Decisions are recorded in section 19 and in the decision journal (`docs/decisions/journal-decisions.md`). The age check uses the birth date declared at signup (R7, DEC-216), with no external provider.
 
+> **Correction (2026-10-22):** the sections on the administrator second factor (TOTP, backup codes, set-up link), the administrator alert e-mail and the `/admin/deletions` route are superseded by DEC-222 and DEC-223. The cookie is `__Host-y_csrf` outside development (DEC-220). Environment variables have no default (DEC-221). A full revision to version 0.13 is pending.
+
 ---
 
 ## Contents

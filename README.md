@@ -15,7 +15,7 @@ Start with [`docs/README.md`](docs/README.md) for the index of the documentation
 
 ## Getting started
 
-Requirements: Node.js 24 LTS, npm, and Docker with the Compose plugin. The frontend is not set up yet.
+Requirements: Node.js 24 LTS, npm, and Docker with the Compose plugin. The frontend is in `frontend/` (Next.js 16, App Router).
 
 ### Database
 
@@ -62,7 +62,7 @@ Further reading: [docs index](docs/README.md), [rollback procedure](docs/operati
 
 ### Production (server)
 
-- Variables to define on the server, never in Git: the same list as `.env.example`, with real values. Required at startup: `NODE_ENV=production`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `BACKUP_CODE_HMAC_KEY`, `SESSION_SECRET`, `BREVO_API_KEY`, `MAIL_FROM_ADDRESS`, `APP_PUBLIC_URL`. `TRUST_PROXY_HOPS` is `1` behind one reverse proxy.
+- Variables to define on the server, never in Git: the same list as `.env.example`, with real values. Required at startup: `NODE_ENV=production`, `DATABASE_URL`, `DATABASE_MAINTENANCE_URL`, `AUDIT_HMAC_KEY`, `IP_HASH_KEY`, `SESSION_SECRET`, `BREVO_API_KEY`, `MAIL_FROM_ADDRESS`, `APP_PUBLIC_URL`, `ADMIN_PUBLIC_URL`. `TRUST_PROXY_HOPS` is `1` behind one reverse proxy.
 - Backups and restore checks: see [ops/backup/README.md](ops/backup/README.md).
 - Age check: the birth date declared at signup, refused under 18 (decision DEC-216).
 

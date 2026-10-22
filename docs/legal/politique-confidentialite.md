@@ -23,7 +23,7 @@ Version 1.0 — 2026-10-16.
 | Vérification d'âge | Date de naissance déclarée, résultat (majeur ou non) | Inscription |
 | Technique | Cookie de session, cookie de protection CSRF, journaux techniques (adresse IP) | Navigation |
 
-**Ce qui n'est pas collecté :** pièce d'identité, données de localisation. Pour la vérification de l'âge, seule la référence du prestataire et le résultat sont conservés, jamais les données d'identité.
+**Ce qui n'est pas collecté :** pièce d'identité, données de localisation. Pour la vérification de l'âge, seuls la date de naissance déclarée et le résultat (majeur ou non) sont conservés, jamais de données d'identité.
 
 ## 3. Finalités et bases légales
 
@@ -51,7 +51,7 @@ Les données ne sont pas vendues et ne sont pas transmises à des fins publicita
 Le site utilise uniquement deux cookies strictement nécessaires :
 
 - **SESSION** : maintient votre connexion. Il est `HttpOnly`, `Secure` et `SameSite`.
-- **XSRF-TOKEN** : protège les formulaires contre les attaques CSRF.
+- **y_csrf** (ou **__Host-y_csrf** hors développement) : protège les formulaires contre les attaques CSRF.
 
 Aucun cookie publicitaire ni de mesure d'audience n'est utilisé.
 

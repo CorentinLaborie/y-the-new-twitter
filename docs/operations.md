@@ -1,6 +1,6 @@
 # Y — Operations: rollback procedure
 
-> **Status (2026-10-19):** target procedure. Staging, the container image and the backup job come with M0 steps 9 to 11. Until then, nothing here is run in production, and the commands are checked against the local database only. The restore test (step 12) is the M0 exit check and fills in section 4.
+> **Status (2026-10-22):** the production server runs (section 8). The backup job is the one of `ops/backup/backup.sh`, which encrypts every dump. The restore test on real data is still to do (section 4).
 
 ## 1. Principles
 
@@ -12,10 +12,7 @@
 ## 2. Before each deploy
 
 1. Confirm the checks pass locally (lint, tests, end-to-end tests, `openapi:check`, security scans).
-2. Dump the database (step 11.1, `pg_dump -Fc`, encrypted before storage, kept 14 days):
-   ```bash
-   pg_dump -Fc --no-owner -d "$DATABASE_URL" -f "backup-$(date -u +%Y%m%dT%H%M%SZ).dump"
-   ```
+2. Dump the database with the backup job, which encrypts the dump and keeps 14 days: `DATABASE_URL=… BACKUP_DIR=… BACKUP_KEY_FILE=… ops/backup/backup.sh`. It writes `y-<timestamp>.dump.enc`.
 3. Note the image tag currently running. It is the rollback target.
 4. Run the migrations as a separate step, before the new version starts (product doc section 16):
    ```bash
@@ -49,8 +46,11 @@ The backups are written by ops/backup/backup.sh (encrypted with openssl, 14 days
 The restore always goes to a **new** database. The damaged database is kept until the restore is checked, then removed by a person, not by a script.
 
 ```bash
+# 1. Decrypt the dump with the key file of the server (never in Git).
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in y-<timestamp>.dump.enc -out restore.dump -pass file:$BACKUP_KEY_FILE
+# 2. Restore it into a scratch database, never into production.
 createdb -h "$DB_HOST" -U "$DB_OWNER" y_restore
-pg_restore --no-owner -d "postgresql://$DB_OWNER@$DB_HOST/y_restore" backup-<timestamp>.dump
+pg_restore --no-owner -d "postgresql://$DB_OWNER@$DB_HOST/y_restore" restore.dump
 ```
 
 Then:
@@ -99,11 +99,11 @@ State of the production server `135.125.53.103` (Ubuntu, user `ubuntu`, SSH key 
 
 **Backups**: `ops/backup/backup.sh` runs every night at 03:30 (crontab of `ubuntu`). Its settings are in `/etc/y/backup.env` (mode 600, read-only role `y_backup`). Dumps are encrypted with `/etc/y/backup.key` and written to `/var/backups/y`, 14 days kept. Logs: `~/logs/y-backup.log`. A test dump was made on 2026-10-22, and restored into a scratch database (`y_restore_test`, dropped afterwards): the restore passed and the row counts matched the source. The production database was still empty, so this proves the chain, not the restore of real data. Repeat the test once data exists.
 
-**Not done yet**: a restore test with real data (the production database is still empty). The `www` name has no DNS record and no redirect.
+**Not done yet**: a restore test with real data (the production database is still empty). The `www` name points to the server and redirects to the root name.
 
 ## 9. What is not covered yet
 
 - Automatic rollback: not planned for M0.
 - Restore on the staging server: step 12, after the OVH server is set up. The scripts are tested locally only.
-- The nightly backup job (cron) is not installed yet: it is set up on the server with the encryption key, which never goes to Git (M0 step 11).
+- The nightly backup job is installed on the server (crontab of `ubuntu`, 03:30, section 8). The encryption key stays on the server, never in Git.
 - Rollback of the e-mail provider: no provider is connected yet (DEC-110).
