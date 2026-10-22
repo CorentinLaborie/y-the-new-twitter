@@ -37,14 +37,19 @@ function genericMessage(problem: ApiProblem): string {
 /** A message, and the field it belongs to when the error is about one field. */
 type ProblemMessage<Field extends string = string> = { message: string; field?: Field };
 
-export function signupProblemMessage(problem: ApiProblem): ProblemMessage<'handle'> {
+/** The API answers a taken phone with a 409 whose message names the phone (signup.service.ts). */
+const PHONE_CONFLICT = /t[ée]l[ée]phone/i;
+
+export function signupProblemMessage(problem: ApiProblem): ProblemMessage<'handle' | 'phone'> {
   const coded = messageForCode(problem);
   if (coded) {
     return { message: coded };
   }
   switch (problem.status) {
     case 409:
-      return { field: 'handle', message: 'Cet identifiant existe déjà.' };
+      return PHONE_CONFLICT.test(problem.detail)
+        ? { field: 'phone', message: 'Ce numéro de téléphone est déjà utilisé.' }
+        : { field: 'handle', message: 'Cet identifiant existe déjà.' };
     case 400:
     case 422:
       return { message: 'Certaines informations ne sont pas acceptées. Vérifiez le formulaire.' };

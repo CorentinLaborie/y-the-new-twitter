@@ -30,6 +30,15 @@ describe('signup problems', () => {
     });
   });
 
+  it('puts a phone already used on the phone field', () => {
+    expect(
+      signupProblemMessage({ ...problem(409), detail: 'Ce numéro de téléphone est déjà utilisé.' }),
+    ).toEqual({
+      field: 'phone',
+      message: 'Ce numéro de téléphone est déjà utilisé.',
+    });
+  });
+
   it('shows the wait of a 429 from Retry-After', () => {
     expect(signupProblemMessage(problem(429, 3600)).message).toBe(
       'Trop de tentatives. Réessayez dans 60 minutes.',
