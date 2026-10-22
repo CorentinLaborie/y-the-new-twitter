@@ -39,12 +39,6 @@ export function Landing() {
             <Image src="/images/landing/side-right.jpg" alt="" fill sizes="(min-width: 600px) 220px, 160px" />
           </div>
         </div>
-        <div className={styles.dots} aria-hidden="true">
-          <span className={styles.dot} />
-          <span className={[styles.dot, styles.dotActive].join(' ')} />
-          <span className={styles.dot} />
-        </div>
-
         <div className={styles.actions}>
           <a href="#demo" className="y-btn y-btn-primary y-btn-lg y-btn-rounded">
             Découvrir Y

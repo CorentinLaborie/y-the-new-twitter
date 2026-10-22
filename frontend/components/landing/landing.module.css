@@ -123,30 +123,12 @@
   color: #ffffff;
 }
 
-.dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background: #e2e8f0;
-}
-
-.dotActive {
-  background: #4f46e5;
-}
-
 .actions {
   display: flex;
   align-self: stretch;
   justify-content: center;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 48px;
 }
 
 .actions > a {
@@ -542,7 +524,7 @@
 
   .actions {
     align-self: auto;
-    margin-top: 40px;
+    margin-top: 64px;
     gap: 16px;
   }
 
@@ -692,7 +674,7 @@
   }
 
   .actions {
-    margin-top: 40px;
+    margin-top: 64px;
   }
 
   .content {
