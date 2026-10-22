@@ -43,6 +43,7 @@ export class ReactionsService {
           questionId,
           counterChange(existing?.kind ?? null, kind),
         );
+        await this.notifyAuthor(tx, viewer.id, questionId, kind);
       }
 
       return this.response(tx, viewer.id, questionId);
@@ -95,6 +96,14 @@ export class ReactionsService {
       yThreshold: threshold,
       conversationOpen: question.conversationOpenedAt !== null || question.yCount >= threshold,
     };
+  }
+
+  /** Tells the author of the question about a new reaction, unless the author reacts to their own question. */
+  private async notifyAuthor(db: ReactionsDb, viewerId: string, questionId: string, kind: ReactionKind): Promise<void> {
+    const question = await this.reactions.findQuestionCounters(db, questionId);
+    if (question.authorId !== viewerId) {
+      await this.reactions.writeReactionNotification(db, questionId, question.authorId, viewerId, kind);
+    }
   }
 
   /**

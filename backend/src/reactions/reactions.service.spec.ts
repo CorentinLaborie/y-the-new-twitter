@@ -18,6 +18,7 @@ type Repository = jest.Mocked<
     | 'changeQuestionCounters'
     | 'openConversation'
     | 'writeConversationOpened'
+    | 'writeReactionNotification'
   >
 >;
 
@@ -69,6 +70,7 @@ describe('ReactionsService (B3, B5)', () => {
       changeQuestionCounters: jest.fn().mockResolvedValue(undefined),
       openConversation: jest.fn().mockResolvedValue({ count: 0 }),
       writeConversationOpened: jest.fn().mockResolvedValue(undefined),
+      writeReactionNotification: jest.fn().mockResolvedValue(undefined),
     };
     users = { lockActiveAccount: jest.fn().mockResolvedValue(true) };
     prisma = { $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback('tx')) };
@@ -221,6 +223,48 @@ describe('ReactionsService (B3, B5)', () => {
 
     await expect(service.set(VIEWER, QUESTION_ID, 'like')).rejects.toThrow(NotFoundException);
     expect(repository.setQuestionReaction).not.toHaveBeenCalled();
+  });
+
+  it("writes one reaction notice to the author for a new reaction (L2, section 4.1)", async () => {
+    await service.set(VIEWER, QUESTION_ID, 'like');
+
+    expect(repository.writeReactionNotification).toHaveBeenCalledWith(
+      'tx',
+      QUESTION_ID,
+      'author-1',
+      'user-1',
+      'like',
+    );
+  });
+
+  it("writes no reaction notice for the author's own reaction (L2, section 4.1)", async () => {
+    repository.findQuestionCounters.mockResolvedValue({
+      authorId: 'user-1',
+      likeCount: 0,
+      dislikeCount: 0,
+      yCount: 0,
+      conversationOpenedAt: null,
+    });
+
+    await service.set(VIEWER, QUESTION_ID, 'like');
+
+    expect(repository.writeReactionNotification).not.toHaveBeenCalled();
+  });
+
+  it('writes no reaction notice when the viewer repeats the same kind', async () => {
+    repository.findQuestionReaction.mockResolvedValue({ kind: 'like' });
+
+    await service.set(VIEWER, QUESTION_ID, 'like');
+
+    expect(repository.writeReactionNotification).not.toHaveBeenCalled();
+  });
+
+  it('writes no reaction notice when a reaction is removed', async () => {
+    repository.findQuestionReaction.mockResolvedValue({ kind: 'like' });
+
+    await service.remove(VIEWER, QUESTION_ID, 'like');
+
+    expect(repository.writeReactionNotification).not.toHaveBeenCalled();
   });
 
   it('removes only a reaction of the kind named in the request', async () => {

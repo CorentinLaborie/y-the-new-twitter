@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma, ReactionKind } from '../database/generated/client/client';
+import type { NotificationType, Prisma, ReactionKind } from '../database/generated/client/client';
 import { visibleTo } from '../questions/question-view';
 
 /** The Prisma client or a transaction opened by the service. */
 export type ReactionsDb = Prisma.TransactionClient;
+
+/** The notification type written for each reaction kind (L2). */
+const REACTION_NOTIFICATION: Record<ReactionKind, NotificationType> = {
+  like: 'reaction_like',
+  dislike: 'reaction_dislike',
+  y: 'reaction_y',
+};
 
 /** Change of the three reaction counters of a question. */
 export interface CounterChange {
@@ -49,6 +56,19 @@ export class ReactionsRepository {
     return db.question.updateMany({
       where: { id: questionId, conversationOpenedAt: null },
       data: { conversationOpenedAt: at },
+    });
+  }
+
+  /** The notice to the author of a question when another account reacts with one kind (section 4.1 of the L2 plan). */
+  writeReactionNotification(
+    db: ReactionsDb,
+    questionId: string,
+    recipientId: string,
+    actorId: string,
+    kind: ReactionKind,
+  ) {
+    return db.notification.create({
+      data: { recipientId, actorId, type: REACTION_NOTIFICATION[kind], questionId },
     });
   }
 

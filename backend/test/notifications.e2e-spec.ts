@@ -158,6 +158,26 @@ describe('Notifications (e2e, L2 step 3)', () => {
     expect(new Set(ids).size).toBe(3);
   });
 
+  it('a reaction from another account appears for the author, and its own reaction does not', async () => {
+    const author = await createUser('x_author');
+    const fan = await createUser('x_fan');
+    const question = await createQuestion(author);
+    const fanClient = await clientFor(fan);
+    const authorClient = await clientFor(author);
+
+    await fanClient.agent.put(`/api/v1/questions/${question}/reactions/like`).set('x-csrf-token', fanClient.token).expect(200);
+    await authorClient.agent
+      .put(`/api/v1/questions/${question}/reactions/y`)
+      .set('x-csrf-token', authorClient.token)
+      .expect(200);
+
+    const response = await authorClient.agent.get('/api/v1/notifications').expect(200);
+
+    expect(response.body.items.map((line: Line) => [line.type, line.actor?.handle])).toEqual([
+      ['reaction_like', 'x_fan'],
+    ]);
+  });
+
   it('answers 400 for an invalid cursor, an unknown tab and an invalid limit', async () => {
     const owner = await createUser('v_owner');
     const client = await clientFor(owner);
