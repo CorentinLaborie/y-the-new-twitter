@@ -743,6 +743,95 @@ paths:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags:
         - Feed
+  /api/v1/notifications:
+    get:
+      operationId: NotificationsController_list
+      parameters:
+        - name: cursor
+          required: false
+          in: query
+          description: nextCursor of the previous page. Absent for the first page.
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+        - name: type
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - mention
+      responses:
+        "200":
+          description: One page of notifications.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPageDto"
+        "400":
+          description: Unknown tab, invalid limit or invalid cursor.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is neither active nor suspended.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a9
+        - Notifications
+  /api/v1/notifications/unread-count:
+    get:
+      operationId: NotificationsController_unreadCount
+      parameters: []
+      responses:
+        "200":
+          description: Number of unread lines.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCountDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is neither active nor suspended.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a9
   /api/v1/support/messages:
     post:
       operationId: SupportController_send
@@ -811,7 +900,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a9
+                    example: &a10
                       database:
                         status: up
                     additionalProperties:
@@ -837,7 +926,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a9
+                    example: *a10
                     additionalProperties:
                       type: object
                       required:
@@ -859,7 +948,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a10
+                      database: &a11
                         status: up
                     additionalProperties:
                       type: object
@@ -873,7 +962,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a11
+                      redis: &a12
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -888,8 +977,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a10
-                      redis: *a11
+                      database: *a11
+                      redis: *a12
                     additionalProperties:
                       type: object
                       required:
@@ -1289,6 +1378,105 @@ components:
         - trending
         - questions
         - nextCursor
+    NotificationActorDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: bob
+        displayName:
+          type: string
+          example: Bob
+      required:
+        - handle
+        - displayName
+    NotificationTargetDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+          example: Une question ?
+      required:
+        - id
+        - text
+    NotificationViewDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - reply_to_question
+            - conversation_opened
+            - reaction_like
+            - reaction_dislike
+            - reaction_y
+            - follow
+            - mention
+        createdAt:
+          type: string
+          format: date-time
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Null while the line is unread.
+        actor:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/NotificationActorDto"
+        actorCount:
+          type: number
+          example: 1
+          minimum: 1
+        question:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/NotificationTargetDto"
+        reply:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/NotificationTargetDto"
+      required:
+        - id
+        - type
+        - createdAt
+        - readAt
+        - actor
+        - actorCount
+        - question
+        - reply
+    NotificationPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationViewDto"
+        nextCursor:
+          type: string
+          nullable: true
+          example: MjAyNi0xMC0yMlQxMDowMDowMC4wMDBafDBmOGMxZDJlLTNhNGItNGM1ZC04ZTZmLTdhOGI5YzBkMWUyZg
+      required:
+        - items
+        - nextCursor
+    UnreadCountDto:
+      type: object
+      properties:
+        unread:
+          type: number
+          example: 3
+          minimum: 0
+      required:
+        - unread
     CreateSupportMessageDto:
       type: object
       properties:

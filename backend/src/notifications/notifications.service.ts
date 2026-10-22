@@ -2,11 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { PrismaService } from '../database/prisma.service';
 import type { NotificationType } from '../database/generated/client/client';
-import {
-  NotificationCursor,
-  NotificationRow,
-  NotificationsRepository,
-} from './notifications.repository';
+import { NotificationCursor, NotificationRow, NotificationsRepository } from './notifications.repository';
 
 /** One notification as the API returns it (section 4.1 of the L2 plan). */
 export interface NotificationView {
@@ -31,12 +27,14 @@ export function toNotificationView(row: NotificationRow): NotificationView {
   return {
     id: row.id,
     type: row.type,
-    createdAt: row.createdAt.toISOString(),
-    readAt: row.readAt?.toISOString() ?? null,
-    actor: row.actor ? { handle: row.actor.handle, displayName: row.actor.displayName } : null,
-    actorCount: 1,
-    question: row.question ? { id: row.question.id, text: row.question.body } : null,
-    reply: row.reply ? { id: row.reply.id, text: row.reply.body } : null,
+    createdAt: row.created_at.toISOString(),
+    readAt: row.has_unread ? null : (row.read_at?.toISOString() ?? null),
+    actor: row.actor_id && row.actor_handle && row.actor_display_name
+      ? { handle: row.actor_handle, displayName: row.actor_display_name }
+      : null,
+    actorCount: row.actor_count,
+    question: row.question_id && row.question_body !== null ? { id: row.question_id, text: row.question_body } : null,
+    reply: row.reply_id && row.reply_body !== null ? { id: row.reply_id, text: row.reply_body } : null,
   };
 }
 
@@ -80,10 +78,10 @@ export class NotificationsService {
       return { items: [], nextCursor: null };
     }
 
-    const rows = await this.notifications.findPage(this.prisma, viewer.id, limit, type, cursor);
+    const rows = await this.notifications.findPage(this.prisma, viewer.id, limit + 1, type, cursor);
     const pageRows = rows.slice(0, limit);
     const last = pageRows.at(-1);
-    const nextCursor = rows.length > limit && last ? encodeCursor({ createdAt: last.createdAt, id: last.id }) : null;
+    const nextCursor = rows.length > limit && last ? encodeCursor({ createdAt: last.created_at, id: last.id }) : null;
 
     return { items: pageRows.map(toNotificationView), nextCursor };
   }

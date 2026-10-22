@@ -21,6 +21,7 @@ import { QuestionsModule } from './questions/questions.module';
 import { ReactionsModule } from './reactions/reactions.module';
 import { RepliesModule } from './replies/replies.module';
 import { FeedModule } from './feed/feed.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { SupportModule } from './support/support.module';
 
 @Module({
@@ -45,6 +46,7 @@ import { SupportModule } from './support/support.module';
     ReactionsModule,
     RepliesModule,
     FeedModule,
+    NotificationsModule,
     SupportModule,
     HealthModule,
   ],
