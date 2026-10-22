@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Product** | Y, a question-based social network (French UI) |
-| **Document version** | 0.12 — draft, 2026-10-20 (sections 9.4, R13 and the reply deletion aligned with the owner decisions of 2026-10-20; 0.11 — M2: « Pour vous » feed with the trending block, idempotency keys expire after 24 h; DEC-158 to DEC-163; earlier 0.10: contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
-| **Changelog** | 0.12 (2026-10-20): owner decisions on the API. A locked account answers `401` like a wrong password, not `429` (section 9.4). Code requests are limited to 3 per account per hour, answered `202` whatever happens (section 9.4). Deleting another account's reply answers `404`, as for a missing reply (section 9.2). R13: an account that stops being active leaves the counters, and comes back when it is active again. 0.11 (2026-10-20): M2 documentation. Section 9.1: idempotency keys expire 24 hours after the first request (DEC-162). Section 9.2: the first page of `/feed?tab=for-you` returns the `trending` block (DEC-159). M2 plan accepted (DEC-158). 0.10 (2026-10-19): M0 steps 3.2, 3.9, 5.1, 6, 7.2, 7.3, 7.4, 7.5, 7.6 and 7.7 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
+| **Document version** | 0.13 — draft, 2026-10-22 (notifications routes in sections 9.2 and 11.1, L2 documentation; DEC-232 to DEC-310; 0.12 — draft, 2026-10-20 (sections 9.4, R13 and the reply deletion aligned with the owner decisions of 2026-10-20; 0.11 — M2: « Pour vous » feed with the trending block, idempotency keys expire after 24 h; DEC-158 to DEC-163; earlier 0.10: contact messages and suspension reason, administrator two-factor login and re-authentication, sign-up, sign-in, notifications, trends, search, user-side reporting, blocking, profile editing and replies; DEC-080 to DEC-106; earlier: backend switched to NestJS and database to PostgreSQL, DEC-069 to DEC-074; account deletion, administration back-office, providers recorded, login events, audit log purge account and hash chain) |
+| **Changelog** | 0.13 (2026-10-22): notifications documentation (L2, step 10). Section 9.2: `GET /notifications` takes `limit` and `type=mention`; `GET /notifications/unread-count` is added; `POST /notifications/read-all` is marked as built, refused for a suspended account (403). Section 11.1: `/notifications` is built. Journal DEC-293 to DEC-310 (L0 navigation answers, 404 of pages not yet built, badge reset). 0.12 (2026-10-20): owner decisions on the API. A locked account answers `401` like a wrong password, not `429` (section 9.4). Code requests are limited to 3 per account per hour, answered `202` whatever happens (section 9.4). Deleting another account's reply answers `404`, as for a missing reply (section 9.2). R13: an account that stops being active leaves the counters, and comes back when it is active again. 0.11 (2026-10-20): M2 documentation. Section 9.1: idempotency keys expire 24 hours after the first request (DEC-162). Section 9.2: the first page of `/feed?tab=for-you` returns the `trending` block (DEC-159). M2 plan accepted (DEC-158). 0.10 (2026-10-19): M0 steps 3.2, 3.9, 5.1, 6, 7.2, 7.3, 7.4, 7.5, 7.6 and 7.7 done (database health check, sessions on the `sessions` table, fictional seed; DEC-130 to DEC-132). 0.9 (2026-10-19): sections 7, 8.1, 8.2, 8.4, 9, 10, 14, 15 and 16 aligned with the code (status notes where the target is not built yet) (M0 steps 1 to 4.6, DEC-119 to DEC-128). 0.8 (2026-10-19): contact thread lifecycle and closing by lifting (DEC-116, DEC-117). 0.7 (2026-10-19): sections 3.1 to 3.4, R13, 12.5, 12.6 and new 12.7 updated for DEC-080 to DEC-106. |
 | **Audience** | Product owner, designers, frontend and backend developers, reviewers |
 | **Companion documents** | [`database/y-database.dbml`](database/y-database.dbml) (schema source), [`database/y-database-documentation.md`](database/y-database-documentation.md) (column reference) |
 
@@ -612,8 +612,9 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/notifications?cursor=…` | Notifications, grouped for display |
-| POST | `/notifications/read-all` | Mark all as read |
+| GET | `/notifications?cursor=…&limit=…&type=mention` | Notifications, grouped for display (reactions of one question and type grouped on the server). `type=mention` is the "Mentions" tab. Built in L2 |
+| GET | `/notifications/unread-count` | Unread count `{ "unread": number }`, used by the navigation badge. Built in L2 |
+| POST | `/notifications/read-all` | Mark all as read; the notifications page calls it on opening, and the badge drops to 0. Refused for a suspended account (403). Built in L2 |
 | GET | `/notification-preferences` | Current preferences |
 | PUT | `/notification-preferences/{type}` | Enable or disable a type |
 
@@ -748,7 +749,7 @@ Route names are English. UI labels stay in French.
 | `/home` | User | Feed. Tab "Pour vous" (M2), tab "Abonnements" added in M4 |
 | `/explore` | User | Trends, popular questions, search (`?q=`) |
 | `/hashtags/[name]` | User | Questions for one hashtag |
-| `/notifications` | User | Notifications |
+| `/notifications` | User | Notifications: grouped list, tabs "Toutes" and "Mentions", "Tout marquer comme lu". Read on opening. Built in L2 (API section 9.2) |
 | `/messages` | User | Inbox |
 | `/messages/[conversationId]` | User | One conversation |
 | `/messages/new` | User | New message |
