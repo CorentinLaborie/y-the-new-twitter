@@ -55,9 +55,9 @@ describe('AuditScreen', () => {
     render(<AuditScreen />);
     await screen.findByText('16/10/2026 10h12');
 
-    fireEvent.change(screen.getByLabelText('Type d’action'), { target: { value: 'auth.mfa_enrol' } });
+    fireEvent.change(screen.getByLabelText('Type d’action'), { target: { value: 'user.suspend' } });
 
-    expect(listAuditLog).toHaveBeenLastCalledWith(expect.objectContaining({ action: 'auth.mfa_enrol' }));
+    expect(listAuditLog).toHaveBeenLastCalledWith(expect.objectContaining({ action: 'user.suspend' }));
   });
 
   it('appends the next page, with the same action filter', async () => {

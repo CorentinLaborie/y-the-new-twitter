@@ -143,22 +143,6 @@ describe('admin API calls', () => {
     });
   });
 
-  it('adminLogin sends the code with the password once the administrator has typed one', async () => {
-    await adminLogin('admin@example.test', 'Abcdef1!', '123456');
-
-    expect(apiRequest).toHaveBeenCalledWith('POST', '/admin/login', {
-      body: { email: 'admin@example.test', password: 'Abcdef1!', code: '123456' },
-    });
-  });
-
-  it('adminLogin treats an empty code as no code', async () => {
-    await adminLogin('admin@example.test', 'Abcdef1!', '');
-
-    expect(apiRequest).toHaveBeenCalledWith('POST', '/admin/login', {
-      body: { email: 'admin@example.test', password: 'Abcdef1!' },
-    });
-  });
-
   it('getAdminSession forwards the SESSION cookie when it is called on the server', async () => {
     await getAdminSession('SESSION=signed-id');
 
@@ -190,11 +174,11 @@ describe('admin API calls', () => {
     await expect(signOut()).resolves.toBe(answer);
   });
 
-  it('reauthenticate sends the password and the code to the re-authentication route', async () => {
-    await reauthenticate('Secret1234!', '123456');
+  it('reauthenticate sends the password to the re-authentication route', async () => {
+    await reauthenticate('Secret1234!');
 
     expect(apiRequest).toHaveBeenCalledWith('POST', '/admin/reauth', {
-      body: { password: 'Secret1234!', code: '123456' },
+      body: { password: 'Secret1234!' },
     });
   });
 

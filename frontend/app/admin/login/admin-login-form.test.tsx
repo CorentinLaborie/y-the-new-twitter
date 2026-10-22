@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { adminLogin } from '@/lib/admin-api';
-import { CODE_REQUIRED_MESSAGE, SETUP_REQUIRED_MESSAGE } from '@/lib/admin-login';
 import { AdminLoginForm } from './admin-login-form';
 
 const push = vi.fn();
@@ -24,6 +23,12 @@ describe('AdminLoginForm', () => {
     vi.mocked(adminLogin).mockReset();
   });
 
+  it('has no second-factor field', () => {
+    render(<AdminLoginForm />);
+
+    expect(screen.queryByLabelText('Code de vérification à 6 chiffres')).not.toBeInTheDocument();
+  });
+
   it('does not call the API while a field is empty, and marks the e-mail field', () => {
     render(<AdminLoginForm />);
 
@@ -33,19 +38,7 @@ describe('AdminLoginForm', () => {
     expect(screen.getByLabelText('Adresse e-mail')).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('asks for the second factor when the password is right and no code was sent', async () => {
-    vi.mocked(adminLogin).mockResolvedValue({ ok: true, status: 200, body: { status: 'code_required' } });
-    render(<AdminLoginForm />);
-
-    fillCredentials();
-    submit();
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(CODE_REQUIRED_MESSAGE);
-    expect(adminLogin).toHaveBeenCalledWith('admin@example.test', 'Secret1234!', undefined);
-    expect(push).not.toHaveBeenCalled();
-  });
-
-  it('sends the code with the password and opens the console on a full sign-in', async () => {
+  it('signs in with the email and the password, and opens the console', async () => {
     vi.mocked(adminLogin).mockResolvedValue({
       ok: true,
       status: 200,
@@ -54,33 +47,30 @@ describe('AdminLoginForm', () => {
     render(<AdminLoginForm />);
 
     fillCredentials();
-    fireEvent.change(screen.getByLabelText('Code de vérification à 6 chiffres'), {
-      target: { value: '123456' },
-    });
     submit();
 
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin'));
-    expect(adminLogin).toHaveBeenCalledWith('admin@example.test', 'Secret1234!', '123456');
+    expect(adminLogin).toHaveBeenCalledWith('admin@example.test', 'Secret1234!');
   });
 
-  it('shows the API message for a wrong code, and keeps the form open', async () => {
+  it('shows the API message for a refused sign-in, and keeps the user on the page', async () => {
     vi.mocked(adminLogin).mockResolvedValue({
       ok: false,
-      problem: { status: 401, title: 'Erreur', detail: 'Code de vérification incorrect.' },
+      problem: { status: 401, title: 'Erreur', detail: 'Identifiants incorrects' },
     });
     render(<AdminLoginForm />);
 
     fillCredentials();
     submit();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Code de vérification incorrect.');
-    expect(screen.getByLabelText('Mot de passe')).toBeEnabled();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Identifiants incorrects');
+    expect(push).not.toHaveBeenCalled();
   });
 
-  it('locks every field for the Retry-After delay after too many failures', async () => {
+  it('locks the form for the delay of a 429 answer', async () => {
     vi.mocked(adminLogin).mockResolvedValue({
       ok: false,
-      problem: { status: 429, title: 'Trop', detail: 'Trop.', retryAfterSeconds: 892 },
+      problem: { status: 429, title: 'Trop de tentatives', detail: 'Verrouillé.', retryAfterSeconds: 892 },
     });
     render(<AdminLoginForm />);
 
@@ -88,19 +78,7 @@ describe('AdminLoginForm', () => {
     submit();
 
     expect(await screen.findByText('Connexion bloquée')).toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('Réessayez dans 14 min 52 s.');
     expect(screen.getByLabelText('Mot de passe')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Se connecter' })).toBeDisabled();
-  });
-
-  it('explains that the second factor must be set up first', async () => {
-    vi.mocked(adminLogin).mockResolvedValue({ ok: true, status: 200, body: { status: 'setup_required' } });
-    render(<AdminLoginForm />);
-
-    fillCredentials();
-    submit();
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(SETUP_REQUIRED_MESSAGE);
-    expect(push).not.toHaveBeenCalled();
   });
 });

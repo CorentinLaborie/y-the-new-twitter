@@ -20,10 +20,10 @@ describe('adminLoginFailure', () => {
 
   it('shows the API message for any other refusal', () => {
     expect(
-      adminLoginFailure({ status: 401, title: 'Erreur', detail: 'Code de vérification incorrect.' }),
+      adminLoginFailure({ status: 401, title: 'Erreur', detail: 'Identifiants incorrects' }),
     ).toEqual({
       kind: 'error',
-      message: 'Code de vérification incorrect.',
+      message: 'Identifiants incorrects',
     });
   });
 });

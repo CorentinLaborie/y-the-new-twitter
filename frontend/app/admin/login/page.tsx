@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Administration — Connexion',
 };
 
-/** Back-office sign-in: the password, then the second factor (a code or a backup code). Outside the console guard. */
+/** Back-office sign-in with the email and the password. Outside the console guard. */
 export default function AdminLoginPage() {
   return (
     <Suspense fallback={null}>

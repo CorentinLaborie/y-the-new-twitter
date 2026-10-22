@@ -8,7 +8,7 @@ import { TextField } from '@/components/auth/text-field';
 import styles from '@/components/admin/admin.module.css';
 import { adminLogin } from '@/lib/admin-api';
 import { formatRetryAfter } from '@/lib/admin-format';
-import { adminLoginFailure, CODE_REQUIRED_MESSAGE, SETUP_REQUIRED_MESSAGE } from '@/lib/admin-login';
+import { adminLoginFailure } from '@/lib/admin-login';
 import {
   firstErrorField,
   hasErrors,
@@ -21,18 +21,17 @@ import {
 const FIELD_ORDER: readonly LoginField[] = ['email', 'password'];
 
 /**
- * Back-office sign-in. The password and the code are on the same screen: a correct password without a code gets the
- * code_required answer, and the form then asks for the code. After too many failures the API locks the form for a
- * delay (429, Retry-After): every field is disabled until the delay of the lock is over.
+ * Back-office sign-in with the email and the password. After too many failures the API locks the form for a delay
+ * (429, Retry-After): every field is disabled until the delay of the lock is over.
  */
 export function AdminLoginForm() {
   const router = useRouter();
-  const [values, setValues] = useState({ email: '', password: '', code: '' });
+  const [values, setValues] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<FieldErrors<LoginField>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [lockedFor, setLockedFor] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const inputs = useRef<Partial<Record<LoginField | 'code', HTMLInputElement | null>>>({});
+  const inputs = useRef<Partial<Record<LoginField, HTMLInputElement | null>>>({});
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,8 +49,7 @@ export function AdminLoginForm() {
 
     setErrors({});
     setSubmitting(true);
-    const code = values.code.trim();
-    const result = await adminLogin(normalizeEmail(values.email), values.password, code || undefined);
+    const result = await adminLogin(normalizeEmail(values.email), values.password);
     setSubmitting(false);
 
     if (!result.ok) {
@@ -64,18 +62,7 @@ export function AdminLoginForm() {
       return;
     }
 
-    switch (result.body.status) {
-      case 'ok':
-        router.push('/admin');
-        return;
-      case 'code_required':
-        setMessage(CODE_REQUIRED_MESSAGE);
-        inputs.current.code?.focus();
-        return;
-      case 'setup_required':
-        setMessage(SETUP_REQUIRED_MESSAGE);
-        return;
-    }
+    router.push('/admin');
   }
 
   const locked = lockedFor !== null;
@@ -129,19 +116,6 @@ export function AdminLoginForm() {
               error={errors.password}
               ref={(element) => {
                 inputs.current.password = element;
-              }}
-            />
-            <TextField
-              id="admin-code"
-              name="code"
-              label="Code de vérification à 6 chiffres"
-              hint="Code à usage unique de votre application d’authentification, ou un code de secours."
-              placeholder="000000"
-              autoComplete="one-time-code"
-              value={values.code}
-              onChange={(event) => setValues((current) => ({ ...current, code: event.target.value }))}
-              ref={(element) => {
-                inputs.current.code = element;
               }}
             />
             <Button type="submit">{submitting ? 'Connexion…' : 'Se connecter'}</Button>

@@ -82,7 +82,6 @@ test.describe('account deletion', () => {
     const reauth = page.getByRole('dialog', { name: 'Confirmer votre identité' });
     await expect(reauth).toBeVisible();
     await page.getByLabel('Mot de passe', { exact: true }).fill('Secret1234!');
-    await page.getByLabel('Code à 6 chiffres').fill('123456');
     await reauth.getByRole('button', { name: 'Confirmer' }).click();
 
     await expect(page.getByRole('dialog')).toHaveCount(0);

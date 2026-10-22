@@ -33,7 +33,7 @@ const LOGIN_ENTRY = {
 const FAILED_ENTRY = {
   ...LOGIN_ENTRY,
   id: 'e2',
-  action: 'auth.mfa_enrol',
+  action: 'user.suspend',
   result: 'failed',
   reason: 'Code incorrect',
   createdAt: '2026-10-15T17:30:00.000Z',
@@ -55,7 +55,6 @@ function formAlert(page: Page) {
   return page.locator('[role="alert"]:not(#__next-route-announcer__)');
 }
 
-const CODE_REQUIRED = 'Saisissez le code de votre application d’authentification.';
 
 test.describe('back-office', () => {
   test.beforeEach(async ({}, testInfo) => {
@@ -71,16 +70,10 @@ test.describe('back-office', () => {
     await expect(page.getByRole('heading', { name: 'Connexion au back-office' })).toBeVisible();
   });
 
-  test('the login asks for the second factor, then opens the dashboard with the latest actions', async ({
-    context,
-    page,
-  }) => {
+  test('the login opens the dashboard with the latest actions', async ({ context, page }) => {
     await context.addCookies([ADMIN_COOKIE]);
     await mockAdminApi(page, {
-      'POST /admin/login': (call) =>
-        call.body?.code === undefined
-          ? { status: 200, body: { status: 'code_required' } }
-          : { status: 200, body: { status: 'ok', user: { handle: 'admin', displayName: 'Administrateur' } } },
+      'POST /admin/login': { status: 200, body: { status: 'ok', user: { handle: 'admin', displayName: 'Administrateur' } } },
       'GET /admin/audit-log': { status: 200, body: { items: [LOGIN_ENTRY], nextCursor: null } },
     });
     await page.goto('/admin/login');
@@ -88,29 +81,24 @@ test.describe('back-office', () => {
     await page.getByLabel('Adresse e-mail').fill('admin@example.test');
     await page.getByLabel('Mot de passe', { exact: true }).fill('Secret1234!');
     await page.getByRole('button', { name: 'Se connecter' }).click();
-    await expect(formAlert(page)).toContainText(CODE_REQUIRED);
-
-    await page.getByLabel('Code de vérification à 6 chiffres').fill('123456');
-    await page.getByRole('button', { name: 'Se connecter' }).click();
 
     await page.waitForURL((url) => url.pathname === '/admin');
     await expect(page.getByRole('heading', { name: 'Tableau de bord' })).toBeVisible();
     await expect(page.getByText('Connexion administrateur')).toBeVisible();
   });
 
-  test('a wrong code keeps the form open and shows the API message', async ({ context, page }) => {
+  test('a wrong password keeps the form open and shows the API message', async ({ context, page }) => {
     await context.addCookies([ADMIN_COOKIE]);
     await mockAdminApi(page, {
-      'POST /admin/login': adminProblem(401, 'Code de vérification incorrect.'),
+      'POST /admin/login': adminProblem(401, 'Identifiants incorrects'),
     });
     await page.goto('/admin/login');
 
     await page.getByLabel('Adresse e-mail').fill('admin@example.test');
-    await page.getByLabel('Mot de passe', { exact: true }).fill('Secret1234!');
-    await page.getByLabel('Code de vérification à 6 chiffres').fill('000000');
+    await page.getByLabel('Mot de passe', { exact: true }).fill('Mauvais1234!');
     await page.getByRole('button', { name: 'Se connecter' }).click();
 
-    await expect(formAlert(page)).toContainText('Code de vérification incorrect.');
+    await expect(formAlert(page)).toContainText('Identifiants incorrects');
     await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
@@ -156,7 +144,7 @@ test.describe('back-office', () => {
     await context.addCookies([ADMIN_COOKIE]);
     const calls = await mockAdminApi(page, {
       'GET /admin/audit-log': (call: AdminCall) =>
-        call.search.includes('action=auth.mfa_enrol')
+        call.search.includes('action=user.suspend')
           ? { status: 200, body: { items: [FAILED_ENTRY], nextCursor: null } }
           : { status: 200, body: { items: [LOGIN_ENTRY, FAILED_ENTRY], nextCursor: null } },
     });
@@ -165,10 +153,10 @@ test.describe('back-office', () => {
     const table = page.getByRole('table', { name: 'Journal d’audit' });
     await expect(table.getByText('Code incorrect')).toBeVisible();
 
-    await page.getByLabel('Type d’action').selectOption('auth.mfa_enrol');
+    await page.getByLabel('Type d’action').selectOption('user.suspend');
 
-    await expect(table.getByText('Double authentification configurée')).toBeVisible();
-    expect(calls.some((call) => call.search.includes('action=auth.mfa_enrol'))).toBe(true);
+    await expect(table.getByText('Suspension de compte')).toBeVisible();
+    expect(calls.some((call) => call.search.includes('action=user.suspend'))).toBe(true);
   });
 
   test('an expired administrator session on a page says so, with a link to sign in again', async ({
@@ -243,7 +231,6 @@ test.describe('back-office', () => {
     const reauth = page.getByRole('dialog', { name: 'Confirmer votre identité' });
     await expect(reauth).toBeVisible();
     await page.getByLabel('Mot de passe', { exact: true }).fill('Secret1234!');
-    await page.getByLabel('Code à 6 chiffres').fill('123456');
     await reauth.getByRole('button', { name: 'Confirmer' }).click();
 
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -271,7 +258,7 @@ test.describe('back-office', () => {
         },
         headers: { 'content-type': 'application/problem+json' },
       },
-      'POST /admin/reauth': adminProblem(401, 'Code de vérification incorrect.'),
+      'POST /admin/reauth': adminProblem(401, 'Identifiants incorrects'),
     });
     await page.goto(`/admin/users/${ALICE_ID}`);
 
@@ -283,11 +270,10 @@ test.describe('back-office', () => {
       .click();
 
     const reauth = page.getByRole('dialog', { name: 'Confirmer votre identité' });
-    await page.getByLabel('Mot de passe', { exact: true }).fill('Secret1234!');
-    await page.getByLabel('Code à 6 chiffres').fill('000000');
+    await page.getByLabel('Mot de passe', { exact: true }).fill('Mauvais1234!');
     await reauth.getByRole('button', { name: 'Confirmer' }).click();
 
-    await expect(formAlert(page)).toContainText('Code de vérification incorrect.');
+    await expect(formAlert(page)).toContainText('Identifiants incorrects');
     await expect(reauth).toBeVisible();
   });
 

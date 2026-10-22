@@ -7,8 +7,8 @@ import { TextField } from '@/components/auth/text-field';
 import { reauthenticate } from '@/lib/admin-api';
 
 /**
- * Asks the administrator for the password and a second-factor code before a sensitive action (DEC-088). The answer of
- * the API is shown as it is: a wrong password or a wrong code keeps the dialog open.
+ * Asks the administrator for the password again before a sensitive action (DEC-088). The answer of the API is shown as
+ * it is: a wrong password keeps the dialog open.
  */
 export function ReauthDialog({
   actionLabel,
@@ -20,20 +20,19 @@ export function ReauthDialog({
   onCancel: () => void;
 }) {
   const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (password === '' || code.trim() === '') {
-      setMessage('Saisissez votre mot de passe et le code de vérification.');
+    if (password === '') {
+      setMessage('Saisissez votre mot de passe.');
       return;
     }
 
     setMessage(null);
     setSubmitting(true);
-    const result = await reauthenticate(password, code.trim());
+    const result = await reauthenticate(password);
     setSubmitting(false);
 
     if (!result.ok) {
@@ -66,16 +65,6 @@ export function ReauthDialog({
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoFocus
-          />
-          <TextField
-            id="reauth-code"
-            name="code"
-            label="Code à 6 chiffres"
-            hint="Code de votre application d’authentification, ou un code de secours."
-            placeholder="000000"
-            autoComplete="one-time-code"
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
           />
           <p className={styles.dialogHint}>La confirmation reste valable 10 minutes.</p>
           <div className={styles.dialogActions}>

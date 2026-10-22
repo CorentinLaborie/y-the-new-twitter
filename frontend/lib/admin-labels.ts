@@ -67,7 +67,6 @@ export const AUDIT_RESULT_LABELS: Record<AuditResult, string> = {
 /** The audit actions written so far (audit-log.types.ts). The listing filters on these codes. */
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'auth.admin_login': 'Connexion administrateur',
-  'auth.mfa_enrol': 'Double authentification configurée',
   'user.suspend': 'Suspension de compte',
   'user.reactivate': 'Levée de suspension',
   'user.delete': 'Suppression de compte',

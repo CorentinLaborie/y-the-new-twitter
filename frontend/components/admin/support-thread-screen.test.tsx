@@ -165,7 +165,6 @@ describe('SupportThreadScreen', () => {
 
     const dialog = await screen.findByRole('dialog', { name: 'Confirmer votre identité' });
     fireEvent.change(within(dialog).getByLabelText('Mot de passe'), { target: { value: 'Secret1234!' } });
-    fireEvent.change(within(dialog).getByLabelText('Code à 6 chiffres'), { target: { value: '123456' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Confirmer' }));
 
     expect(await screen.findByText(/Fil fermé le 21\/10\/2026 14h00/)).toBeInTheDocument();

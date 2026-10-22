@@ -54,7 +54,6 @@ describe('AUDIT_ACTION_FILTER_OPTIONS', () => {
     expect(AUDIT_ACTION_FILTER_OPTIONS.map((option) => option.value)).toEqual([
       '',
       'auth.admin_login',
-      'auth.mfa_enrol',
       'user.suspend',
       'user.reactivate',
       'user.delete',

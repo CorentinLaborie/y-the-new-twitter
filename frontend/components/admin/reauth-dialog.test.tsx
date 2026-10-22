@@ -18,9 +18,8 @@ function renderDialog() {
   return { onConfirmed, onCancel };
 }
 
-function fill(password: string, code: string) {
+function fill(password: string) {
   fireEvent.change(screen.getByLabelText('Mot de passe'), { target: { value: password } });
-  fireEvent.change(screen.getByLabelText('Code à 6 chiffres'), { target: { value: code } });
 }
 
 describe('ReauthDialog', () => {
@@ -28,27 +27,25 @@ describe('ReauthDialog', () => {
     vi.mocked(reauthenticate).mockReset();
   });
 
-  it('names the action and asks for the password and the code in a labelled dialog', () => {
+  it('names the action and asks for the password only, in a labelled dialog', () => {
     renderDialog();
 
     expect(screen.getByRole('dialog', { name: 'Confirmer votre identité' })).toBeInTheDocument();
     expect(screen.getByText(/Action demandée : suspendre le compte de @MarkL/)).toBeInTheDocument();
     expect(screen.getByLabelText('Mot de passe')).toHaveAttribute('autocomplete', 'current-password');
-    expect(screen.getByLabelText('Code à 6 chiffres')).toHaveAttribute('autocomplete', 'one-time-code');
+    expect(screen.queryByLabelText('Code à 6 chiffres')).not.toBeInTheDocument();
   });
 
-  it('does not call the API while the password or the code is empty', () => {
+  it('does not call the API while the password is empty', () => {
     renderDialog();
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
 
     expect(reauthenticate).not.toHaveBeenCalled();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Saisissez votre mot de passe et le code de vérification.',
-    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Saisissez votre mot de passe.');
   });
 
-  it('confirms once the API accepts the password and the code, with the code trimmed', async () => {
+  it('confirms once the API accepts the password', async () => {
     vi.mocked(reauthenticate).mockResolvedValue({
       ok: true,
       status: 200,
@@ -56,24 +53,24 @@ describe('ReauthDialog', () => {
     });
     const { onConfirmed } = renderDialog();
 
-    fill('Secret1234!', ' 123456 ');
+    fill('Secret1234!');
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
 
     await waitFor(() => expect(onConfirmed).toHaveBeenCalledTimes(1));
-    expect(reauthenticate).toHaveBeenCalledWith('Secret1234!', '123456');
+    expect(reauthenticate).toHaveBeenCalledWith('Secret1234!');
   });
 
-  it('shows the API message for a wrong code, and does not confirm', async () => {
+  it('shows the API message for a wrong password, and does not confirm', async () => {
     vi.mocked(reauthenticate).mockResolvedValue({
       ok: false,
-      problem: { status: 401, title: 'Erreur', detail: 'Code de vérification incorrect.' },
+      problem: { status: 401, title: 'Erreur', detail: 'Identifiants incorrects' },
     });
     const { onConfirmed } = renderDialog();
 
-    fill('Secret1234!', '000000');
+    fill('Mauvais1234!');
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Code de vérification incorrect.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Identifiants incorrects');
     expect(onConfirmed).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Mot de passe')).toBeEnabled();
   });

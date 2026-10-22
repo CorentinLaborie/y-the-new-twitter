@@ -105,7 +105,6 @@ describe('ReportDecisionDialog', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Confirmer votre identité' })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Mot de passe'), { target: { value: 'Secret1234!' } });
-    fireEvent.change(screen.getByLabelText('Code à 6 chiffres'), { target: { value: '123456' } });
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
 
     await waitFor(() => expect(onDecided).toHaveBeenCalledWith(RESULT));

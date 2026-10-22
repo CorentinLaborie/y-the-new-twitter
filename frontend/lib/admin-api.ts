@@ -12,9 +12,8 @@ export type AdminRole = 'user' | 'moderator' | 'admin';
 /** The administrator as the back-office API names them (AdminUserView). */
 export type AdminUser = { handle: string; displayName: string };
 
-/** The answer of POST /admin/login. `setup_required` carries no user: the second factor is not configured yet. */
-export type AdminLoginResult =
-  { status: 'ok'; user: AdminUser } | { status: 'code_required' } | { status: 'setup_required' };
+/** The answer of POST /admin/login: the administrator, when the email and the password are right. */
+export type AdminLoginResult = { status: 'ok'; user: AdminUser };
 
 /** GET /admin/session: the administrator and when the back-office session ends. Times are ISO strings. */
 export type AdminSession = { user: AdminUser; idleExpiresAt: string; expiresAt: string };
@@ -104,33 +103,10 @@ function withQuery(params: Record<string, string | number | undefined>): string 
 }
 
 /**
- * The first step of the back-office sign-in is the password alone, then the second factor. `code` is sent only when
- * the administrator has typed one.
+ * The back-office sign-in: the email and the password of an administrator.
  */
-export function adminLogin(
-  email: string,
-  password: string,
-  code?: string,
-): Promise<ApiResult<AdminLoginResult>> {
-  return apiRequest<AdminLoginResult>('POST', '/admin/login', {
-    body: code === undefined || code === '' ? { email, password } : { email, password, code },
-  });
-}
-
-/** The set-up of the second factor: the secret to type into an authenticator application, and its otpauth link. */
-export type MfaSetup = { secret: string; otpauthUri: string };
-
-/** POST /admin/mfa/setup: starts the set-up with the token of the e-mail link. Nothing is enrolled yet. */
-export function startMfaSetup(token: string): Promise<ApiResult<MfaSetup>> {
-  return apiRequest<MfaSetup>('POST', '/admin/mfa/setup', { body: { token } });
-}
-
-/**
- * POST /admin/mfa/confirm: enrols the factor with a first code. The backup codes come back once, and the session is
- * signed in.
- */
-export function confirmMfaSetup(code: string): Promise<ApiResult<{ backupCodes: string[] }>> {
-  return apiRequest<{ backupCodes: string[] }>('POST', '/admin/mfa/confirm', { body: { code } });
+export function adminLogin(email: string, password: string): Promise<ApiResult<AdminLoginResult>> {
+  return apiRequest<AdminLoginResult>('POST', '/admin/login', { body: { email, password } });
 }
 
 /** `cookie` is the SESSION cookie of the visitor when the call is made on the server (see requireAdminSession). */
@@ -159,14 +135,11 @@ export type StatusChangeResult = {
 };
 
 /**
- * Re-authentication of the administrator (DEC-088): the password again, and a second-factor code. Valid for 10 minutes,
- * and the sensitive actions (such as a suspension) need it.
+ * Re-authentication of the administrator (DEC-088): the password again. Valid for 10 minutes, and the sensitive actions
+ * (such as a suspension) need it.
  */
-export function reauthenticate(
-  password: string,
-  code: string,
-): Promise<ApiResult<{ reauthExpiresAt: string }>> {
-  return apiRequest<{ reauthExpiresAt: string }>('POST', '/admin/reauth', { body: { password, code } });
+export function reauthenticate(password: string): Promise<ApiResult<{ reauthExpiresAt: string }>> {
+  return apiRequest<{ reauthExpiresAt: string }>('POST', '/admin/reauth', { body: { password } });
 }
 
 /** Suspends an account with its reason. Needs a current re-authentication: otherwise the answer carries reauth_required. */
