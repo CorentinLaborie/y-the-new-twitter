@@ -8,7 +8,7 @@ Version 1.0 — 2026-10-16
 
 - **Nom et prénom :** Corentin Laborie
 - **Statut :** site fictif de démonstration, sans activité commerciale
-- **Adresse électronique de contact :** corentin.laborie@epitech.eu
+- **Adresse électronique de contact :** corentin.lab82@gmail.com
 - **Téléphone :** +33 6 50 51 05 81
 - **Directeur de la publication :** Corentin Laborie
 

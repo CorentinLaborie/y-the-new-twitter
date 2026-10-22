@@ -7,7 +7,7 @@ Version 1.0 — 2026-10-16.
 ## 1. Responsable du traitement
 
 - **Responsable :** Corentin Laborie
-- **Contact :** corentin.laborie@epitech.eu
+- **Contact :** corentin.lab82@gmail.com
 
 ## 2. Données collectées
 
@@ -83,7 +83,7 @@ Vous disposez des droits suivants sur vos données :
 - **Limitation** et **opposition** : limiter ou refuser certains traitements.
 - **Portabilité** : recevoir vos données dans un format lisible.
 
-**Comment exercer vos droits :** écrivez à corentin.laborie@epitech.eu, ou utilisez la suppression de compte depuis les paramètres.
+**Comment exercer vos droits :** écrivez à corentin.lab82@gmail.com, ou utilisez la suppression de compte depuis les paramètres.
 
 **Droit à l'effacement :** une demande d'effacement déclenche le même parcours que la suppression de compte (section 8 de la [conditions d'utilisation](conditions-utilisation.md)) : suspension immédiate, puis suppression définitive à l'issue de 90 jours. Certaines données peuvent être conservées si la loi l'impose.
 
