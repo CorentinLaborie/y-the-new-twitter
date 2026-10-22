@@ -64,7 +64,7 @@ test('a reply over 280 characters keeps "Répondre" disabled, and nothing is sen
   await expect(sendButton).toBeEnabled();
 
   await composer.fill('a'.repeat(281));
-  await expect(conversation.getByText('Votre réponse dépasse 280 caractères.')).toBeVisible();
+  await expect(conversation.getByText('Votre réponse dépasse la limite de 280 caractères. Retirez 1 caractère pour publier.')).toBeVisible();
   await expect(conversation.getByText('281/280')).toBeVisible();
   await expect(sendButton).toBeDisabled();
 
