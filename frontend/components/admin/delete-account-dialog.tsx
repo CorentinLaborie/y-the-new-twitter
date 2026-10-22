@@ -135,7 +135,7 @@ export function DeleteAccountDialog({
           Enregistré dans le journal d’audit et envoyé à l’utilisateur par e-mail.
         </span>
         <p className={styles.dialogHint}>
-          Action sensible : confirmation par mot de passe et code requise à l’étape suivante.
+          Action sensible : confirmation par mot de passe requise à l’étape suivante.
         </p>
         <div className={styles.dialogActions}>
           <button type="button" className={styles.secondaryButton} onClick={onCancel}>

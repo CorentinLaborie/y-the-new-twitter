@@ -38,6 +38,14 @@ const REAUTH_REQUIRED = {
 };
 
 describe('CloseThreadDialog', () => {
+  it('names only the password in the sensitive-action notice', () => {
+    render(<CloseThreadDialog threadId={THREAD_ID} onClosed={vi.fn()} onCancel={vi.fn()} />);
+
+    expect(
+      screen.getByText('Action sensible : confirmation par mot de passe requise à l’étape suivante.'),
+    ).toBeInTheDocument();
+  });
+
   beforeEach(() => {
     vi.mocked(closeSupportThread).mockReset();
     vi.mocked(reauthenticate).mockReset();

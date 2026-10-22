@@ -121,7 +121,7 @@ export function ReportDecisionDialog({
           </span>
         ) : null}
         <p className={styles.dialogHint}>
-          Action sensible : confirmation par mot de passe et code requise à l’étape suivante.
+          Action sensible : confirmation par mot de passe requise à l’étape suivante.
         </p>
         <div className={styles.dialogActions}>
           <button type="button" className={styles.secondaryButton} onClick={onCancel}>

@@ -40,6 +40,14 @@ function submitButton() {
 }
 
 describe('DeleteAccountDialog', () => {
+  it('names only the password in the sensitive-action notice', () => {
+    renderDialog();
+
+    expect(
+      screen.getByText('Action sensible : confirmation par mot de passe requise à l’étape suivante.'),
+    ).toBeInTheDocument();
+  });
+
   beforeEach(() => {
     vi.mocked(deleteAccount).mockReset();
     vi.mocked(reauthenticate).mockReset();
