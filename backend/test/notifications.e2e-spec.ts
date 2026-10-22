@@ -20,6 +20,7 @@ class SessionProbeController {
 interface Client {
   readonly userId: string;
   readonly agent: ReturnType<typeof request.agent>;
+  readonly token: string;
 }
 
 interface Line {
@@ -79,7 +80,7 @@ describe('Notifications (e2e, L2 step 3)', () => {
       .split(';')[0]
       .split('=')[1];
     await agent.post(`/api/v1/session-probe/login/${userId}`).set('x-csrf-token', token).expect(201);
-    return { userId, agent };
+    return { userId, agent, token };
   }
 
   beforeAll(async () => {
@@ -232,6 +233,32 @@ describe('Notifications (e2e, L2 step 3)', () => {
       nextCursor: null,
     });
     expect((await client.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 0 });
+  });
+
+  it('marks every unread line as read, and a second call changes nothing', async () => {
+    const owner = await createUser('r_owner');
+    const ann = await createUser('r_ann');
+    const ben = await createUser('r_ben');
+    const question = await createQuestion(owner);
+    await reaction(owner, ann, question, 20);
+    await reaction(owner, ben, question, 10, 'reaction_y');
+    const client = await clientFor(owner);
+
+    await client.agent.post('/api/v1/notifications/read-all').set('x-csrf-token', client.token).expect(204);
+    await client.agent.post('/api/v1/notifications/read-all').set('x-csrf-token', client.token).expect(204);
+
+    expect((await client.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 0 });
+    expect(await sql(`SELECT count(*) FROM notifications WHERE recipient_id = '${owner}' AND read_at IS NULL;`)).toBe(
+      '0',
+    );
+  });
+
+  it('refuses read-all to a suspended account, and without the CSRF token', async () => {
+    const suspended = await createUser('r_suspended', 'suspended');
+    const client = await clientFor(suspended);
+
+    await client.agent.post('/api/v1/notifications/read-all').set('x-csrf-token', client.token).expect(403);
+    await client.agent.post('/api/v1/notifications/read-all').expect(403);
   });
 
   it('answers 401 without a session', async () => {

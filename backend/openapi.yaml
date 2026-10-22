@@ -832,6 +832,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a9
+  /api/v1/notifications/read-all:
+    post:
+      operationId: NotificationsController_markAllRead
+      parameters: []
+      responses:
+        "204":
+          description: Every unread line of the viewer is now read.
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended accounts included), or the
+            CSRF token is missing.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a9
   /api/v1/support/messages:
     post:
       operationId: SupportController_send

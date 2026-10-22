@@ -9,7 +9,7 @@ import {
   toNotificationView,
 } from './notifications.service';
 
-type Repository = jest.Mocked<Pick<NotificationsRepository, 'findPage' | 'countUnread'>>;
+type Repository = jest.Mocked<Pick<NotificationsRepository, 'findPage' | 'countUnread' | 'markAllRead'>>;
 
 const VIEWER: SessionUser = {
   id: '4c5d6e7f-1a2b-4c3d-8e9f-0a1b2c3d4e5f',
@@ -101,7 +101,7 @@ describe('NotificationsService', () => {
   let service: NotificationsService;
 
   beforeEach(() => {
-    repository = { findPage: jest.fn(), countUnread: jest.fn() } as unknown as Repository;
+    repository = { findPage: jest.fn(), countUnread: jest.fn(), markAllRead: jest.fn() } as unknown as Repository;
     prisma = {} as PrismaService;
     service = new NotificationsService(prisma, repository as unknown as NotificationsRepository);
   });
@@ -163,5 +163,13 @@ describe('NotificationsService', () => {
   it('answers 0 for a suspended account, without querying', async () => {
     await expect(service.unreadCount({ ...VIEWER, status: 'suspended' })).resolves.toBe(0);
     expect(repository.countUnread).not.toHaveBeenCalled();
+  });
+
+  it('marks every unread line of the viewer as read now', async () => {
+    repository.markAllRead.mockResolvedValue({ count: 2 });
+
+    await service.markAllRead(VIEWER);
+
+    expect(repository.markAllRead).toHaveBeenCalledWith(prisma, VIEWER.id, expect.any(Date));
   });
 });
