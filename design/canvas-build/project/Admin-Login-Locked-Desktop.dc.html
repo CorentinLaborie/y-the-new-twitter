@@ -63,9 +63,7 @@ a{color:#4f46e5}a:hover{color:#4338ca}
       <fieldset class="a-locked" disabled>
         <x-import component-from-global-scope="YDS.TextField" label="Adresse e-mail" placeholder="Votre adresse e-mail" type="email" auto-complete="username"></x-import>
         <x-import component-from-global-scope="YDS.TextField" label="Mot de passe" placeholder="Votre mot de passe" type="password" revealable="{yes}" auto-complete="current-password"></x-import>
-        <x-import component-from-global-scope="YDS.TextField" label="Code de vérification à 6 chiffres" placeholder="000000" auto-complete="one-time-code"></x-import>
         <x-import component-from-global-scope="YDS.Button" variant="primary" size="lg" block="{yes}" type="submit">Se connecter</x-import>
-        <a class="a-login-alt" href="#">Utiliser un code de secours</a>
       </fieldset>
     </form>
     <p class="a-login-note"><span style="display:inline-flex;line-height:0"><x-import component-from-global-scope="YDS.Icon" name="lock" size="16" color="#6b7280"></x-import></span>Connexion réservée à l’administrateur</p>
