@@ -333,7 +333,7 @@ export function HomeFeed({
       ) : null}
 
       {questions.length > 0 ? (
-        <ul className={styles.list}>
+        <ul className={styles.list} aria-label="Questions du fil">
           {questions.map((question) => (
             <li key={question.id}>{renderQuestionItem(question)}</li>
           ))}
