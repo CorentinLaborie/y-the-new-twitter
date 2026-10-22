@@ -16,7 +16,7 @@ export const QUESTION_NOT_FOUND_MESSAGE = 'Question introuvable.';
  * What the public may see of a question: not deleted, visible, and written by an active account (R13,
  * DEC-086, DEC-087). Every read of a question for another user goes through this filter.
  */
-const VISIBLE_QUESTION = {
+export const VISIBLE_QUESTION = {
   deletedAt: null,
   moderationStatus: 'visible',
   author: { status: 'active' },
