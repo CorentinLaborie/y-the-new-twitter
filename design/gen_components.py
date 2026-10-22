@@ -587,7 +587,7 @@ R += row('Liste sécurité', 'li · Icon 20 indigo + texte', 'Carte « Un espace
          main_d(SAFE.format(f=16, l=22)), main_d(SAFE.format(f=16, l=22)), main_m(SAFE.format(f=14, l=20)))
 JOIN = ('<section style="box-sizing: border-box; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: {p};">'
         '<h2 style="margin: 0 0 16px; font-size: 24px; line-height: 30px; font-weight: 700; color: #1e293b;">Rejoignez la communauté</h2>'
-        '<p style="margin: 0 0 24px; font-size: {f}px; line-height: {l}px; color: #6b7280;">L’inscription est réservée aux adultes de 18&nbsp;ans et plus.<br>Les mineurs ne peuvent pas créer de compte sur Y.<br>Vérification avec VerifAge</p>'
+        '<p style="margin: 0 0 24px; font-size: {f}px; line-height: {l}px; color: #6b7280;">L’inscription est réservée aux adultes de 18&nbsp;ans et plus.<br>Les mineurs ne peuvent pas créer de compte sur Y.<br>Âge calculé à partir de la date de naissance déclarée</p>'
         + C('Button', 'Créer mon compte', variant='primary', size='lg') + '</section>')
 R += row('Carte d’inscription', 'section + YDS.Button lg', 'Bas de page, centrée',
          main_d(JOIN.format(p='32px 24px', f=16, l=22)), main_d(JOIN.format(p='32px 24px', f=16, l=22)), main_m(JOIN.format(p='24px 16px', f=14, l=20).replace('<br>', ' ')))

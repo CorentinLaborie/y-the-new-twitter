@@ -136,7 +136,7 @@ export function Landing() {
               <br />
               Les mineurs ne peuvent pas créer de compte sur Y.
               <br />
-              Vérification avec VerifAge.
+              Âge calculé à partir de la date de naissance déclarée.
             </p>
             <Link href="/signup" className="y-btn y-btn-primary y-btn-lg y-btn-rounded">
               Créer mon compte

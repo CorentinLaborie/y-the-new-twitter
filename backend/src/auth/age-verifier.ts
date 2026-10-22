@@ -16,7 +16,7 @@ export interface AgeVerifier {
 
 /**
  * Decides from the birth date the user declared at signup (owner decision 2026-10-21: no external age provider, since
- * VerifAge has no key). A false declaration is not detected: the rule is 18 or more, declared by the user.
+ * none has been contracted). A false declaration is not detected: the rule is 18 or more, declared by the user.
  */
 export class DeclaredAgeVerifier implements AgeVerifier {
   check(birthDate: Date | null, today: Date): Promise<AgeCheckResult> {
