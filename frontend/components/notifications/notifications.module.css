@@ -122,6 +122,12 @@
   background: var(--color-accent);
 }
 
+/* The quote and the time are muted text: on the tinted background they fall under 4.5:1, so they take the foreground colour. */
+.unread .quote,
+.unread .meta {
+  color: var(--color-foreground);
+}
+
 .link {
   display: flex;
   align-items: flex-start;
