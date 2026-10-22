@@ -76,6 +76,20 @@
   gap: var(--space-16);
 }
 
+/* "Mot de passe oublié ?" under the password field: the link style of the forgot-password screens. */
+.forgotLink {
+  align-self: flex-end;
+  color: var(--color-primary);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.forgotLink:hover {
+  color: var(--color-primary-hover);
+}
+
 .screen :global(.y-field-label) {
   font-size: 16px;
   /* The boards set no line height on labels: the body's 24 px would make each label 3 px taller. */

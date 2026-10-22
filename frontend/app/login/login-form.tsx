@@ -117,6 +117,9 @@ export function LoginForm() {
               inputs.current.password = element;
             }}
           />
+          <Link className={styles.forgotLink} href="/forgot-password">
+            Mot de passe oublié ?
+          </Link>
         </div>
         {formError ? (
           <Notice tone="error">

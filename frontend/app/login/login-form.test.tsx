@@ -139,6 +139,16 @@ describe('LoginForm', () => {
     expect(screen.queryByText(/Votre session a expiré/)).not.toBeInTheDocument();
   });
 
+  it('links to the password reset, under the password field', () => {
+    render(<LoginForm />);
+
+    const link = screen.getByRole('link', { name: 'Mot de passe oublié ?' });
+    expect(link).toHaveAttribute('href', '/forgot-password');
+    expect(screen.getByLabelText('Mot de passe').compareDocumentPosition(link)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
   it('keeps the e-mail field empty when no address was handed over', () => {
     givenUrl('verified=1');
     render(<LoginForm />);
