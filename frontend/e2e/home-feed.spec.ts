@@ -19,6 +19,11 @@ async function expectNoHorizontalScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
+// The questions of the feed only: the trending block and the navigation are lists too.
+function feedItems(page: Page) {
+  return page.getByRole('list', { name: 'Questions du fil' }).getByRole('listitem');
+}
+
 test('the list shows the questions of the feed, with author, handle, date, hashtags and text', async ({
   page,
 }) => {
@@ -32,7 +37,7 @@ test('the list shows the questions of the feed, with author, handle, date, hasht
 
   await page.goto('/home');
 
-  const items = page.getByRole('listitem');
+  const items = feedItems(page);
   await expect(items).toHaveCount(2);
   await expect(items.nth(0)).toContainText('Pourquoi les gens préfèrent-ils les réponses rapides ?');
   await expect(items.nth(0)).toContainText('Marthe A');
@@ -51,12 +56,12 @@ test('a question posted from the composer appears first, after the API created i
   });
 
   await page.goto('/home');
-  await expect(page.getByRole('listitem')).toHaveCount(1);
+  await expect(feedItems(page)).toHaveCount(1);
 
   await page.getByLabel(COMPOSER_LABEL).fill('  Pourquoi le café refroidit-il si vite ?  ');
   await page.getByRole('button', { name: 'Poster' }).click();
 
-  const items = page.getByRole('listitem');
+  const items = feedItems(page);
   await expect(items).toHaveCount(2);
   await expect(items.nth(0)).toContainText('Pourquoi le café refroidit-il si vite ?');
   await expect(items.nth(1)).toContainText('Une question déjà publiée');
@@ -88,7 +93,8 @@ test('the empty state shows when the feed has no question', async ({ page }) => 
 
   await expect(page.getByRole('heading', { name: 'Rien à lire pour l’instant' })).toBeVisible();
   await expect(page.getByText('Posez la première question ou explorez les tendances.')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Explorer' })).toHaveCount(0);
+  // The navigation keeps its "Explorer" entry; only the empty state must not offer it.
+  await expect(page.getByRole('main').getByRole('link', { name: 'Explorer' })).toHaveCount(0);
   await expectNoHorizontalScroll(page);
 });
 
@@ -109,15 +115,15 @@ test('new questions are announced by a pill, and shown first when it is clicked'
   });
 
   await page.goto('/home');
-  await expect(page.getByRole('listitem')).toHaveCount(1);
+  await expect(feedItems(page)).toHaveCount(1);
   await page.clock.fastForward(30_000);
 
   const pill = page.getByRole('button', { name: 'Afficher 1 nouvelle question' });
   await expect(pill).toBeVisible();
   await pill.click();
 
-  await expect(page.getByRole('listitem')).toHaveCount(2);
-  await expect(page.getByRole('listitem').nth(0)).toContainText('Question arrivée pendant la lecture');
+  await expect(feedItems(page)).toHaveCount(2);
+  await expect(feedItems(page).nth(0)).toContainText('Question arrivée pendant la lecture');
   await expect(pill).toHaveCount(0);
 });
 
@@ -175,7 +181,7 @@ test('Voir plus loads the next page and keeps the questions already shown', asyn
   await page.goto('/home');
   await page.getByRole('button', { name: 'Voir plus', exact: true }).click();
 
-  await expect(page.getByRole('listitem')).toHaveCount(2);
+  await expect(feedItems(page)).toHaveCount(2);
   await expect(page.getByRole('button', { name: 'Voir plus', exact: true })).toHaveCount(0);
   expect(feedCalls.map((call) => call.cursor)).toEqual([null, 'page-2']);
 });
@@ -184,7 +190,7 @@ test('the list of questions has no WCAG 2.2 AA violation', async ({ page }) => {
   await mockFeedApi(page, { feed: () => feedPage([question('a', 'Une question pour le contrôle')]) });
 
   await page.goto('/home');
-  await expect(page.getByRole('listitem')).toHaveCount(1);
+  await expect(feedItems(page)).toHaveCount(1);
 
   const results = await new AxeBuilder({ page }).withTags(WCAG_AA_TAGS).analyze();
 
