@@ -154,17 +154,19 @@ describe('Back-office sign-in with the password (e2e)', () => {
       .expect(404);
   });
 
-  it('sends the e-mail alert on every sign-in', async () => {
-    const account = await createAccount('alert_admin', 'admin');
-    const alerts = () => mail.messages().filter((message) => message.subject === 'Connexion à l’administration Y');
+  it('sends no e-mail on a sign-in, and writes each sign-in in the audit log', async () => {
+    const account = await createAccount('audit_admin', 'admin');
 
     await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD }).expect(200);
-    expect(alerts().map((message) => message.to)).toEqual([account.email]);
-
     await adminLogin(await newVisitor(), { email: account.email, password: PASSWORD }).expect(200);
-    expect(alerts().map((message) => message.to)).toEqual([account.email, account.email]);
+
+    expect(mail.messages()).toHaveLength(0);
+    expect(
+      await sql(
+        `SELECT count(*) FROM admin_audit_log WHERE actor_id = '${account.id}' AND action = 'auth.admin_login' AND result = 'ok';`,
+      ),
+    ).toBe('2');
   });
-
   it('locks the account after five wrong passwords, and refuses even the right password meanwhile', async () => {
     const account = await createAccount('lock_admin', 'admin');
 
