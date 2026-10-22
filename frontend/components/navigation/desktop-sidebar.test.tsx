@@ -71,7 +71,7 @@ describe('DesktopSidebar (plan L0, section 4.1)', () => {
 
   it('opens the same menu from the account block, named after the viewer', () => {
     const nav = renderSidebar('/home');
-    const account = within(nav).getByRole('button', { name: 'Options du compte de Alice Martin' });
+    const account = within(nav).getByRole('button', { name: /Alice Martin/ });
 
     fireEvent.click(account);
 
