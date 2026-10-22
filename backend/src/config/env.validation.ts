@@ -7,6 +7,7 @@ import {
   IsString,
   IsUrl,
   Min,
+  MinLength,
   ValidateIf,
   validateSync,
 } from 'class-validator';
@@ -29,14 +30,17 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(32)
   AUDIT_HMAC_KEY!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(32)
   IP_HASH_KEY!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(32)
   BACKUP_CODE_HMAC_KEY!: string;
 
   /** Base64 key of 32 bytes that encrypts the TOTP secrets of the back-office (DEC-107). Never in Git. */
@@ -46,6 +50,7 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(32)
   SESSION_SECRET!: string;
 
   @IsUrl({ require_tld: false })

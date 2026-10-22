@@ -4,11 +4,11 @@ const validConfig: Record<string, string> = {
   NODE_ENV: 'local',
   DATABASE_URL: 'postgresql://y:test@localhost:5434/y',
   DATABASE_MAINTENANCE_URL: 'postgresql://y_maintenance:test@localhost:5434/y',
-  AUDIT_HMAC_KEY: 'audit',
-  IP_HASH_KEY: 'ip',
-  BACKUP_CODE_HMAC_KEY: 'backup',
+  AUDIT_HMAC_KEY: '0123456789abcdef0123456789abcdef',
+  IP_HASH_KEY: '0123456789abcdef0123456789abcdef',
+  BACKUP_CODE_HMAC_KEY: '0123456789abcdef0123456789abcdef',
   TOTP_ENCRYPTION_KEY: 'totp',
-  SESSION_SECRET: 'session',
+  SESSION_SECRET: '0123456789abcdef0123456789abcdef',
   APP_PUBLIC_URL: 'http://localhost:3000',
   Y_CONVERSATION_THRESHOLD: '50',
   Y_CODE_TTL_MINUTES: '15',
@@ -101,6 +101,11 @@ describe('validateEnvironment', () => {
     ).not.toThrow();
   });
 
+  it('refuses a secret shorter than 32 characters, and names only the key', () => {
+    expect(() => validateEnvironment({ ...validConfig, SESSION_SECRET: 'too-short' })).toThrow('SESSION_SECRET');
+    expect(() => validateEnvironment({ ...validConfig, AUDIT_HMAC_KEY: 'too-short' })).toThrow('AUDIT_HMAC_KEY');
+  });
+
   it('defaults the proxy hops to 0, and refuses a negative number', () => {
     expect(validateEnvironment(validConfig).TRUST_PROXY_HOPS).toBe(0);
     expect(() => validateEnvironment({ ...validConfig, TRUST_PROXY_HOPS: '-1' })).toThrow('TRUST_PROXY_HOPS');
@@ -125,6 +130,6 @@ describe('validateEnvironment', () => {
     })();
 
     expect(error).toContain('IP_HASH_KEY');
-    expect(error).not.toContain('audit');
+    expect(error).not.toContain('0123456789abcdef0123456789abcdef');
   });
 });
