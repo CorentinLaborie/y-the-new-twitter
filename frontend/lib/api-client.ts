@@ -4,7 +4,24 @@
  * lib/session-expired.ts) and by the health page (getHealth). Every call returns an ApiResult, it never throws on an answer.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
+/**
+ * The API address. A production build must name it: without it, a visitor's browser would call its own localhost.
+ * Development falls back to the local backend.
+ */
+export function apiBaseUrl(
+  configured: string | undefined = process.env.NEXT_PUBLIC_API_URL,
+  nodeEnv: string | undefined = process.env.NODE_ENV,
+): string {
+  if (configured) {
+    return configured;
+  }
+  if (nodeEnv === 'production') {
+    throw new Error('NEXT_PUBLIC_API_URL is required in a production build.');
+  }
+  return 'http://localhost:8080';
+}
+
+const API_BASE_URL = apiBaseUrl();
 
 export type ApiProblem = {
   status: number;

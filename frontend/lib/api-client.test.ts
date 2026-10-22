@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiRequest } from './api-client';
+import { apiBaseUrl, apiRequest } from './api-client';
 
 describe('apiRequest errors', () => {
   beforeEach(() => {
@@ -63,5 +63,19 @@ describe('apiRequest errors', () => {
 
     expect(result).toMatchObject({ ok: false, problem: { status: 500, detail: 'Erreur serveur.' } });
     expect(result.ok ? undefined : result.problem.code).toBeUndefined();
+  });
+});
+
+describe('apiBaseUrl', () => {
+  it('uses the configured address', () => {
+    expect(apiBaseUrl('https://y.corentin-laborie.com', 'production')).toBe('https://y.corentin-laborie.com');
+  });
+
+  it('refuses a production build without an address, instead of calling localhost', () => {
+    expect(() => apiBaseUrl(undefined, 'production')).toThrow('NEXT_PUBLIC_API_URL is required');
+  });
+
+  it('falls back to the local backend in development', () => {
+    expect(apiBaseUrl(undefined, 'development')).toBe('http://localhost:8080');
   });
 });

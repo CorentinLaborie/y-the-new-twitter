@@ -32,6 +32,8 @@ export default defineConfig({
     { command: 'node e2e/session-stub.mjs', port: 8080, reuseExistingServer: true },
     {
       command: `npm run build && npm run start -- --port ${PORT}`,
+      // The production build needs the API address: the tests answer it on the stub port.
+      env: { NEXT_PUBLIC_API_URL: 'http://localhost:8080' },
       url: `http://localhost:${PORT}`,
       reuseExistingServer: !process.env.CI,
       timeout: 240_000,
