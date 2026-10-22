@@ -199,8 +199,6 @@ model User {
   notificationPreferences  NotificationPreference[]
   filedReports             Report[]                  @relation("ReportReporter")
   reviewedReports          Report[]                  @relation("ReportReviewer")
-  adminMfa                 AdminMfa?
-  adminBackupCodes         AdminBackupCode[]
   idempotencyKeys          IdempotencyKey[]
   auditLogEntries          AdminAuditLog[]
   supportThreads           SupportThread[]           @relation("SupportThreadUser")
@@ -613,29 +611,6 @@ model Report {
   @@index([reporterId])
   @@index([reviewedById])
   @@map("reports")
-}
-
-model AdminMfa {
-  userId              String   @id @map("user_id") @db.Uuid
-  totpSecretEncrypted String   @map("totp_secret_encrypted") @db.VarChar(255)
-  enabledAt           DateTime @default(now()) @map("enabled_at") @db.Timestamptz(3)
-  lastUsedStep        BigInt?  @map("last_used_step")
-
-  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@map("admin_mfa")
-}
-
-model AdminBackupCode {
-  id       String    @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  userId   String    @map("user_id") @db.Uuid
-  codeHash String    @map("code_hash") @db.Char(64)
-  usedAt   DateTime? @map("used_at") @db.Timestamptz(3)
-
-  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([userId])
-  @@map("admin_backup_codes")
 }
 
 model AdminAuditLog {

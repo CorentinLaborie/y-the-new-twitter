@@ -8,7 +8,7 @@ import { MAIL_SENDER } from '../src/common/mail/mail-sender';
 import { PrismaService } from '../src/database/prisma.service';
 import type { Prisma } from '../src/database/generated/client/client';
 import { startApp } from './support/app';
-import { BASE, createAccount, enrol, newVisitor, PASSWORD, signIn } from './support/back-office';
+import { BASE, createAccount, newVisitor, PASSWORD, signIn  } from './support/back-office';
 import { resetRateLimits } from './support/rate-limits';
 import { startMigratedPostgres } from './support/postgres';
 
@@ -22,26 +22,19 @@ describe('Back-office suspension and reactivation (e2e, DEC-077, DEC-088, DEC-11
   let prisma: PrismaService;
   let mail: CapturingMailSender;
 
-  /**
-   * A signed-in administrator. The backup codes after the first one are the queue of re-authentications: each one is
-   * single-use, so the TOTP time window does not limit a test.
-   */
+  /** A signed-in administrator, with the password. */
   async function administrator(handle: string) {
     const account = await createAccount(app, handle, 'admin');
-    const codes = await enrol(app, account);
-    const visitor = await signIn(app, handle, codes[0]);
-    return { visitor, userId: account.id, codes: codes.slice(1) };
+    const visitor = await signIn(app, handle);
+    return { visitor, userId: account.id };
   }
 
-  /** A re-authentication with the password and the next backup code of the queue. */
-  async function reauthenticate(admin: {
-    visitor: { agent: ReturnType<typeof request.agent>; csrf: string };
-    codes: string[];
-  }) {
+  /** A re-authentication with the password (DEC-088). */
+  async function reauthenticate(admin: { visitor: { agent: ReturnType<typeof request.agent>; csrf: string } }) {
     await admin.visitor.agent
       .post(`${BASE}/admin/reauth`)
       .set('x-csrf-token', admin.visitor.csrf)
-      .send({ password: PASSWORD, code: admin.codes.shift() })
+      .send({ password: PASSWORD })
       .expect(200);
   }
 

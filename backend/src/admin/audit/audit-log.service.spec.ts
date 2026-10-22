@@ -82,7 +82,7 @@ describe('AuditLogService', () => {
 
   it('chains each entry to the HMAC of the entry before it', async () => {
     await service.append(NEW_ENTRY);
-    await service.append({ ...NEW_ENTRY, action: AUDIT_ACTIONS.mfaEnrol });
+    await service.append({ ...NEW_ENTRY, action: AUDIT_ACTIONS.adminLogin });
 
     expect(rows[1].prevHash).toBe(auditHmac(KEY, { ...rows[0], details: null }));
   });
@@ -162,7 +162,7 @@ describe('AuditLogService', () => {
 
   it('verifies a chain it wrote, and finds the entry that was changed afterwards', async () => {
     await service.append(NEW_ENTRY);
-    await service.append({ ...NEW_ENTRY, action: AUDIT_ACTIONS.mfaEnrol });
+    await service.append({ ...NEW_ENTRY, action: AUDIT_ACTIONS.adminLogin });
     await service.append({ ...NEW_ENTRY, result: 'failed' });
 
     await expect(service.verify()).resolves.toEqual({ valid: true, brokenAt: null, checked: 3 });

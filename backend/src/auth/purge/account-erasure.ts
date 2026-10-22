@@ -101,8 +101,6 @@ export async function eraseAccount(db: ErasureDb, userId: string, now: Date): Pr
   await db.notificationPreference.deleteMany({ where: { userId } });
   await db.conversationParticipant.deleteMany({ where: { userId } });
   await db.ageVerification.deleteMany({ where: { userId } });
-  await db.adminMfa.deleteMany({ where: { userId } });
-  await db.adminBackupCode.deleteMany({ where: { userId } });
 
   // Codes, sessions, idempotency keys and login events of the account (DEC-065).
   await db.signupCode.deleteMany({ where: { userId } });

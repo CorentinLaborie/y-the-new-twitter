@@ -6,8 +6,6 @@ import { AdminAuthService } from './admin-auth.service';
 import { AdminAuditController } from './audit/admin-audit.controller';
 import { AuditLogRepository } from './audit/audit-log.repository';
 import { AuditLogService } from './audit/audit-log.service';
-import { AdminMfaRepository } from './mfa/admin-mfa.repository';
-import { AdminMfaService } from './mfa/admin-mfa.service';
 import { AdminDashboardController } from './dashboard/admin-dashboard.controller';
 import { AdminDashboardRepository } from './dashboard/admin-dashboard.repository';
 import { AdminDashboardService } from './dashboard/admin-dashboard.service';
@@ -21,7 +19,7 @@ import { AdminUsersController } from './users/admin-users.controller';
 import { AdminUsersRepository } from './users/admin-users.repository';
 import { AdminUsersService } from './users/admin-users.service';
 
-/** The back-office (DEC-036, DEC-037): the sign-in, the second factor, the admin guard and the console sections. */
+/** The back-office (DEC-036, DEC-037): the sign-in, the admin guard and the console sections. */
 @Module({
   imports: [AuthModule, UsersModule],
   controllers: [
@@ -34,8 +32,6 @@ import { AdminUsersService } from './users/admin-users.service';
   ],
   providers: [
     AdminAuthService,
-    AdminMfaService,
-    AdminMfaRepository,
     AuditLogService,
     AuditLogRepository,
     AdminUsersService,

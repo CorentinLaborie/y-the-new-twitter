@@ -43,8 +43,6 @@ function fakeTransaction(accountCount = 1) {
     notificationPreference: { deleteMany: write('notificationPreference.deleteMany') },
     conversationParticipant: { deleteMany: write('conversationParticipant.deleteMany') },
     ageVerification: { deleteMany: write('ageVerification.deleteMany') },
-    adminMfa: { deleteMany: write('adminMfa.deleteMany') },
-    adminBackupCode: { deleteMany: write('adminBackupCode.deleteMany') },
     signupCode: { deleteMany: write('signupCode.deleteMany') },
     passwordResetCode: { deleteMany: write('passwordResetCode.deleteMany') },
     emailChangeCode: { deleteMany: write('emailChangeCode.deleteMany') },

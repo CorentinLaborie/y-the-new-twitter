@@ -7,7 +7,6 @@ const validConfig: Record<string, string> = {
   AUDIT_HMAC_KEY: '0123456789abcdef0123456789abcdef',
   IP_HASH_KEY: '0123456789abcdef0123456789abcdef',
   BACKUP_CODE_HMAC_KEY: '0123456789abcdef0123456789abcdef',
-  TOTP_ENCRYPTION_KEY: 'totp',
   SESSION_SECRET: '0123456789abcdef0123456789abcdef',
   APP_PUBLIC_URL: 'http://localhost:3000',
   Y_CONVERSATION_THRESHOLD: '50',
@@ -31,12 +30,6 @@ describe('validateEnvironment', () => {
   it('fails at startup when a secret is missing, and names only the key', () => {
     expect(() => validateEnvironment(without('AUDIT_HMAC_KEY'))).toThrow(
       'Invalid configuration: AUDIT_HMAC_KEY',
-    );
-  });
-
-  it('fails at startup when the TOTP encryption key of the back-office is missing', () => {
-    expect(() => validateEnvironment(without('TOTP_ENCRYPTION_KEY'))).toThrow(
-      'Invalid configuration: TOTP_ENCRYPTION_KEY',
     );
   });
 

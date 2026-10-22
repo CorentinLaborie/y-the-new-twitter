@@ -45,7 +45,7 @@ describe('Database migrations (e2e)', () => {
     await container?.stop();
   });
 
-  it('creates the 31 tables of the reference on a fresh PostgreSQL 18, rate_limit_counters and job_leases included', async () => {
+  it('creates the 29 tables of the reference on a fresh PostgreSQL 18, rate_limit_counters and job_leases included', async () => {
     const result = await sql(
       `SELECT count(*) FROM information_schema.tables
        WHERE table_schema = 'public' AND table_name NOT LIKE '\\_prisma%';`,
@@ -53,7 +53,7 @@ describe('Database migrations (e2e)', () => {
     const rateLimitTable = await sql(`SELECT to_regclass('public.rate_limit_counters') IS NOT NULL;`);
     const jobLeaseTable = await sql(`SELECT to_regclass('public.job_leases') IS NOT NULL;`);
 
-    expect(result.stdout.trim()).toBe('31');
+    expect(result.stdout.trim()).toBe('29');
     expect(rateLimitTable.stdout.trim()).toBe('t');
     expect(jobLeaseTable.stdout.trim()).toBe('t');
   });

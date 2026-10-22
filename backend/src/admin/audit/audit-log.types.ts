@@ -3,7 +3,6 @@ export const AUDIT_ACTIONS = {
   /** A back-office sign-in, with the result 'ok' (second factor given) or 'failed' (wrong code). */
   adminLogin: 'auth.admin_login',
   /** A second factor set up and confirmed by an administrator. */
-  mfaEnrol: 'auth.mfa_enrol',
   /** An account suspended by an administrator, with the reason (DEC-077, DEC-085). */
   userSuspend: 'user.suspend',
   /** A suspension lifted by an administrator, with the reason (DEC-077, DEC-085). */

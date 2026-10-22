@@ -46,7 +46,7 @@ GRANT SELECT (id, status, deletion_purge_at, follower_count, following_count) ON
 GRANT UPDATE (status, status_changed_at, deleted_at, handle, display_name, email, phone, password_hash, birth_date, bio, avatar_url, suspension_reason, role, failed_login_count, locked_until, follower_count, following_count, updated_at) ON users TO y_maintenance;
 GRANT UPDATE (deleted_at, like_count, dislike_count, y_count, reply_count) ON questions TO y_maintenance;
 GRANT UPDATE (deleted_at, like_count, dislike_count) ON replies TO y_maintenance;
-GRANT SELECT, DELETE ON question_reactions, reply_reactions, follows, blocks, bookmarks, notifications, notification_preferences, conversation_participants, age_verifications, admin_mfa, admin_backup_codes TO y_maintenance;
+GRANT SELECT, DELETE ON question_reactions, reply_reactions, follows, blocks, bookmarks, notifications, notification_preferences, conversation_participants, age_verifications TO y_maintenance;
 
 -- Backup: read everything, write nothing.
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO y_backup;

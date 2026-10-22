@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { PrismaService } from '../src/database/prisma.service';
 import { startApp } from './support/app';
-import { BASE, createAccount, enrol, newVisitor, PASSWORD, signIn } from './support/back-office';
+import { BASE, createAccount, newVisitor, PASSWORD, signIn  } from './support/back-office';
 import { resetRateLimits } from './support/rate-limits';
 import { startMigratedPostgres } from './support/postgres';
 
@@ -35,8 +35,7 @@ describe('Back-office account search and view (e2e)', () => {
       where: { id: bruno.id },
       data: { status: 'suspended', suspensionReason: 'Propos injurieux', statusChangedAt: new Date() },
     });
-    const adminCodes = await enrol(app, admin);
-    visitor = await signIn(app, 'usrsearch_admin', adminCodes[0]);
+    visitor = await signIn(app, 'usrsearch_admin');
   }, 180_000);
 
   beforeEach(async () => {
@@ -55,7 +54,7 @@ describe('Back-office account search and view (e2e)', () => {
     await visitor.agent.get(`${ACCOUNTS}/${alice.id}`).expect(404);
   });
 
-  it('answers 404 to an administrator whose password alone was given: no session is started before the second factor', async () => {
+  it('lets an administrator who signed in with the password reach the account search', async () => {
     await createAccount(app, 'gate_admin', 'admin');
     const visitor = await newVisitor(app);
     await visitor.agent
@@ -64,7 +63,7 @@ describe('Back-office account search and view (e2e)', () => {
       .send({ email: 'gate_admin@example.test', password: PASSWORD })
       .expect(200);
 
-    await visitor.agent.get(ACCOUNTS).expect(404);
+    await visitor.agent.get(ACCOUNTS).expect(200);
   });
 
   describe('once signed in as an administrator', () => {
@@ -231,7 +230,7 @@ describe('Back-office account search and view (e2e)', () => {
       const view = await visitor.agent.get(`${ACCOUNTS}/${admin.id}`).expect(200);
 
       const actions = view.body.history.map((entry: { action: string }) => entry.action);
-      expect(actions).toEqual(expect.arrayContaining(['auth.admin_login', 'auth.mfa_enrol']));
+      expect(actions).toEqual(expect.arrayContaining(['auth.admin_login']));
       expect(view.body.history.every((entry: { targetId: string }) => entry.targetId === admin.id)).toBe(
         true,
       );

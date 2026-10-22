@@ -1,10 +1,8 @@
 import {
   ADMIN_IDLE_TIMEOUT_MS,
   ADMIN_MAX_SESSION_MS,
-  ADMIN_MFA_SETUP_TTL_MS,
   ADMIN_REAUTH_WINDOW_MS,
   isElevated,
-  isMfaSetupOpen,
   isReauthenticated,
   startElevation,
 } from './admin-session';
@@ -42,23 +40,6 @@ describe('admin session limits (DEC-036, DEC-082)', () => {
     const elevation = { ...startElevation(verifiedAt), lastSeenAt: NOW.toISOString() };
 
     expect(isElevated(elevation, NOW)).toBe(false);
-  });
-
-  it('keeps the set-up of the second factor open for 15 minutes only', () => {
-    const startedAt = new Date(NOW.getTime() - ADMIN_MFA_SETUP_TTL_MS).toISOString();
-
-    expect(isMfaSetupOpen({ userId: 'admin-1', secretEncrypted: 'x', startedAt }, NOW)).toBe(true);
-    expect(
-      isMfaSetupOpen(
-        {
-          userId: 'admin-1',
-          secretEncrypted: 'x',
-          startedAt: new Date(NOW.getTime() - ADMIN_MFA_SETUP_TTL_MS - 1).toISOString(),
-        },
-        NOW,
-      ),
-    ).toBe(false);
-    expect(isMfaSetupOpen(undefined, NOW)).toBe(false);
   });
 
   it('counts a re-authentication as current for 10 minutes only (DEC-088)', () => {

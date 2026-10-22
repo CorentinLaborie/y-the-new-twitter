@@ -1,34 +1,24 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { LoginService, type LoginAttempt } from '../auth/login/login.service';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { MAIL_SENDER, type MailSender } from '../common/mail/mail-sender';
 import { UsersRepository } from '../users/users.repository';
-import type { AdminMfaSetup } from './admin-session';
-import { adminSetupMail } from './admin-setup-mail';
 import { adminSignInMail } from './admin-sign-in-mail';
-import { AdminMfaService, type PendingFactor } from './mfa/admin-mfa.service';
-import { issueSetupToken, readSetupToken } from './mfa/setup-link';
 import { AuditLogService } from './audit/audit-log.service';
 import { AUDIT_ACTIONS, AUDIT_TARGET_TYPES, type AuditResult } from './audit/audit-log.types';
 
 /**
- * What the back-office login answers. 'invalid' and 'unverified' are the same answers as the user login. The other
- * outcomes come after a correct password: 'code_required' asks for the second factor, 'invalid_code' refuses a wrong
- * one, 'setup_required' means the set-up link was sent by e-mail (no session is started), and 'ok' is a full sign-in.
+ * What the back-office sign-in answers. 'invalid' and 'unverified' are the same answers as the user login. 'ok' is a
+ * full sign-in: the password is the only proof.
  */
 type AdminLoginOutcome =
   | { readonly status: 'invalid' }
   | { readonly status: 'unverified' }
-  | { readonly status: 'code_required' }
-  | { readonly status: 'invalid_code' }
-  | { readonly status: 'setup_required' }
   | { readonly status: 'ok'; readonly user: SessionUser };
 
 /**
- * The back-office sign-in (DEC-036): the password, then the second factor, then an e-mail alert. An account with no
- * second factor yet gets a set-up link by e-mail instead of a session (DEC-082): the set-up can only start from the
- * mailbox, so a stolen password alone cannot enrol a factor.
+ * The back-office sign-in (DEC-036): the email and the password of an active administrator, then an e-mail alert.
+ * The second factor is not used.
  */
 @Injectable()
 export class AdminAuthService {
@@ -36,36 +26,15 @@ export class AdminAuthService {
 
   constructor(
     private readonly loginService: LoginService,
-    private readonly mfa: AdminMfaService,
     private readonly users: UsersRepository,
     private readonly audit: AuditLogService,
     @Inject(MAIL_SENDER) private readonly mail: MailSender,
-    private readonly config: ConfigService,
   ) {}
 
-  async login(
-    attempt: Omit<LoginAttempt, 'adminOnly'>,
-    code: string | undefined,
-    now: Date,
-  ): Promise<AdminLoginOutcome> {
+  async login(attempt: Omit<LoginAttempt, 'adminOnly'>, now: Date): Promise<AdminLoginOutcome> {
     const check = await this.loginService.checkPassword({ ...attempt, adminOnly: true });
     if (check.status !== 'ok') {
       return check;
-    }
-
-    if (!(await this.mfa.isEnrolled(check.account.id))) {
-      await this.sendSetupLink(check.account.id, check.account.email, now);
-      return { status: 'setup_required' };
-    }
-
-    if (code === undefined) {
-      return { status: 'code_required' };
-    }
-
-    if (!(await this.mfa.verifyCode(check.account.id, code, now))) {
-      await this.loginService.recordFailure(check.account, check.event);
-      await this.record(check.account.id, AUDIT_ACTIONS.adminLogin, 'failed');
-      return { status: 'invalid_code' };
     }
 
     const completed = await this.loginService.completeLogin(check.account, check.event);
@@ -78,34 +47,12 @@ export class AdminAuthService {
     return { status: 'ok', user: completed.user };
   }
 
-  /**
-   * A new secret for the set-up, from a link sent by e-mail. Null for a link that is unknown, expired, or whose account
-   * has its second factor already: the answer does not say which.
-   */
-  async startSetupFromLink(token: string, now: Date): Promise<{ userId: string; pending: PendingFactor } | null> {
-    const userId = readSetupToken(token, this.config.getOrThrow<string>('SESSION_SECRET'), now);
-    if (userId === null || (await this.mfa.isEnrolled(userId))) {
-      return null;
-    }
-
-    const handle = await this.users.handleOf(userId);
-    if (handle === null) {
-      return null;
-    }
-
-    return { userId, pending: await this.mfa.startSetup(handle) };
-  }
-
-  /**
-   * Checks the password and a second-factor code again, for the actions that need a fresh proof (DEC-088). The
-   * password step counts failures toward the lock, like a sign-in. A wrong code counts too.
-   */
+  /** The password again, for the sensitive actions (DEC-088). Counts a wrong password toward the lock, like a sign-in. */
   async reauthenticate(
     userId: string,
     network: { ipAddress: string; userAgent: string | undefined },
-    proof: { password: string; code: string },
-    now: Date,
-  ): Promise<'ok' | 'invalid' | 'invalid_code'> {
+    password: string,
+  ): Promise<'ok' | 'invalid'> {
     const email = await this.users.emailOf(userId);
     if (email === null) {
       return 'invalid';
@@ -113,53 +60,12 @@ export class AdminAuthService {
 
     const check = await this.loginService.checkPassword({
       email,
-      password: proof.password,
+      password,
       ipAddress: network.ipAddress,
       userAgent: network.userAgent,
       adminOnly: true,
     });
-    if (check.status !== 'ok') {
-      return 'invalid';
-    }
-
-    if (!(await this.mfa.verifyCode(userId, proof.code, now))) {
-      await this.loginService.recordFailure(check.account, check.event);
-      return 'invalid_code';
-    }
-
-    return 'ok';
-  }
-
-  /** The codes in clear, or null when the code is wrong. A successful set-up is announced by e-mail, like a sign-in. */
-  async confirmSetup(
-    userId: string,
-    setup: AdminMfaSetup,
-    code: string,
-    now: Date,
-  ): Promise<string[] | null> {
-    const codes = await this.mfa.confirmSetup(userId, setup.secretEncrypted, code, now);
-    if (codes !== null) {
-      await this.record(userId, AUDIT_ACTIONS.mfaEnrol, 'ok');
-      const email = await this.users.emailOf(userId);
-      if (email !== null) {
-        await this.notifySignIn(email, now);
-      }
-    }
-
-    return codes;
-  }
-
-  /**
-   * Sends the set-up link to the account address. Unlike the sign-in alert, a failed send is an error: without the link
-   * the set-up cannot be done, so the login answers an error and the administrator knows to retry.
-   */
-  private async sendSetupLink(userId: string, to: string, now: Date): Promise<void> {
-    const token = issueSetupToken(userId, this.config.getOrThrow<string>('SESSION_SECRET'), now);
-    const base = this.config.get<string>('ADMIN_PUBLIC_URL') || this.config.getOrThrow<string>('APP_PUBLIC_URL');
-    const link = new URL('/admin/mfa-setup', base);
-    link.searchParams.set('token', token);
-
-    await this.mail.send(adminSetupMail(to, link.toString()));
+    return check.status === 'ok' ? 'ok' : 'invalid';
   }
 
   /**

@@ -3,7 +3,7 @@ import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { AuditLogService } from '../src/admin/audit/audit-log.service';
 import { AUDIT_ACTIONS, AUDIT_TARGET_TYPES } from '../src/admin/audit/audit-log.types';
 import { startApp } from './support/app';
-import { BASE, createAccount, enrol, newVisitor, PASSWORD, signIn } from './support/back-office';
+import { BASE, createAccount, newVisitor, signIn  } from './support/back-office';
 import { resetRateLimits } from './support/rate-limits';
 import { sqlAsSuperuser, startMigratedPostgres } from './support/postgres';
 
@@ -41,14 +41,13 @@ describe('Back-office audit log (e2e)', () => {
 
   it('writes the set-up and each sign-in, and lists them newest first', async () => {
     const admin = await createAccount(app, 'audit_admin', 'admin');
-    const [code] = await enrol(app, admin);
-    const visitor = await signIn(app, 'audit_admin', code);
+    const visitor = await signIn(app, 'audit_admin');
 
     const listed = await visitor.agent.get(AUDIT).expect(200);
 
     const actions = listed.body.items.map((item: { action: string }) => item.action);
     expect(actions[0]).toBe(AUDIT_ACTIONS.adminLogin);
-    expect(actions).toContain(AUDIT_ACTIONS.mfaEnrol);
+    expect(actions).toContain(AUDIT_ACTIONS.adminLogin);
     expect(listed.body.items[0]).toMatchObject({
       actorId: admin.id,
       result: 'ok',
@@ -59,29 +58,10 @@ describe('Back-office audit log (e2e)', () => {
     });
   });
 
-  it('records a wrong second factor as a failed sign-in', async () => {
-    const admin = await createAccount(app, 'failed_admin', 'admin');
-    await enrol(app, admin);
-    const visitor = await newVisitor(app);
-
-    await visitor.agent
-      .post(`${BASE}/admin/login`)
-      .set('x-csrf-token', visitor.csrf)
-      .send({ email: admin.email, password: PASSWORD, code: '000000' })
-      .expect(401);
-
-    expect(
-      await sql(
-        `SELECT count(*) FROM admin_audit_log WHERE actor_id = '${admin.id}' AND action = '${AUDIT_ACTIONS.adminLogin}' AND result = 'failed';`,
-      ),
-    ).toBe('1');
-  });
-
   it('filters by action and pages with a cursor, without repeating an entry', async () => {
-    const admin = await createAccount(app, 'paging_admin', 'admin');
-    const [first, second] = await enrol(app, admin);
-    const visitor = await signIn(app, 'paging_admin', first);
-    await signIn(app, 'paging_admin', second);
+    await createAccount(app, 'paging_admin', 'admin');
+    const visitor = await signIn(app, 'paging_admin');
+    await signIn(app, 'paging_admin');
 
     const page1 = await visitor.agent.get(`${AUDIT}?limit=1&action=${AUDIT_ACTIONS.adminLogin}`).expect(200);
     expect(page1.body.items).toHaveLength(1);
@@ -98,17 +78,15 @@ describe('Back-office audit log (e2e)', () => {
   });
 
   it('refuses a cursor that is not one of its own', async () => {
-    const admin = await createAccount(app, 'cursor_admin', 'admin');
-    const [code] = await enrol(app, admin);
-    const visitor = await signIn(app, 'cursor_admin', code);
+    await createAccount(app, 'cursor_admin', 'admin');
+    const visitor = await signIn(app, 'cursor_admin');
 
     await visitor.agent.get(`${AUDIT}?cursor=garbage`).expect(400);
   });
 
   it('lists 20 entries by default, accepts a limit of 50 and refuses a limit of 51', async () => {
-    const admin = await createAccount(app, 'limit_admin', 'admin');
-    const [code] = await enrol(app, admin);
-    const visitor = await signIn(app, 'limit_admin', code);
+    await createAccount(app, 'limit_admin', 'admin');
+    const visitor = await signIn(app, 'limit_admin');
     await Promise.all(
       Array.from({ length: 25 }, (_, index) =>
         audit.append({
@@ -156,9 +134,8 @@ describe('Back-office audit log (e2e)', () => {
   });
 
   it('reports the entry where the chain breaks when a row is changed in the database', async () => {
-    const admin = await createAccount(app, 'tamper_admin', 'admin');
-    const [code] = await enrol(app, admin);
-    const visitor = await signIn(app, 'tamper_admin', code);
+    await createAccount(app, 'tamper_admin', 'admin');
+    const visitor = await signIn(app, 'tamper_admin');
     const total = Number(await sql('SELECT count(*) FROM admin_audit_log;'));
     const changed = await sql(
       `UPDATE admin_audit_log SET reason = 'changed afterwards' WHERE id = (SELECT id FROM admin_audit_log ORDER BY created_at ASC, id ASC OFFSET 1 LIMIT 1) RETURNING id;`,

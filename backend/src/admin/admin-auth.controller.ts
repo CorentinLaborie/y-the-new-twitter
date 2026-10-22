@@ -1,6 +1,5 @@
 import {
   Body,
-  ConflictException,
   Controller,
   ForbiddenException,
   Get,
@@ -21,11 +20,10 @@ import {
   ADMIN_MAX_SESSION_MS,
   ADMIN_REAUTH_WINDOW_MS,
   ADMIN_SIGN_IN_REQUIRED_MESSAGE,
-  isMfaSetupOpen,
   startElevation,
 } from './admin-session';
 import { AdminAuthService } from './admin-auth.service';
-import { AdminCodeDto, AdminLoginDto, AdminReauthDto, AdminSetupLinkDto } from './admin-auth.dto';
+import { AdminLoginDto, AdminReauthDto } from './admin-auth.dto';
 import { Admin } from './admin.decorators';
 
 interface AdminUserView {
@@ -34,12 +32,12 @@ interface AdminUserView {
 }
 
 interface AdminLoginResponse {
-  readonly status: 'ok' | 'code_required' | 'setup_required';
-  readonly user?: AdminUserView;
+  readonly status: 'ok';
+  readonly user: AdminUserView;
 }
 
 /**
- * The back-office sign-in and second factor (DEC-036, DEC-082). Documented in the product doc, not in the public
+ * The back-office sign-in and the re-authentication (DEC-036, DEC-088). Documented in the product doc, not in the public
  * OpenAPI contract: the back-office is not discoverable (DEC-037).
  */
 @ApiExcludeController()
@@ -60,7 +58,6 @@ export class AdminAuthController {
         ipAddress: req.ip ?? '',
         userAgent: req.get('user-agent'),
       },
-      body.code,
       now,
     );
 
@@ -72,12 +69,6 @@ export class AdminAuthController {
           message: 'Votre adresse e-mail n’est pas encore vérifiée.',
           code: 'account_pending_verification',
         });
-      case 'invalid_code':
-        throw new UnauthorizedException('Code de vérification incorrect.');
-      case 'code_required':
-        return { status: 'code_required' };
-      case 'setup_required':
-        return { status: 'setup_required' };
       case 'ok':
         await regenerateSession(req);
         req.session.userId = outcome.user.id;
@@ -87,62 +78,8 @@ export class AdminAuthController {
   }
 
   /**
-   * The set-up of the second factor, from the link sent by e-mail: a secret to type into an authenticator application.
-   * Nothing is enrolled yet, and the session is not signed in until the first code is confirmed.
-   */
-  @Public()
-  @AuthRateLimit('login')
-  @Post('mfa/setup')
-  @HttpCode(HttpStatus.OK)
-  async startMfaSetup(
-    @Body() body: AdminSetupLinkDto,
-    @Req() req: Request,
-  ): Promise<{ readonly secret: string; readonly otpauthUri: string }> {
-    const now = new Date();
-    const started = await this.adminAuth.startSetupFromLink(body.token, now);
-    if (started === null) {
-      throw new UnauthorizedException('Ce lien de configuration est invalide ou a expiré.');
-    }
-
-    req.session.adminMfaSetup = {
-      userId: started.userId,
-      secretEncrypted: started.pending.secretEncrypted,
-      startedAt: now.toISOString(),
-    };
-
-    return { secret: started.pending.secret, otpauthUri: started.pending.otpauthUri };
-  }
-
-  /**
-   * Confirms the set-up with a first code. The backup codes are returned once, and the session is signed in and
-   * elevated: the second factor is the proof, so the sign-in happens here, not at the login step.
-   */
-  @Public()
-  @AuthRateLimit('code-confirm')
-  @Post('mfa/confirm')
-  @HttpCode(HttpStatus.CREATED)
-  async confirmMfaSetup(@Body() body: AdminCodeDto, @Req() req: Request): Promise<{ readonly backupCodes: string[] }> {
-    const now = new Date();
-    const setup = req.session.adminMfaSetup;
-    if (!isMfaSetupOpen(setup, now)) {
-      req.session.adminMfaSetup = undefined;
-      throw new ConflictException('Aucune configuration en cours. Recommencez.');
-    }
-
-    const codes = await this.adminAuth.confirmSetup(setup.userId, setup, body.code, now);
-    if (codes === null) {
-      throw new UnauthorizedException('Code de vérification incorrect.');
-    }
-
-    await regenerateSession(req);
-    req.session.userId = setup.userId;
-    req.session.admin = startElevation(now);
-    return { backupCodes: codes };
-  }
-
-  /**
-   * Asks again for the password and a second-factor code, before a sensitive action (DEC-088). The proof lasts 10
-   * minutes, kept in the session. It does not extend the 8-hour elevation.
+   * Asks again for the password, before a sensitive action (DEC-088). The proof lasts 10 minutes, kept in the session.
+   * It does not extend the 8-hour elevation.
    */
   @Admin()
   @AuthRateLimit('login')
@@ -154,22 +91,16 @@ export class AdminAuthController {
     @Req() req: Request,
   ): Promise<{ readonly reauthExpiresAt: string }> {
     const now = new Date();
-    const outcome = await this.adminAuth.reauthenticate(
-      user.id,
-      { ipAddress: req.ip ?? '', userAgent: req.get('user-agent') },
-      { password: body.password, code: body.code },
-      now,
-    );
+    const outcome = await this.adminAuth.reauthenticate(user.id, {
+      ipAddress: req.ip ?? '',
+      userAgent: req.get('user-agent'),
+    }, body.password);
 
-    switch (outcome) {
-      case 'invalid':
-        throw new UnauthorizedException('Identifiants incorrects');
-      case 'invalid_code':
-        throw new UnauthorizedException('Code de vérification incorrect.');
-      case 'ok':
-        req.session.reauth_at = now.toISOString();
-        return { reauthExpiresAt: new Date(now.getTime() + ADMIN_REAUTH_WINDOW_MS).toISOString() };
+    if (outcome === 'invalid') {
+      throw new UnauthorizedException('Identifiants incorrects');
     }
+    req.session.reauth_at = now.toISOString();
+    return { reauthExpiresAt: new Date(now.getTime() + ADMIN_REAUTH_WINDOW_MS).toISOString() };
   }
 
   /** The signed-in administrator and when the back-office session ends: 30 minutes idle, 8 hours at most. */
