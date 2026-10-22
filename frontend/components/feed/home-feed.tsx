@@ -315,7 +315,7 @@ export function HomeFeed({
       {trendingQuestions.length > 0 ? (
         <section className={styles.trending} aria-labelledby="trending-title">
           <h2 id="trending-title" className={styles.trendingTitle}>
-            Tendances sur 24 h
+            Tendances pour vous
           </h2>
           <ul className={styles.list}>
             {trendingQuestions.map((question) => (

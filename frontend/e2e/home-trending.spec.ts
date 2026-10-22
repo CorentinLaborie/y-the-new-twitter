@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { feedPage, mockFeedApi, question, signIn } from './feed-kit';
 
-// Trending block of the first page: "Tendances sur 24 h", above the list (DEC-091).
+// Trending block of the first page: "Tendances pour vous", above the list (DEC-091).
 
 test.beforeEach(async ({ context }) => {
   await signIn(context);
@@ -25,7 +25,7 @@ test('the trending block comes first, under its title, and the list follows it',
 
   await page.goto('/home');
 
-  const block = page.getByRole('region', { name: 'Tendances sur 24 h' });
+  const block = page.getByRole('region', { name: 'Tendances pour vous' });
   await expect(block.getByRole('listitem')).toHaveCount(2);
   await expect(block).toContainText('Première tendance');
   await expect(block).toContainText('Deuxième tendance');
@@ -44,6 +44,6 @@ test('no block is shown when no question is trending', async ({ page }) => {
   await page.goto('/home');
 
   await expect(page.getByText('Question de la liste')).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Tendances sur 24 h' })).toHaveCount(0);
-  await expect(page.getByText('Tendances sur 24 h')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Tendances pour vous' })).toHaveCount(0);
+  await expect(page.getByText('Tendances pour vous')).toHaveCount(0);
 });

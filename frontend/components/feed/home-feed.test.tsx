@@ -544,14 +544,14 @@ describe('HomeFeed', () => {
   });
 
   describe('trending block', () => {
-    it('shows the trending questions in a block titled "Tendances sur 24 h", above the list', async () => {
+    it('shows the trending questions in a block titled "Tendances pour vous", above the list', async () => {
       vi.mocked(fetchFeedPage).mockResolvedValue(
         page([question('a', 'Question de la liste')], null, [question('t', 'Question tendance')]),
       );
 
       render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
 
-      const block = await screen.findByRole('region', { name: 'Tendances sur 24 h' });
+      const block = await screen.findByRole('region', { name: 'Tendances pour vous' });
       expect(within(block).getByText('Question tendance')).toBeInTheDocument();
       const listItem = screen.getByText('Question de la liste');
       expect(block.compareDocumentPosition(listItem) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -563,7 +563,7 @@ describe('HomeFeed', () => {
       render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
 
       await screen.findByText('Question de la liste');
-      expect(screen.queryByText('Tendances sur 24 h')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tendances pour vous')).not.toBeInTheDocument();
       expect(screen.queryByRole('region')).not.toBeInTheDocument();
     });
 
@@ -572,7 +572,7 @@ describe('HomeFeed', () => {
       vi.mocked(putReaction).mockResolvedValue({ ok: true, status: 200, body: {} });
 
       render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
-      const block = await screen.findByRole('region', { name: 'Tendances sur 24 h' });
+      const block = await screen.findByRole('region', { name: 'Tendances pour vous' });
       const like = within(block).getByRole('button', { name: /J’aime/ });
 
       fireEvent.click(like);
