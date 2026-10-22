@@ -25,6 +25,21 @@ export function apiBaseUrl(
 
 const API_BASE_URL = apiBaseUrl();
 
+/**
+ * The address a request is sent to. A relative address (empty API address) only works in the browser: the server
+ * (the back-office guard, which runs in Node) calls the API on this machine instead.
+ */
+export function requestBaseUrl(
+  base: string,
+  onServer: boolean,
+  internal: string | undefined = process.env.API_INTERNAL_URL,
+): string {
+  if (base !== '' || !onServer) {
+    return base;
+  }
+  return internal ?? 'http://127.0.0.1:8080';
+}
+
 export type ApiProblem = {
   status: number;
   title: string;
@@ -95,7 +110,7 @@ export async function apiRequest<T>(
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+    response = await fetch(`${requestBaseUrl(API_BASE_URL, typeof window === 'undefined')}/api/v1${path}`, {
       method,
       headers,
       credentials: 'include',

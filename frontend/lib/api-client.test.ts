@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiBaseUrl, apiRequest } from './api-client';
+import { apiBaseUrl, apiRequest, requestBaseUrl } from './api-client';
 
 describe('apiRequest errors', () => {
   beforeEach(() => {
@@ -81,5 +81,17 @@ describe('apiBaseUrl', () => {
 
   it('falls back to the local backend in development', () => {
     expect(apiBaseUrl(undefined, 'development')).toBe('http://localhost:8080');
+  });
+});
+
+describe('requestBaseUrl', () => {
+  it('keeps the address of the page in the browser, even when it is relative', () => {
+    expect(requestBaseUrl('', false)).toBe('');
+    expect(requestBaseUrl('https://y.corentin-laborie.com', true)).toBe('https://y.corentin-laborie.com');
+  });
+
+  it('calls the API on this machine from the server when the address is relative', () => {
+    expect(requestBaseUrl('', true, undefined)).toBe('http://127.0.0.1:8080');
+    expect(requestBaseUrl('', true, 'http://127.0.0.1:9000')).toBe('http://127.0.0.1:9000');
   });
 });
