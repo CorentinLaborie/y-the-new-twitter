@@ -58,7 +58,6 @@ export function Landing() {
             </div>
             <div className={styles.feed}>
               <h3 className={styles.feedTitle}>Vos questions…</h3>
-              <p className={styles.exampleLabel}>Exemple</p>
               <div className={styles.preview} aria-hidden="true">
                 <QuestionPreview
                   author="AliceY"
@@ -77,7 +76,6 @@ export function Landing() {
               <p className={styles.feedNote}>
                 Au bout de 50&nbsp;Y, une conversation s’ouvre sous la question.
               </p>
-              <p className={styles.exampleLabel}>Exemple</p>
               <div className={styles.preview} aria-hidden="true">
                 <QuestionPreview
                   author="MarkL"

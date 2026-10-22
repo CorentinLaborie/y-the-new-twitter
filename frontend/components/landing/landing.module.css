@@ -303,14 +303,6 @@
  * Question cards of the demo: the design-system classes with the board's overrides (the boards set them in
  * their style block). Desktop and tablet values here, mobile values below.
  */
-.exampleLabel {
-  margin: 0;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-  color: #6b7280;
-}
-
 .preview .avatar {
   width: 40px;
   height: 40px;
