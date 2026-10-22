@@ -41,11 +41,6 @@ class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   @MinLength(32)
-  BACKUP_CODE_HMAC_KEY!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(32)
   SESSION_SECRET!: string;
 
   @IsUrl({ require_tld: false })

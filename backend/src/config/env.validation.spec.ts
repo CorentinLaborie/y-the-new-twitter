@@ -6,7 +6,6 @@ const validConfig: Record<string, string> = {
   DATABASE_MAINTENANCE_URL: 'postgresql://y_maintenance:test@localhost:5434/y',
   AUDIT_HMAC_KEY: '0123456789abcdef0123456789abcdef',
   IP_HASH_KEY: '0123456789abcdef0123456789abcdef',
-  BACKUP_CODE_HMAC_KEY: '0123456789abcdef0123456789abcdef',
   SESSION_SECRET: '0123456789abcdef0123456789abcdef',
   APP_PUBLIC_URL: 'http://localhost:3000',
   Y_CONVERSATION_THRESHOLD: '50',
