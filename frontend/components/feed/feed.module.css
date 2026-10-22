@@ -208,6 +208,22 @@
   white-space: nowrap;
 }
 
+/* Closed conversation: the title, then the threshold and the Y still missing, then the progress. */
+.closed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.closedTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: normal;
+  color: var(--color-foreground);
+}
+
 .meta {
   font-size: 11px;
   line-height: normal;

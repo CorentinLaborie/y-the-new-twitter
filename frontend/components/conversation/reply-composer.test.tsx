@@ -57,7 +57,7 @@ describe('ReplyComposer', () => {
 
     expect(counter()).toHaveTextContent('280/280');
     expect(counter()).not.toHaveAttribute('data-over');
-    expect(screen.queryByText('Votre réponse dépasse 280 caractères.')).not.toBeInTheDocument();
+    expect(screen.queryByText(/dépasse la limite/)).not.toBeInTheDocument();
     expect(screen.getByLabelText('Votre réponse')).not.toHaveAttribute('aria-invalid');
     expect(sendButton()).toBeEnabled();
   });
@@ -69,7 +69,9 @@ describe('ReplyComposer', () => {
 
     expect(counter()).toHaveTextContent('281/280');
     expect(counter()).toHaveAttribute('data-over', 'true');
-    expect(screen.getByText('Votre réponse dépasse 280 caractères.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Votre réponse dépasse la limite de 280 caractères. Retirez 1 caractère pour publier.'),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Votre réponse')).toHaveAttribute('aria-invalid', 'true');
     expect(sendButton()).toBeDisabled();
   });

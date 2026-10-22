@@ -3,11 +3,17 @@ import feedStyles from '@/components/feed/feed.module.css';
 
 const SKELETON_ROW_COUNT = 3;
 
-/** Under 50 Y (or whatever the threshold is): the conversation is closed, with the current Y count. */
+/**
+ * Under 50 Y (or whatever the threshold is): the conversation is closed, with the current Y count and the Y still
+ * missing (never negative).
+ */
 export function ConversationClosed({ yCount, yThreshold }: { yCount: number; yThreshold: number }) {
+  const missing = Math.max(0, yThreshold - yCount);
   return (
-    <div className={feedStyles.reactions}>
+    <div className={feedStyles.closed}>
+      <h3 className={feedStyles.closedTitle}>Réponses fermées pour cette question</h3>
       <p className={feedStyles.meta}>Les réponses s’ouvrent à {yThreshold} Y.</p>
+      <p className={feedStyles.meta}>Il manque encore {missing} Y.</p>
       <span className="y-progress">
         {yCount} / {yThreshold} Y
       </span>

@@ -101,7 +101,9 @@ describe('Conversation', () => {
       />,
     );
 
+    expect(screen.getByText('Réponses fermées pour cette question')).toBeInTheDocument();
     expect(screen.getByText('Les réponses s’ouvrent à 50 Y.')).toBeInTheDocument();
+    expect(screen.getByText('Il manque encore 38 Y.')).toBeInTheDocument();
     expect(screen.getByText('12 / 50 Y')).toBeInTheDocument();
     expect(listReplies).not.toHaveBeenCalled();
     expect(screen.queryByLabelText('Votre réponse')).not.toBeInTheDocument();

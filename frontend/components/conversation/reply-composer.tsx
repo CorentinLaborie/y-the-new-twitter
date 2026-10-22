@@ -45,6 +45,7 @@ export function ReplyComposer({ questionId, onPosted }: ReplyComposerProps) {
 
   const characterCount = replyCharacterCount(text);
   const tooLong = characterCount > REPLY_MAX_LENGTH;
+  const excess = characterCount - REPLY_MAX_LENGTH;
   const canSend = isReplyTextValid(text) && !sending;
 
   function handleChange(value: string) {
@@ -94,7 +95,8 @@ export function ReplyComposer({ questionId, onPosted }: ReplyComposerProps) {
       />
       {tooLong ? (
         <p id={refusalId} className={styles.refusal}>
-          Votre réponse dépasse {REPLY_MAX_LENGTH} caractères.
+          Votre réponse dépasse la limite de {REPLY_MAX_LENGTH} caractères. Retirez {excess}{' '}
+          {excess === 1 ? 'caractère' : 'caractères'} pour publier.
         </p>
       ) : null}
       {sendError ? (
