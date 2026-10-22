@@ -1,0 +1,24 @@
+/*
+ * Layout of the signed-in area (plan L0, section 5.5). Desktop and tablet: the sidebar or the rail, then the content.
+ * Mobile: the top bar, the content, and the bottom bar fixed on the screen, with room kept under the content for it.
+ */
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .shell {
+    display: block;
+  }
+
+  .content {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}

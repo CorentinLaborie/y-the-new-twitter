@@ -1,0 +1,572 @@
+/*
+ * Application navigation (plan L0, sections 4 to 8). Breakpoints: sidebar from 1280 px, rail from 768 px to 1279 px,
+ * bottom bar and top bar under 768 px. Every target is at least 44 px. Works down to 325 px wide, without any
+ * horizontal scroll. Colours and spacing come from the design tokens (styles/tokens.css).
+ */
+
+/* Shared: links, icon box, badge, focus ring. */
+
+.link,
+.more,
+.account,
+.poster,
+.logo,
+.menuButton,
+.closeButton,
+.secondaryLink {
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-foreground);
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.link:hover {
+  background: var(--color-muted);
+}
+
+.current {
+  font-weight: 700;
+}
+
+.iconBox {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  line-height: 0;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.link:focus-visible,
+.more:focus-visible,
+.account:focus-visible,
+.poster:focus-visible,
+.logo:focus-visible,
+.menuButton:focus-visible,
+.closeButton:focus-visible,
+.secondaryLink:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* Sidebar, desktop 1280 px and more. */
+
+.sidebarNav {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .sidebarNav {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 275px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    padding: 16px 16px 24px;
+    border-right: 1px solid var(--color-border);
+    background: var(--color-card);
+    overflow-y: auto;
+  }
+}
+
+.sidebarNav .logo {
+  display: inline-flex;
+  align-self: flex-start;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  color: var(--color-foreground);
+}
+
+.sidebarNav .list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sidebarNav .poster {
+  margin-top: 8px;
+}
+
+.sidebarNav .account {
+  margin-top: auto;
+}
+
+/* Rail, tablet 768 to 1279 px. */
+
+.railNav {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  .railNav {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    width: 88px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    padding: 16px 0 20px;
+    border-right: 1px solid var(--color-border);
+    background: var(--color-card);
+    overflow: hidden;
+  }
+}
+
+.railNav .logo {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-foreground);
+}
+
+.railNav .list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.railNav .link,
+.railNav .more {
+  width: 50px;
+  height: 50px;
+  min-height: 0;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+}
+
+.railNav .account {
+  margin-top: auto;
+}
+
+/* Bottom bar, mobile under 768 px: five cases, the labels under the icons. */
+
+.bottomBar {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .bottomBar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    display: block;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-card);
+  }
+}
+
+.barList {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barItem {
+  min-width: 0;
+}
+
+.bar {
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 6px 2px;
+  border-radius: 0;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.bar.current {
+  font-weight: 700;
+}
+
+.bar:hover {
+  background: transparent;
+}
+
+.bar .label {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.bar .iconBox {
+  line-height: 0;
+}
+
+/* Top bar, mobile under 768 px. */
+
+.topBar {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .topBar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    height: 53px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-card);
+  }
+}
+
+.logo {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  color: var(--color-foreground);
+}
+
+.menuButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-foreground);
+}
+
+.menuButton:hover {
+  background: var(--color-muted);
+}
+
+.dot {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-card);
+}
+
+/* Full-screen menu of the mobile. */
+
+.fullMenu {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom));
+  background: var(--color-card);
+  color: var(--color-foreground);
+}
+
+.fullMenuHeader {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fullMenuList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* "Plus" sheet and its backdrop (bottom bar, sidebar, rail). */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(15 23 42 / 0.4);
+}
+
+.panel {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+  box-sizing: border-box;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--color-card);
+  color: var(--color-foreground);
+}
+
+@media (min-width: 768px) {
+  .panel {
+    right: auto;
+    bottom: 16px;
+    left: 16px;
+    width: 300px;
+    max-height: calc(100vh - 32px);
+    border-radius: var(--radius-lg);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  .panel {
+    left: 96px;
+  }
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+}
+
+.sheetTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 800;
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-foreground);
+}
+
+.sheet {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 8px;
+  border-radius: var(--radius-md);
+  color: var(--color-foreground);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 500;
+}
+
+.sheet:hover {
+  background: var(--color-muted);
+}
+
+.sheet .label {
+  white-space: normal;
+}
+
+.secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.secondaryTitle {
+  margin: 12px 8px 4px;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.secondaryLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-foreground);
+  font-size: 16px;
+  line-height: 20px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.secondaryLink:hover {
+  background: var(--color-muted);
+}
+
+/* "Poster" button. */
+
+.poster {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  box-shadow: var(--shadow-raised);
+  color: var(--color-primary-foreground);
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.poster:hover {
+  background: var(--color-primary-hover);
+}
+
+.poster-sidebar,
+.poster-menu {
+  width: 100%;
+}
+
+.poster-rail {
+  width: 50px;
+  min-height: 50px;
+  height: 50px;
+  padding: 0;
+}
+
+/* Account block: avatar and name, at the foot of the sidebar and of the rail. */
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-foreground);
+  text-align: left;
+}
+
+.account:hover {
+  background: var(--color-muted);
+}
+
+.account-rail {
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+}
+
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.accountText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.accountName {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountHandle {
+  color: var(--color-muted-foreground);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}

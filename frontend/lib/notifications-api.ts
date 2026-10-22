@@ -66,7 +66,15 @@ export function fetchUnreadCount(): Promise<ApiResult<{ unread: number }>> {
   return protectedApiRequest<{ unread: number }>('GET', '/notifications/unread-count');
 }
 
+/** Sent on the window when every line has been marked as read, so the navigation badge can reset at once. */
+export const NOTIFICATIONS_READ_EVENT = 'y:notifications-read';
+
 /** Marks every unread line as read. Called when the page opens (the API has no single-line read). */
 export function markAllNotificationsRead(): Promise<ApiResult<void>> {
-  return protectedApiRequest<void>('POST', '/notifications/read-all');
+  return protectedApiRequest<void>('POST', '/notifications/read-all').then((result) => {
+    if (result.ok && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(NOTIFICATIONS_READ_EVENT));
+    }
+    return result;
+  });
 }
