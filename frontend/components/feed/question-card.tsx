@@ -6,6 +6,7 @@ import { copyQuestionLink, questionLink } from '@/components/question/copy-link'
 import questionStyles from '@/components/question/question.module.css';
 import { YMark } from '@/components/brand/y-mark';
 import { FollowButton } from '@/components/follow/follow-button';
+import { BlockDialog } from '@/components/block/block-dialog';
 import { ReportDialog } from '@/components/report/report-dialog';
 import { REPORT_SENT_MESSAGE } from '@/components/report/report-rules';
 import { UnfollowMenuItem } from '@/components/follow/unfollow-menu-item';
@@ -102,7 +103,10 @@ export function QuestionCard({
   const [copyStatus, setCopyStatus] = useState<'copied' | 'failed' | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportNotice, setReportNotice] = useState<string | null>(null);
-  // Another account's question offers the report to an active viewer (plan L6, DEC-035).
+  const [blockOpen, setBlockOpen] = useState(false);
+  // Once the author is blocked, the card leaves the list (plan L6, section 8): it is not rendered any more.
+  const [blocked, setBlocked] = useState(false);
+  // Another account's question offers the report and the block to an active viewer (plan L6, DEC-035, DEC-104).
   const canReport = viewer !== undefined && !viewer.suspended && viewer.handle !== question.author.handle;
   const menuWrapRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -138,6 +142,10 @@ export function QuestionCard({
     menuButtonRef.current?.focus();
     const copied = await copyQuestionLink(questionLink(window.location.origin, question.id));
     setCopyStatus(copied ? 'copied' : 'failed');
+  }
+
+  if (blocked) {
+    return null;
   }
 
   return (
@@ -206,6 +214,19 @@ export function QuestionCard({
                   Signaler
                 </button>
               ) : null}
+              {canReport ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={questionStyles.menuItem}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setBlockOpen(true);
+                  }}
+                >
+                  Bloquer @{question.author.handle}
+                </button>
+              ) : null}
               {showFollow && viewer && !viewer.suspended ? (
                 <UnfollowMenuItem
                   handle={question.author.handle}
@@ -231,6 +252,17 @@ export function QuestionCard({
           onSent={() => {
             setReportOpen(false);
             setReportNotice(REPORT_SENT_MESSAGE);
+          }}
+        />
+      ) : null}
+      {canReport && blockOpen ? (
+        <BlockDialog
+          open={blockOpen}
+          handle={question.author.handle}
+          onClose={() => setBlockOpen(false)}
+          onBlocked={() => {
+            setBlockOpen(false);
+            setBlocked(true);
           }}
         />
       ) : null}

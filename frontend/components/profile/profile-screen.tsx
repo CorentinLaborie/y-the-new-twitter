@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { BlockDialog } from '@/components/block/block-dialog';
+import { blockedMessage } from '@/components/block/block-rules';
 import { FollowButton } from '@/components/follow/follow-button';
 import { avatarInitial } from '@/components/feed/avatar-initial';
 import { FeedError, FeedLoading, CONNECTION_FAILURE_MESSAGE } from '@/components/feed/feed-states';
@@ -31,6 +33,8 @@ export function ProfileScreen({
   const [moreStatus, setMoreStatus] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [loadError, setLoadError] = useState('');
   const { pendingIds, errors, react } = useProfileReactions(setQuestions);
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockNotice, setBlockNotice] = useState<string | null>(null);
 
   const loadFirst = useCallback(() => {
     Promise.all([fetchProfile(handle), fetchProfileQuestions(handle)]).then(([account, page]) => {
@@ -111,7 +115,28 @@ export function ProfileScreen({
               disabled={suspended}
             />
           )}
+          {profile.isOwnAccount || viewerHandle === null || suspended ? null : (
+            <button
+              type="button"
+              className="y-btn y-btn-md y-btn-outline y-btn-pill"
+              onClick={() => setBlockOpen(true)}
+            >
+              Bloquer
+            </button>
+          )}
         </div>
+        {blockNotice ? <p role="status">{blockNotice}</p> : null}
+        {profile.isOwnAccount || viewerHandle === null || suspended || !blockOpen ? null : (
+          <BlockDialog
+            open={blockOpen}
+            handle={profile.handle}
+            onClose={() => setBlockOpen(false)}
+            onBlocked={() => {
+              setBlockOpen(false);
+              setBlockNotice(blockedMessage(profile.handle));
+            }}
+          />
+        )}
         <h1 className={styles.name}>{profile.displayName}</h1>
         <p className={styles.handle}>@{profile.handle}</p>
         {profile.bio ? <p className={styles.bio}>{profile.bio}</p> : null}

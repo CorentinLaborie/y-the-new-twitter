@@ -55,6 +55,25 @@ describe('ProfileScreen (L1)', () => {
     expect(screen.getByRole('button', { name: 'Suivre @alice' })).toBeInTheDocument();
   });
 
+  it('offers Bloquer on another account’s profile to an active viewer, and not on one’s own', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({ ok: true, status: 200, body: PROFILE });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    const { unmount } = render(<ProfileScreen handle="alice" viewerHandle="me" suspended={false} />);
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(screen.getByRole('button', { name: 'Bloquer' })).toBeInTheDocument();
+    unmount();
+
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', isOwnAccount: true },
+    });
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(screen.queryByRole('button', { name: 'Bloquer' })).not.toBeInTheDocument();
+  });
+
   it('shows no follow pill on the viewer’s own profile', async () => {
     vi.mocked(fetchProfile).mockResolvedValue({
       ok: true,

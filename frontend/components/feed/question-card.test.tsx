@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { blockAccount } from '@/lib/blocks-api';
 import type { FeedQuestion } from '@/lib/feed-api';
 import { unfollowUser } from '@/lib/follows-api';
 import { QuestionCard } from './question-card';
@@ -8,6 +9,8 @@ vi.mock('@/lib/follows-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/follows-api')>();
   return { ...actual, followUser: vi.fn(), unfollowUser: vi.fn() };
 });
+
+vi.mock('@/lib/blocks-api', () => ({ blockAccount: vi.fn(), unblockAccount: vi.fn(), listBlockedAccounts: vi.fn() }));
 
 // jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
 beforeAll(() => {
@@ -176,6 +179,26 @@ describe('QuestionCard menu and copied link', () => {
     renderCard({ viewer: { handle: 'someone-else', suspended: true } });
     openMenu();
     expect(screen.queryByRole('menuitem', { name: 'Signaler' })).toBeNull();
+  });
+
+  it('offers Bloquer @author in the menu of another account’s question only', () => {
+    renderCard({ viewer: { handle: 'someone-else', suspended: false } });
+
+    openMenu();
+
+    expect(screen.getByRole('menuitem', { name: 'Bloquer @alice' })).toBeInTheDocument();
+  });
+
+  it('removes the card once its author is blocked', async () => {
+    vi.mocked(blockAccount).mockResolvedValue({ ok: true, status: 204, body: undefined });
+    renderCard({ viewer: { handle: 'someone-else', suspended: false } });
+
+    openMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Bloquer @alice' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Bloquer' }));
+
+    await waitFor(() => expect(screen.queryByText('Le télétravail rend-il les débats moins violents ?')).toBeNull());
+    expect(blockAccount).toHaveBeenCalledWith('alice');
   });
 
   it('opens the report dialog for the question from its menu', () => {
