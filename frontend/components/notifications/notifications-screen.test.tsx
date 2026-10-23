@@ -233,7 +233,17 @@ describe('NotificationsScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tout marquer comme lu' }));
 
     expect(await screen.findByText(CONNECTION_FAILURE)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveFocus();
     expect(screen.getByRole('link', { name: /Personne a/ }).textContent).toContain('Non lue');
     expect(screen.getByRole('button', { name: 'Tout marquer comme lu' })).toBeEnabled();
+  });
+
+  it('refreshes the relative times every minute while the page stays open', () => {
+    const timers = vi.spyOn(window, 'setInterval');
+    vi.mocked(fetchNotificationPage).mockReturnValue(new Promise(() => undefined));
+    renderScreen();
+
+    expect(timers).toHaveBeenCalledWith(expect.any(Function), 60_000);
+    timers.mockRestore();
   });
 });

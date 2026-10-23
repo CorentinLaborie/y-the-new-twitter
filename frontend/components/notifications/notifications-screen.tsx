@@ -11,7 +11,6 @@ import {
 } from '@/lib/notifications-api';
 import { NotificationItem } from './notification-item';
 import {
-  CONNECTION_FAILURE_MESSAGE,
   NotificationsEmpty,
   NotificationsError,
   NotificationsLoading,
@@ -30,7 +29,7 @@ type MoreStatus = 'idle' | 'loading' | 'failed';
 
 type ListState = {
   phase: ListPhase;
-  /** Message of the failed first page, shown by the error state. */
+  /** Message of the failed call: the first page (error state) or "Voir plus" (alert under the lines). */
   loadError: string;
   items: NotificationView[];
   nextCursor: string | null;
@@ -39,6 +38,9 @@ type ListState = {
 };
 
 const LOADING_LIST: ListState = { phase: 'loading', loadError: '', items: [], nextCursor: null, moreStatus: 'idle' };
+
+/** How often the relative times are computed again ("à l'instant", "il y a 2 h"). */
+const RELATIVE_TIME_REFRESH_MS = 60_000;
 
 function readyList(page: NotificationPage): ListState {
   return { phase: 'ready', loadError: '', items: page.items, nextCursor: page.nextCursor, moreStatus: 'idle' };
@@ -59,9 +61,23 @@ function appendNew(first: NotificationView[], second: NotificationView[]): Notif
 export function NotificationsScreen({ initialTab, suspended }: { initialTab: NotificationTab; suspended: boolean }) {
   const [tab, setTab] = useState<NotificationTab>(initialTab);
   const [list, setList] = useState<ListState>(LOADING_LIST);
-  const [now] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
   const [markPending, setMarkPending] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
+  const markErrorRef = useRef<HTMLParagraphElement>(null);
+
+  // The relative times ("il y a 2 h") move on while the page stays open.
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), RELATIVE_TIME_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // A failed "Tout marquer comme lu" removes the focus with its disabled button: the message takes it back.
+  useEffect(() => {
+    if (markError !== null) {
+      markErrorRef.current?.focus();
+    }
+  }, [markError]);
   /** Counts the first-page requests: an answer of a previous tab is ignored. */
   const requestToken = useRef(0);
   /** The page has been opened: the read call runs once, after its first successful page. */
@@ -152,7 +168,7 @@ export function NotificationsScreen({ initialTab, suspended }: { initialTab: Not
               nextCursor: result.body.nextCursor,
               moreStatus: 'idle',
             }
-          : { ...current, moreStatus: 'failed' },
+          : { ...current, moreStatus: 'failed', loadError: notificationsFailureMessage(result.problem) },
       );
     });
   }
@@ -227,7 +243,7 @@ export function NotificationsScreen({ initialTab, suspended }: { initialTab: Not
         className={styles.panel}
       >
         {markError ? (
-          <p role="alert" className={styles.notice}>
+          <p ref={markErrorRef} tabIndex={-1} role="alert" className={styles.notice}>
             {markError}
           </p>
         ) : null}
@@ -248,7 +264,7 @@ export function NotificationsScreen({ initialTab, suspended }: { initialTab: Not
 
         {phase === 'ready' && nextCursor !== null && moreStatus === 'failed' ? (
           <p role="alert" className={styles.notice}>
-            {CONNECTION_FAILURE_MESSAGE}
+            {list.loadError}
           </p>
         ) : null}
         {phase === 'ready' && nextCursor !== null ? (
