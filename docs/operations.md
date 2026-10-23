@@ -99,7 +99,9 @@ State of the production server `135.125.53.103` (Ubuntu, user `ubuntu`, SSH key 
 
 **Backups**: `ops/backup/backup.sh` runs every night at 03:30 (crontab of `ubuntu`). Its settings are in `/etc/y/backup.env` (mode 600, read-only role `y_backup`). Dumps are encrypted with `/etc/y/backup.key` and written to `/var/backups/y`, 14 days kept. Logs: `~/logs/y-backup.log`. A test dump was made on 2026-10-22, and restored into a scratch database (`y_restore_test`, dropped afterwards): the restore passed and the row counts matched the source. The production database was still empty, so this proves the chain, not the restore of real data. Repeat the test once data exists.
 
-**Not done yet**: a restore test with real data (the production database is still empty). The `www` name points to the server and redirects to the root name.
+**Restore test with data (2026-10-23)**: a fresh dump was taken with `ops/backup/backup.sh` (`y-20261023T103139Z.dump.enc`), decrypted with `/etc/y/backup.key`, and restored with `pg_restore --no-owner --no-privileges` into a new scratch database `y_restore_test`. Row counts matched the source: `users` 28, `questions` 60, `replies` 212. The scratch database was then dropped. The data is fictional (`example.test` accounts, no administrator), which the owner accepts as test data for this check.
+
+The `www` name points to the server and redirects to the root name.
 
 ## 9. What is not covered yet
 
