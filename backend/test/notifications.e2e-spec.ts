@@ -273,6 +273,42 @@ describe('Notifications (e2e, L2 step 3)', () => {
     );
   });
 
+  it('marks only the lines whose ids the page sent, and ignores ids of other lines', async () => {
+    const owner = await createUser('r_shown_owner');
+    const ann = await createUser('r_shown_ann');
+    const ben = await createUser('r_shown_ben');
+    const question = await createQuestion(owner);
+    await reaction(owner, ann, question, 20);
+    await reaction(owner, ben, question, 10, 'reaction_y');
+    const client = await clientFor(owner);
+    const shown = (await client.agent.get('/api/v1/notifications').expect(200)).body.items[0].id;
+
+    await client.agent
+      .post('/api/v1/notifications/read-all')
+      .set('x-csrf-token', client.token)
+      .send({ ids: ['00000000-0000-4000-8000-000000000000'] })
+      .expect(204);
+    expect((await client.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 2 });
+
+    await client.agent
+      .post('/api/v1/notifications/read-all')
+      .set('x-csrf-token', client.token)
+      .send({ ids: [shown] })
+      .expect(204);
+    expect((await client.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 1 });
+  });
+
+  it('refuses an ids list that is not a list of UUIDs', async () => {
+    const owner = await createUser('r_bad_ids');
+    const client = await clientFor(owner);
+
+    await client.agent
+      .post('/api/v1/notifications/read-all')
+      .set('x-csrf-token', client.token)
+      .send({ ids: ['pas-un-uuid'] })
+      .expect(400);
+  });
+
   it('refuses read-all to a suspended account, and without the CSRF token', async () => {
     const suspended = await createUser('r_suspended', 'suspended');
     const client = await clientFor(suspended);

@@ -130,10 +130,13 @@ export class NotificationsRepository {
     return rows[0]?.unread ?? 0;
   }
 
-  /** Marks every unread line of the viewer as read now. Lines already read keep their date. */
-  markAllRead(db: NotificationsDb, viewerId: string, at: Date): Promise<Prisma.BatchPayload> {
+  /**
+   * Marks the unread lines of the viewer as read now, or only the lines of `ids` when given (the lines the page showed).
+   * Lines already read keep their date.
+   */
+  markAllRead(db: NotificationsDb, viewerId: string, at: Date, ids?: string[]): Promise<Prisma.BatchPayload> {
     return db.notification.updateMany({
-      where: { recipientId: viewerId, readAt: null },
+      where: { recipientId: viewerId, readAt: null, ...(ids === undefined ? {} : { id: { in: ids } }) },
       data: { readAt: at },
     });
   }

@@ -176,6 +176,14 @@ describe('NotificationsService', () => {
 
     await service.markAllRead(VIEWER);
 
-    expect(repository.markAllRead).toHaveBeenCalledWith(prisma, VIEWER.id, expect.any(Date));
+    expect(repository.markAllRead).toHaveBeenCalledWith(prisma, VIEWER.id, expect.any(Date), undefined);
+  });
+
+  it('marks only the lines the page showed when their ids are given', async () => {
+    repository.markAllRead.mockResolvedValue({ count: 1 });
+
+    await service.markAllRead(VIEWER, [OTHER_ID]);
+
+    expect(repository.markAllRead).toHaveBeenCalledWith(prisma, VIEWER.id, expect.any(Date), [OTHER_ID]);
   });
 });

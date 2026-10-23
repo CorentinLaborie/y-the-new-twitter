@@ -103,7 +103,7 @@ export class NotificationsService {
   }
 
   /** Opening the page marks every line as read (section 4.3). A suspended account is refused by the guard. */
-  async markAllRead(viewer: SessionUser): Promise<void> {
-    await this.notifications.markAllRead(this.prisma, viewer.id, new Date());
+  async markAllRead(viewer: SessionUser, ids?: string[]): Promise<void> {
+    await this.notifications.markAllRead(this.prisma, viewer.id, new Date(), ids);
   }
 }

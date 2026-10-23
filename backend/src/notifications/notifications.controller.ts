@@ -1,10 +1,11 @@
-import { BadRequestException, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
 import { AllowStatuses, CurrentUser } from '../auth/session/access.decorators';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { problemDetailsResponse } from '../common/problem-details/problem-details.swagger';
 import { NotificationPageDto, UnreadCountDto } from './dto/notification-page.dto';
 import { NotificationQueryDto } from './dto/notification-query.dto';
+import { ReadAllDto } from './dto/read-all.dto';
 import { decodeCursor, NotificationsService } from './notifications.service';
 
 const DEFAULT_LIMIT = 20;
@@ -49,7 +50,7 @@ export class NotificationsController {
   @problemDetailsResponse(401, 'Not logged in.')
   @problemDetailsResponse(403, 'The account is not active (suspended accounts included), or the CSRF token is missing.')
   @problemDetailsResponse(429, 'Too many requests.')
-  async markAllRead(@CurrentUser() viewer: SessionUser): Promise<void> {
-    await this.notifications.markAllRead(viewer);
+  async markAllRead(@CurrentUser() viewer: SessionUser, @Body() body: ReadAllDto): Promise<void> {
+    await this.notifications.markAllRead(viewer, body.ids);
   }
 }
