@@ -47,6 +47,7 @@ export class NotificationsController {
   @Post('read-all')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse({ description: 'Every unread line of the viewer is now read.' })
+  @problemDetailsResponse(400, 'The ids list is not a list of at most 100 UUIDs.')
   @problemDetailsResponse(401, 'Not logged in.')
   @problemDetailsResponse(403, 'The account is not active (suspended accounts included), or the CSRF token is missing.')
   @problemDetailsResponse(429, 'Too many requests.')

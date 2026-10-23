@@ -307,6 +307,36 @@ describe('Notifications (e2e, L2 step 3)', () => {
       .set('x-csrf-token', client.token)
       .send({ ids: ['pas-un-uuid'] })
       .expect(400);
+    await client.agent
+      .post('/api/v1/notifications/read-all')
+      .set('x-csrf-token', client.token)
+      .send({ ids: null })
+      .expect(400);
+  });
+
+  it('marks nothing for an empty ids list, and never the lines of another user', async () => {
+    const owner = await createUser('r_iso_owner');
+    const intruder = await createUser('r_iso_intruder');
+    const ann = await createUser('r_iso_ann');
+    const question = await createQuestion(owner);
+    await reaction(owner, ann, question, 20);
+    const ownerClient = await clientFor(owner);
+    const intruderClient = await clientFor(intruder);
+    const shown = (await ownerClient.agent.get('/api/v1/notifications').expect(200)).body.items[0].id;
+
+    await ownerClient.agent
+      .post('/api/v1/notifications/read-all')
+      .set('x-csrf-token', ownerClient.token)
+      .send({ ids: [] })
+      .expect(204);
+    expect((await ownerClient.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 1 });
+
+    await intruderClient.agent
+      .post('/api/v1/notifications/read-all')
+      .set('x-csrf-token', intruderClient.token)
+      .send({ ids: [shown] })
+      .expect(204);
+    expect((await ownerClient.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 1 });
   });
 
   it('refuses read-all to a suspended account, and without the CSRF token', async () => {
