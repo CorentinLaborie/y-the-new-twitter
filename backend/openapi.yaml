@@ -981,6 +981,124 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a9
+  /api/v1/users/{handle}:
+    get:
+      operationId: ProfilesController_profile
+      parameters:
+        - name: handle
+          required: true
+          in: path
+          schema:
+            maxLength: 30
+            example: alice
+            type: string
+      responses:
+        "200":
+          description: The public profile of the account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponseDto"
+        "400":
+          description: The handle is not a valid handle.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The viewer’s account is not active (suspended, pending verification
+            or pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The account does not exist, is not active, or is blocked in either
+            direction.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a10
+        - Profiles
+  /api/v1/users/{handle}/questions:
+    get:
+      operationId: ProfilesController_questions
+      parameters:
+        - name: handle
+          required: true
+          in: path
+          schema:
+            maxLength: 30
+            example: alice
+            type: string
+        - name: cursor
+          required: false
+          in: query
+          description: nextCursor of the previous page. Absent for the first page.
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            allOf:
+              - $ref: "#/components/schemas/Object"
+      responses:
+        "200":
+          description: One page of the questions of the account, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileQuestionsPageDto"
+        "400":
+          description: The handle, the cursor or the limit is not valid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The viewer’s account is not active.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The account does not exist, is not active, or is blocked in either
+            direction.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a10
   /api/v1/notifications:
     get:
       operationId: NotificationsController_list
@@ -1038,7 +1156,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a10
+      tags: &a11
         - Notifications
   /api/v1/notifications/unread-count:
     get:
@@ -1069,7 +1187,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a10
+      tags: *a11
   /api/v1/notifications/read-all:
     post:
       operationId: NotificationsController_markAllRead
@@ -1108,7 +1226,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a10
+      tags: *a11
   /api/v1/support/messages:
     post:
       operationId: SupportController_send
@@ -1177,7 +1295,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a11
+                    example: &a12
                       database:
                         status: up
                     additionalProperties:
@@ -1203,7 +1321,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a11
+                    example: *a12
                     additionalProperties:
                       type: object
                       required:
@@ -1225,7 +1343,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a12
+                      database: &a13
                         status: up
                     additionalProperties:
                       type: object
@@ -1239,7 +1357,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a13
+                      redis: &a14
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -1254,8 +1372,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a12
-                      redis: *a13
+                      database: *a13
+                      redis: *a14
                     additionalProperties:
                       type: object
                       required:
@@ -1701,6 +1819,60 @@ components:
           example: MjAyNi0xMC0yMlQxMDowMDowMC4wMDBafDBmOGMxZDJlLTNhNGItNGM1ZC04ZTZmLTdhOGI5YzBkMWUyZg
       required:
         - items
+        - nextCursor
+    ProfileResponseDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: alice
+        displayName:
+          type: string
+          example: Alice
+        bio:
+          type: string
+          nullable: true
+          maxLength: 160
+        joinedAt:
+          type: string
+          format: date-time
+          description: When the account was created ("A rejoint Y").
+        followerCount:
+          type: number
+          example: 2340
+        followingCount:
+          type: number
+          example: 182
+        viewerFollows:
+          type: boolean
+          example: false
+          description: True when the signed-in viewer follows this account.
+        isOwnAccount:
+          type: boolean
+          example: false
+          description: True when this is the signed-in viewer’s own account.
+      required:
+        - handle
+        - displayName
+        - bio
+        - joinedAt
+        - followerCount
+        - followingCount
+        - viewerFollows
+        - isOwnAccount
+    ProfileQuestionsPageDto:
+      type: object
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionResponseDto"
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor of the next page, null at the end.
+      required:
+        - questions
         - nextCursor
     NotificationActorDto:
       type: object
