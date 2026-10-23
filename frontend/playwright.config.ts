@@ -6,6 +6,8 @@ const PORT = Number(process.env.E2E_PORT ?? 3000);
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Limits parallel Chrome instances (default: half the CPU cores) to keep the local machine responsive.
+  workers: 2,
   forbidOnly: false,
   retries: 0,
   reporter: [['list']],
