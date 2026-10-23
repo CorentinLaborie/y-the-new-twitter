@@ -93,6 +93,12 @@ describe('cursor', () => {
     expect(decodeCursor('pas-un-curseur')).toBeUndefined();
     expect(decodeCursor(Buffer.from('2026-13-45T00:00:00.000Z|x').toString('base64url'))).toBeUndefined();
   });
+
+  it('refuses an id of 36 characters that is not a UUID (it would fail the ::uuid cast in the query)', () => {
+    const notUuid = Buffer.from(`2026-10-22T10:00:00.000Z|${'-'.repeat(36)}`).toString('base64url');
+
+    expect(decodeCursor(notUuid)).toBeUndefined();
+  });
 });
 
 describe('NotificationsService', () => {

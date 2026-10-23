@@ -38,7 +38,8 @@ export function toNotificationView(row: NotificationRow): NotificationView {
   };
 }
 
-const CURSOR_PATTERN = /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)\|([0-9a-f-]{36})$/;
+// The id must be a full UUID: a 36-character string of dashes would pass the length check and fail the ::uuid cast (500).
+const CURSOR_PATTERN = /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)\|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 
 /** The cursor is the creation time and id of the last row of a page, base64url-encoded. */
 export function encodeCursor(cursor: NotificationCursor): string {
