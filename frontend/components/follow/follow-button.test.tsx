@@ -184,3 +184,14 @@ describe('FollowButton', () => {
     expect(screen.getByRole('button', { name: 'Suivre @alice' })).toHaveStyle({ minHeight: '44px' });
   });
 });
+
+describe('FollowButton follows the state given by its card', () => {
+  it('shows the new state when the card changes it, for example from the menu entry', () => {
+    const { rerender } = render(<FollowButton handle="alice" initialFollows />);
+    expect(screen.getByRole('button', { name: 'Suivi @alice' })).toBeInTheDocument();
+
+    rerender(<FollowButton handle="alice" initialFollows={false} />);
+
+    expect(screen.getByRole('button', { name: 'Suivre @alice' })).toBeInTheDocument();
+  });
+});

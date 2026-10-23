@@ -10,7 +10,7 @@ const CREATED: FeedQuestion = {
   text: 'Pourquoi attendons-nous le lundi ?',
   hashtags: ['attente'],
   createdAt: '2026-10-14T08:41:00Z',
-  author: { handle: 'alice', displayName: 'Alice' },
+  author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
   counters: { like: 0, dislike: 0, y: 0, reply: 0 },
   yThreshold: 50,
   conversationOpen: false,

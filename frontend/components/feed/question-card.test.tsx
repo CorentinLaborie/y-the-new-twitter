@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FeedQuestion } from '@/lib/feed-api';
+import { unfollowUser } from '@/lib/follows-api';
 import { QuestionCard } from './question-card';
+
+vi.mock('@/lib/follows-api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/follows-api')>();
+  return { ...actual, followUser: vi.fn(), unfollowUser: vi.fn() };
+});
 
 function question(overrides: Partial<FeedQuestion> = {}): FeedQuestion {
   return {
@@ -9,7 +15,7 @@ function question(overrides: Partial<FeedQuestion> = {}): FeedQuestion {
     text: 'Le télétravail rend-il les débats moins violents ?',
     hashtags: ['attente'],
     createdAt: '2026-10-14T08:41:00Z',
-    author: { handle: 'alice', displayName: 'Alice' },
+    author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
     counters: { like: 10, dislike: 2, y: 49, reply: 0 },
     yThreshold: 50,
     conversationOpen: false,
@@ -182,5 +188,57 @@ describe('QuestionCard menu and copied link', () => {
     fireEvent.mouseDown(document.body);
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+});
+
+describe('QuestionCard follow control (L3)', () => {
+  const OTHER_VIEWER = { handle: 'me', suspended: false };
+
+  beforeEach(() => {
+    vi.mocked(unfollowUser).mockResolvedValue({ ok: true, status: 204, body: undefined } as never);
+  });
+
+  it('shows the pill with the state of the author, and none on the viewer own question', () => {
+    renderCard({
+      question: question({ author: { handle: 'alice', displayName: 'Alice', viewerFollows: true } }),
+      viewer: OTHER_VIEWER,
+    });
+    expect(screen.getByRole('button', { name: 'Suivi @alice' })).toBeInTheDocument();
+  });
+
+  it('shows no follow control on the viewer own question', () => {
+    renderCard({
+      question: question({ author: { handle: 'me', displayName: 'Moi', viewerFollows: false } }),
+      viewer: OTHER_VIEWER,
+    });
+    expect(screen.queryByRole('button', { name: /@me$/ })).not.toBeInTheDocument();
+  });
+
+  it('shows no follow control without a viewer', () => {
+    renderCard();
+    expect(screen.queryByRole('button', { name: /^(Suivre|Suivi) @alice$/ })).not.toBeInTheDocument();
+  });
+
+  it('removes the follow from the menu entry, and the pill shows "Suivre" at once', async () => {
+    renderCard({
+      question: question({ author: { handle: 'alice', displayName: 'Alice', viewerFollows: true } }),
+      viewer: OTHER_VIEWER,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Plus d’options' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Ne plus suivre @alice' }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Suivre @alice' })).toBeInTheDocument());
+    expect(unfollowUser).toHaveBeenCalledWith('alice');
+  });
+
+  it('offers no follow menu entry to a suspended viewer', () => {
+    renderCard({
+      question: question({ author: { handle: 'alice', displayName: 'Alice', viewerFollows: true } }),
+      viewer: { handle: 'me', suspended: true },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Plus d’options' }));
+    expect(screen.queryByRole('menuitem', { name: 'Ne plus suivre @alice' })).not.toBeInTheDocument();
   });
 });

@@ -276,6 +276,7 @@ export function HomeFeed({
         replyCount={replyCountOf(question)}
         onOpenConversation={() => toggleConversation(question.id)}
         conversationOpen={conversationShown}
+        viewer={viewerHandle === null ? undefined : { handle: viewerHandle, suspended }}
       />
     );
   }

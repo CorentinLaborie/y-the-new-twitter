@@ -30,7 +30,7 @@ function question(id: string, text: string): FeedQuestion {
     text,
     hashtags: ['attente'],
     createdAt: '2026-10-14T08:41:00Z',
-    author: { handle: `user_${id}`, displayName: `Personne ${id}` },
+    author: { handle: `user_${id}`, displayName: `Personne ${id}`, viewerFollows: false },
     counters: { like: 10, dislike: 2, y: 49, reply: 0 },
     yThreshold: 50,
     conversationOpen: false,

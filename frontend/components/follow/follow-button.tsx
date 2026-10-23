@@ -27,6 +27,13 @@ export function FollowButton({ handle, initialFollows, disabled = false, onChang
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // The card may change the state from its menu ("Ne plus suivre"): the pill follows the new value at render time.
+  const [seenInitial, setSeenInitial] = useState(initialFollows);
+  if (seenInitial !== initialFollows) {
+    setSeenInitial(initialFollows);
+    setFollows(initialFollows);
+  }
+
   async function toggle() {
     if (disabled || pending) {
       return;

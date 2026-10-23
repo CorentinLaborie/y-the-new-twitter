@@ -5,6 +5,8 @@ import { ConversationRuleDialog } from '@/components/question/conversation-rule-
 import { copyQuestionLink, questionLink } from '@/components/question/copy-link';
 import questionStyles from '@/components/question/question.module.css';
 import { YMark } from '@/components/brand/y-mark';
+import { FollowButton } from '@/components/follow/follow-button';
+import { UnfollowMenuItem } from '@/components/follow/unfollow-menu-item';
 import type { FeedQuestion, ReactionKind } from '@/lib/feed-api';
 import { avatarInitial } from './avatar-initial';
 import { FeedIcon } from './feed-icon';
@@ -27,6 +29,8 @@ type QuestionCardProps = {
   onOpenConversation?: () => void;
   /** Whether the conversation under the card is open: sets aria-expanded on the reply count (with onOpenConversation). */
   conversationOpen?: boolean;
+  /** The signed-in viewer. Without it the card shows no follow control; their own questions show none either. */
+  viewer?: { handle: string; suspended: boolean };
 };
 
 function ReactionGlyph({ kind }: { kind: ReactionKind }) {
@@ -76,8 +80,11 @@ export function QuestionCard({
   replyCount = 0,
   onOpenConversation,
   conversationOpen: conversationShown = false,
+  viewer,
 }: QuestionCardProps) {
   const { counters, yThreshold, conversationOpen, viewerReactions } = question;
+  const [followed, setFollowed] = useState(question.author.viewerFollows);
+  const showFollow = viewer !== undefined && viewer.handle !== question.author.handle;
   const [ruleOpen, setRuleOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'copied' | 'failed' | null>(null);
@@ -130,6 +137,14 @@ export function QuestionCard({
             <time dateTime={question.createdAt}>{formatPostDate(question.createdAt)}</time>
           </span>
         </div>
+        {showFollow && viewer ? (
+          <FollowButton
+            handle={question.author.handle}
+            initialFollows={followed}
+            disabled={viewer.suspended}
+            onChange={setFollowed}
+          />
+        ) : null}
         {question.hashtags.length > 0 ? (
           <div className={styles.tags}>
             {question.hashtags.map((hashtag) => (
@@ -162,6 +177,13 @@ export function QuestionCard({
                 </CardIcon>
                 Copier le lien
               </button>
+              {showFollow && viewer && !viewer.suspended ? (
+                <UnfollowMenuItem
+                  handle={question.author.handle}
+                  follows={followed}
+                  onUnfollowed={() => setFollowed(false)}
+                />
+              ) : null}
             </div>
           ) : null}
         </div>
