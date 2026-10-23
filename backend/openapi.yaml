@@ -683,6 +683,70 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a8
+  /api/v1/reports:
+    post:
+      operationId: ReportsController_create
+      parameters:
+        - name: idempotency-key
+          in: header
+          description: Repeated with the same report, returns the first one. Section 9.1.
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReportDto"
+      responses:
+        "201":
+          description: The report, open.
+          headers:
+            Location:
+              description: Path of the new report.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportResponseDto"
+        "400":
+          description: Not exactly one of questionId and replyId, a UUID is invalid, the
+            reason is not in the list, or the body is invalid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The content does not exist, or it is hidden, deleted or blocked.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "422":
+          description: The reason is other and the details are missing, the details are
+            longer than 280 characters, the reported content is the viewer’s
+            own, or the key was used for another request.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - Reports
   /api/v1/feed:
     get:
       operationId: FeedController_page
@@ -1759,6 +1823,50 @@ components:
         - replyId
         - counts
         - viewerReactions
+    CreateReportDto:
+      type: object
+      properties:
+        questionId:
+          type: string
+          format: uuid
+          description: The reported question. Exactly one target.
+        replyId:
+          type: string
+          format: uuid
+          description: The reported reply. Exactly one target.
+        reason:
+          type: string
+          enum:
+            - spam
+            - harassment
+            - hate
+            - illegal_content
+            - misinformation
+            - other
+          description: The reason, from a fixed list (DEC-011).
+        details:
+          type: string
+          maxLength: 280
+          description: Details, trimmed. Required when the reason is other.
+      required:
+        - reason
+    ReportResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - open
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - status
+        - createdAt
     FeedPageDto:
       type: object
       properties:
