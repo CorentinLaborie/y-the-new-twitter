@@ -100,7 +100,7 @@ describe('QuestionsService (B2, section 9.1)', () => {
       id: 'question-1',
       text: 'Bonjour tout le monde',
       createdAt: '2026-10-20T10:41:00.000Z',
-      author: { handle: 'alice', displayName: 'Alice' },
+      author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
       hashtags: [],
       counters: { like: 0, dislike: 0, y: 0, reply: 0 },
       yThreshold: 50,
@@ -224,7 +224,7 @@ describe('QuestionsService (B2, section 9.1)', () => {
   });
 });
 
-type DetailRepository = jest.Mocked<Pick<QuestionsRepository, 'findVisibleQuestion' | 'findViewerReactions'>>;
+type DetailRepository = jest.Mocked<Pick<QuestionsRepository, 'findVisibleQuestion' | 'findViewerReactions' | 'findFollowedAuthorIds'>>;
 type VisibleRow = NonNullable<Awaited<ReturnType<QuestionsRepository['findVisibleQuestion']>>>;
 
 describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
@@ -249,6 +249,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
       yCount: 3,
       replyCount: 1,
       conversationOpenedAt: CREATED_AT,
+      authorId: 'author-1',
       author: { handle: 'alice', displayName: 'Alice' },
       hashtags: [{ hashtag: { name: 'irl' } }],
       ...overrides,
@@ -259,6 +260,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
     repository = {
       findVisibleQuestion: jest.fn().mockResolvedValue(visibleRow()),
       findViewerReactions: jest.fn().mockResolvedValue([]),
+      findFollowedAuthorIds: jest.fn().mockResolvedValue([]),
     } as unknown as DetailRepository;
     const prisma = { $transaction: jest.fn() };
     const config = { getOrThrow: jest.fn().mockReturnValue(50) } as unknown as ConfigService;
@@ -284,13 +286,22 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
       id: 'question-1',
       text: 'Bonjour #irl',
       createdAt: '2026-10-20T10:41:00.000Z',
-      author: { handle: 'alice', displayName: 'Alice' },
+      author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
       hashtags: ['irl'],
       counters: { like: 2, dislike: 0, y: 3, reply: 1 },
       yThreshold: 50,
       conversationOpen: true,
       viewerReactions: ['y'],
     });
+  });
+
+  it('says the viewer follows the author when a follow exists (L3)', async () => {
+    repository.findFollowedAuthorIds.mockResolvedValue([{ followeeId: 'author-1' }] as never);
+
+    const response = await service.findVisible(VIEWER, 'question-1');
+
+    expect(repository.findFollowedAuthorIds).toHaveBeenCalledWith('viewer-1', ['author-1']);
+    expect(response.author.viewerFollows).toBe(true);
   });
 
   it('shows the conversation as closed and no reaction when the viewer has none', async () => {

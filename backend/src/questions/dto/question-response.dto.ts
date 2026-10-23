@@ -6,6 +6,12 @@ class QuestionAuthorDto {
 
   @ApiProperty({ example: 'Alice' })
   readonly displayName!: string;
+
+  @ApiProperty({
+    example: false,
+    description: 'True when the signed-in viewer follows this author. False for the viewer’s own questions (L3).',
+  })
+  readonly viewerFollows!: boolean;
 }
 
 class QuestionCountersDto {

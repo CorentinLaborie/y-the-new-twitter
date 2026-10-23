@@ -53,8 +53,14 @@ export class FeedService {
       ...trendingRows,
       ...page,
     ]);
+    const followedAuthors = await this.followedAuthorIds(viewer.id, [...trendingRows, ...page]);
     const toView = (row: QuestionRow) =>
-      toQuestionView(row, threshold, viewerReactionsByQuestion.get(row.id) ?? []);
+      toQuestionView(
+        row,
+        threshold,
+        viewerReactionsByQuestion.get(row.id) ?? [],
+        followedAuthors.has(row.authorId),
+      );
 
     return {
       trending: trendingRows.map(toView),
@@ -70,11 +76,17 @@ export class FeedService {
     const rows = await this.feed.findFollowingPage({ viewerId: viewer.id, after, take: limit + 1 });
     const page = rows.slice(0, limit);
     const viewerReactionsByQuestion = await this.viewerReactionsByQuestion(viewer.id, page);
+    const followedAuthors = await this.followedAuthorIds(viewer.id, page);
 
     return {
       trending: [],
       questions: page.map((row) =>
-        toQuestionView(row, threshold, viewerReactionsByQuestion.get(row.id) ?? []),
+        toQuestionView(
+          row,
+          threshold,
+          viewerReactionsByQuestion.get(row.id) ?? [],
+          followedAuthors.has(row.authorId),
+        ),
       ),
       nextCursor: nextCursorOf(rows, limit),
     };
@@ -94,6 +106,16 @@ export class FeedService {
       const row = rowsById.get(id);
       return row ? [row] : [];
     });
+  }
+
+  /** The authors of these questions that the viewer follows, one query per page (author.viewerFollows). */
+  private async followedAuthorIds(viewerId: string, rows: readonly QuestionRow[]): Promise<Set<string>> {
+    const follows = await this.questions.findFollowedAuthorIds(
+      viewerId,
+      rows.map((row) => row.authorId),
+    );
+
+    return new Set(follows.map((follow) => follow.followeeId));
   }
 
   /** The viewer's own reaction on each of these questions, by question id (at most one, R11). */

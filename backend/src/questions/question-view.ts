@@ -52,17 +52,23 @@ type QuestionViewSource = Pick<
 /**
  * A question as the API returns it. Hashtags are sorted by name, so every endpoint gives the same order.
  * `viewerReactions` is the reaction the signed-in viewer gave, read by the caller (at most one, R11).
+ * `viewerFollowsAuthor` tells whether the viewer follows the author, read by the caller (L3).
  */
 export function toQuestionView(
   row: QuestionViewSource,
   threshold: number,
   viewerReactions: readonly ReactionKind[],
+  viewerFollowsAuthor: boolean,
 ): QuestionResponseDto {
   return {
     id: row.id,
     text: row.body,
     createdAt: row.createdAt.toISOString(),
-    author: { handle: row.author.handle, displayName: row.author.displayName },
+    author: {
+      handle: row.author.handle,
+      displayName: row.author.displayName,
+      viewerFollows: viewerFollowsAuthor,
+    },
     hashtags: row.hashtags.map((link) => link.hashtag.name).sort(),
     counters: {
       like: row.likeCount,

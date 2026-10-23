@@ -66,11 +66,13 @@ export class QuestionsService {
       throw new NotFoundException(QUESTION_NOT_FOUND_MESSAGE);
     }
     const reactions = await this.questions.findViewerReactions(viewer.id, [questionId]);
+    const follows = await this.questions.findFollowedAuthorIds(viewer.id, [row.authorId]);
 
     return toQuestionView(
       row,
       this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD'),
       reactions.map((reaction) => reaction.kind),
+      follows.length > 0,
     );
   }
 
@@ -94,6 +96,7 @@ export class QuestionsService {
       },
       this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD'),
       [],
+      false,
     );
   }
 }

@@ -1385,9 +1385,15 @@ components:
         displayName:
           type: string
           example: Alice
+        viewerFollows:
+          type: boolean
+          example: false
+          description: True when the signed-in viewer follows this author. False for the
+            viewer’s own questions (L3).
       required:
         - handle
         - displayName
+        - viewerFollows
     QuestionCountersDto:
       type: object
       properties:

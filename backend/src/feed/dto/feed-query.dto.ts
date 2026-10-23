@@ -3,8 +3,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
 /** The tabs of GET /feed: "Pour vous" (for-you) and "Abonnements" (following, L3). */
-export const FEED_TABS = ['for-you', 'following'] as const;
-export type FeedTab = (typeof FEED_TABS)[number];
+const FEED_TABS = ['for-you', 'following'] as const;
+type FeedTab = (typeof FEED_TABS)[number];
 
 /** Query of GET /feed. */
 export class FeedQueryDto {

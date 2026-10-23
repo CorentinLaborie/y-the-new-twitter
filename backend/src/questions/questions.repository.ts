@@ -27,6 +27,14 @@ export class QuestionsRepository {
     });
   }
 
+  /** The accounts among these authors that the viewer follows (author.viewerFollows, L3). */
+  findFollowedAuthorIds(viewerId: string, authorIds: readonly string[]) {
+    return this.prisma.follow.findMany({
+      where: { followerId: viewerId, followeeId: { in: [...authorIds] } },
+      select: { followeeId: true },
+    });
+  }
+
   createQuestion(db: QuestionsDb, authorId: string, body: string) {
     return db.question.create({ data: { authorId, body } });
   }
