@@ -54,10 +54,13 @@ describe('Follows (e2e, L3 E1, E2, E5)', () => {
   }
 
   /** A follow row. Its date is the one given (the lists are ordered by it), or the current time. */
+  /** Inserts a follow row with the counters a real follow leaves behind (the counters never go below zero). */
   function insertFollow(followerId: string, followeeId: string, createdAt?: string): Promise<string> {
     const at = createdAt === undefined ? 'now()' : `'${createdAt}'`;
     return sql(
-      `INSERT INTO follows (follower_id, followee_id, created_at) VALUES ('${followerId}', '${followeeId}', ${at});`,
+      `INSERT INTO follows (follower_id, followee_id, created_at) VALUES ('${followerId}', '${followeeId}', ${at});
+       UPDATE users SET following_count = following_count + 1 WHERE id = '${followerId}';
+       UPDATE users SET follower_count = follower_count + 1 WHERE id = '${followeeId}';`,
     );
   }
 
@@ -85,6 +88,13 @@ describe('Follows (e2e, L3 E1, E2, E5)', () => {
   function followRows(followerId: string, followeeId: string): Promise<string> {
     return sql(
       `SELECT count(*) FROM follows WHERE follower_id = '${followerId}' AND followee_id = '${followeeId}';`,
+    );
+  }
+
+  /** The following count of the first account and the follower count of the second, as "following|followers". */
+  function followCounters(followerId: string, followeeId: string): Promise<string> {
+    return sql(
+      `SELECT (SELECT following_count FROM users WHERE id = '${followerId}') || '|' || (SELECT follower_count FROM users WHERE id = '${followeeId}');`,
     );
   }
 
@@ -123,6 +133,7 @@ describe('Follows (e2e, L3 E1, E2, E5)', () => {
 
     expect(response.body).toEqual({ handle: target.handle, viewerFollows: true });
     expect(await followRows(viewer.id, target.id)).toBe('1');
+    expect(await followCounters(viewer.id, target.id)).toBe('1|1');
     expect(await followNotices(target.id)).toBe(`1,${viewer.id},null`);
   });
 
@@ -170,6 +181,7 @@ describe('Follows (e2e, L3 E1, E2, E5)', () => {
     await unfollow(client, target.handle).expect(204);
 
     expect(await followRows(viewer.id, target.id)).toBe('0');
+    expect(await followCounters(viewer.id, target.id)).toBe('0|0');
   });
 
   it('refuses to follow oneself (422) and stores nothing', async () => {

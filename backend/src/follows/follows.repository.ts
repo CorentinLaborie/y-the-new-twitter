@@ -73,15 +73,16 @@ export class FollowsRepository {
   }
 
   /**
-   * Locks the account rows, shared, until the transaction ends, one at a time in the order of their ids. Two follows
-   * that cross each other lock the same rows in the same order, so they never wait on each other (section 6.3).
+   * Locks the account rows, exclusively, until the transaction ends, one at a time in the order of their ids. The lock
+   * is exclusive because the follow counters of both rows change (section 6.3). Two follows that cross each other lock
+   * the same rows in the same order, so they never wait on each other.
    * Returns the status read under each lock.
    */
   async lockAccounts(db: FollowsDb, userIds: readonly string[]): Promise<Map<string, AccountStatus>> {
     const statuses = new Map<string, AccountStatus>();
     for (const userId of [...new Set(userIds)].sort()) {
       const rows = await db.$queryRaw<{ status: AccountStatus }[]>`
-        SELECT status FROM users WHERE id = ${userId}::uuid FOR SHARE`;
+        SELECT status FROM users WHERE id = ${userId}::uuid FOR UPDATE`;
       if (rows[0] !== undefined) {
         statuses.set(userId, rows[0].status);
       }
@@ -104,6 +105,17 @@ export class FollowsRepository {
 
   deleteFollow(db: FollowsDb, followerId: string, followeeId: string) {
     return db.follow.deleteMany({ where: { followerId, followeeId } });
+  }
+
+  /** Moves the follow counters of both accounts by `delta` (+1 on a new follow, -1 on an unfollow), in the same transaction. */
+  async changeFollowCounters(
+    db: FollowsDb,
+    followerId: string,
+    followeeId: string,
+    delta: number,
+  ): Promise<void> {
+    await db.user.update({ where: { id: followerId }, data: { followingCount: { increment: delta } } });
+    await db.user.update({ where: { id: followeeId }, data: { followerCount: { increment: delta } } });
   }
 
   /** One page of the accounts that follow `ownerId`, the most recent follow first. Hidden or blocked accounts are left out. */

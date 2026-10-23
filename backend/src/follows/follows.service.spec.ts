@@ -19,6 +19,7 @@ type Repository = jest.Mocked<
     | 'createFollow'
     | 'writeFollowNotification'
     | 'deleteFollow'
+    | 'changeFollowCounters'
     | 'findFollowerPage'
     | 'findFollowingPage'
   >
@@ -54,6 +55,7 @@ describe('FollowsService (E1, E2, E5)', () => {
       createFollow: jest.fn().mockResolvedValue(true),
       writeFollowNotification: jest.fn().mockResolvedValue(undefined),
       deleteFollow: jest.fn().mockResolvedValue({ count: 1 }),
+      changeFollowCounters: jest.fn().mockResolvedValue(undefined),
       findFollowerPage: jest.fn().mockResolvedValue([]),
       findFollowingPage: jest.fn().mockResolvedValue([]),
     };
@@ -71,6 +73,20 @@ describe('FollowsService (E1, E2, E5)', () => {
       expect(repository.createFollow).toHaveBeenCalledWith(DB, 'viewer-1', 'target-1');
       expect(repository.writeFollowNotification).toHaveBeenCalledWith(DB, 'target-1', 'viewer-1');
       expect(response).toEqual({ handle: 'bob', viewerFollows: true });
+    });
+
+    it('moves the follow counters of both accounts by one, in the same transaction', async () => {
+      await service.follow(VIEWER, 'bob');
+
+      expect(repository.changeFollowCounters).toHaveBeenCalledWith(DB, 'viewer-1', 'target-1', 1);
+    });
+
+    it('leaves the counters alone when the follow exists already', async () => {
+      repository.createFollow.mockResolvedValue(false);
+
+      await service.follow(VIEWER, 'bob');
+
+      expect(repository.changeFollowCounters).not.toHaveBeenCalled();
     });
 
     it('writes no notice when the follow exists already, and answers the same (idempotence)', async () => {
@@ -146,6 +162,20 @@ describe('FollowsService (E1, E2, E5)', () => {
       expect(repository.deleteFollow).toHaveBeenCalledWith(DB, 'viewer-1', 'target-1');
       expect(repository.createFollow).not.toHaveBeenCalled();
       expect(repository.writeFollowNotification).not.toHaveBeenCalled();
+    });
+
+    it('moves the follow counters back by one when a row was removed', async () => {
+      await service.unfollow(VIEWER, 'bob');
+
+      expect(repository.changeFollowCounters).toHaveBeenCalledWith(DB, 'viewer-1', 'target-1', -1);
+    });
+
+    it('leaves the counters alone when there was no follow to remove', async () => {
+      repository.deleteFollow.mockResolvedValue({ count: 0 });
+
+      await service.unfollow(VIEWER, 'bob');
+
+      expect(repository.changeFollowCounters).not.toHaveBeenCalled();
     });
 
     it('answers 404 for an unknown handle only', async () => {

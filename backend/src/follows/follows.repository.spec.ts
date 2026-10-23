@@ -18,7 +18,7 @@ describe('FollowsRepository (E1, E2, E5)', () => {
   let db: {
     follow: { createMany: jest.Mock; deleteMany: jest.Mock; findMany: jest.Mock };
     notification: { create: jest.Mock };
-    user: { findFirst: jest.Mock };
+    user: { findFirst: jest.Mock; update: jest.Mock };
     $queryRaw: jest.Mock;
   };
   let repository: FollowsRepository;
@@ -31,19 +31,19 @@ describe('FollowsRepository (E1, E2, E5)', () => {
         findMany: jest.fn().mockResolvedValue([]),
       },
       notification: { create: jest.fn().mockResolvedValue({}) },
-      user: { findFirst: jest.fn().mockResolvedValue(null) },
+      user: { findFirst: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
       $queryRaw: jest.fn().mockResolvedValue([{ status: 'active' }]),
     };
     repository = new FollowsRepository();
   });
 
   describe('lockAccounts (section 6.3)', () => {
-    it('locks each account once, shared, in the order of the ids, whatever the order they are given in', async () => {
+    it('locks each account once, exclusively, in the order of the ids, whatever the order they are given in', async () => {
       const statuses = await repository.lockAccounts(db as unknown as FollowsDb, ['b-id', 'a-id', 'b-id']);
 
       expect(db.$queryRaw).toHaveBeenCalledTimes(2);
       expect(db.$queryRaw.mock.calls.map((call) => call[1])).toEqual(['a-id', 'b-id']);
-      expect(sqlOf(db.$queryRaw.mock.calls[0])).toContain('FOR SHARE');
+      expect(sqlOf(db.$queryRaw.mock.calls[0])).toContain('FOR UPDATE');
       expect(statuses).toEqual(
         new Map([
           ['a-id', 'active'],
@@ -75,6 +75,19 @@ describe('FollowsRepository (E1, E2, E5)', () => {
       await expect(repository.createFollow(db as unknown as FollowsDb, 'viewer', 'target')).resolves.toBe(
         false,
       );
+    });
+
+    it('moves the following count of the viewer and the follower count of the target', async () => {
+      await repository.changeFollowCounters(db as unknown as FollowsDb, 'viewer', 'target', -1);
+
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: 'viewer' },
+        data: { followingCount: { increment: -1 } },
+      });
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: 'target' },
+        data: { followerCount: { increment: -1 } },
+      });
     });
 
     it('writes the follow notice to the followed account, with the viewer as the actor and no question', async () => {
