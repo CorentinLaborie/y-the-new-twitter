@@ -20,6 +20,7 @@ import { HealthModule } from './health/health.module';
 import { QuestionsModule } from './questions/questions.module';
 import { ReactionsModule } from './reactions/reactions.module';
 import { RepliesModule } from './replies/replies.module';
+import { BlocksModule } from './blocks/blocks.module';
 import { ReportsModule } from './reports/reports.module';
 import { FeedModule } from './feed/feed.module';
 import { FollowsModule } from './follows/follows.module';
@@ -48,6 +49,7 @@ import { SupportModule } from './support/support.module';
     QuestionsModule,
     ReactionsModule,
     RepliesModule,
+    BlocksModule,
     ReportsModule,
     FeedModule,
     FollowsModule,

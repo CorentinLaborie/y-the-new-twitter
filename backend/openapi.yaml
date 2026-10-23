@@ -683,6 +683,139 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a8
+  /api/v1/users/{handle}/block:
+    put:
+      operationId: BlocksController_block
+      parameters:
+        - name: handle
+          required: true
+          in: path
+          schema:
+            maxLength: 30
+            example: alice
+            type: string
+      responses:
+        "204":
+          description: The account is blocked. Blocking it again changes nothing.
+        "400":
+          description: The handle is not a valid handle.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: No active account has this handle.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "422":
+          description: The viewer tries to block their own account.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a9
+        - Blocks
+    delete:
+      operationId: BlocksController_unblock
+      parameters:
+        - name: handle
+          required: true
+          in: path
+          schema:
+            maxLength: 30
+            example: alice
+            type: string
+      responses:
+        "204":
+          description: The block is lifted, or there was none.
+        "400":
+          description: The handle is not a valid handle.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a9
+  /api/v1/users/me/blocks:
+    get:
+      operationId: BlocksController_list
+      parameters:
+        - name: cursor
+          required: false
+          in: query
+          description: nextCursor of the previous page. Absent for the first page.
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            allOf:
+              - $ref: "#/components/schemas/Object"
+      responses:
+        "200":
+          description: One page of the accounts the viewer blocks.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockPageDto"
+        "400":
+          description: The cursor or the limit is not valid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a9
   /api/v1/reports:
     post:
       operationId: ReportsController_create
@@ -864,7 +997,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a9
+      tags: &a10
         - Follows
     delete:
       operationId: FollowsController_unfollow
@@ -910,7 +1043,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a9
+      tags: *a10
   /api/v1/users/{handle}/followers:
     get:
       operationId: FollowsController_followers
@@ -977,7 +1110,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a9
+      tags: *a10
   /api/v1/users/{handle}/following:
     get:
       operationId: FollowsController_following
@@ -1044,7 +1177,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a9
+      tags: *a10
   /api/v1/users/{handle}:
     get:
       operationId: ProfilesController_profile
@@ -1095,7 +1228,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a10
+      tags: &a11
         - Profiles
   /api/v1/users/{handle}/questions:
     get:
@@ -1162,7 +1295,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a10
+      tags: *a11
   /api/v1/notifications:
     get:
       operationId: NotificationsController_list
@@ -1220,7 +1353,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a11
+      tags: &a12
         - Notifications
   /api/v1/notifications/unread-count:
     get:
@@ -1251,7 +1384,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a11
+      tags: *a12
   /api/v1/notifications/read-all:
     post:
       operationId: NotificationsController_markAllRead
@@ -1290,7 +1423,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a11
+      tags: *a12
   /api/v1/support/messages:
     post:
       operationId: SupportController_send
@@ -1359,7 +1492,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a12
+                    example: &a13
                       database:
                         status: up
                     additionalProperties:
@@ -1385,7 +1518,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a12
+                    example: *a13
                     additionalProperties:
                       type: object
                       required:
@@ -1407,7 +1540,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a13
+                      database: &a14
                         status: up
                     additionalProperties:
                       type: object
@@ -1421,7 +1554,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a14
+                      redis: &a15
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -1436,8 +1569,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a13
-                      redis: *a14
+                      database: *a14
+                      redis: *a15
                     additionalProperties:
                       type: object
                       required:
@@ -1823,6 +1956,38 @@ components:
         - replyId
         - counts
         - viewerReactions
+    Object:
+      type: object
+      properties: {}
+    BlockedAccountDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: bob
+        displayName:
+          type: string
+          example: Bob Martin
+        blockedAt:
+          format: date-time
+          type: string
+      required:
+        - handle
+        - displayName
+        - blockedAt
+    BlockPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlockedAccountDto"
+        nextCursor:
+          type: string
+          nullable: true
+      required:
+        - items
+        - nextCursor
     CreateReportDto:
       type: object
       properties:
@@ -1899,9 +2064,6 @@ components:
       required:
         - handle
         - viewerFollows
-    Object:
-      type: object
-      properties: {}
     FollowAccountDto:
       type: object
       properties:
