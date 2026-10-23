@@ -28,19 +28,19 @@ describe('notificationText', () => {
   });
 
   it('says one reaction of each kind, with its label', () => {
-    expect(notificationText(line({ type: 'reaction_like' }), 50)).toBe('Alice a réagi J’aime à votre question');
+    expect(notificationText(line({ type: 'reaction_like' }), 50)).toBe('Alice a réagi « J’aime » à votre question');
     expect(notificationText(line({ type: 'reaction_dislike' }), 50)).toBe(
-      'Alice a réagi Pas d’accord à votre question',
+      'Alice a réagi « Pas d’accord » à votre question',
     );
-    expect(notificationText(line({ type: 'reaction_y' }), 50)).toBe('Alice a réagi Y à votre question');
+    expect(notificationText(line({ type: 'reaction_y' }), 50)).toBe('Alice a réagi « Y » à votre question');
   });
 
   it('counts the other actors of a grouped reaction, with the right plural', () => {
     expect(notificationText(line({ type: 'reaction_y', actorCount: 2 }), 50)).toBe(
-      'Alice et 1 autre ont réagi Y à votre question',
+      'Alice et 1 autre ont réagi « Y » à votre question',
     );
     expect(notificationText(line({ type: 'reaction_y', actorCount: 13 }), 50)).toBe(
-      'Alice et 12 autres ont réagi Y à votre question',
+      'Alice et 12 autres ont réagi « Y » à votre question',
     );
   });
 

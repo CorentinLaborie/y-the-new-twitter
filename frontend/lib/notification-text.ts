@@ -22,7 +22,8 @@ export function notificationText(line: NotificationView, threshold: number): str
     case 'reaction_like':
     case 'reaction_dislike':
     case 'reaction_y': {
-      const kind = REACTION_LABEL[line.type];
+      // The reaction name is quoted, so « J’aime » does not read as part of the sentence.
+      const kind = `« ${REACTION_LABEL[line.type]} »`;
       if (others <= 0) {
         return `${name} a réagi ${kind} à votre question`;
       }

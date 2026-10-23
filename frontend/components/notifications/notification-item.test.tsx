@@ -64,6 +64,6 @@ describe('NotificationItem', () => {
   it('counts the other actors of a grouped reaction in its sentence', () => {
     renderItem(line({ type: 'reaction_y', actorCount: 13 }));
 
-    expect(screen.getByRole('link')).toHaveTextContent('AliceY et 12 autres ont réagi Y à votre question');
+    expect(screen.getByRole('link')).toHaveTextContent('AliceY et 12 autres ont réagi « Y » à votre question');
   });
 });
