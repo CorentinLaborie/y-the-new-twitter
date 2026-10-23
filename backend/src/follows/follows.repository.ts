@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { AccountStatus, Prisma } from '../database/generated/client/client';
 import type { KeysetPosition } from '../common/pagination/keyset-cursor';
+import { visibleAccountTo } from '../users/account-visibility';
 
 /** The Prisma client or a transaction opened by the service. */
 export type FollowsDb = Prisma.TransactionClient;
@@ -22,21 +23,12 @@ export interface FollowPageQuery {
   readonly take: number;
 }
 
-/** An account the viewer may see: active, and no block in either direction with the viewer (R13, R14). */
-function visibleAccount(viewerId: string): Prisma.UserWhereInput {
-  return {
-    status: 'active',
-    blocks: { none: { blockedId: viewerId } },
-    blockedBy: { none: { blockerId: viewerId } },
-  };
-}
-
 /**
  * An account a list may show: visible to the viewer, and not blocked in either direction with the owner of the list
  * either (R14). A follow between two accounts that block each other is not listed.
  */
 function listedAccount(ownerId: string, viewerId: string): Prisma.UserWhereInput {
-  return { AND: [visibleAccount(viewerId), visibleAccount(ownerId)] };
+  return { AND: [visibleAccountTo(viewerId), visibleAccountTo(ownerId)] };
 }
 
 /** The rows after a keyset position, in the order (createdAt desc, account id desc). */
@@ -64,10 +56,10 @@ export class FollowsRepository {
     });
   }
 
-  /** The account matching `where`, when the viewer may see it (visibleAccount). Null when it is not visible. */
+  /** The account matching `where`, when the viewer may see it (visibleAccountTo). Null when it is not visible. */
   findVisibleAccount(db: FollowsDb, viewerId: string, where: Prisma.UserWhereInput) {
     return db.user.findFirst({
-      where: { AND: [where, visibleAccount(viewerId)] },
+      where: { AND: [where, visibleAccountTo(viewerId)] },
       select: { id: true, handle: true },
     });
   }

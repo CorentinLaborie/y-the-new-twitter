@@ -1,4 +1,5 @@
 import type { Prisma, ReactionKind } from '../database/generated/client/client';
+import { visibleAccountTo } from '../users/account-visibility';
 import type { QuestionResponseDto } from './dto/question-response.dto';
 
 /** What a question view needs: the author's public names and the hashtags, read with the question. */
@@ -28,10 +29,7 @@ export const VISIBLE_QUESTION = {
  */
 export function visibleTo(viewerId: string) {
   return {
-    AND: [
-      VISIBLE_QUESTION,
-      { author: { blocks: { none: { blockedId: viewerId } }, blockedBy: { none: { blockerId: viewerId } } } },
-    ],
+    AND: [VISIBLE_QUESTION, { author: visibleAccountTo(viewerId) }],
   };
 }
 

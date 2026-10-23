@@ -300,17 +300,20 @@ describe('Feed "Pour vous" and "Abonnements" (e2e, B6, L3)', () => {
     });
   });
 
-  it('pages "Abonnements" without duplicates or gaps, in the same order as the followed author on "Pour vous"', async () => {
+  it('pages "Abonnements" without duplicates or gaps, with the same questions as the followed author on "Pour vous"', async () => {
     const following = await walk(7, 'following');
     const everyone = await walk(50);
-    const writerIds = everyone.questions
+    // The trending block of "Pour vous" can hold questions of this author: they count too. Its order is by reactions,
+    // so the two lists are compared as sets. The order by date is checked by the test above.
+    const writerIds = [...everyone.trending, ...everyone.questions]
       .filter((question) => question.author.handle === 'feed_writer')
-      .map((question) => question.id);
+      .map((question) => question.id)
+      .sort();
     const followingIds = following.questions.map((question) => question.id);
 
     expect(following.pages.length).toBeGreaterThan(1);
     expect(new Set(followingIds).size).toBe(followingIds.length);
-    expect(followingIds).toEqual(writerIds);
+    expect([...followingIds].sort()).toEqual(writerIds);
   });
 
   it('leaves out of "Abonnements" the hidden, deleted, suspended and blocked-in-either-direction questions, even when followed', async () => {
@@ -330,7 +333,7 @@ describe('Feed "Pour vous" and "Abonnements" (e2e, B6, L3)', () => {
     expect(texts).not.toContain('Bloqueur');
   });
 
-  it("leaves out of \"Abonnements\" the viewer's own questions", async () => {
+  it('leaves out of "Abonnements" the viewer\'s own questions', async () => {
     await sql(`INSERT INTO questions (author_id, body) VALUES ('${viewer}', 'Question du viewer');`);
 
     const { questions } = await walk(50, 'following');

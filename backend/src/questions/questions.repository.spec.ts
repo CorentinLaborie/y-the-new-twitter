@@ -18,6 +18,7 @@ describe('QuestionsRepository.findVisibleQuestion (R13, R14, section 9.2)', () =
         { deletedAt: null, moderationStatus: 'visible', author: { status: 'active' } },
         {
           author: {
+            status: 'active',
             blocks: { none: { blockedId: 'viewer-1' } },
             blockedBy: { none: { blockerId: 'viewer-1' } },
           },

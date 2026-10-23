@@ -1,17 +1,9 @@
 import { FollowsRepository, type FollowsDb } from './follows.repository';
+import { visibleAccountTo } from '../users/account-visibility';
 
 /** The SQL of a tagged template, so the lock clause can be checked in the text. */
 function sqlOf(call: unknown[]): string {
   return (call[0] as TemplateStringsArray).join('?');
-}
-
-/** The clauses that keep an account visible to one viewer: active, and no block in either direction (R13, R14). */
-function visibleTo(viewerId: string) {
-  return {
-    status: 'active',
-    blocks: { none: { blockedId: viewerId } },
-    blockedBy: { none: { blockerId: viewerId } },
-  };
 }
 
 describe('FollowsRepository (E1, E2, E5)', () => {
@@ -121,7 +113,7 @@ describe('FollowsRepository (E1, E2, E5)', () => {
       await repository.findVisibleAccount(db as unknown as FollowsDb, 'viewer', { id: 'target' });
 
       expect(db.user.findFirst).toHaveBeenCalledWith({
-        where: { AND: [{ id: 'target' }, visibleTo('viewer')] },
+        where: { AND: [{ id: 'target' }, visibleAccountTo('viewer')] },
         select: { id: true, handle: true },
       });
     });
@@ -140,7 +132,9 @@ describe('FollowsRepository (E1, E2, E5)', () => {
 
       const args = db.follow.findMany.mock.calls[0][0];
       expect(args.where.AND[0]).toEqual({ followeeId: 'owner' });
-      expect(args.where.AND[1]).toEqual({ follower: { AND: [visibleTo('viewer'), visibleTo('owner')] } });
+      expect(args.where.AND[1]).toEqual({
+        follower: { AND: [visibleAccountTo('viewer'), visibleAccountTo('owner')] },
+      });
       expect(args.where.AND[2]).toEqual({});
       expect(args.orderBy).toEqual([{ createdAt: 'desc' }, { followerId: 'desc' }]);
       expect(args.take).toBe(21);
@@ -156,7 +150,9 @@ describe('FollowsRepository (E1, E2, E5)', () => {
 
       const args = db.follow.findMany.mock.calls[0][0];
       expect(args.where.AND[0]).toEqual({ followerId: 'owner' });
-      expect(args.where.AND[1]).toEqual({ followee: { AND: [visibleTo('viewer'), visibleTo('owner')] } });
+      expect(args.where.AND[1]).toEqual({
+        followee: { AND: [visibleAccountTo('viewer'), visibleAccountTo('owner')] },
+      });
       expect(args.orderBy).toEqual([{ createdAt: 'desc' }, { followeeId: 'desc' }]);
     });
 
