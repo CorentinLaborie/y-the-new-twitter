@@ -7,6 +7,9 @@ export class FollowAccountDto {
 
   @ApiProperty({ example: 'Alice' })
   readonly displayName!: string;
+
+  @ApiProperty({ example: false, description: 'True when the signed-in viewer follows this account.' })
+  readonly viewerFollows!: boolean;
 }
 
 /** One page of a follower or following list. `nextCursor` is null on the last page (section 9.1). */

@@ -22,6 +22,7 @@ type Repository = jest.Mocked<
     | 'changeFollowCounters'
     | 'findFollowerPage'
     | 'findFollowingPage'
+    | 'findFollowedIds'
   >
 >;
 
@@ -58,6 +59,7 @@ describe('FollowsService (E1, E2, E5)', () => {
       changeFollowCounters: jest.fn().mockResolvedValue(undefined),
       findFollowerPage: jest.fn().mockResolvedValue([]),
       findFollowingPage: jest.fn().mockResolvedValue([]),
+      findFollowedIds: jest.fn().mockResolvedValue(new Set<string>()),
     };
     prisma = { $transaction: jest.fn(async (callback: (tx: unknown) => unknown) => callback(DB)) };
     service = new FollowsService(
@@ -196,6 +198,18 @@ describe('FollowsService (E1, E2, E5)', () => {
   describe('lists (E5)', () => {
     const at = (iso: string) => new Date(iso);
 
+    it('says for each account of a list whether the viewer follows it', async () => {
+      repository.findFollowerPage.mockResolvedValue([
+        { createdAt: at('2026-10-20T10:00:02.000Z'), accountId: 'a-2', handle: 'dan', displayName: 'Dan' },
+      ]);
+      repository.findFollowedIds.mockResolvedValue(new Set(['a-2']));
+
+      const page = await service.listFollowers(VIEWER, 'bob', { limit: 20 });
+
+      expect(repository.findFollowedIds).toHaveBeenCalledWith(prisma, 'viewer-1', ['a-2']);
+      expect(page.items).toEqual([{ handle: 'dan', displayName: 'Dan', viewerFollows: true }]);
+    });
+
     it('returns the accounts in the author format, newest follow first, with the next cursor of the last shown row', async () => {
       repository.findFollowerPage.mockResolvedValue([
         {
@@ -212,8 +226,8 @@ describe('FollowsService (E1, E2, E5)', () => {
 
       expect(page).toEqual({
         items: [
-          { handle: 'carol', displayName: 'Carol' },
-          { handle: 'dan', displayName: 'Dan' },
+          { handle: 'carol', displayName: 'Carol', viewerFollows: false },
+          { handle: 'dan', displayName: 'Dan', viewerFollows: false },
         ],
         nextCursor: encodeKeysetCursor({ createdAt: at('2026-10-20T10:00:02.000Z'), id: 'a-2' }),
       });
@@ -232,7 +246,10 @@ describe('FollowsService (E1, E2, E5)', () => {
 
       const page = await service.listFollowing(VIEWER, 'bob', { limit: 20 });
 
-      expect(page).toEqual({ items: [{ handle: 'erin', displayName: 'Erin' }], nextCursor: null });
+      expect(page).toEqual({
+        items: [{ handle: 'erin', displayName: 'Erin', viewerFollows: false }],
+        nextCursor: null,
+      });
     });
 
     it('reads the page after the cursor it is given', async () => {

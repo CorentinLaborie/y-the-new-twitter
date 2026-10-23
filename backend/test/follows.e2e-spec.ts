@@ -308,7 +308,13 @@ describe('Follows (e2e, L3 E1, E2, E5)', () => {
 
       const firstPage = await client.agent.get(`/api/v1/users/${owner.handle}/followers?limit=2`).expect(200);
       expect(firstPage.body.items).toEqual(
-        expected.slice(0, 2).map((account) => ({ handle: account.handle, displayName: account.displayName })),
+        expected
+          .slice(0, 2)
+          .map((account) => ({
+            handle: account.handle,
+            displayName: account.displayName,
+            viewerFollows: false,
+          })),
       );
       expect(firstPage.body.nextCursor).toEqual(expect.any(String));
 

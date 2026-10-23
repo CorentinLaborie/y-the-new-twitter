@@ -1803,9 +1803,14 @@ components:
         displayName:
           type: string
           example: Alice
+        viewerFollows:
+          type: boolean
+          example: false
+          description: True when the signed-in viewer follows this account.
       required:
         - handle
         - displayName
+        - viewerFollows
     FollowListPageDto:
       type: object
       properties:

@@ -18,12 +18,20 @@ export const ACCOUNT_NOT_FOUND_MESSAGE = 'Compte introuvable.';
 const SELF_FOLLOW_MESSAGE = 'Vous ne pouvez pas vous suivre vous-même.';
 
 /** The page of a list: the rows read with one more than the limit, so the presence of a next page is known. */
-function toListPage(rows: readonly FollowListRow[], limit: number): FollowListPageDto {
+function toListPage(
+  rows: readonly FollowListRow[],
+  limit: number,
+  followedIds: ReadonlySet<string>,
+): FollowListPageDto {
   const items = rows.slice(0, limit);
   const last = items.at(-1);
 
   return {
-    items: items.map((row) => ({ handle: row.handle, displayName: row.displayName })),
+    items: items.map((row) => ({
+      handle: row.handle,
+      displayName: row.displayName,
+      viewerFollows: followedIds.has(row.accountId),
+    })),
     nextCursor:
       rows.length > limit && last !== undefined
         ? encodeKeysetCursor({ createdAt: last.createdAt, id: last.accountId })
@@ -89,7 +97,7 @@ export class FollowsService {
       take: query.limit + 1,
     });
 
-    return toListPage(rows, query.limit);
+    return this.listPage(viewer, rows, query.limit);
   }
 
   /** The accounts that the account follows, the most recent follow first (section 9.1). */
@@ -106,7 +114,15 @@ export class FollowsService {
       take: query.limit + 1,
     });
 
-    return toListPage(rows, query.limit);
+    return this.listPage(viewer, rows, query.limit);
+  }
+
+  /** One page of a list, with the viewer's follow state for each account of the page. */
+  private async listPage(viewer: SessionUser, rows: readonly FollowListRow[], limit: number) {
+    const accountIds = rows.slice(0, limit).map((row) => row.accountId);
+    const followedIds = await this.follows.findFollowedIds(this.prisma, viewer.id, accountIds);
+
+    return toListPage(rows, limit, followedIds);
   }
 
   private decodeCursor(cursor: string | undefined) {

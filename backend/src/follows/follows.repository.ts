@@ -111,6 +111,20 @@ export class FollowsRepository {
   }
 
   /** One page of the accounts that follow `ownerId`, the most recent follow first. Hidden or blocked accounts are left out. */
+  /** The accounts among `accountIds` that the viewer follows. */
+  async findFollowedIds(
+    db: FollowsDb,
+    viewerId: string,
+    accountIds: readonly string[],
+  ): Promise<Set<string>> {
+    const rows = await db.follow.findMany({
+      where: { followerId: viewerId, followeeId: { in: [...accountIds] } },
+      select: { followeeId: true },
+    });
+
+    return new Set(rows.map((row) => row.followeeId));
+  }
+
   async findFollowerPage(db: FollowsDb, query: FollowPageQuery): Promise<FollowListRow[]> {
     const rows = await db.follow.findMany({
       where: {
