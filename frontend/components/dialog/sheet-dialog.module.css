@@ -1,0 +1,16 @@
+/* Under 768 px the dialog is a sheet at the bottom of the screen, full width, with rounded top corners (DEC-103). */
+.sheet {
+  border: 0;
+}
+
+@media (max-width: 767px) {
+  .sheet {
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0;
+    max-width: none;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 24px 16px 20px;
+  }
+}
