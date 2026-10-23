@@ -1,0 +1,162 @@
+import { Injectable } from '@nestjs/common';
+import type { AccountStatus, Prisma } from '../database/generated/client/client';
+import type { KeysetPosition } from '../common/pagination/keyset-cursor';
+
+/** The Prisma client or a transaction opened by the service. */
+export type FollowsDb = Prisma.TransactionClient;
+
+/** An account as a list shows it, with the position of its follow (the list is ordered by it, then by id). */
+export interface FollowListRow {
+  readonly createdAt: Date;
+  readonly accountId: string;
+  readonly handle: string;
+  readonly displayName: string;
+}
+
+export interface FollowPageQuery {
+  /** The account whose list is read: the followee of a follower list, the follower of a following list. */
+  readonly ownerId: string;
+  readonly viewerId: string;
+  /** The last row of the previous page, or undefined for the first page. */
+  readonly after: KeysetPosition | undefined;
+  readonly take: number;
+}
+
+/** An account the viewer may see: active, and no block in either direction with the viewer (R13, R14). */
+function visibleAccount(viewerId: string): Prisma.UserWhereInput {
+  return {
+    status: 'active',
+    blocks: { none: { blockedId: viewerId } },
+    blockedBy: { none: { blockerId: viewerId } },
+  };
+}
+
+/**
+ * An account a list may show: visible to the viewer, and not blocked in either direction with the owner of the list
+ * either (R14). A follow between two accounts that block each other is not listed.
+ */
+function listedAccount(ownerId: string, viewerId: string): Prisma.UserWhereInput {
+  return { AND: [visibleAccount(viewerId), visibleAccount(ownerId)] };
+}
+
+/** The rows after a keyset position, in the order (createdAt desc, account id desc). */
+function afterPosition(
+  after: KeysetPosition | undefined,
+  accountField: 'followerId' | 'followeeId',
+): Prisma.FollowWhereInput {
+  if (after === undefined) {
+    return {};
+  }
+  const idBefore =
+    accountField === 'followerId' ? { followerId: { lt: after.id } } : { followeeId: { lt: after.id } };
+
+  return { OR: [{ createdAt: { lt: after.createdAt } }, { createdAt: after.createdAt, ...idBefore }] };
+}
+
+/** The only place that reads and writes the follow rows (section 6.3). */
+@Injectable()
+export class FollowsRepository {
+  /** The account with this handle, whatever its status. Handles are unique regardless of case (DEC-061). */
+  findAccountByHandle(db: FollowsDb, handle: string) {
+    return db.user.findFirst({
+      where: { handle: { equals: handle, mode: 'insensitive' } },
+      select: { id: true, handle: true },
+    });
+  }
+
+  /** The account matching `where`, when the viewer may see it (visibleAccount). Null when it is not visible. */
+  findVisibleAccount(db: FollowsDb, viewerId: string, where: Prisma.UserWhereInput) {
+    return db.user.findFirst({
+      where: { AND: [where, visibleAccount(viewerId)] },
+      select: { id: true, handle: true },
+    });
+  }
+
+  /**
+   * Locks the account rows, shared, until the transaction ends, one at a time in the order of their ids. Two follows
+   * that cross each other lock the same rows in the same order, so they never wait on each other (section 6.3).
+   * Returns the status read under each lock.
+   */
+  async lockAccounts(db: FollowsDb, userIds: readonly string[]): Promise<Map<string, AccountStatus>> {
+    const statuses = new Map<string, AccountStatus>();
+    for (const userId of [...new Set(userIds)].sort()) {
+      const rows = await db.$queryRaw<{ status: AccountStatus }[]>`
+        SELECT status FROM users WHERE id = ${userId}::uuid FOR SHARE`;
+      if (rows[0] !== undefined) {
+        statuses.set(userId, rows[0].status);
+      }
+    }
+
+    return statuses;
+  }
+
+  /** Adds the follow. True only when the row is new: a row that exists already is left as it is (idempotence). */
+  async createFollow(db: FollowsDb, followerId: string, followeeId: string): Promise<boolean> {
+    const result = await db.follow.createMany({ data: { followerId, followeeId }, skipDuplicates: true });
+
+    return result.count === 1;
+  }
+
+  /** The notice to the followed account about a new follow (type follow, no question, shown in L2). */
+  writeFollowNotification(db: FollowsDb, recipientId: string, actorId: string) {
+    return db.notification.create({ data: { recipientId, actorId, type: 'follow' } });
+  }
+
+  deleteFollow(db: FollowsDb, followerId: string, followeeId: string) {
+    return db.follow.deleteMany({ where: { followerId, followeeId } });
+  }
+
+  /** One page of the accounts that follow `ownerId`, the most recent follow first. Hidden or blocked accounts are left out. */
+  async findFollowerPage(db: FollowsDb, query: FollowPageQuery): Promise<FollowListRow[]> {
+    const rows = await db.follow.findMany({
+      where: {
+        AND: [
+          { followeeId: query.ownerId },
+          { follower: listedAccount(query.ownerId, query.viewerId) },
+          afterPosition(query.after, 'followerId'),
+        ],
+      },
+      orderBy: [{ createdAt: 'desc' }, { followerId: 'desc' }],
+      take: query.take,
+      select: {
+        createdAt: true,
+        followerId: true,
+        follower: { select: { handle: true, displayName: true } },
+      },
+    });
+
+    return rows.map((row) => ({
+      createdAt: row.createdAt,
+      accountId: row.followerId,
+      handle: row.follower.handle,
+      displayName: row.follower.displayName,
+    }));
+  }
+
+  /** One page of the accounts that `ownerId` follows, the most recent follow first. Hidden or blocked accounts are left out. */
+  async findFollowingPage(db: FollowsDb, query: FollowPageQuery): Promise<FollowListRow[]> {
+    const rows = await db.follow.findMany({
+      where: {
+        AND: [
+          { followerId: query.ownerId },
+          { followee: listedAccount(query.ownerId, query.viewerId) },
+          afterPosition(query.after, 'followeeId'),
+        ],
+      },
+      orderBy: [{ createdAt: 'desc' }, { followeeId: 'desc' }],
+      take: query.take,
+      select: {
+        createdAt: true,
+        followeeId: true,
+        followee: { select: { handle: true, displayName: true } },
+      },
+    });
+
+    return rows.map((row) => ({
+      createdAt: row.createdAt,
+      accountId: row.followeeId,
+      handle: row.followee.handle,
+      displayName: row.followee.displayName,
+    }));
+  }
+}

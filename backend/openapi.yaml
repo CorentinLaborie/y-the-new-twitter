@@ -685,7 +685,7 @@ paths:
       tags: *a8
   /api/v1/feed:
     get:
-      operationId: FeedController_forYou
+      operationId: FeedController_page
       parameters:
         - name: tab
           required: true
@@ -694,6 +694,7 @@ paths:
             type: string
             enum:
               - for-you
+              - following
         - name: cursor
           required: false
           in: query
@@ -711,7 +712,7 @@ paths:
             type: number
       responses:
         "200":
-          description: One page of the feed.
+          description: One page of the feed for the requested tab.
           content:
             application/json:
               schema:
@@ -743,6 +744,243 @@ paths:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags:
         - Feed
+  /api/v1/users/{handle}/follow:
+    put:
+      operationId: FollowsController_follow
+      parameters:
+        - name: handle
+          required: true
+          in: path
+          schema:
+            maxLength: 30
+            example: alice
+            type: string
+      responses:
+        "200":
+          description: The viewer follows the account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowStateDto"
+        "400":
+          description: The handle is not a valid handle.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The account does not exist, is not active, or is blocked in either
+            direction.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "422":
+          description: The viewer tries to follow their own account.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a9
+        - Follows
+    delete:
+      operationId: FollowsController_unfollow
+      parameters:
+        - name: handle
+          required: true
+          in: path
+          schema:
+            maxLength: 30
+            example: alice
+            type: string
+      responses:
+        "204":
+          description: The viewer no longer follows the account, or did not follow it.
+        "400":
+          description: The handle is not a valid handle.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: No account has this handle.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a9
+  /api/v1/users/{handle}/followers:
+    get:
+      operationId: FollowsController_followers
+      parameters:
+        - name: handle
+          required: true
+          in: path
+          schema:
+            maxLength: 30
+            example: alice
+            type: string
+        - name: cursor
+          required: false
+          in: query
+          description: nextCursor of the previous page. Absent for the first page.
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            allOf:
+              - $ref: "#/components/schemas/Object"
+      responses:
+        "200":
+          description: One page of the accounts that follow this account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowListPageDto"
+        "400":
+          description: The handle, the cursor or the limit is not valid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The account does not exist, is not active, or is blocked in either
+            direction.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a9
+  /api/v1/users/{handle}/following:
+    get:
+      operationId: FollowsController_following
+      parameters:
+        - name: handle
+          required: true
+          in: path
+          schema:
+            maxLength: 30
+            example: alice
+            type: string
+        - name: cursor
+          required: false
+          in: query
+          description: nextCursor of the previous page. Absent for the first page.
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            allOf:
+              - $ref: "#/components/schemas/Object"
+      responses:
+        "200":
+          description: One page of the accounts that this account follows.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowListPageDto"
+        "400":
+          description: The handle, the cursor or the limit is not valid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The account does not exist, is not active, or is blocked in either
+            direction.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a9
   /api/v1/notifications:
     get:
       operationId: NotificationsController_list
@@ -800,7 +1038,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a9
+      tags: &a10
         - Notifications
   /api/v1/notifications/unread-count:
     get:
@@ -831,14 +1069,26 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a9
+      tags: *a10
   /api/v1/notifications/read-all:
     post:
       operationId: NotificationsController_markAllRead
       parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadAllDto"
       responses:
         "204":
           description: Every unread line of the viewer is now read.
+        "400":
+          description: The ids list is not a list of at most 100 UUIDs.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
         "401":
           description: Not logged in.
           content:
@@ -858,7 +1108,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a9
+      tags: *a10
   /api/v1/support/messages:
     post:
       operationId: SupportController_send
@@ -927,7 +1177,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a10
+                    example: &a11
                       database:
                         status: up
                     additionalProperties:
@@ -953,7 +1203,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a10
+                    example: *a11
                     additionalProperties:
                       type: object
                       required:
@@ -975,7 +1225,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a11
+                      database: &a12
                         status: up
                     additionalProperties:
                       type: object
@@ -989,7 +1239,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a12
+                      redis: &a13
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -1004,8 +1254,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a11
-                      redis: *a12
+                      database: *a12
+                      redis: *a13
                     additionalProperties:
                       type: object
                       required:
@@ -1405,6 +1655,47 @@ components:
         - trending
         - questions
         - nextCursor
+    FollowStateDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: alice
+        viewerFollows:
+          type: boolean
+          example: true
+      required:
+        - handle
+        - viewerFollows
+    Object:
+      type: object
+      properties: {}
+    FollowAccountDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: alice
+        displayName:
+          type: string
+          example: Alice
+      required:
+        - handle
+        - displayName
+    FollowListPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FollowAccountDto"
+        nextCursor:
+          type: string
+          nullable: true
+          example: MjAyNi0xMC0yMlQxMDowMDowMC4wMDBafDBmOGMxZDJlLTNhNGItNGM1ZC04ZTZmLTdhOGI5YzBkMWUyZg
+      required:
+        - items
+        - nextCursor
     NotificationActorDto:
       type: object
       properties:
@@ -1504,6 +1795,15 @@ components:
           minimum: 0
       required:
         - unread
+    ReadAllDto:
+      type: object
+      properties:
+        ids:
+          maxItems: 100
+          description: Ids of the lines shown on the page.
+          type: array
+          items:
+            type: string
     CreateSupportMessageDto:
       type: object
       properties:

@@ -21,6 +21,7 @@ import { QuestionsModule } from './questions/questions.module';
 import { ReactionsModule } from './reactions/reactions.module';
 import { RepliesModule } from './replies/replies.module';
 import { FeedModule } from './feed/feed.module';
+import { FollowsModule } from './follows/follows.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SupportModule } from './support/support.module';
 
@@ -46,6 +47,7 @@ import { SupportModule } from './support/support.module';
     ReactionsModule,
     RepliesModule,
     FeedModule,
+    FollowsModule,
     NotificationsModule,
     SupportModule,
     HealthModule,
