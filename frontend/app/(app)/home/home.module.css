@@ -20,7 +20,7 @@
   background: var(--color-card);
 }
 
-/* The tab hugs its label, with the 56 px underline of the boards. Only one tab in M2 ("Pour vous"). */
+/* The tab hugs its label, with the 56 px underline of the boards. Two tabs: "Pour vous" and "Abonnements" (L3). */
 .tab {
   position: relative;
   display: flex;

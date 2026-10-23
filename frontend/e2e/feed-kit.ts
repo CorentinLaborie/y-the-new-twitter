@@ -6,6 +6,7 @@ import type { BrowserContext, Page } from '@playwright/test';
 
 const API_ORIGIN = 'http://localhost:8080';
 const REACTION_PATH = /^\/questions\/([^/]+)\/reactions\/(like|dislike|y)$/;
+const FOLLOW_PATH = /^\/users\/([^/]+)\/follow$/;
 
 const SIGNED_IN = { name: 'SESSION', value: 'e2e-feed' } as const;
 const CSRF = { name: 'y_csrf', value: 'csrf-e2e' } as const;
@@ -17,7 +18,7 @@ type FeedQuestionJson = {
   text: string;
   hashtags: string[];
   createdAt: string;
-  author: { handle: string; displayName: string };
+  author: { handle: string; displayName: string; viewerFollows: boolean };
   counters: { like: number; dislike: number; y: number; reply: number };
   yThreshold: number;
   conversationOpen: boolean;
@@ -31,13 +32,16 @@ export type ReactionCall = {
   csrf: string | null;
 };
 
-type FeedCall = { cursor: string | null };
+type FeedCall = { cursor: string | null; tab: string | null };
+// The unfollow of "Ne plus suivre" (L3): the handle of the account, in the path of DELETE /users/{handle}/follow.
+export type UnfollowCall = { handle: string; csrf: string | null };
 type PostCall = { body: { text: string }; csrf: string | null; idempotencyKey: string | null };
 
 type Handlers = {
   feed?: (call: FeedCall) => Reply | Promise<Reply>;
   post?: (call: PostCall) => Reply | Promise<Reply>;
   reaction?: (call: ReactionCall) => Reply | Promise<Reply>;
+  unfollow?: (call: UnfollowCall) => Reply | Promise<Reply>;
 };
 
 // Answers the feed and posting calls. Unknown calls get a 404, so that a missing reply fails the test visibly.
@@ -45,6 +49,7 @@ export async function mockFeedApi(page: Page, handlers: Handlers = {}) {
   const feedCalls: FeedCall[] = [];
   const postCalls: PostCall[] = [];
   const reactionCalls: ReactionCall[] = [];
+  const unfollowCalls: UnfollowCall[] = [];
 
   await page.route(`${API_ORIGIN}/api/v1/**`, async (route) => {
     const request = route.request();
@@ -67,7 +72,7 @@ export async function mockFeedApi(page: Page, handlers: Handlers = {}) {
     };
 
     if (request.method() === 'GET' && path === '/feed') {
-      const call = { cursor: url.searchParams.get('cursor') };
+      const call = { cursor: url.searchParams.get('cursor'), tab: url.searchParams.get('tab') };
       feedCalls.push(call);
       reply = handlers.feed ? await handlers.feed(call) : reply;
     } else if (request.method() === 'POST' && path === '/questions') {
@@ -89,6 +94,11 @@ export async function mockFeedApi(page: Page, handlers: Handlers = {}) {
       };
       reactionCalls.push(call);
       reply = handlers.reaction ? await handlers.reaction(call) : reply;
+    } else if (request.method() === 'DELETE' && FOLLOW_PATH.test(path)) {
+      const [, handle = ''] = FOLLOW_PATH.exec(path) ?? [];
+      const call: UnfollowCall = { handle, csrf: request.headers()['x-csrf-token'] ?? null };
+      unfollowCalls.push(call);
+      reply = handlers.unfollow ? await handlers.unfollow(call) : reply;
     } else if (request.method() === 'GET' && path === '/status') {
       reply = { status: 200, body: { status: 'ok' } };
     }
@@ -101,7 +111,7 @@ export async function mockFeedApi(page: Page, handlers: Handlers = {}) {
     });
   });
 
-  return { feedCalls, postCalls, reactionCalls };
+  return { feedCalls, postCalls, reactionCalls, unfollowCalls };
 }
 
 // The e2e session: the protected page is served, and the composer finds the CSRF token in its cookie.
@@ -126,7 +136,7 @@ export function question(id: string, text: string, hashtags: string[] = []): Fee
     text,
     hashtags,
     createdAt: '2026-10-14T08:41:00Z',
-    author: { handle: `marthe_${id}`, displayName: `Marthe ${id.toUpperCase()}` },
+    author: { handle: `marthe_${id}`, displayName: `Marthe ${id.toUpperCase()}`, viewerFollows: false },
     counters: { like: 10, dislike: 2, y: 49, reply: 0 },
     yThreshold: 50,
     conversationOpen: false,

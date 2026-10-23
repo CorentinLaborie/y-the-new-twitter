@@ -47,6 +47,22 @@ export function FeedEmpty() {
   );
 }
 
+/**
+ * The "Abonnements" tab has no question yet: an account followed with no question, or none of them. Text only, with
+ * no action: the page to explore the accounts does not exist yet (DEC-168).
+ */
+export function FollowingEmpty() {
+  return (
+    <div className="y-empty">
+      <span className="y-empty-icon">
+        <FeedIcon name="message-circle" size={28} />
+      </span>
+      <h2>Rien à lire pour l’instant</h2>
+      <p>Les questions des comptes que vous suivez apparaîtront ici.</p>
+    </div>
+  );
+}
+
 /** A load failed (Home-Error boards). The retry control is a real button. */
 export function FeedError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (

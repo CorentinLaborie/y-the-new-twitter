@@ -31,6 +31,8 @@ type QuestionCardProps = {
   conversationOpen?: boolean;
   /** The signed-in viewer. Without it the card shows no follow control; their own questions show none either. */
   viewer?: { handle: string; suspended: boolean };
+  /** Called when the viewer stops following the author from this card (the "Abonnements" tab drops their questions). */
+  onAuthorUnfollowed?: () => void;
 };
 
 function ReactionGlyph({ kind }: { kind: ReactionKind }) {
@@ -81,10 +83,18 @@ export function QuestionCard({
   onOpenConversation,
   conversationOpen: conversationShown = false,
   viewer,
+  onAuthorUnfollowed,
 }: QuestionCardProps) {
   const { counters, yThreshold, conversationOpen, viewerReactions } = question;
   const [followed, setFollowed] = useState(question.author.viewerFollows);
   const showFollow = viewer !== undefined && viewer.handle !== question.author.handle;
+
+  function changeFollow(next: boolean) {
+    setFollowed(next);
+    if (!next) {
+      onAuthorUnfollowed?.();
+    }
+  }
   const [ruleOpen, setRuleOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'copied' | 'failed' | null>(null);
@@ -142,7 +152,7 @@ export function QuestionCard({
             handle={question.author.handle}
             initialFollows={followed}
             disabled={viewer.suspended}
-            onChange={setFollowed}
+            onChange={changeFollow}
           />
         ) : null}
         {question.hashtags.length > 0 ? (
@@ -181,7 +191,7 @@ export function QuestionCard({
                 <UnfollowMenuItem
                   handle={question.author.handle}
                   follows={followed}
-                  onUnfollowed={() => setFollowed(false)}
+                  onUnfollowed={() => changeFollow(false)}
                 />
               ) : null}
             </div>

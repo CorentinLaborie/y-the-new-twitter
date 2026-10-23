@@ -75,3 +75,31 @@ describe('the protected feed calls', () => {
     expect(replace).toHaveBeenCalledWith('/login?reason=session-expired');
   });
 });
+
+describe('fetchFeedPage tabs (L3)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('asks the "Pour vous" tab by default', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ trending: [], questions: [], nextCursor: null })),
+    );
+
+    await fetchFeedPage();
+
+    expect(String(vi.mocked(fetch).mock.calls[0]?.[0])).toContain('/feed?tab=for-you');
+  });
+
+  it('asks the "Abonnements" tab with its cursor', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ trending: [], questions: [], nextCursor: null })),
+    );
+
+    await fetchFeedPage('abc', 'following');
+
+    expect(String(vi.mocked(fetch).mock.calls[0]?.[0])).toContain('/feed?tab=following&cursor=abc');
+  });
+});

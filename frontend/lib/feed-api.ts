@@ -58,9 +58,12 @@ export type FeedQuestion = ReactionState & {
 /** One page of the feed. `trending` (the top 10 by reactions in the last 24 h) is sent on the first page only. */
 export type FeedPage = { trending: FeedQuestion[]; questions: FeedQuestion[]; nextCursor: string | null };
 
-/** One page of the "Pour vous" feed. `cursor` is the nextCursor of the previous page, absent for the first one. */
-export function fetchFeedPage(cursor?: string): Promise<ApiResult<FeedPage>> {
-  const query = new URLSearchParams({ tab: 'for-you' });
+/** The two tabs of the home page: "Pour vous" (for-you) and "Abonnements" (following, L3). */
+export type FeedTabId = 'for-you' | 'following';
+
+/** One page of a feed tab. `cursor` is the nextCursor of the previous page, absent for the first one. */
+export function fetchFeedPage(cursor?: string, tab: FeedTabId = 'for-you'): Promise<ApiResult<FeedPage>> {
+  const query = new URLSearchParams({ tab });
   if (cursor) {
     query.set('cursor', cursor);
   }

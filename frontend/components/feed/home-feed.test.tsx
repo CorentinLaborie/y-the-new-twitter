@@ -8,8 +8,14 @@ import {
   type FeedPage,
   type FeedQuestion,
 } from '@/lib/feed-api';
+import { unfollowUser } from '@/lib/follows-api';
 import { createReply, listReplies, type ReplyView } from '@/lib/replies-api';
 import { HomeFeed } from './home-feed';
+
+vi.mock('@/lib/follows-api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/follows-api')>();
+  return { ...actual, followUser: vi.fn(), unfollowUser: vi.fn() };
+});
 
 vi.mock('@/lib/feed-api', () => ({
   fetchFeedPage: vi.fn(),
@@ -186,7 +192,7 @@ describe('HomeFeed', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Voir plus' }));
 
     expect(await screen.findByText('Page deux')).toBeInTheDocument();
-    expect(fetchFeedPage).toHaveBeenLastCalledWith('curseur-2');
+    expect(fetchFeedPage).toHaveBeenLastCalledWith('curseur-2', 'for-you');
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
     expect(screen.queryByRole('button', { name: 'Voir plus' })).not.toBeInTheDocument();
   });
@@ -206,7 +212,7 @@ describe('HomeFeed', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
 
     await waitFor(() => expect(screen.getByText('Page deux')).toBeInTheDocument());
-    expect(fetchFeedPage).toHaveBeenLastCalledWith('curseur-2');
+    expect(fetchFeedPage).toHaveBeenLastCalledWith('curseur-2', 'for-you');
   });
 
   it('puts a question posted from the composer first in the list', async () => {
@@ -580,5 +586,49 @@ describe('HomeFeed', () => {
       expect(like).toHaveAccessibleName('11 J’aime');
       expect(putReaction).toHaveBeenCalledWith('t', 'like');
     });
+  });
+});
+
+describe('HomeFeed on the Abonnements tab (L3)', () => {
+  beforeEach(() => {
+    vi.mocked(fetchFeedPage).mockReset();
+    vi.mocked(unfollowUser).mockReset();
+  });
+
+  it('asks the following tab, and shows its own empty text', async () => {
+    vi.mocked(fetchFeedPage).mockResolvedValue(page([]));
+
+    render(<HomeFeed displayName="Alice" viewerHandle="me" suspended={false} tab="following" />);
+
+    expect(
+      await screen.findByText('Les questions des comptes que vous suivez apparaîtront ici.'),
+    ).toBeInTheDocument();
+    expect(fetchFeedPage).toHaveBeenCalledWith(undefined, 'following');
+    expect(
+      screen.queryByText('Posez la première question ou explorez les tendances.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('takes the questions of an author off the list at once when the viewer unfollows them there', async () => {
+    const alice = {
+      ...question('q1', 'Question d’Alice'),
+      author: { handle: 'alice', displayName: 'Alice', viewerFollows: true },
+    };
+    const bob = {
+      ...question('q2', 'Question de Bob'),
+      author: { handle: 'bob', displayName: 'Bob', viewerFollows: true },
+    };
+    vi.mocked(fetchFeedPage).mockResolvedValue(page([alice, bob]));
+    vi.mocked(unfollowUser).mockResolvedValue({ ok: true, status: 204, body: undefined } as never);
+
+    render(<HomeFeed displayName="Me" viewerHandle="me" suspended={false} tab="following" />);
+    await screen.findByText('Question d’Alice');
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Plus d’options' })[0]);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Ne plus suivre @alice' }));
+
+    await waitFor(() => expect(screen.queryByText('Question d’Alice')).not.toBeInTheDocument());
+    expect(screen.getByText('Question de Bob')).toBeInTheDocument();
+    expect(unfollowUser).toHaveBeenCalledWith('alice');
   });
 });

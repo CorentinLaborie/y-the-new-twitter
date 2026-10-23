@@ -6,6 +6,7 @@ import {
   fetchFeedPage,
   putReaction,
   type FeedPage,
+  type FeedTabId,
   type FeedQuestion,
   type ReactionKind,
   type ReactionState,
@@ -18,6 +19,7 @@ import {
   CONNECTION_FAILURE_MESSAGE,
   feedFailureMessage,
   FeedEmpty,
+  FollowingEmpty,
   FeedError,
   FeedLoading,
 } from './feed-states';
@@ -101,11 +103,14 @@ export function HomeFeed({
   displayName,
   viewerHandle,
   suspended,
+  tab = 'for-you',
 }: {
   displayName: string;
   viewerHandle: string | null;
   /** True for a suspended account: the composer keeps publishing off. */
   suspended: boolean;
+  /** The tab shown: the parent gives a new key to each tab, so each one starts from its own first page. */
+  tab?: FeedTabId;
 }) {
   const [state, setState] = useState<FeedState>(INITIAL_STATE);
   /** The questions whose conversation is open under their card. */
@@ -126,7 +131,7 @@ export function HomeFeed({
   }, []);
 
   const checkForNewQuestions = useCallback(() => {
-    fetchFeedPage().then((result) => {
+    fetchFeedPage(undefined, tab).then((result) => {
       if (!result.ok) {
         return;
       }
@@ -139,11 +144,11 @@ export function HomeFeed({
           : current,
       );
     });
-  }, []);
+  }, [tab]);
 
   useEffect(() => {
-    fetchFeedPage().then(applyFirstPage);
-  }, [applyFirstPage]);
+    fetchFeedPage(undefined, tab).then(applyFirstPage);
+  }, [applyFirstPage, tab]);
 
   const {
     phase,
@@ -165,14 +170,22 @@ export function HomeFeed({
     return () => clearInterval(timer);
   }, [phase, checkForNewQuestions]);
 
+  /** Unfollowing an author on the "Abonnements" tab takes their questions off the list at once (section 7.3). */
+  function removeAuthorQuestions(handle: string) {
+    setState((current) => ({
+      ...current,
+      questions: current.questions.filter((question) => question.author.handle !== handle),
+    }));
+  }
+
   function retryFirstPage() {
     setState((current) => ({ ...current, phase: 'loading' }));
-    fetchFeedPage().then(applyFirstPage);
+    fetchFeedPage(undefined, tab).then(applyFirstPage);
   }
 
   function loadMore(cursor: string) {
     setState((current) => ({ ...current, nextPageStatus: 'loading' }));
-    fetchFeedPage(cursor).then((result) => {
+    fetchFeedPage(cursor, tab).then((result) => {
       setState((current) =>
         result.ok
           ? {
@@ -277,6 +290,7 @@ export function HomeFeed({
         onOpenConversation={() => toggleConversation(question.id)}
         conversationOpen={conversationShown}
         viewer={viewerHandle === null ? undefined : { handle: viewerHandle, suspended }}
+        onAuthorUnfollowed={tab === 'following' ? () => removeAuthorQuestions(question.author.handle) : undefined}
       />
     );
   }
@@ -341,7 +355,9 @@ export function HomeFeed({
         </ul>
       ) : null}
       {questions.length === 0 && phase === 'loading' ? <FeedLoading /> : null}
-      {trendingQuestions.length === 0 && questions.length === 0 && phase === 'ready' ? <FeedEmpty /> : null}
+      {trendingQuestions.length === 0 && questions.length === 0 && phase === 'ready' ? (
+        tab === 'following' ? <FollowingEmpty /> : <FeedEmpty />
+      ) : null}
       {phase === 'failed' ? <FeedError message={loadError} onRetry={retryFirstPage} /> : null}
 
       {phase === 'ready' && nextPageStatus === 'failed' && nextCursor ? (
