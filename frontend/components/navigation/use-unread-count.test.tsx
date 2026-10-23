@@ -68,4 +68,19 @@ describe('useUnreadCount (badge, L2 section 6.4)', () => {
     expect(result.current).toBe(0);
     expect(fetchUnreadCount).toHaveBeenCalledTimes(1);
   });
+
+  it('ignores a count asked before the reset, when it arrives after it', async () => {
+    let answerLate!: (value: Awaited<ReturnType<typeof fetchUnreadCount>>) => void;
+    vi.mocked(fetchUnreadCount).mockReturnValueOnce(new Promise((resolve) => (answerLate = resolve)));
+    const { result } = renderHook(() => useUnreadCount('/notifications'));
+
+    act(() => {
+      window.dispatchEvent(new Event('y:notifications-read'));
+    });
+    await act(async () => {
+      answerLate({ ok: true, status: 200, body: { unread: 3 } });
+    });
+
+    expect(result.current).toBe(0);
+  });
 });

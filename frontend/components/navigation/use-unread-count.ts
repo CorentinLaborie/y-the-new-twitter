@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fetchUnreadCount, NOTIFICATIONS_READ_EVENT } from '@/lib/notifications-api';
 
 /**
@@ -9,11 +9,14 @@ import { fetchUnreadCount, NOTIFICATIONS_READ_EVENT } from '@/lib/notifications-
  */
 export function useUnreadCount(pathname: string): number {
   const [unread, setUnread] = useState(0);
+  /** Counts the resets: a count asked before a reset is stale and must not overwrite the 0 of that reset. */
+  const resets = useRef(0);
 
   useEffect(() => {
     let current = true;
+    const resetsWhenAsked = resets.current;
     fetchUnreadCount().then((result) => {
-      if (current && result.ok) {
+      if (current && result.ok && resets.current === resetsWhenAsked) {
         setUnread(result.body.unread);
       }
     });
@@ -24,7 +27,10 @@ export function useUnreadCount(pathname: string): number {
 
   // Marking everything as read resets the badge at once, without waiting for the next page change.
   useEffect(() => {
-    const reset = () => setUnread(0);
+    const reset = () => {
+      resets.current += 1;
+      setUnread(0);
+    };
     window.addEventListener(NOTIFICATIONS_READ_EVENT, reset);
     return () => window.removeEventListener(NOTIFICATIONS_READ_EVENT, reset);
   }, []);
