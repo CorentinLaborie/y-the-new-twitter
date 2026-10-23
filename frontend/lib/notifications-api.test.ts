@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchNotificationPage, fetchUnreadCount, markAllNotificationsRead } from './notifications-api';
 
+type FetchMock = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
 describe('notification calls', () => {
   beforeEach(() => {
     document.cookie = 'y_csrf=csrf-unit';
@@ -11,7 +13,7 @@ describe('notification calls', () => {
   });
 
   it('asks for the first page of every type, with no query when there is no cursor', async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json({ items: [], nextCursor: null }));
+    const fetchMock = vi.fn<FetchMock>(async () => Response.json({ items: [], nextCursor: null }));
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await fetchNotificationPage('all');
@@ -21,7 +23,7 @@ describe('notification calls', () => {
   });
 
   it('asks for the Mentions tab and the next page with the cursor', async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json({ items: [], nextCursor: null }));
+    const fetchMock = vi.fn<FetchMock>(async () => Response.json({ items: [], nextCursor: null }));
     vi.stubGlobal('fetch', fetchMock);
 
     await fetchNotificationPage('mention', 'abc123');
@@ -40,7 +42,7 @@ describe('notification calls', () => {
   });
 
   it('marks everything as read with a POST that carries the CSRF token', async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 204 }));
+    const fetchMock = vi.fn<FetchMock>(async () => new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await markAllNotificationsRead();
