@@ -11,6 +11,24 @@ interface FeedPageQuery {
   readonly excludeIds: readonly string[];
 }
 
+interface FollowingPageQuery {
+  readonly viewerId: string;
+  readonly after: CursorPosition | null;
+  readonly take: number;
+}
+
+/** The rows strictly after the cursor position, in (createdAt DESC, id DESC) order. */
+function afterCursor(after: CursorPosition | null) {
+  return after === null
+    ? {}
+    : {
+        OR: [
+          { createdAt: { lt: after.createdAt } },
+          { createdAt: after.createdAt, id: { lt: after.id } },
+        ],
+      };
+}
+
 /** The only place that reads the feed (section 8.2). */
 @Injectable()
 export class FeedRepository {
@@ -42,23 +60,35 @@ export class FeedRepository {
   }
 
   /**
-   * One page of the feed, newest first: every visible question (R12), minus `excludeIds`. The keyset on
-   * (createdAt, id) returns each question once, even when new ones arrive between two pages.
+   * One page of the "Pour vous" feed, newest first: every visible question (R12), minus `excludeIds`. The keyset
+   * on (createdAt, id) returns each question once, even when new ones arrive between two pages.
    */
   findPage(query: FeedPageQuery) {
-    const beforeCursor =
-      query.after === null
-        ? {}
-        : {
-            OR: [
-              { createdAt: { lt: query.after.createdAt } },
-              { createdAt: query.after.createdAt, id: { lt: query.after.id } },
-            ],
-          };
-
     return this.prisma.question.findMany({
       where: {
-        AND: [visibleTo(query.viewerId), { id: { notIn: [...query.excludeIds] } }, beforeCursor],
+        AND: [visibleTo(query.viewerId), { id: { notIn: [...query.excludeIds] } }, afterCursor(query.after)],
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: query.take,
+      include: QUESTION_VIEW_INCLUDE,
+    });
+  }
+
+  /**
+   * One page of the "Abonnements" feed, newest first: the visible questions whose author the viewer follows (E3).
+   * The follows are a subquery on the author relation, so the list of followed accounts is never loaded. The
+   * viewer's own questions are left out too. No trending block on this tab.
+   */
+  findFollowingPage(query: FollowingPageQuery) {
+    return this.prisma.question.findMany({
+      where: {
+        AND: [
+          visibleTo(query.viewerId),
+          { authorId: { not: query.viewerId } },
+          // followedBy lists the follows pointing at the author: one from the viewer means the viewer follows them.
+          { author: { followedBy: { some: { followerId: query.viewerId } } } },
+          afterCursor(query.after),
+        ],
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: query.take,

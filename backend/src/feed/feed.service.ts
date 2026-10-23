@@ -17,10 +17,17 @@ const TRENDING_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** How many trending questions the first page shows (DEC-159). */
 const TRENDING_COUNT = 10;
 
+/** The cursor of the next page: the last row of this page, when a row is left after it. */
+function nextCursorOf(rows: readonly QuestionRow[], limit: number): string | null {
+  const last = rows.slice(0, limit).at(-1);
+  return rows.length > limit && last !== undefined ? encodeCursor(last) : null;
+}
+
 /**
- * The "Pour vous" feed (M2, B6). The first page opens with the trending block (the most reacted questions of the
- * last 24 hours). Below it, the list by date, newest first, holds every visible question (R12); on the first page,
- * the trending questions are not repeated in the list. Cursor pages have no trending block.
+ * The feed (M2, B6, L3). "Pour vous" (forYou): the first page opens with the trending block (the most reacted
+ * questions of the last 24 hours). Below it, the list by date, newest first, holds every visible question (R12); on
+ * the first page, the trending questions are not repeated in the list. Cursor pages have no trending block.
+ * "Abonnements" (following): the same list by date, limited to the accounts the viewer follows, with no trending block.
  */
 @Injectable()
 export class FeedService {
@@ -42,7 +49,6 @@ export class FeedService {
       excludeIds: trendingRows.map((row) => row.id),
     });
     const page = rows.slice(0, limit);
-    const last = page.at(-1);
     const viewerReactionsByQuestion = await this.viewerReactionsByQuestion(viewer.id, [
       ...trendingRows,
       ...page,
@@ -53,7 +59,24 @@ export class FeedService {
     return {
       trending: trendingRows.map(toView),
       questions: page.map(toView),
-      nextCursor: rows.length > limit && last !== undefined ? encodeCursor(last) : null,
+      nextCursor: nextCursorOf(rows, limit),
+    };
+  }
+
+  async following(viewer: SessionUser, query: FeedQueryDto): Promise<FeedPageDto> {
+    const limit = query.limit ?? DEFAULT_LIMIT;
+    const after = query.cursor === undefined ? null : decodeCursor(query.cursor);
+    const threshold = this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD');
+    const rows = await this.feed.findFollowingPage({ viewerId: viewer.id, after, take: limit + 1 });
+    const page = rows.slice(0, limit);
+    const viewerReactionsByQuestion = await this.viewerReactionsByQuestion(viewer.id, page);
+
+    return {
+      trending: [],
+      questions: page.map((row) =>
+        toQuestionView(row, threshold, viewerReactionsByQuestion.get(row.id) ?? []),
+      ),
+      nextCursor: nextCursorOf(rows, limit),
     };
   }
 

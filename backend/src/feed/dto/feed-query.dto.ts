@@ -2,11 +2,15 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
-/** Query of GET /feed. Only the "Pour vous" tab exists in M2 (DEC-049). */
+/** The tabs of GET /feed: "Pour vous" (for-you) and "Abonnements" (following, L3). */
+export const FEED_TABS = ['for-you', 'following'] as const;
+export type FeedTab = (typeof FEED_TABS)[number];
+
+/** Query of GET /feed. */
 export class FeedQueryDto {
-  @ApiProperty({ enum: ['for-you'] })
-  @IsIn(['for-you'], { message: 'Onglet inconnu : seul « for-you » est disponible.' })
-  tab!: string;
+  @ApiProperty({ enum: [...FEED_TABS] })
+  @IsIn(FEED_TABS, { message: 'Onglet inconnu : seuls « for-you » et « following » sont disponibles.' })
+  tab!: FeedTab;
 
   @ApiPropertyOptional({
     maxLength: 512,

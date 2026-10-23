@@ -34,7 +34,7 @@ interface FeedPage {
   nextCursor: string | null;
 }
 
-describe('Feed "Pour vous" (e2e, B6)', () => {
+describe('Feed "Pour vous" and "Abonnements" (e2e, B6, L3)', () => {
   let container: StartedPostgreSqlContainer;
   let moduleRef: TestingModule;
   let app: INestApplication;
@@ -58,21 +58,22 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     return id;
   }
 
-  /** The first page, or the page after `cursor`. */
-  async function fetchPage(limit: number, cursor: string | null = null): Promise<FeedPage> {
+  /** The first page of a tab, or the page after `cursor`. */
+  async function fetchPage(limit: number, cursor: string | null = null, tab = 'for-you'): Promise<FeedPage> {
     const cursorQuery = cursor === null ? '' : `&cursor=${encodeURIComponent(cursor)}`;
-    const response = await agent.get(`/api/v1/feed?tab=for-you&limit=${limit}${cursorQuery}`).expect(200);
+    const response = await agent.get(`/api/v1/feed?tab=${tab}&limit=${limit}${cursorQuery}`).expect(200);
     return response.body as FeedPage;
   }
 
-  /** Every page of the feed, from the first one to the last. */
+  /** Every page of a tab, from the first one to the last. */
   async function walk(
     limit: number,
+    tab = 'for-you',
   ): Promise<{ trending: FeedItem[]; questions: FeedItem[]; pages: FeedPage[] }> {
     const pages: FeedPage[] = [];
     let cursor: string | null = null;
     do {
-      const page = await fetchPage(limit, cursor);
+      const page = await fetchPage(limit, cursor, tab);
       pages.push(page);
       cursor = page.nextCursor;
     } while (cursor !== null && pages.length < 20);
@@ -229,7 +230,7 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     const defaults = await agent.get('/api/v1/feed?tab=for-you').expect(200);
     expect(defaults.body.questions).toHaveLength(20);
 
-    await agent.get('/api/v1/feed?tab=following').expect(400);
+    await agent.get('/api/v1/feed?tab=trending').expect(400);
     await agent.get('/api/v1/feed').expect(400);
     await agent.get('/api/v1/feed?tab=for-you&limit=0').expect(400);
     await agent.get('/api/v1/feed?tab=for-you&limit=51').expect(400);
@@ -278,5 +279,62 @@ describe('Feed "Pour vous" (e2e, B6)', () => {
     expect(trendingTexts.every((text) => text === 'Très ancienne' || text.startsWith('Cap '))).toBe(true);
     expect(trendingTexts).not.toContain('Cap cachée');
     expect(first.trending.some((question) => listedIds.includes(question.id))).toBe(false);
+  });
+
+  it('lists on "Abonnements" only the questions of the followed accounts, newest first, with no trending block', async () => {
+    const stranger = await createUser('feed_stranger');
+    await sql(`INSERT INTO questions (author_id, body) VALUES ('${stranger}', 'Inconnue');`);
+    await sql(`INSERT INTO follows (follower_id, followee_id) VALUES ('${viewer}', '${writer}');`);
+
+    const { questions, pages } = await walk(20, 'following');
+    const texts = questions.map((question) => question.text);
+
+    expect(pages.every((page) => page.trending.length === 0)).toBe(true);
+    expect(texts).toContain('Question 1');
+    expect(texts).not.toContain('Inconnue');
+    expect(questions.every((question) => question.author.handle === 'feed_writer')).toBe(true);
+    const dates = questions.map((question) => question.createdAt);
+    expect(dates).toEqual([...dates].sort().reverse());
+    expect(questions.find((question) => question.text === 'Très ancienne')).toMatchObject({
+      viewerReactions: ['like'],
+    });
+  });
+
+  it('pages "Abonnements" without duplicates or gaps, in the same order as the followed author on "Pour vous"', async () => {
+    const following = await walk(7, 'following');
+    const everyone = await walk(50);
+    const writerIds = everyone.questions
+      .filter((question) => question.author.handle === 'feed_writer')
+      .map((question) => question.id);
+    const followingIds = following.questions.map((question) => question.id);
+
+    expect(following.pages.length).toBeGreaterThan(1);
+    expect(new Set(followingIds).size).toBe(followingIds.length);
+    expect(followingIds).toEqual(writerIds);
+  });
+
+  it('leaves out of "Abonnements" the hidden, deleted, suspended and blocked-in-either-direction questions, even when followed', async () => {
+    await sql(
+      `INSERT INTO follows (follower_id, followee_id)
+       SELECT '${viewer}', id FROM users WHERE handle IN ('feed_suspended', 'feed_blocked', 'feed_blocking');`,
+    );
+
+    const { trending, questions } = await walk(50, 'following');
+    const texts = [...trending, ...questions].map((question) => question.text);
+
+    expect(texts).toContain('Question 1');
+    expect(texts).not.toContain('Cachée');
+    expect(texts).not.toContain('Supprimée');
+    expect(texts).not.toContain('Compte suspendu');
+    expect(texts).not.toContain('Bloquée');
+    expect(texts).not.toContain('Bloqueur');
+  });
+
+  it("leaves out of \"Abonnements\" the viewer's own questions", async () => {
+    await sql(`INSERT INTO questions (author_id, body) VALUES ('${viewer}', 'Question du viewer');`);
+
+    const { questions } = await walk(50, 'following');
+
+    expect(questions.map((question) => question.text)).not.toContain('Question du viewer');
   });
 });

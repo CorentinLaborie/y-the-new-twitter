@@ -7,13 +7,13 @@ import { FeedPageDto } from './dto/feed-page.dto';
 import { FeedQueryDto } from './dto/feed-query.dto';
 import { FeedService } from './feed.service';
 
-/** The home feed (M2). Logged-in, active accounts only: the global SessionGuard enforces it (R13). */
+/** The home feed (M2, L3). Logged-in, active accounts only: the global SessionGuard enforces it (R13). */
 @Controller('feed')
 export class FeedController {
   constructor(private readonly feed: FeedService) {}
 
   @Get()
-  @ApiOkResponse({ description: 'One page of the feed.', type: FeedPageDto })
+  @ApiOkResponse({ description: 'One page of the feed for the requested tab.', type: FeedPageDto })
   @problemDetailsResponse(400, 'Unknown tab, invalid limit or invalid cursor.')
   @problemDetailsResponse(401, 'Not logged in.')
   @problemDetailsResponse(
@@ -21,7 +21,7 @@ export class FeedController {
     'The account is not active (suspended, pending verification or pending deletion).',
   )
   @problemDetailsResponse(429, 'Too many requests.')
-  forYou(@CurrentUser() viewer: SessionUser, @Query() query: FeedQueryDto): Promise<FeedPageDto> {
-    return this.feed.forYou(viewer, query);
+  page(@CurrentUser() viewer: SessionUser, @Query() query: FeedQueryDto): Promise<FeedPageDto> {
+    return query.tab === 'following' ? this.feed.following(viewer, query) : this.feed.forYou(viewer, query);
   }
 }
