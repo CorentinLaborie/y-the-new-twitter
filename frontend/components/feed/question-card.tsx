@@ -243,7 +243,7 @@ export function QuestionCard({
           {reportNotice}
         </p>
       ) : null}
-      {canReport ? (
+      {canReport && reportOpen ? (
         <ReportDialog
           open={reportOpen}
           kind="question"

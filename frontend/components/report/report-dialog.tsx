@@ -18,6 +18,9 @@ import {
   REPORT_UNAVAILABLE_MESSAGE,
 } from './report-rules';
 
+/** The buttons of the dialogs are at least 44 px high, the touch target of the plan (section 9). */
+const TOUCH_HEIGHT = { minHeight: 44 } as const;
+
 type ReportDialogProps = {
   open: boolean;
   /** The content reported: a question or a reply. */
@@ -123,7 +126,12 @@ function ReportForm({ target, onClose, onSent }: ReportFormProps) {
 
       <div className="y-dialog-actions">
         {failure === 'unavailable' ? (
-          <button type="button" className="y-btn y-btn-md y-btn-outline y-btn-pill y-btn-block" onClick={onClose}>
+          <button
+            type="button"
+            className="y-btn y-btn-md y-btn-outline y-btn-pill y-btn-block"
+            style={TOUCH_HEIGHT}
+            onClick={onClose}
+          >
             Fermer
           </button>
         ) : (
@@ -131,6 +139,7 @@ function ReportForm({ target, onClose, onSent }: ReportFormProps) {
             <button
               type="button"
               className="y-btn y-btn-md y-btn-outline y-btn-pill y-btn-block"
+              style={TOUCH_HEIGHT}
               onClick={onClose}
               disabled={sending}
             >
@@ -138,7 +147,8 @@ function ReportForm({ target, onClose, onSent }: ReportFormProps) {
             </button>
             <button
               type="button"
-              className="y-btn y-btn-md y-btn-danger y-btn-pill y-btn-block"
+              className="y-btn y-btn-md y-btn-primary y-btn-pill y-btn-block"
+              style={TOUCH_HEIGHT}
               onClick={send}
               disabled={!valid || sending}
             >

@@ -227,7 +227,7 @@ export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDel
       {isOwn ? (
         <DeleteReplyDialog open={dialogOpen} onConfirm={handleConfirm} onCancel={handleDialogCancel} />
       ) : null}
-      {canReport ? (
+      {canReport && reportOpen ? (
         <ReportDialog
           open={reportOpen}
           kind="reply"

@@ -26,6 +26,9 @@ export function BlockDialog({ open, handle, onClose, onBlocked }: BlockDialogPro
   );
 }
 
+/** The buttons of the dialogs are at least 44 px high, the touch target of the plan (section 9). */
+const TOUCH_HEIGHT = { minHeight: 44 } as const;
+
 type BlockFormProps = Pick<BlockDialogProps, 'handle' | 'onClose' | 'onBlocked'>;
 
 function BlockForm({ handle, onClose, onBlocked }: BlockFormProps) {
@@ -54,7 +57,12 @@ function BlockForm({ handle, onClose, onBlocked }: BlockFormProps) {
       {failure === 'not-found' ? <p role="alert">{BLOCK_NOT_FOUND_MESSAGE}</p> : null}
       <div className="y-dialog-actions">
         {failure === 'not-found' ? (
-          <button type="button" className="y-btn y-btn-md y-btn-outline y-btn-pill y-btn-block" onClick={onClose}>
+          <button
+            type="button"
+            className="y-btn y-btn-md y-btn-outline y-btn-pill y-btn-block"
+            style={TOUCH_HEIGHT}
+            onClick={onClose}
+          >
             Fermer
           </button>
         ) : (
@@ -62,6 +70,7 @@ function BlockForm({ handle, onClose, onBlocked }: BlockFormProps) {
             <button
               type="button"
               className="y-btn y-btn-md y-btn-outline y-btn-pill y-btn-block"
+              style={TOUCH_HEIGHT}
               onClick={onClose}
               disabled={sending}
             >
@@ -69,7 +78,8 @@ function BlockForm({ handle, onClose, onBlocked }: BlockFormProps) {
             </button>
             <button
               type="button"
-              className="y-btn y-btn-md y-btn-danger y-btn-pill y-btn-block"
+              className="y-btn y-btn-md y-btn-primary y-btn-pill y-btn-block"
+              style={TOUCH_HEIGHT}
               onClick={block}
               disabled={sending}
             >
