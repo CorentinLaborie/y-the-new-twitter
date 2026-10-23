@@ -74,6 +74,26 @@ describe('NotificationsScreen', () => {
     expect(markAllNotificationsRead).toHaveBeenCalledTimes(1);
   });
 
+  it('does not call the read endpoint when the first page has no unread line', async () => {
+    vi.mocked(fetchNotificationPage).mockResolvedValue(
+      page([line('a', { readAt: '2026-10-22T10:05:00.000Z' })]),
+    );
+    renderScreen();
+
+    await screen.findByRole('link', { name: /Personne a/ });
+    expect(markAllNotificationsRead).not.toHaveBeenCalled();
+  });
+
+  it('asks the read call for the unread lines of the first page only, not the read ones', async () => {
+    vi.mocked(fetchNotificationPage).mockResolvedValue(
+      page([line('a'), line('b', { readAt: '2026-10-22T10:05:00.000Z' }), line('c')]),
+    );
+    renderScreen();
+
+    await screen.findByRole('link', { name: /Personne a/ });
+    expect(markAllNotificationsRead).toHaveBeenCalledWith(['a', 'c']);
+  });
+
   it('does not call the read endpoint for a suspended account, and shows the empty list', async () => {
     vi.mocked(fetchNotificationPage).mockResolvedValue(page([]));
     renderScreen('all', true);

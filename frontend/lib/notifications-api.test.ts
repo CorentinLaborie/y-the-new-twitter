@@ -52,4 +52,15 @@ describe('notification calls', () => {
     expect(init?.method).toBe('POST');
     expect(new Headers(init?.headers).get('x-csrf-token')).toBe('csrf-unit');
   });
+
+  it('sends the ids of the shown lines in the body when they are given', async () => {
+    const fetchMock = vi.fn<FetchMock>(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await markAllNotificationsRead(['11111111-1111-4111-8111-111111111111']);
+
+    const init = fetchMock.mock.calls[0][1];
+    expect(init?.body).toBe(JSON.stringify({ ids: ['11111111-1111-4111-8111-111111111111'] }));
+    expect(new Headers(init?.headers).get('content-type')).toBe('application/json');
+  });
 });

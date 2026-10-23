@@ -86,7 +86,11 @@ export function NotificationsScreen({ initialTab, suspended }: { initialTab: Not
           openedRef.current = true;
           if (!suspended) {
             // The answer does not change the page: the lines keep their state for display (plan 6.3).
-            void markAllNotificationsRead();
+            // Only the unread lines this page shows are marked: the later pages keep theirs.
+            const shownUnread = result.body.items.filter((line) => line.readAt === null).map((line) => line.id);
+            if (shownUnread.length > 0) {
+              void markAllNotificationsRead(shownUnread);
+            }
           }
         }
       });
