@@ -13,7 +13,7 @@ const CSRF = { name: 'y_csrf', value: 'csrf-e2e' } as const;
 
 export type Reply = { status: number; body?: unknown };
 
-type FeedQuestionJson = {
+export type FeedQuestionJson = {
   id: string;
   text: string;
   hashtags: string[];

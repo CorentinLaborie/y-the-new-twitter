@@ -1,0 +1,170 @@
+/*
+ * Profile and follow lists (L1, L3 section 7.4). Built for 325 px first: the text wraps, nothing scrolls sideways,
+ * and every control is at least 44 px high. Colours and spacing come from the design tokens of globals.css.
+ */
+
+.screen {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 var(--space-16) var(--space-16);
+  color: var(--color-foreground);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--space-16) 0;
+  border-bottom: 1px solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.name {
+  margin: 8px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.handle,
+.meta {
+  margin: 0;
+  color: var(--color-muted-foreground, #6b7280);
+  font-size: 15px;
+}
+
+.bio {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 4px 0 0;
+  font-size: 15px;
+}
+
+.counts a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-foreground);
+  text-decoration: none;
+}
+
+.counts strong {
+  margin-right: 4px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.more {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-foreground);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.listTitle {
+  margin: 0;
+  padding: var(--space-16) 0 4px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.back {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.back a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-primary);
+}
+
+.accounts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.avatarSmall {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.accountText {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  overflow-wrap: anywhere;
+}
+
+.accountName {
+  color: var(--color-foreground);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.accountHandle {
+  color: var(--color-muted-foreground, #6b7280);
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  .screen {
+    padding: 0 24px 24px;
+  }
+}
