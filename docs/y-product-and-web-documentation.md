@@ -553,6 +553,10 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 | GET | `/users/{handle}/following` | Following list (cursor) |
 | PUT | `/users/{handle}/follow` | Follow (idempotent) |
 | DELETE | `/users/{handle}/follow` | Unfollow |
+| PUT | `/users/{handle}/block` | Block an account (idempotent; the follows in both directions are removed) |
+| DELETE | `/users/{handle}/block` | Lift a block (no confirmation; idempotent) |
+| GET | `/users/me/blocks` | The accounts the viewer blocks (cursor, most recent first) |
+| POST | `/reports` | Report a question or a reply: one reason from six, details for "other" (Idempotency-Key; one row per report) |
 | GET | `/users/suggestions` | Suggestions to follow (cursor) |
 | GET | `/users/{handle}/questions` | Questions published by a user (cursor). Hidden and deleted questions are excluded |
 | PUT | `/users/{handle}/block` | Block a user (idempotent). Removes follows in both directions (R14) |
@@ -893,8 +897,8 @@ Every screen defines these states. A state missing from the design is a defect.
 
 Each screen below exists on desktop, tablet and mobile (rule R5). Only its container changes.
 
-- **Report from a user (DEC-103):** a reason picker with six reasons: spam, harassment, hate, illegal content, misinformation, other (DEC-011). For "other", a detail of 280 characters is required. Desktop and tablet: dialog. Mobile: bottom sheet. Opened from the "⋯" menu of a question or a reply.
-- **Block (DEC-104):** a "Bloquer" entry in the "⋯" menu of a question and of a profile, with a confirmation step (R14).
+- **Report from a user (DEC-103, plan L6):** a reason picker with six reasons: spam, harassment, "Propos haineux" (the `hate` reason, DEC-314), illegal content, misinformation, other (DEC-011). For "other", a detail of 280 characters is required. The reporter is never revealed and the reported content stays visible to them. Desktop and tablet: dialog. Mobile: bottom sheet. Opened from the "⋯" menu of a question or a reply.
+- **Block (DEC-104, plan L6):** a "Bloquer" entry in the "⋯" menu of a question and of a profile, with a confirmation step (R14). The blocked account is not told. Blocking removes the follows in both directions. The blocked accounts are listed at `/settings/blocked`, where a block is lifted without confirmation (DEC-315).
 - **Edit profile (DEC-105):** display name (50 characters), bio (160), handle (30, unique regardless of case), avatar (profile photo, in v1). The phone number is not editable in v1. Desktop and tablet: modal. Mobile: full screen. No profile banner in v1 (DEC-107).
 - **Reply composer (DEC-106):** a reply box of 280 characters, shown once the conversation is open (50 Y). Below 50 Y the area shows "Les réponses s'ouvrent à 50 Y" with the current count (section 12.5).
 
