@@ -13,8 +13,21 @@ powershell -ExecutionPolicy Bypass -File scripts\run-e2e.ps1
 
 Options :
 
+- `-Project mobile,tablet,desktop` : choisit les projets, lances l'un apres l'autre dans cet ordre (defaut : les trois). Exemple : `-Project mobile` pour un seul projet. Chaque projet a son propre journal.
 - `-SkipRealApi` : lance l'etape 1 seulement.
 - `-DryRun` : affiche les commandes sans les lancer et n'ecrit aucun fichier.
+
+### Lancer les projets un par un
+
+Chaque projet se lance avec sa propre commande, sans attendre les autres :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\run-e2e.ps1 -Project mobile
+powershell -ExecutionPolicy Bypass -File scripts\run-e2e.ps1 -Project tablet
+powershell -ExecutionPolicy Bypass -File scripts\run-e2e.ps1 -Project desktop
+```
+
+Chaque commande fait les deux etapes pour son projet. Sans `-Project`, les trois passent d'affilee.
 
 ## Prerequis
 

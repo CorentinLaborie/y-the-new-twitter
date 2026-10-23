@@ -6,10 +6,13 @@
 #           base de test y_e2e.
 #
 # Usage :  powershell -ExecutionPolicy Bypass -File scripts\run-e2e.ps1
-# Options : -SkipRealApi  (etape 1 seulement)
+# Options : -Project mobile,tablet,desktop  (un ou plusieurs projets, lances l'un apres l'autre ; defaut : les trois)
+#           -SkipRealApi  (etape 1 seulement)
 #           -DryRun       (affiche les commandes sans les lancer)
 
 param(
+    [ValidateSet('mobile', 'tablet', 'desktop')]
+    [string[]]$Project = @('mobile', 'tablet', 'desktop'),
     [switch]$SkipRealApi,
     [switch]$DryRun
 )
@@ -24,8 +27,6 @@ $lockPath    = Join-Path $env:TEMP 'y-e2e.lock'
 $configPath  = Join-Path $env:TEMP 'y-e2e-playwright.config.ts'
 $resultsDir  = Join-Path $env:TEMP 'y-e2e-results'
 $stamp       = Get-Date -Format 'yyyyMMdd-HHmmss'
-$logStep1    = Join-Path $env:TEMP "y-e2e-step1-$stamp.log"
-$logStep2    = Join-Path $env:TEMP "y-e2e-step2-$stamp.log"
 $logBackend  = Join-Path $env:TEMP "y-e2e-backend-$stamp.log"
 $logBackErr  = Join-Path $env:TEMP "y-e2e-backend-$stamp.err.log"
 $dbCheckPath = Join-Path $env:TEMP "y-e2e-check-db-$stamp.js"
@@ -269,9 +270,13 @@ export default {
     $mockedSpecs = Get-ChildItem -LiteralPath (Join-Path $frontendDir 'e2e') -Filter '*.spec.ts' |
         Where-Object { $_.Name -ne 'real-api.spec.ts' } |
         ForEach-Object { 'e2e/' + $_.Name }
-    $step1Args = @('--config', $configPath) + $mockedSpecs
-    $code1 = Invoke-Playwright 'Etape 1 : tests mockes (desktop, tablet, mobile)' $step1Args $logStep1 $npxPath
-    if ($code1 -ne 0) { $exitCode = 1 }
+    # Un projet apres l'autre (mobile, tablet, desktop) : une seule fenetre Chrome a la fois, un journal par projet.
+    foreach ($p in $Project) {
+        $step1Args = @('--config', $configPath, "--project=$p") + $mockedSpecs
+        $logStep1 = Join-Path $env:TEMP "y-e2e-step1-$p-$stamp.log"
+        $code1 = Invoke-Playwright "Etape 1 : tests mockes ($p)" $step1Args $logStep1 $npxPath
+        if ($code1 -ne 0) { $exitCode = 1 }
+    }
 
     if ($SkipRealApi) {
         Write-Host ''
@@ -316,9 +321,12 @@ export default {
             Write-Host '   Backend pret (200).'
         }
 
-        $args2 = @('--config', $configPath, 'e2e/real-api.spec.ts')
-        $code2 = Invoke-Playwright 'Etape 2 : tests contre la vraie API (real-api.spec.ts)' $args2 $logStep2 $npxPath
-        if ($code2 -ne 0) { $exitCode = 1 }
+        foreach ($p in $Project) {
+            $args2 = @('--config', $configPath, "--project=$p", 'e2e/real-api.spec.ts')
+            $logStep2 = Join-Path $env:TEMP "y-e2e-step2-$p-$stamp.log"
+            $code2 = Invoke-Playwright "Etape 2 : tests contre la vraie API ($p)" $args2 $logStep2 $npxPath
+            if ($code2 -ne 0) { $exitCode = 1 }
+        }
     }
 }
 catch {
