@@ -21,11 +21,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
+      // The back-office is desktop only: its specs are not run here.
       name: 'tablet',
+      testIgnore: '**/admin*.spec.ts',
       use: { ...devices['Desktop Chrome'], viewport: { width: 768, height: 1024 } },
     },
     {
       name: 'mobile',
+      testIgnore: '**/admin*.spec.ts',
       use: { ...devices['Pixel 7'] },
     },
   ],
