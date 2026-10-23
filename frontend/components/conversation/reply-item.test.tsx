@@ -92,21 +92,29 @@ describe('ReplyItem', () => {
     expect(onReact).not.toHaveBeenCalled();
   });
 
-  it('shows no menu on a reply of another account, or when nobody is signed in', () => {
-    const { unmount } = render(
-      <ReplyItem
-        reply={REPLY}
-        viewerHandle="alice"
-        reactionPending={false}
-        onReact={vi.fn()}
-        onDelete={vi.fn()}
-      />,
-    );
-    expect(screen.queryByRole('button', { name: MENU_BUTTON })).toBeNull();
-    unmount();
-
+  it('shows no menu when nobody is signed in', () => {
     renderItem({ viewerHandle: null });
+
     expect(screen.queryByRole('button', { name: MENU_BUTTON })).toBeNull();
+  });
+
+  it('offers Signaler, and no delete, in the menu of a reply of another account (DEC-035)', () => {
+    renderItem({ viewerHandle: 'alice' });
+
+    fireEvent.click(screen.getByRole('button', { name: MENU_BUTTON }));
+
+    expect(screen.getByRole('menuitem', { name: 'Signaler' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Supprimer ma réponse' })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: 'Bloquer' })).toBeNull();
+  });
+
+  it('opens the report dialog from the menu of another account’s reply', () => {
+    renderItem({ viewerHandle: 'alice' });
+
+    fireEvent.click(screen.getByRole('button', { name: MENU_BUTTON }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Signaler' }));
+
+    expect(screen.getByRole('dialog', { name: 'Signaler cette réponse' })).toBeInTheDocument();
   });
 
   it('opens the menu of the viewer’s own reply with aria-haspopup and aria-expanded', () => {

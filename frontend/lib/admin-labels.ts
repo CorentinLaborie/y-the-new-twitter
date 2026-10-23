@@ -95,7 +95,7 @@ export function reportStatusTone(status: ReportStatus): StatusTone {
 export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
   spam: 'Spam',
   harassment: 'Harcèlement',
-  hate: 'Haine',
+  hate: 'Propos haineux',
   illegal_content: 'Contenu illicite',
   misinformation: 'Désinformation',
   other: 'Autre',

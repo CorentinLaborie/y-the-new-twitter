@@ -51,7 +51,7 @@ describe('ReportsScreen', () => {
     const link = await screen.findByRole('link', { name: 'Examiner le signalement du 13/10/2026 13h07' });
     expect(link).toHaveAttribute('href', `/admin/reports/${REPORT.id}`);
     expect(within(table()).getByText('13/10/2026 13h07')).toBeInTheDocument();
-    expect(within(table()).getByText('Haine')).toBeInTheDocument();
+    expect(within(table()).getByText('Propos haineux')).toBeInTheDocument();
     expect(within(table()).getByText('Réponse')).toBeInTheDocument();
     expect(within(table()).getByText(/Auteur : @Robert44/)).toBeInTheDocument();
     expect(within(table()).getByText('2')).toBeInTheDocument();

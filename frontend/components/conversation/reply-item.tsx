@@ -5,6 +5,8 @@ import { avatarInitial } from '@/components/feed/avatar-initial';
 import { FeedIcon } from '@/components/feed/feed-icon';
 import { formatPostDate } from '@/components/feed/format-date';
 import styles from '@/components/feed/feed.module.css';
+import { ReportDialog } from '@/components/report/report-dialog';
+import { REPORT_SENT_MESSAGE } from '@/components/report/report-rules';
 import type { ReplyReactionKind, ReplyView } from '@/lib/replies-api';
 import { DeleteReplyDialog } from './delete-reply-dialog';
 import { MentionText } from './mention-text';
@@ -37,8 +39,12 @@ const REACTIONS: ReadonlyArray<{
  */
 export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDelete }: ReplyItemProps) {
   const isOwn = viewerHandle !== null && viewerHandle === reply.author.handle;
+  // Another account's reply offers the report (plan L6, DEC-035); the block is only offered from a question and a profile.
+  const canReport = viewerHandle !== null && !isOwn;
   const [menuOpen, setMenuOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportNotice, setReportNotice] = useState<string | null>(null);
   const menuWrapRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuItemRef = useRef<HTMLButtonElement>(null);
@@ -98,6 +104,16 @@ export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDel
     setDialogOpen(true);
   }
 
+  function handleReportChosen() {
+    setMenuOpen(false);
+    setReportOpen(true);
+  }
+
+  function handleReportClosed() {
+    setReportOpen(false);
+    menuButtonRef.current?.focus();
+  }
+
   function handleDialogCancel() {
     restoreFocusRef.current = true;
     setDialogOpen(false);
@@ -120,7 +136,7 @@ export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDel
             @{reply.author.handle} · <time dateTime={reply.createdAt}>{formatPostDate(reply.createdAt)}</time>
           </span>
         </div>
-        {isOwn ? (
+        {isOwn || canReport ? (
           <div
             ref={menuWrapRef}
             style={{ position: 'relative', marginLeft: 'auto' }}
@@ -152,15 +168,27 @@ export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDel
             </button>
             {menuOpen ? (
               <div id={menuId} role="menu" className="y-menu y-qpost-menu">
-                <button
-                  ref={menuItemRef}
-                  type="button"
-                  role="menuitem"
-                  className="y-menu-item is-danger"
-                  onClick={handleDeleteChosen}
-                >
-                  Supprimer ma réponse
-                </button>
+                {isOwn ? (
+                  <button
+                    ref={menuItemRef}
+                    type="button"
+                    role="menuitem"
+                    className="y-menu-item is-danger"
+                    onClick={handleDeleteChosen}
+                  >
+                    Supprimer ma réponse
+                  </button>
+                ) : (
+                  <button
+                    ref={menuItemRef}
+                    type="button"
+                    role="menuitem"
+                    className="y-menu-item"
+                    onClick={handleReportChosen}
+                  >
+                    Signaler
+                  </button>
+                )}
               </div>
             ) : null}
           </div>
@@ -191,8 +219,26 @@ export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDel
           </button>
         ))}
       </div>
+      {reportNotice ? (
+        <p role="status" className="y-dialog-text">
+          {reportNotice}
+        </p>
+      ) : null}
       {isOwn ? (
         <DeleteReplyDialog open={dialogOpen} onConfirm={handleConfirm} onCancel={handleDialogCancel} />
+      ) : null}
+      {canReport ? (
+        <ReportDialog
+          open={reportOpen}
+          kind="reply"
+          target={{ replyId: reply.id }}
+          onClose={handleReportClosed}
+          onSent={() => {
+            setReportOpen(false);
+            setReportNotice(REPORT_SENT_MESSAGE);
+            menuButtonRef.current?.focus();
+          }}
+        />
       ) : null}
     </article>
   );

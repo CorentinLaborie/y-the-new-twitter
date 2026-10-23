@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FeedQuestion } from '@/lib/feed-api';
 import { unfollowUser } from '@/lib/follows-api';
 import { QuestionCard } from './question-card';
@@ -7,6 +7,20 @@ import { QuestionCard } from './question-card';
 vi.mock('@/lib/follows-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/follows-api')>();
   return { ...actual, followUser: vi.fn(), unfollowUser: vi.fn() };
+});
+
+// jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
+beforeAll(() => {
+  if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      this.setAttribute('open', '');
+    };
+  }
+  if (typeof HTMLDialogElement.prototype.close !== 'function') {
+    HTMLDialogElement.prototype.close = function close() {
+      this.removeAttribute('open');
+    };
+  }
 });
 
 function question(overrides: Partial<FeedQuestion> = {}): FeedQuestion {
@@ -142,6 +156,35 @@ describe('QuestionCard menu and copied link', () => {
 
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('menuitem', { name: 'Copier le lien' })).toBeInTheDocument();
+  });
+
+  it('offers Signaler on another account’s question to an active viewer', () => {
+    renderCard({ viewer: { handle: 'someone-else', suspended: false } });
+
+    openMenu();
+
+    expect(screen.getByRole('menuitem', { name: 'Signaler' })).toBeInTheDocument();
+  });
+
+  it('offers no Signaler on the viewer’s own question, nor to a suspended viewer', () => {
+    const own = question().author.handle;
+    renderCard({ viewer: { handle: own, suspended: false } });
+    openMenu();
+    expect(screen.queryByRole('menuitem', { name: 'Signaler' })).toBeNull();
+    cleanup();
+
+    renderCard({ viewer: { handle: 'someone-else', suspended: true } });
+    openMenu();
+    expect(screen.queryByRole('menuitem', { name: 'Signaler' })).toBeNull();
+  });
+
+  it('opens the report dialog for the question from its menu', () => {
+    renderCard({ viewer: { handle: 'someone-else', suspended: false } });
+
+    openMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Signaler' }));
+
+    expect(screen.getByRole('dialog', { name: 'Signaler cette question' })).toBeInTheDocument();
   });
 
   it('copies the share link, closes the menu, shows "Lien copié." and does not navigate', async () => {
