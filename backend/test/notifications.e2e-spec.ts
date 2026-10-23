@@ -298,6 +298,30 @@ describe('Notifications (e2e, L2 step 3)', () => {
     expect((await client.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 1 });
   });
 
+  it('marks a reaction group read when the page sends its line, even if the line hides older reactions', async () => {
+    const owner = await createUser('r_group_owner');
+    const ann = await createUser('r_group_ann');
+    const ben = await createUser('r_group_ben');
+    const question = await createQuestion(owner);
+    await reaction(owner, ann, question, 20);
+    await reaction(owner, ben, question, 10);
+    const client = await clientFor(owner);
+    const lines = (await client.agent.get('/api/v1/notifications').expect(200)).body.items;
+    expect(lines).toHaveLength(1);
+    expect((await client.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 1 });
+
+    await client.agent
+      .post('/api/v1/notifications/read-all')
+      .set('x-csrf-token', client.token)
+      .send({ ids: [lines[0].id] })
+      .expect(204);
+
+    expect((await client.agent.get('/api/v1/notifications/unread-count').expect(200)).body).toEqual({ unread: 0 });
+    expect(await sql(`SELECT count(*) FROM notifications WHERE recipient_id = '${owner}' AND read_at IS NULL;`)).toBe(
+      '0',
+    );
+  });
+
   it('refuses an ids list that is not a list of UUIDs', async () => {
     const owner = await createUser('r_bad_ids');
     const client = await clientFor(owner);

@@ -5,6 +5,9 @@ import type { NotificationType } from '../database/generated/client/client';
 /** The Prisma client or a transaction opened by the service. */
 export type NotificationsDb = Prisma.TransactionClient;
 
+/** The types that group one line per question and type (section 4.1). */
+const REACTION_TYPES: NotificationType[] = ['reaction_like', 'reaction_dislike', 'reaction_y'];
+
 /** Keyset position of a page: the creation time and id of the last grouped row returned. */
 export interface NotificationCursor {
   readonly createdAt: Date;
@@ -134,10 +137,32 @@ export class NotificationsRepository {
    * Marks the unread lines of the viewer as read now, or only the lines of `ids` when given (the lines the page showed).
    * Lines already read keep their date.
    */
-  markAllRead(db: NotificationsDb, viewerId: string, at: Date, ids?: string[]): Promise<Prisma.BatchPayload> {
-    return db.notification.updateMany({
-      where: { recipientId: viewerId, readAt: null, ...(ids === undefined ? {} : { id: { in: ids } }) },
+  async markAllRead(db: NotificationsDb, viewerId: string, at: Date, ids?: string[]): Promise<Prisma.BatchPayload> {
+    if (ids === undefined) {
+      return db.notification.updateMany({ where: { recipientId: viewerId, readAt: null }, data: { readAt: at } });
+    }
+    const shown = await db.notification.updateMany({
+      where: { recipientId: viewerId, readAt: null, id: { in: ids } },
       data: { readAt: at },
     });
+    // A reaction line is a group (one line per question and type, see visibleRows): the id the page sent is only its
+    // newest row, so the other reactions of the same group are marked too, or the line would stay unread.
+    const groups = await db.notification.findMany({
+      where: { recipientId: viewerId, id: { in: ids }, type: { in: REACTION_TYPES } },
+      select: { questionId: true, type: true },
+    });
+    if (groups.length === 0) {
+      return shown;
+    }
+    const group = await db.notification.updateMany({
+      where: {
+        recipientId: viewerId,
+        readAt: null,
+        OR: groups.map((line) => ({ questionId: line.questionId, type: line.type })),
+      },
+      data: { readAt: at },
+    });
+
+    return { count: shown.count + group.count };
   }
 }
