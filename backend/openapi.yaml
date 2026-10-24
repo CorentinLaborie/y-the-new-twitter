@@ -189,6 +189,32 @@ paths:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags:
         - AccountDeletion
+  /api/v1/users/me/account:
+    get:
+      operationId: AccountSettingsController_read
+      parameters: []
+      responses:
+        "200":
+          description: The viewer’s account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountSettingsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - AccountSettings
   /api/v1/questions/{questionId}:
     get:
       operationId: QuestionsController_findOne
@@ -1691,6 +1717,31 @@ components:
     AccountDeletionDto:
       type: object
       properties: {}
+    AccountSettingsDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: alice
+        displayName:
+          type: string
+          example: Alice Martin
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          example: active
+        deletionPurgeAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - handle
+        - displayName
+        - email
+        - status
+        - deletionPurgeAt
     QuestionAuthorDto:
       type: object
       properties:

@@ -43,6 +43,14 @@ export class UsersRepository {
     return user?.handle ?? null;
   }
 
+  /** The account as the settings page shows it: the e-mail and the purge date are not in the session (plan L5, 4). */
+  findAccountSettings(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: { handle: true, displayName: true, email: true, status: true, deletionPurgeAt: true },
+    });
+  }
+
   /** Handles are unique regardless of case (DEC-061). */
   findByHandle(handle: string) {
     return this.prisma.user.findFirst({
