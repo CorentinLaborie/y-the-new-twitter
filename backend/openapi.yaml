@@ -189,6 +189,45 @@ paths:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags:
         - AccountDeletion
+  /api/v1/users/me/password:
+    put:
+      operationId: PasswordChangeController_change
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeDto"
+      responses:
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "422":
+          description: The current password is wrong, or the new one does not meet the
+            policy.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - PasswordChange
   /api/v1/users/me/account:
     get:
       operationId: AccountSettingsController_read
@@ -1715,6 +1754,9 @@ components:
       type: object
       properties: {}
     AccountDeletionDto:
+      type: object
+      properties: {}
+    PasswordChangeDto:
       type: object
       properties: {}
     AccountSettingsDto:

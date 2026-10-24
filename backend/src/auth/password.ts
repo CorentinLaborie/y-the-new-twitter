@@ -36,3 +36,7 @@ export async function verifyPassword(storedHash: string, password: string): Prom
     return false;
   }
 }
+
+/** The refusal of a password that does not meet the policy, the same for the reset and the change. */
+export const PASSWORD_REFUSED =
+  'Le mot de passe doit contenir de 8 à 128 caractères, dont au moins un chiffre et un caractère spécial.';

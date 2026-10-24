@@ -3,14 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import { MAIL_SENDER, type MailSender } from '../../common/mail/mail-sender';
 import { UsersRepository } from '../../users/users.repository';
 import { CodeRequestLimitService } from '../rate-limit/code-request-limit.service';
-import { hashPassword, isPasswordAllowed } from '../password';
+import { hashPassword, isPasswordAllowed, PASSWORD_REFUSED } from '../password';
 import { generateCode, hashCode, verifyCode } from '../verification-code';
 import { PasswordResetCodesRepository } from './password-reset-codes.repository';
 import { passwordChangedMail, resetCodeMail } from './password-reset-mail';
 
 const INVALID_CODE = 'Le code est incorrect ou a expiré.';
-const PASSWORD_REFUSED =
-  'Le mot de passe doit contenir de 8 à 128 caractères, dont au moins un chiffre et un caractère spécial.';
 
 interface PasswordResetInput {
   email: string;

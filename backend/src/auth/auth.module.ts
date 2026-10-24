@@ -29,6 +29,9 @@ import { EmailChangeService } from './email-change/email-change.service';
 import { AccountDeletionController } from './account-deletion/account-deletion.controller';
 import { AccountDeletionRepository } from './account-deletion/account-deletion.repository';
 import { AccountDeletionService } from './account-deletion/account-deletion.service';
+import { PasswordChangeController } from './password-change/password-change.controller';
+import { PasswordChangeRepository } from './password-change/password-change.repository';
+import { PasswordChangeService } from './password-change/password-change.service';
 
 /**
  * Account flows (M1). Controllers and services of each flow are registered here.
@@ -44,10 +47,13 @@ import { AccountDeletionService } from './account-deletion/account-deletion.serv
     PasswordResetController,
     EmailChangeController,
     AccountDeletionController,
+    PasswordChangeController,
   ],
   providers: [
     CodeRequestLimitService,
     AccountDeletionService,
+    PasswordChangeService,
+    PasswordChangeRepository,
     AccountDeletionRepository,
     PasswordResetService,
     PasswordResetCodesRepository,
