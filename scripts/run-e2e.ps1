@@ -105,9 +105,8 @@ const client = new pg.Client({ connectionString: process.env.Y_E2E_DATABASE_URL 
   try { await client.connect(); }
   catch (e) { console.log(e.code === '3D000' ? 'BASE_ABSENTE' : 'CONNEXION_KO ' + (e.code || '')); process.exit(2); }
   try {
-    const t = await client.query("select to_regclass('public._prisma_migrations') is not null as ok");
-    if (!t.rows[0].ok) { console.log('NON_MIGREE'); process.exit(4); }
-    const m = await client.query('select count(*)::int as n from _prisma_migrations where finished_at is not null');
+    // The application role cannot read the migration history (roles.sql): the newest column of users proves the schema.
+    const m = await client.query("select count(*)::int as n from information_schema.columns where table_schema = 'public' and table_name = 'users' and column_name = 'deletion_reason'");
     if (m.rows[0].n === 0) { console.log('NON_MIGREE'); process.exit(4); }
     const s = await client.query("select count(*)::int as n from users where handle = 'demo_alice'");
     if (s.rows[0].n === 0) { console.log('NON_SEMEE'); process.exit(5); }
