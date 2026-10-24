@@ -547,7 +547,13 @@ Target list. Each endpoint arrives with its milestone. `/health` is outside the 
 | GET | `/users/me` | Current user |
 | PATCH | `/users/me` | Update display name, bio, handle |
 | PUT | `/users/me/password` | Change password. Body `{currentPassword, newPassword}`; the current password is required |
-| PUT | `/users/me/email` | Start an email change (sends a code to the new address). Email is not part of `PATCH /users/me` |
+| GET | `/users/me/account` | Settings view of the account: handle, name, e-mail, status and the purge date of a pending deletion |
+| POST | `/auth/email-change/request` | Start an email change: the new address and the current password; the code goes to the new address (202) |
+| POST | `/auth/email-change/resend` | Send the open code again, to the same address (202); three an hour, then 429 |
+| POST | `/auth/email-change/confirm` | Confirm the change with the six-digit code (200) |
+| PUT | `/users/me/deletion` | Ask for the deletion (90 days). Body: password, reason (from the administrator list; text for Autre), e-mail. Answers the purge date (200) and sends a mail to the address typed |
+| GET | `/notification-preferences` | The stored notification preferences of the viewer (a type without a row is on) |
+| PUT | `/notification-preferences/{type}` | Switch one notification type on or off (upsert; 404 for an unknown type) |
 | GET | `/users/{handle}` | Public profile |
 | GET | `/users/{handle}/followers` | Followers list (cursor) |
 | GET | `/users/{handle}/following` | Following list (cursor) |
