@@ -78,3 +78,29 @@ export type AccountDeletionReceipt = { deletionPurgeAt: string };
 export function requestAccountDeletion(request: AccountDeletionRequest): Promise<ApiResult<AccountDeletionReceipt>> {
   return protectedApiRequest<AccountDeletionReceipt>('PUT', '/users/me/deletion', { body: request });
 }
+
+/** The notification types a preference can be set for (backend NotificationType). */
+export type NotificationPreferenceType =
+  | 'reply_to_question'
+  | 'conversation_opened'
+  | 'reaction_like'
+  | 'reaction_dislike'
+  | 'reaction_y'
+  | 'follow'
+  | 'mention';
+
+/** One stored preference. A type without a row is on (the default). */
+export type NotificationPreference = { type: NotificationPreferenceType; enabled: boolean };
+
+/** The stored preferences of the viewer (plan L5, step 8). */
+export function getNotificationPreferences(): Promise<ApiResult<{ items: NotificationPreference[] }>> {
+  return protectedApiRequest<{ items: NotificationPreference[] }>('GET', '/notification-preferences');
+}
+
+/** Switches one notification type on or off (200, the value as stored). */
+export function setNotificationPreference(
+  type: NotificationPreferenceType,
+  enabled: boolean,
+): Promise<ApiResult<NotificationPreference>> {
+  return protectedApiRequest<NotificationPreference>('PUT', `/notification-preferences/${type}`, { body: { enabled } });
+}

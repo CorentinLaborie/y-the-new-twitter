@@ -9,6 +9,7 @@ const API_ORIGIN = 'http://localhost:8080';
 export type SettingsHandlers = {
   account?: () => Reply | Promise<Reply>;
   logout?: () => Reply | Promise<Reply>;
+  notificationItems?: { type: string; enabled: boolean }[];
   password?: (body: { currentPassword: string; newPassword: string }) => Reply | Promise<Reply>;
   emailRequest?: (body: { newEmail: string; password: string }) => Reply | Promise<Reply>;
   emailResend?: () => Reply | Promise<Reply>;
@@ -43,6 +44,8 @@ export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {
   const emailRequestCalls: { newEmail: string; password: string }[] = [];
   const emailConfirmCalls: string[] = [];
   const deletionCalls: { reasonCode: string; email: string }[] = [];
+  const notificationCalls: { type: string; enabled: boolean }[] = [];
+  const notificationItems = handlers.notificationItems ?? [];
 
   await page.route(`${API_ORIGIN}/api/v1/**`, async (route) => {
     const request = route.request();
@@ -74,6 +77,13 @@ export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {
       const body = JSON.parse(request.postData() ?? '{}') as { reasonCode: string; email: string };
       deletionCalls.push(body);
       reply = handlers.deletion ? await handlers.deletion(body) : { status: 200, body: { deletionPurgeAt: '2027-01-21T10:00:00.000Z' } };
+    } else if (request.method() === 'GET' && path === '/notification-preferences') {
+      reply = { status: 200, body: { items: notificationItems } };
+    } else if (request.method() === 'PUT' && path.startsWith('/notification-preferences/')) {
+      const type = path.slice('/notification-preferences/'.length);
+      const body = JSON.parse(request.postData() ?? '{}') as { enabled: boolean };
+      notificationCalls.push({ type, enabled: body.enabled });
+      reply = { status: 200, body: { type, enabled: body.enabled } };
     } else if (request.method() === 'POST' && path === '/auth/logout') {
       logoutCalls.push(path);
       reply = handlers.logout ? await handlers.logout() : { status: 204 };
@@ -91,7 +101,7 @@ export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {
     });
   });
 
-  return { logoutCalls, passwordCalls, emailRequestCalls, emailConfirmCalls, deletionCalls };
+  return { logoutCalls, passwordCalls, emailRequestCalls, emailConfirmCalls, deletionCalls, notificationCalls };
 }
 
 /** A problem of a refused call, in the Problem Details shape. */
