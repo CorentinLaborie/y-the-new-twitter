@@ -42,6 +42,21 @@ const LOADING_LIST: ListState = { phase: 'loading', loadError: '', items: [], ne
 /** How often the relative times are computed again ("à l'instant", "il y a 2 h"). */
 const RELATIVE_TIME_REFRESH_MS = 60_000;
 
+/** The read endpoint takes at most 100 ids per call: a longer list is sent in chunks, one after the other. */
+const READ_CHUNK = 100;
+
+/** Marks only the lines the page shows (decision of 2026-10-23): a line that arrives later stays unread. */
+async function markShownRead(ids: string[]): Promise<ApiResult<void>> {
+  let result: ApiResult<void> = { ok: true, status: 204, body: undefined };
+  for (let index = 0; index < ids.length; index += READ_CHUNK) {
+    result = await markAllNotificationsRead(ids.slice(index, index + READ_CHUNK));
+    if (!result.ok) {
+      return result;
+    }
+  }
+  return result;
+}
+
 function readyList(page: NotificationPage): ListState {
   return { phase: 'ready', loadError: '', items: page.items, nextCursor: page.nextCursor, moreStatus: 'idle' };
 }
@@ -174,9 +189,10 @@ export function NotificationsScreen({ initialTab, suspended }: { initialTab: Not
   }
 
   function markAllRead() {
+    const shownUnread = list.items.filter((line) => line.readAt === null).map((line) => line.id);
     setMarkPending(true);
     setMarkError(null);
-    markAllNotificationsRead().then((result) => {
+    markShownRead(shownUnread).then((result) => {
       setMarkPending(false);
       if (!result.ok) {
         setMarkError(notificationsFailureMessage(result.problem));

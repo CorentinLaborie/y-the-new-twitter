@@ -202,6 +202,19 @@ describe('NotificationsScreen', () => {
     expect(mentions).toHaveAttribute('aria-selected', 'true');
   });
 
+  it('the header action marks only the unread lines the page shows', async () => {
+    vi.mocked(fetchNotificationPage).mockResolvedValue(
+      page([line('a'), line('b', { readAt: '2026-10-22T10:05:00.000Z' })]),
+    );
+    renderScreen();
+    await screen.findByRole('link', { name: /Personne a/ });
+    vi.mocked(markAllNotificationsRead).mockClear();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tout marquer comme lu' }));
+
+    await waitFor(() => expect(markAllNotificationsRead).toHaveBeenCalledWith(['a']));
+  });
+
   it('disables "Tout marquer comme lu" when no line is unread', async () => {
     vi.mocked(fetchNotificationPage).mockResolvedValue(
       page([line('a', { readAt: '2026-10-22T10:05:00.000Z' })]),
