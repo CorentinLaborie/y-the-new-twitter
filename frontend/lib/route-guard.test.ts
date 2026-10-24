@@ -6,6 +6,8 @@ describe('isProtectedPath', () => {
     expect(isProtectedPath('/home')).toBe(true);
     expect(isProtectedPath('/home/details')).toBe(true);
     expect(isProtectedPath('/notifications')).toBe(true);
+    expect(isProtectedPath('/settings')).toBe(true);
+    expect(isProtectedPath('/settings/email')).toBe(true);
   });
 
   it('does not protect public pages, including names that only start the same way', () => {

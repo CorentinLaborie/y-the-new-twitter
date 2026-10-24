@@ -24,7 +24,7 @@ export function formatWait(seconds: number): string {
   return minutes === 1 ? '1 minute' : `${minutes} minutes`;
 }
 
-function tooManyAttemptsMessage(problem: ApiProblem): string {
+export function tooManyAttemptsMessage(problem: ApiProblem): string {
   return problem.retryAfterSeconds === undefined
     ? 'Trop de tentatives. Réessayez plus tard.'
     : `Trop de tentatives. Réessayez dans ${formatWait(problem.retryAfterSeconds)}.`;
