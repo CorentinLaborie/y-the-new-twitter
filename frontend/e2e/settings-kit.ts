@@ -13,6 +13,7 @@ export type SettingsHandlers = {
   emailRequest?: (body: { newEmail: string; password: string }) => Reply | Promise<Reply>;
   emailResend?: () => Reply | Promise<Reply>;
   emailConfirm?: (body: { code: string }) => Reply | Promise<Reply>;
+  deletion?: (body: { reasonCode: string; email: string }) => Reply | Promise<Reply>;
 };
 
 /** The account as GET /users/me/account sends it. */
@@ -41,6 +42,7 @@ export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {
   const passwordCalls: { currentPassword: string; newPassword: string }[] = [];
   const emailRequestCalls: { newEmail: string; password: string }[] = [];
   const emailConfirmCalls: string[] = [];
+  const deletionCalls: { reasonCode: string; email: string }[] = [];
 
   await page.route(`${API_ORIGIN}/api/v1/**`, async (route) => {
     const request = route.request();
@@ -68,6 +70,10 @@ export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {
       const body = JSON.parse(request.postData() ?? '{}') as { code: string };
       emailConfirmCalls.push(body.code);
       reply = handlers.emailConfirm ? await handlers.emailConfirm(body) : { status: 200 };
+    } else if (request.method() === 'PUT' && path === '/users/me/deletion') {
+      const body = JSON.parse(request.postData() ?? '{}') as { reasonCode: string; email: string };
+      deletionCalls.push(body);
+      reply = handlers.deletion ? await handlers.deletion(body) : { status: 200, body: { deletionPurgeAt: '2027-01-21T10:00:00.000Z' } };
     } else if (request.method() === 'POST' && path === '/auth/logout') {
       logoutCalls.push(path);
       reply = handlers.logout ? await handlers.logout() : { status: 204 };
@@ -85,7 +91,7 @@ export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {
     });
   });
 
-  return { logoutCalls, passwordCalls, emailRequestCalls, emailConfirmCalls };
+  return { logoutCalls, passwordCalls, emailRequestCalls, emailConfirmCalls, deletionCalls };
 }
 
 /** A problem of a refused call, in the Problem Details shape. */

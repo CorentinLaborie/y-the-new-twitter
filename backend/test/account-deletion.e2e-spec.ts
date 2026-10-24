@@ -64,8 +64,8 @@ describe('Account deletion request, cancellation and window (e2e, R16)', () => {
     return { ...current, response };
   }
 
-  function requestDeletion({ agent, csrf }: Client, password: string) {
-    return agent.put(DELETION).set('x-csrf-token', csrf).send({ password });
+  function requestDeletion({ agent, csrf }: Client, password: string, extra: Record<string, unknown> = {}) {
+    return agent.put(DELETION).set('x-csrf-token', csrf).send({ password, reasonCode: 'spam', email: 'me@example.test', ...extra });
   }
 
   const sql = (statement: string) => sqlAsSuperuser(container, statement);
@@ -98,11 +98,43 @@ describe('Account deletion request, cancellation and window (e2e, R16)', () => {
     await expect(sql(`SELECT status FROM users WHERE id = '${id}'`)).resolves.toBe('active');
   });
 
-  it('starts the window with the current password: 204, a purge date 90 days later, every session closed', async () => {
+  it('keeps the reason and the e-mail of the request, and answers the purge date (200)', async () => {
+    const id = await createActiveAccount('del_reason');
+    const { agent, csrf } = await login('del_reason');
+
+    const response = await requestDeletion({ agent, csrf }, PASSWORD, {
+      reasonCode: 'other',
+      otherReason: 'Je ne reviendrai pas',
+      email: 'Reasons@Example.test',
+    }).expect(200);
+
+    expect(new Date(response.body.deletionPurgeAt).getTime()).toBeGreaterThan(Date.now() + 89 * 24 * 60 * 60 * 1000);
+    expect(await sql(`SELECT deletion_reason || '|' || deletion_email FROM users WHERE id = '${id}'`)).toBe(
+      'Je ne reviendrai pas|reasons@example.test',
+    );
+  });
+
+  it('refuses a request without a reason in the list (400), and changes nothing', async () => {
+    const id = await createActiveAccount('del_nomotif');
+    const { agent, csrf } = await login('del_nomotif');
+
+    await requestDeletion({ agent, csrf }, PASSWORD, { reasonCode: 'unknown' }).expect(400);
+
+    expect(await sql(`SELECT status FROM users WHERE id = '${id}'`)).toBe('active');
+  });
+
+  it('refuses Autre without its text (400)', async () => {
+    await createActiveAccount('del_autre');
+    const { agent, csrf } = await login('del_autre');
+
+    await requestDeletion({ agent, csrf }, PASSWORD, { reasonCode: 'other', otherReason: '   ' }).expect(400);
+  });
+
+  it('starts the window with the current password: 200, a purge date 90 days later, every session closed', async () => {
     const id = await createActiveAccount('del_request');
     const { agent, csrf } = await login('del_request');
 
-    await requestDeletion({ agent, csrf }, PASSWORD).expect(204);
+    await requestDeletion({ agent, csrf }, PASSWORD).expect(200);
 
     const row = await sql(
       `SELECT status, extract(epoch FROM (deletion_purge_at - deletion_requested_at))::int
@@ -124,7 +156,7 @@ describe('Account deletion request, cancellation and window (e2e, R16)', () => {
          VALUES ('${QUESTION_ID}', '${id}', 'Réponse de test');`,
     );
     const before = await login('del_cancel');
-    await requestDeletion(before, PASSWORD).expect(204);
+    await requestDeletion(before, PASSWORD).expect(200);
     await expect(sql(`SELECT reply_count FROM questions WHERE id = '${QUESTION_ID}'`)).resolves.toBe('0');
 
     const { response } = await login('del_cancel');
@@ -142,7 +174,7 @@ describe('Account deletion request, cancellation and window (e2e, R16)', () => {
   it('refuses a login after the 90-day window, and leaves the account pending for the purge (R16)', async () => {
     const id = await createActiveAccount('del_late');
     const current = await login('del_late');
-    await requestDeletion(current, PASSWORD).expect(204);
+    await requestDeletion(current, PASSWORD).expect(200);
     await sql(`UPDATE users SET deletion_purge_at = now() - interval '1 minute' WHERE id = '${id}'`);
 
     const refused = await login('del_late');

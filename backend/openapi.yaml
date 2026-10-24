@@ -193,8 +193,27 @@ paths:
             schema:
               $ref: "#/components/schemas/AccountDeletionDto"
       responses:
+        "200":
+          description: The deletion is recorded. The account is purged on the date given.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountDeletionResponseDto"
+        "400":
+          description: The reason is missing or not in the list, the text for Autre is
+            missing, or the e-mail is not valid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
         "422":
           description: The current password is wrong.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
           content:
             application/problem+json:
               schema:
@@ -1768,6 +1787,14 @@ components:
     AccountDeletionDto:
       type: object
       properties: {}
+    AccountDeletionResponseDto:
+      type: object
+      properties:
+        deletionPurgeAt:
+          format: date-time
+          type: string
+      required:
+        - deletionPurgeAt
     PasswordChangeDto:
       type: object
       properties: {}

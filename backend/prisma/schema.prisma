@@ -169,6 +169,8 @@ model User {
   deletionRequestedAt DateTime?       @map("deletion_requested_at") @db.Timestamptz(3)
   deletionPurgeAt     DateTime?       @map("deletion_purge_at") @db.Timestamptz(3)
   deletionOrigin      DeletionOrigin? @map("deletion_origin")
+  deletionReason      String?         @map("deletion_reason")
+  deletionEmail       String?         @map("deletion_email") @db.VarChar(254)
   deletedAt           DateTime?       @map("deleted_at") @db.Timestamptz(3)
   followerCount       Int             @default(0) @map("follower_count")
   followingCount      Int             @default(0) @map("following_count")

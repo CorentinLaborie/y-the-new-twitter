@@ -49,3 +49,32 @@ export function resendEmailChange(): Promise<ApiResult<void>> {
 export function confirmEmailChange(code: string): Promise<ApiResult<void>> {
   return protectedApiRequest<void>('POST', '/auth/email-change/confirm', { body: { code } });
 }
+
+/** The reasons of a deletion, as the administrator's list (backend/src/admin/users/account-deletion-reasons.ts). */
+export const DELETION_REASONS = [
+  { value: 'abuse', label: 'Abus' },
+  { value: 'spam', label: 'Spam' },
+  { value: 'harassment', label: 'Harcèlement' },
+  { value: 'identity_theft', label: 'Usurpation d’identité' },
+  { value: 'other', label: 'Autre' },
+] as const;
+
+export type DeletionReasonCode = (typeof DELETION_REASONS)[number]['value'];
+
+export type AccountDeletionRequest = {
+  password: string;
+  reasonCode: DeletionReasonCode;
+  otherReason?: string;
+  email: string;
+};
+
+/** The answer to a deletion request: the date the account is purged. */
+export type AccountDeletionReceipt = { deletionPurgeAt: string };
+
+/**
+ * Asks for the deletion of the account (200, the purge date). The session is closed by the server: the caller shows the
+ * answer on the same page and sends the visitor to the login page when they choose to.
+ */
+export function requestAccountDeletion(request: AccountDeletionRequest): Promise<ApiResult<AccountDeletionReceipt>> {
+  return protectedApiRequest<AccountDeletionReceipt>('PUT', '/users/me/deletion', { body: request });
+}

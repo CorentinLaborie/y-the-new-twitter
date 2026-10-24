@@ -21,10 +21,16 @@ export class AccountDeletionRepository {
   }
 
   /**
-   * Moves an active account to pending_deletion, recalculates the counters that the account no longer adds to, and
-   * closes every session of the account, in one transaction. False when the account is not active any more.
+   * Moves an active account to pending_deletion, keeps the reason and the e-mail of the request, recalculates the
+   * counters that the account no longer adds to, and closes every session of the account, in one transaction. False
+   * when the account is not active any more.
    */
-  startDeletion(userId: string, now: Date, purgeAt: Date): Promise<boolean> {
+  startDeletion(
+    userId: string,
+    now: Date,
+    purgeAt: Date,
+    deletion: { reason: string; email: string },
+  ): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
       const result = await tx.user.updateMany({
         where: { id: userId, status: 'active' },
@@ -34,6 +40,8 @@ export class AccountDeletionRepository {
           deletionRequestedAt: now,
           deletionPurgeAt: purgeAt,
           deletionOrigin: 'user',
+          deletionReason: deletion.reason,
+          deletionEmail: deletion.email,
         },
       });
       if (result.count !== 1) {
