@@ -7,7 +7,7 @@ import { ReportsRepository } from './reports.repository';
 import { ReportsService } from './reports.service';
 
 type Repository = jest.Mocked<
-  Pick<ReportsRepository, 'findVisibleQuestion' | 'findVisibleReply' | 'createReport'>
+  Pick<ReportsRepository, 'findVisibleQuestion' | 'findVisibleReply' | 'createReport' | 'findOwnReport'>
 >;
 type Users = jest.Mocked<Pick<UsersRepository, 'lockActiveAccount'>>;
 type Idempotency = jest.Mocked<Pick<IdempotencyService, 'run'>>;
@@ -36,6 +36,7 @@ describe('ReportsService (L6, S1)', () => {
       findVisibleQuestion: jest.fn().mockResolvedValue({ id: QUESTION_ID, authorId: 'user-2' }),
       findVisibleReply: jest.fn().mockResolvedValue({ id: REPLY_ID, authorId: 'user-2' }),
       createReport: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: CREATED_AT }),
+      findOwnReport: jest.fn().mockResolvedValue(null),
     };
     users = { lockActiveAccount: jest.fn().mockResolvedValue(true) };
     idempotency = { run: jest.fn((_user, _key, _fingerprint, write) => write(TX)) } as unknown as Idempotency;
@@ -178,6 +179,44 @@ describe('ReportsService (L6, S1)', () => {
 
       expect(idempotency.run).toHaveBeenCalledWith(REPORTER.id, key, expect.any(String), expect.any(Function));
       expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+describe('reading (L6, read route)', () => {
+    const OWN_ROW = {
+      id: 'report-1',
+      status: 'open',
+      reason: 'spam',
+      details: null,
+      createdAt: CREATED_AT,
+      questionId: QUESTION_ID,
+      replyId: null,
+    };
+
+    it('returns the report of its author, with its target', async () => {
+      repository.findOwnReport.mockResolvedValue(OWN_ROW);
+
+      await expect(service.get(REPORTER, 'report-1')).resolves.toEqual({
+        id: 'report-1',
+        status: 'open',
+        targetKind: 'question',
+        targetId: QUESTION_ID,
+        reason: 'spam',
+        details: null,
+        createdAt: CREATED_AT,
+      });
+      expect(repository.findOwnReport).toHaveBeenCalledWith(prisma, REPORTER.id, 'report-1');
+    });
+
+    it('answers a reply report with the reply as target', async () => {
+      repository.findOwnReport.mockResolvedValue({ ...OWN_ROW, questionId: null, replyId: REPLY_ID });
+
+      await expect(service.get(REPORTER, 'report-1')).resolves.toMatchObject({ targetKind: 'reply', targetId: REPLY_ID });
+    });
+
+    it('answers a report of another account, or an unknown id, as not found (404)', async () => {
+      repository.findOwnReport.mockResolvedValue(null);
+
+      await expect(service.get(REPORTER, 'report-1')).rejects.toThrow(NotFoundException);
     });
   });
 });

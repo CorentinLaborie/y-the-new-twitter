@@ -44,7 +44,7 @@ describe('Notification preferences (e2e, L5 step 8)', () => {
     const agent = request.agent(app.getHttpServer());
     const status = await agent.get('/api/v1/status').expect(200);
     const cookies = status.headers['set-cookie'] as unknown as string[];
-    const csrf = cookies.find((value) => value.startsWith('y_csrf=')).split(';')[0].split('=')[1];
+    const csrf = cookies.find((value) => value.startsWith('y_csrf='))!.split(';')[0]!.split('=')[1]!;
     await agent.post(`/api/v1/session-probe/login/${userId}`).set('x-csrf-token', csrf).expect(201);
     return { agent, csrf };
   }

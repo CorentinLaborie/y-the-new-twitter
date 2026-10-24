@@ -15,6 +15,7 @@ import { PrismaService } from '../database/prisma.service';
 import { characterCount } from '../questions/question-text';
 import { ACCOUNT_NOT_ACTIVE_MESSAGE, UsersRepository } from '../users/users.repository';
 import type { CreateReportDto } from './dto/create-report.dto';
+import type { ReportDetailDto } from './dto/report-detail.dto';
 import type { ReportResponseDto } from './dto/report-response.dto';
 import { ReportsDb, ReportsRepository } from './reports.repository';
 
@@ -24,6 +25,7 @@ const TARGET_MESSAGE = 'Un signalement vise une seule question ou une seule rép
 const CONTENT_NOT_FOUND = 'Contenu introuvable.';
 const DETAILS_REQUIRED = 'Précisez le motif.';
 const DETAILS_TOO_LONG = 'Le détail doit contenir 280 caractères au maximum.';
+const REPORT_NOT_FOUND = 'Signalement introuvable.';
 const OWN_CONTENT = 'Vous ne pouvez pas signaler votre propre contenu.';
 
 /** The content a report points at: a question or a reply, never both. */
@@ -74,6 +76,24 @@ export class ReportsService {
       requestHash('POST /reports', JSON.stringify({ target, reason: dto.reason, details })),
       write,
     );
+  }
+
+  /** The reporter reads their own report. Another account, or an unknown id, is not found (404). */
+  async get(reporter: SessionUser, reportId: string): Promise<ReportDetailDto> {
+    const row = await this.reports.findOwnReport(this.prisma, reporter.id, reportId);
+    if (!row) {
+      throw new NotFoundException(REPORT_NOT_FOUND);
+    }
+
+    return {
+      id: row.id,
+      status: row.status,
+      targetKind: row.questionId !== null ? 'question' : 'reply',
+      targetId: (row.questionId ?? row.replyId) as string,
+      reason: row.reason,
+      details: row.details,
+      createdAt: row.createdAt,
+    };
   }
 
   /**

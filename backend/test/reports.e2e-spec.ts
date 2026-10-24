@@ -228,4 +228,25 @@ describe('Reports (e2e, L6 S1)', () => {
     expect(second.body.id).toBe(first.body.id);
     expect(await sql(`SELECT count(*) FROM reports WHERE reporter_id = '${reporter}';`)).toBe('1');
   });
+  it('lets the reporter read their own report (200), and answers another account 404', async () => {
+    const author = await createUser('active');
+    await loginAs(author);
+    const questionId = await writeQuestion('Question à relire après signalement');
+    const reporter = await createUser('active');
+    await loginAs(reporter);
+    const created = await postReport({ questionId, reason: 'spam' }).expect(201);
+
+    const own = await agent.get(`/api/v1/reports/${created.body.id}`).expect(200);
+    expect(own.body).toMatchObject({ id: created.body.id, status: 'open', targetKind: 'question', targetId: questionId, reason: 'spam' });
+
+    await loginAs(author);
+    await agent.get(`/api/v1/reports/${created.body.id}`).expect(404);
+  });
+
+  it('answers an id that is not a UUID with 400', async () => {
+    const reporter = await createUser('active');
+    await loginAs(reporter);
+
+    await agent.get('/api/v1/reports/pas-un-uuid').expect(400);
+  });
 });

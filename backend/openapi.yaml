@@ -974,8 +974,49 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags:
+      tags: &a10
         - Reports
+  /api/v1/reports/{id}:
+    get:
+      operationId: ReportsController_get
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The report of the viewer.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportDetailDto"
+        "400":
+          description: The id is not a UUID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: No report of the viewer has this id.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a10
   /api/v1/feed:
     get:
       operationId: FeedController_page
@@ -1093,7 +1134,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a10
+      tags: &a11
         - Follows
     delete:
       operationId: FollowsController_unfollow
@@ -1139,7 +1180,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a10
+      tags: *a11
   /api/v1/users/{handle}/followers:
     get:
       operationId: FollowsController_followers
@@ -1206,7 +1247,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a10
+      tags: *a11
   /api/v1/users/{handle}/following:
     get:
       operationId: FollowsController_following
@@ -1273,7 +1314,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a10
+      tags: *a11
   /api/v1/users/{handle}:
     get:
       operationId: ProfilesController_profile
@@ -1324,7 +1365,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a11
+      tags: &a12
         - Profiles
   /api/v1/users/{handle}/questions:
     get:
@@ -1391,7 +1432,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a11
+      tags: *a12
   /api/v1/notifications:
     get:
       operationId: NotificationsController_list
@@ -1449,7 +1490,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a12
+      tags: &a13
         - Notifications
   /api/v1/notifications/unread-count:
     get:
@@ -1480,7 +1521,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a12
+      tags: *a13
   /api/v1/notifications/read-all:
     post:
       operationId: NotificationsController_markAllRead
@@ -1519,7 +1560,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a12
+      tags: *a13
   /api/v1/notification-preferences:
     get:
       operationId: NotificationPreferencesController_list
@@ -1543,7 +1584,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a13
+      tags: &a14
         - NotificationPreferences
   /api/v1/notification-preferences/{type}:
     put:
@@ -1591,7 +1632,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/support/messages:
     post:
       operationId: SupportController_send
@@ -1660,7 +1701,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a14
+                    example: &a15
                       database:
                         status: up
                     additionalProperties:
@@ -1686,7 +1727,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a14
+                    example: *a15
                     additionalProperties:
                       type: object
                       required:
@@ -1708,7 +1749,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a15
+                      database: &a16
                         status: up
                     additionalProperties:
                       type: object
@@ -1722,7 +1763,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a16
+                      redis: &a17
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -1737,8 +1778,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a15
-                      redis: *a16
+                      database: *a16
+                      redis: *a17
                     additionalProperties:
                       type: object
                       required:
@@ -2235,6 +2276,42 @@ components:
       required:
         - id
         - status
+        - createdAt
+    ReportDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - open
+            - closed
+        targetKind:
+          type: string
+          enum:
+            - question
+            - reply
+        targetId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          example: spam
+        details:
+          type: string
+          nullable: true
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - status
+        - targetKind
+        - targetId
+        - reason
+        - details
         - createdAt
     FeedPageDto:
       type: object

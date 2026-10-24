@@ -25,6 +25,14 @@ export class ReportsRepository {
     });
   }
 
+  /** The report of this reporter only: another account's report is not found (the reporter is never revealed). */
+  findOwnReport(db: ReportsDb, reporterId: string, reportId: string) {
+    return db.report.findFirst({
+      where: { id: reportId, reporterId },
+      select: { id: true, status: true, reason: true, details: true, createdAt: true, questionId: true, replyId: true },
+    });
+  }
+
   /** One row per report: the same account may report the same content several times (DEC, plan section 6). */
   createReport(
     db: ReportsDb,

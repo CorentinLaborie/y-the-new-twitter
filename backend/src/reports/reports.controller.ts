@@ -1,10 +1,11 @@
-import { Body, Controller, Headers, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
-import { ApiCreatedResponse, ApiHeader } from '@nestjs/swagger';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Res } from '@nestjs/common';
+import { ApiCreatedResponse, ApiHeader, ApiOkResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/session/access.decorators';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { problemDetailsResponse } from '../common/problem-details/problem-details.swagger';
 import { CreateReportDto } from './dto/create-report.dto';
+import { ReportDetailDto } from './dto/report-detail.dto';
 import { ReportResponseDto } from './dto/report-response.dto';
 import { ReportsService } from './reports.service';
 
@@ -49,5 +50,15 @@ export class ReportsController {
     response.setHeader('Location', `/api/v1/reports/${report.id}`);
 
     return report;
+  }
+
+  @Get('reports/:id')
+  @ApiOkResponse({ description: 'The report of the viewer.', type: ReportDetailDto })
+  @problemDetailsResponse(400, 'The id is not a UUID.')
+  @problemDetailsResponse(401, 'Not logged in.')
+  @problemDetailsResponse(403, 'The account is not active.')
+  @problemDetailsResponse(404, 'No report of the viewer has this id.')
+  get(@CurrentUser() reporter: SessionUser, @Param('id', ParseUUIDPipe) id: string): Promise<ReportDetailDto> {
+    return this.reports.get(reporter, id);
   }
 }
