@@ -184,8 +184,8 @@ describe('ReportsService (L6, S1)', () => {
 describe('reading (L6, read route)', () => {
     const OWN_ROW = {
       id: 'report-1',
-      status: 'open',
-      reason: 'spam',
+      status: 'open' as const,
+      reason: 'spam' as const,
       details: null,
       createdAt: CREATED_AT,
       questionId: QUESTION_ID,

@@ -38,6 +38,8 @@ export async function eraseAccount(db: ErasureDb, userId: string, now: Date): Pr
       handle: placeholderHandle(userId),
       displayName: ERASED_DISPLAY_NAME,
       email: placeholderEmail(userId),
+      deletionEmail: null,
+      deletionReason: null,
       phone: null,
       passwordHash: UNUSABLE_PASSWORD_HASH,
       birthDate: null,
