@@ -1,5 +1,7 @@
 'use client';
 
+import { TOUCH_LINK } from './touch-link';
+import { DESTRUCTIVE } from './destructive-style';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -72,10 +74,10 @@ export function SettingsHub() {
           </p>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             <li>
-              <Link href="/settings/email">Changer d’adresse e-mail</Link>
+              <Link href="/settings/email" style={TOUCH_LINK}>Changer d’adresse e-mail</Link>
             </li>
             <li>
-              <Link href="/settings/password">Changer de mot de passe</Link>
+              <Link href="/settings/password" style={TOUCH_LINK}>Changer de mot de passe</Link>
             </li>
           </ul>
         </section>
@@ -83,7 +85,7 @@ export function SettingsHub() {
 
       <section aria-labelledby="notifications-title">
         <h2 id="notifications-title">Notifications</h2>
-        <Link href="/settings/notifications">Gérer mes notifications</Link>
+        <Link href="/settings/notifications" style={TOUCH_LINK}>Gérer mes notifications</Link>
       </section>
 
       <section aria-labelledby="about-title">
@@ -91,7 +93,7 @@ export function SettingsHub() {
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {LEGAL_LINKS.map((link) => (
             <li key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
+              <Link href={link.href} style={TOUCH_LINK}>{link.label}</Link>
             </li>
           ))}
         </ul>
@@ -101,11 +103,11 @@ export function SettingsHub() {
         <h2 id="session-title" className="y-sr">
           Session et suppression
         </h2>
-        <Link href="/settings/delete-account" className="y-btn y-btn-md y-btn-danger y-btn-pill">
+        <Link href="/settings/delete-account" className="y-btn y-btn-md y-btn-danger y-btn-pill" style={{ ...DESTRUCTIVE, minHeight: 44 }}>
           Supprimer mon compte
         </Link>
         <div style={{ marginTop: 12 }}>
-          <button type="button" className="y-btn y-btn-md y-btn-outline y-btn-pill" onClick={signOut}>
+          <button type="button" className="y-btn y-btn-md y-btn-outline y-btn-pill" style={{ minHeight: 44 }} onClick={signOut}>
             Se déconnecter
           </button>
           {signOutMessage ? <p role="alert">{signOutMessage}</p> : null}

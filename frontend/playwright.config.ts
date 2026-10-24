@@ -31,6 +31,12 @@ export default defineConfig({
       testIgnore: '**/admin*.spec.ts',
       use: { ...devices['Pixel 7'] },
     },
+    {
+      // The settings at 325 px wide (plan L5, decision 14): only the settings specs run here.
+      name: 'mobile-325',
+      testMatch: '**/settings-*.spec.ts',
+      use: { ...devices['Pixel 7'], viewport: { width: 325, height: 640 } },
+    },
   ],
   webServer: [
     // Answers the session check of the protected pages, on the API port (see e2e/session-stub.mjs).

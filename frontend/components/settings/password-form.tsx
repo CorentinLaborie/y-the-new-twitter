@@ -1,5 +1,6 @@
 'use client';
 
+import { TOUCH_LINK } from './touch-link';
 import Link from 'next/link';
 import { useRef, useState, type FormEvent } from 'react';
 import { tooManyAttemptsMessage } from '@/components/auth/messages';
@@ -112,7 +113,7 @@ export function PasswordForm() {
             {errors.current}
           </p>
         ) : null}
-        <Link href="/forgot-password">Mot de passe oublié ?</Link>
+        <Link href="/forgot-password" style={TOUCH_LINK}>Mot de passe oublié ?</Link>
       </div>
 
       <div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { DESTRUCTIVE } from './destructive-style';
 import { useState, type FormEvent } from 'react';
 import { SheetDialog } from '@/components/dialog/sheet-dialog';
 import { tooManyAttemptsMessage } from '@/components/auth/messages';
@@ -179,7 +180,7 @@ export function DeleteAccountForm() {
           {errors.email ? <p role="alert">{errors.email}</p> : null}
         </div>
 
-        <button type="submit" className="y-btn y-btn-md y-btn-danger y-btn-pill" style={{ minHeight: 44, marginTop: 16 }}>
+        <button type="submit" className="y-btn y-btn-md y-btn-danger y-btn-pill" style={{ ...DESTRUCTIVE, minHeight: 44, marginTop: 16 }}>
           Demander la suppression
         </button>
         {formMessage !== null ? <p role="alert">{formMessage}</p> : null}
@@ -199,7 +200,7 @@ export function DeleteAccountForm() {
           <button
             type="button"
             className="y-btn y-btn-md y-btn-danger y-btn-pill y-btn-block"
-            style={{ minHeight: 44 }}
+            style={{ ...DESTRUCTIVE, minHeight: 44 }}
             onClick={confirm}
             disabled={sending}
           >

@@ -11,7 +11,7 @@
 #           -DryRun       (affiche les commandes sans les lancer)
 
 param(
-    [ValidateSet('mobile', 'tablet', 'desktop')]
+    [ValidateSet('mobile', 'tablet', 'desktop', 'mobile-325')]
     [string[]]$Project = @('mobile', 'tablet', 'desktop'),
     [switch]$SkipRealApi,
     [switch]$DryRun
@@ -321,7 +321,8 @@ export default {
             Write-Host '   Backend pret (200).'
         }
 
-        foreach ($p in $Project) {
+        # mobile-325 only runs the settings specs at 325 px: the real API tests run on the three boards.
+        foreach ($p in ($Project | Where-Object { $_ -ne 'mobile-325' })) {
             $args2 = @('--config', $configPath, "--project=$p", 'e2e/real-api.spec.ts')
             $logStep2 = Join-Path $env:TEMP "y-e2e-step2-$p-$stamp.log"
             $code2 = Invoke-Playwright "Etape 2 : tests contre la vraie API ($p)" $args2 $logStep2 $npxPath
