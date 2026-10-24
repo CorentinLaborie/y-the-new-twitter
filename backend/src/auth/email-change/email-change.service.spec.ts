@@ -205,3 +205,64 @@ describe('EmailChangeService (B18, B19)', () => {
     });
   });
 });
+
+describe('EmailChangeService.resendChange (L5, step 6)', () => {
+  const OPEN_CODE = { id: 'code-1', newEmail: NEW_EMAIL, codeHash: 'hash', expiresAt: new Date(Date.now() + 60_000) };
+  let codes: Codes;
+  let codeRequests: CodeRequests;
+  let mail: CapturingMailSender;
+  let service: EmailChangeService;
+
+  beforeEach(() => {
+    codes = {
+      findAccount: jest.fn().mockResolvedValue({ email: OLD_EMAIL, status: 'active', passwordHash: 'unused' }),
+      replaceOpenCode: jest.fn().mockResolvedValue(undefined),
+      findOpenCode: jest.fn().mockResolvedValue(OPEN_CODE),
+      reserveAttempt: jest.fn().mockResolvedValue(true),
+      completeChange: jest.fn().mockResolvedValue('changed'),
+    } as unknown as Codes;
+    codeRequests = { allow: jest.fn().mockResolvedValue(true) };
+    mail = new CapturingMailSender();
+    const config = { getOrThrow: jest.fn().mockReturnValue(15) } as unknown as ConfigService;
+    service = new EmailChangeService(
+      { findByEmail: jest.fn().mockResolvedValue(null) } as unknown as UsersRepository,
+      codes as unknown as EmailChangeCodesRepository,
+      codeRequests as unknown as CodeRequestLimitService,
+      config,
+      mail,
+    );
+  });
+
+  it('sends a new code to the address of the open change, and replaces the stored one', async () => {
+    await service.resendChange(USER_ID);
+
+    expect(codes.replaceOpenCode).toHaveBeenCalledWith(USER_ID, NEW_EMAIL, expect.any(String), expect.any(Date));
+    expect(mail.messages()).toHaveLength(1);
+    expect(mail.messages()[0]?.to).toBe(NEW_EMAIL);
+    const code = codeFromMail(mail.messages()[0]!.text);
+    const [, , storedHash] = (codes.replaceOpenCode as jest.Mock).mock.calls[0]!;
+    expect(await verifyCode(storedHash, code)).toBe(true);
+  });
+
+  it('sends nothing when no change is open', async () => {
+    codes.findOpenCode.mockResolvedValue(null);
+
+    await service.resendChange(USER_ID);
+
+    expect(codes.replaceOpenCode).not.toHaveBeenCalled();
+    expect(mail.messages()).toHaveLength(0);
+  });
+
+  it('refuses a resend beyond the code request limit (429), and sends nothing', async () => {
+    codeRequests.allow.mockResolvedValue(false);
+
+    await expect(service.resendChange(USER_ID)).rejects.toMatchObject({ status: 429 });
+    expect(mail.messages()).toHaveLength(0);
+  });
+
+  it('refuses an account that is not active (401)', async () => {
+    codes.findAccount.mockResolvedValue({ email: OLD_EMAIL, status: 'suspended', passwordHash: 'unused' });
+
+    await expect(service.resendChange(USER_ID)).rejects.toThrow(UnauthorizedException);
+  });
+});

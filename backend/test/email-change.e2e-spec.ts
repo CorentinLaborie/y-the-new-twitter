@@ -252,4 +252,32 @@ describe('E-mail change (e2e, B18 and B19)', () => {
       expect(await sql(`SELECT email FROM users WHERE id = '${user.id}';`)).toBe(user.email);
     });
   });
+
+  describe('resend (L5, step 6)', () => {
+    function resendChange() {
+      return agent.post('/api/v1/auth/email-change/resend').set('x-csrf-token', csrf!);
+    }
+
+    it('answers 202 and sends the open code again to the same new address', async () => {
+      const user = await createUser();
+      await loginAs(user.id);
+      const newEmail = `resend-${counter}@example.test`;
+      await requestChange(newEmail).expect(202);
+
+      await resendChange().expect(202);
+
+      expect(mail.messages().map((message) => message.to)).toEqual([newEmail, newEmail]);
+    });
+
+    it('answers 202 and sends nothing when no change is open', async () => {
+      const user = await createUser();
+      await loginAs(user.id);
+      const before = mail.messages().length;
+
+      await resendChange().expect(202);
+
+      expect(mail.messages().length).toBe(before);
+    });
+
+  });
 });

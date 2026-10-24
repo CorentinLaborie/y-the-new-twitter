@@ -19,6 +19,14 @@ export class EmailChangeController {
     return this.emailChange.requestChange(sessionUserId(req), body.newEmail, body.password);
   }
 
+  @Post('resend')
+  @AuthRateLimit('code-request')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @problemDetailsResponse(429, 'More than three resends in an hour.')
+  resend(@Req() req: Request): Promise<void> {
+    return this.emailChange.resendChange(sessionUserId(req));
+  }
+
   @Post('confirm')
   @AuthRateLimit('code-confirm')
   @HttpCode(HttpStatus.OK)

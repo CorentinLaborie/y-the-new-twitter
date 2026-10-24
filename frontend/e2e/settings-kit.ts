@@ -10,6 +10,9 @@ export type SettingsHandlers = {
   account?: () => Reply | Promise<Reply>;
   logout?: () => Reply | Promise<Reply>;
   password?: (body: { currentPassword: string; newPassword: string }) => Reply | Promise<Reply>;
+  emailRequest?: (body: { newEmail: string; password: string }) => Reply | Promise<Reply>;
+  emailResend?: () => Reply | Promise<Reply>;
+  emailConfirm?: (body: { code: string }) => Reply | Promise<Reply>;
 };
 
 /** The account as GET /users/me/account sends it. */
@@ -36,6 +39,8 @@ function corsHeaders(origin: string | undefined) {
 export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {}) {
   const logoutCalls: string[] = [];
   const passwordCalls: { currentPassword: string; newPassword: string }[] = [];
+  const emailRequestCalls: { newEmail: string; password: string }[] = [];
+  const emailConfirmCalls: string[] = [];
 
   await page.route(`${API_ORIGIN}/api/v1/**`, async (route) => {
     const request = route.request();
@@ -53,6 +58,16 @@ export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {
       const body = JSON.parse(request.postData() ?? '{}') as { currentPassword: string; newPassword: string };
       passwordCalls.push(body);
       reply = handlers.password ? await handlers.password(body) : { status: 204 };
+    } else if (request.method() === 'POST' && path === '/auth/email-change/request') {
+      const body = JSON.parse(request.postData() ?? '{}') as { newEmail: string; password: string };
+      emailRequestCalls.push(body);
+      reply = handlers.emailRequest ? await handlers.emailRequest(body) : { status: 202 };
+    } else if (request.method() === 'POST' && path === '/auth/email-change/resend') {
+      reply = handlers.emailResend ? await handlers.emailResend() : { status: 202 };
+    } else if (request.method() === 'POST' && path === '/auth/email-change/confirm') {
+      const body = JSON.parse(request.postData() ?? '{}') as { code: string };
+      emailConfirmCalls.push(body.code);
+      reply = handlers.emailConfirm ? await handlers.emailConfirm(body) : { status: 200 };
     } else if (request.method() === 'POST' && path === '/auth/logout') {
       logoutCalls.push(path);
       reply = handlers.logout ? await handlers.logout() : { status: 204 };
@@ -70,7 +85,7 @@ export async function mockSettingsApi(page: Page, handlers: SettingsHandlers = {
     });
   });
 
-  return { logoutCalls, passwordCalls };
+  return { logoutCalls, passwordCalls, emailRequestCalls, emailConfirmCalls };
 }
 
 /** A problem of a refused call, in the Problem Details shape. */

@@ -1,5 +1,7 @@
 import {
   ConflictException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -18,6 +20,7 @@ const NOT_LOGGED_IN = 'Vous devez être connecté.';
 const WRONG_PASSWORD = 'Le mot de passe est incorrect.';
 const INVALID_CODE = 'Le code est incorrect ou a expiré.';
 const ADDRESS_TAKEN = 'Cette adresse e-mail est déjà utilisée.';
+const RESEND_LIMIT = 'Trop de tentatives. Réessayez plus tard.';
 
 @Injectable()
 export class EmailChangeService {
@@ -51,6 +54,26 @@ export class EmailChangeService {
 
     await this.codes.replaceOpenCode(userId, newEmail, codeHash, this.expiresAt());
     await this.mail.send(newAddressCodeMail(newEmail, code, this.ttlMinutes()));
+  }
+
+  /**
+   * Sends the open code again, to the new address it was sent to (decision 13). Each resend gets a new code and a new
+   * expiry. Without an open change nothing is sent. Beyond the code request limit (3 an hour, section 9.4) the answer is
+   * 429, as the password limit does.
+   */
+  async resendChange(userId: string): Promise<void> {
+    await this.activeAccount(userId);
+    const openCode = await this.codes.findOpenCode(userId);
+    if (!openCode) {
+      return;
+    }
+    if (!(await this.codeRequests.allow({ userId }))) {
+      throw new HttpException(RESEND_LIMIT, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    const code = generateCode();
+    await this.codes.replaceOpenCode(userId, openCode.newEmail, await hashCode(code), this.expiresAt());
+    await this.mail.send(newAddressCodeMail(openCode.newEmail, code, this.ttlMinutes()));
   }
 
   /**
