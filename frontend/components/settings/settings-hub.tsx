@@ -88,6 +88,11 @@ export function SettingsHub() {
         <Link href="/settings/notifications" style={TOUCH_LINK}>Gérer mes notifications</Link>
       </section>
 
+      <section aria-labelledby="privacy-title">
+        <h2 id="privacy-title">Confidentialité</h2>
+        <Link href="/settings/blocked" style={TOUCH_LINK}>Comptes bloqués</Link>
+      </section>
+
       <section aria-labelledby="about-title">
         <h2 id="about-title">Aide et à propos</h2>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>

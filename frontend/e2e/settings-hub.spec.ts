@@ -18,6 +18,7 @@ test('the hub shows the e-mail of the account, the sections and the legal links'
   await expect(page.getByText('alice@example.test')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Changer de mot de passe' })).toHaveAttribute('href', '/settings/password');
   await expect(page.getByRole('link', { name: 'Politique de confidentialité' })).toHaveAttribute('href', '/privacy');
+  await expect(page.getByRole('link', { name: 'Comptes bloqués' })).toHaveAttribute('href', '/settings/blocked');
   await expect(page.getByRole('link', { name: 'Supprimer mon compte' })).toHaveAttribute('href', '/settings/delete-account');
 });
 

@@ -42,6 +42,15 @@ describe('SettingsHub', () => {
     expect(screen.getByRole('link', { name: 'Gérer mes notifications' })).toHaveAttribute('href', '/settings/notifications');
   });
 
+  it('links the blocked accounts under Confidentialité', async () => {
+    vi.mocked(getAccount).mockResolvedValue({ ok: true, status: 200, body: ACCOUNT });
+
+    render(<SettingsHub />);
+    await screen.findByText('alice@example.test');
+
+    expect(screen.getByRole('link', { name: 'Comptes bloqués' })).toHaveAttribute('href', '/settings/blocked');
+  });
+
   it('links the legal pages under Aide et à propos, and the deletion', async () => {
     vi.mocked(getAccount).mockResolvedValue({ ok: true, status: 200, body: ACCOUNT });
 
