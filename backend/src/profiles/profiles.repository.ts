@@ -71,4 +71,12 @@ export class ProfilesRepository {
       select: { questionId: true, kind: true },
     });
   }
+
+  /** The questions among these that the viewer saved (viewerSaved, L4). */
+  findViewerSaved(viewerId: string, questionIds: readonly string[]) {
+    return this.prisma.bookmark.findMany({
+      where: { userId: viewerId, questionId: { in: [...questionIds] } },
+      select: { questionId: true },
+    });
+  }
 }

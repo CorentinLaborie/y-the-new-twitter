@@ -24,6 +24,7 @@ import { BlocksModule } from './blocks/blocks.module';
 import { ReportsModule } from './reports/reports.module';
 import { FeedModule } from './feed/feed.module';
 import { FollowsModule } from './follows/follows.module';
+import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SupportModule } from './support/support.module';
@@ -53,6 +54,7 @@ import { SupportModule } from './support/support.module';
     ReportsModule,
     FeedModule,
     FollowsModule,
+    BookmarksModule,
     ProfilesModule,
     NotificationsModule,
     SupportModule,

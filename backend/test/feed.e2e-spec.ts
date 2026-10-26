@@ -165,6 +165,7 @@ describe('Feed "Pour vous" and "Abonnements" (e2e, B6, L3)', () => {
       'id',
       'text',
       'viewerReactions',
+      'viewerSaved',
       'yThreshold',
     ]);
     expect(page.questions[0]).toMatchObject({

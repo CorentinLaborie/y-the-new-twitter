@@ -54,12 +54,14 @@ export class FeedService {
       ...page,
     ]);
     const followedAuthors = await this.followedAuthorIds(viewer.id, [...trendingRows, ...page]);
+    const savedIds = await this.viewerSavedIds(viewer.id, [...trendingRows, ...page]);
     const toView = (row: QuestionRow) =>
       toQuestionView(
         row,
         threshold,
         viewerReactionsByQuestion.get(row.id) ?? [],
         followedAuthors.has(row.authorId),
+        savedIds.has(row.id),
       );
 
     return {
@@ -77,6 +79,7 @@ export class FeedService {
     const page = rows.slice(0, limit);
     const viewerReactionsByQuestion = await this.viewerReactionsByQuestion(viewer.id, page);
     const followedAuthors = await this.followedAuthorIds(viewer.id, page);
+    const savedIds = await this.viewerSavedIds(viewer.id, page);
 
     return {
       trending: [],
@@ -86,6 +89,7 @@ export class FeedService {
           threshold,
           viewerReactionsByQuestion.get(row.id) ?? [],
           followedAuthors.has(row.authorId),
+          savedIds.has(row.id),
         ),
       ),
       nextCursor: nextCursorOf(rows, limit),
@@ -116,6 +120,16 @@ export class FeedService {
     );
 
     return new Set(follows.map((follow) => follow.followeeId));
+  }
+
+  /** The ids of these questions that the viewer saved (viewerSaved, L4). */
+  private async viewerSavedIds(viewerId: string, rows: readonly QuestionRow[]): Promise<Set<string>> {
+    const saved = await this.questions.findViewerSaved(
+      viewerId,
+      rows.map((row) => row.id),
+    );
+
+    return new Set(saved.map((row) => row.questionId));
   }
 
   /** The viewer's own reaction on each of these questions, by question id (at most one, R11). */

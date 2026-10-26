@@ -67,12 +67,14 @@ export class QuestionsService {
     }
     const reactions = await this.questions.findViewerReactions(viewer.id, [questionId]);
     const follows = await this.questions.findFollowedAuthorIds(viewer.id, [row.authorId]);
+    const saved = await this.questions.findViewerSaved(viewer.id, [questionId]);
 
     return toQuestionView(
       row,
       this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD'),
       reactions.map((reaction) => reaction.kind),
       follows.length > 0,
+      saved.length > 0,
     );
   }
 
@@ -96,6 +98,7 @@ export class QuestionsService {
       },
       this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD'),
       [],
+      false,
       false,
     );
   }

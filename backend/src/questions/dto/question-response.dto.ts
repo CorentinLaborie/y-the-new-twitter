@@ -68,4 +68,10 @@ export class QuestionResponseDto {
       'The reaction of the signed-in viewer on this question, at most one (R11). Empty for anonymous views.',
   })
   readonly viewerReactions!: readonly string[];
+
+  @ApiProperty({
+    description:
+      'Whether the signed-in viewer saved this question (L4, section 9.2). False for anonymous views and for the question just published.',
+  })
+  readonly viewerSaved!: boolean;
 }

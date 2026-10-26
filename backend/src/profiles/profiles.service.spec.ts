@@ -8,7 +8,7 @@ import { PROFILE_NOT_FOUND_MESSAGE, ProfilesService } from './profiles.service';
 type Repository = jest.Mocked<
   Pick<
     ProfilesRepository,
-    'findVisibleAccount' | 'viewerFollows' | 'findQuestionPage' | 'findViewerReactions'
+    'findVisibleAccount' | 'viewerFollows' | 'findQuestionPage' | 'findViewerReactions' | 'findViewerSaved'
   >
 >;
 
@@ -55,6 +55,7 @@ describe('ProfilesService (L1)', () => {
       viewerFollows: jest.fn().mockResolvedValue(false),
       findQuestionPage: jest.fn().mockResolvedValue([]),
       findViewerReactions: jest.fn().mockResolvedValue([]),
+      findViewerSaved: jest.fn().mockResolvedValue([]),
     };
     const config = { getOrThrow: jest.fn().mockReturnValue(50) } as unknown as ConfigService;
     service = new ProfilesService(repository as unknown as ProfilesRepository, config);

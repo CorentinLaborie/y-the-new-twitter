@@ -1315,6 +1315,148 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a11
+  /api/v1/questions/{questionId}/bookmark:
+    put:
+      operationId: BookmarksController_save
+      parameters:
+        - name: questionId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          description: The question is saved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookmarkStateDto"
+        "400":
+          description: The question id is not a UUID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The question does not exist, or it is hidden, deleted or blocked.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a12
+        - Bookmarks
+    delete:
+      operationId: BookmarksController_remove
+      parameters:
+        - name: questionId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "204":
+          description: The question is no longer saved, or it was not saved.
+        "400":
+          description: The question id is not a UUID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a12
+  /api/v1/bookmarks:
+    get:
+      operationId: BookmarksController_list
+      parameters:
+        - name: cursor
+          required: false
+          in: query
+          description: nextCursor of the previous page. Absent for the first page.
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            allOf:
+              - $ref: "#/components/schemas/Object"
+      responses:
+        "200":
+          description: The saved questions, the most recently saved first, with a cursor
+            for the next page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookmarkPageDto"
+        "400":
+          description: The cursor or the limit is invalid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a12
   /api/v1/users/{handle}:
     get:
       operationId: ProfilesController_profile
@@ -1365,7 +1507,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a12
+      tags: &a13
         - Profiles
   /api/v1/users/{handle}/questions:
     get:
@@ -1432,7 +1574,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a12
+      tags: *a13
   /api/v1/notifications:
     get:
       operationId: NotificationsController_list
@@ -1490,7 +1632,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a13
+      tags: &a14
         - Notifications
   /api/v1/notifications/unread-count:
     get:
@@ -1521,7 +1663,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/notifications/read-all:
     post:
       operationId: NotificationsController_markAllRead
@@ -1560,7 +1702,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/notification-preferences:
     get:
       operationId: NotificationPreferencesController_list
@@ -1584,7 +1726,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a14
+      tags: &a15
         - NotificationPreferences
   /api/v1/notification-preferences/{type}:
     put:
@@ -1632,7 +1774,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a14
+      tags: *a15
   /api/v1/support/messages:
     post:
       operationId: SupportController_send
@@ -1701,7 +1843,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a15
+                    example: &a16
                       database:
                         status: up
                     additionalProperties:
@@ -1727,7 +1869,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a15
+                    example: *a16
                     additionalProperties:
                       type: object
                       required:
@@ -1749,7 +1891,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a16
+                      database: &a17
                         status: up
                     additionalProperties:
                       type: object
@@ -1763,7 +1905,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a17
+                      redis: &a18
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -1778,8 +1920,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a16
-                      redis: *a17
+                      database: *a17
+                      redis: *a18
                     additionalProperties:
                       type: object
                       required:
@@ -2018,6 +2160,10 @@ components:
               - like
               - dislike
               - y
+        viewerSaved:
+          type: boolean
+          description: Whether the signed-in viewer saved this question (L4, section 9.2).
+            False for anonymous views and for the question just published.
       required:
         - id
         - text
@@ -2028,6 +2174,7 @@ components:
         - yThreshold
         - conversationOpen
         - viewerReactions
+        - viewerSaved
     CreateQuestionDto:
       type: object
       properties:
@@ -2375,6 +2522,32 @@ components:
           example: MjAyNi0xMC0yMlQxMDowMDowMC4wMDBafDBmOGMxZDJlLTNhNGItNGM1ZC04ZTZmLTdhOGI5YzBkMWUyZg
       required:
         - items
+        - nextCursor
+    BookmarkStateDto:
+      type: object
+      properties:
+        questionId:
+          type: string
+          format: uuid
+        saved:
+          type: boolean
+          example: true
+          description: "Always true: the question is saved."
+      required:
+        - questionId
+        - saved
+    BookmarkPageDto:
+      type: object
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionResponseDto"
+        nextCursor:
+          type: string
+          nullable: true
+      required:
+        - questions
         - nextCursor
     ProfileResponseDto:
       type: object

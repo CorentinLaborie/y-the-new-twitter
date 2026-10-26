@@ -1,0 +1,62 @@
+import { Injectable } from '@nestjs/common';
+import type { KeysetPosition } from '../common/pagination/keyset-cursor';
+import type { Prisma } from '../database/generated/client/client';
+import { PrismaService } from '../database/prisma.service';
+import { QUESTION_VIEW_INCLUDE, visibleTo } from '../questions/question-view';
+
+/** The rows after a keyset position, in the order (saved at desc, question id desc): the newest saves first. */
+function afterPosition(after: KeysetPosition | undefined): Prisma.BookmarkWhereInput {
+  if (after === undefined) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { createdAt: { lt: after.createdAt } },
+      { createdAt: after.createdAt, questionId: { lt: after.id } },
+    ],
+  };
+}
+
+/** The only place that reads and writes the saved questions (bookmark rows, L4). */
+@Injectable()
+export class BookmarksRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /** The question id, when the viewer may see the question (visibleTo, R13, R14). Null when it is not visible. */
+  findVisibleQuestion(viewerId: string, questionId: string) {
+    return this.prisma.question.findFirst({
+      where: { AND: [{ id: questionId }, visibleTo(viewerId)] },
+      select: { id: true },
+    });
+  }
+
+  /** Saves the question. True only when the row is new: saving it again changes nothing (idempotence). */
+  async createBookmark(viewerId: string, questionId: string): Promise<boolean> {
+    const result = await this.prisma.bookmark.createMany({
+      data: { userId: viewerId, questionId },
+      skipDuplicates: true,
+    });
+
+    return result.count === 1;
+  }
+
+  deleteBookmark(viewerId: string, questionId: string) {
+    return this.prisma.bookmark.deleteMany({ where: { userId: viewerId, questionId } });
+  }
+
+  /**
+   * One page of the saved questions, the most recently saved first. A question the viewer may no longer see (hidden,
+   * deleted, author inactive or blocked, R13, R14) is left out, like in the feed.
+   */
+  findPage(viewerId: string, after: KeysetPosition | undefined, take: number) {
+    return this.prisma.bookmark.findMany({
+      where: {
+        AND: [{ userId: viewerId }, { question: visibleTo(viewerId) }, afterPosition(after)],
+      },
+      orderBy: [{ createdAt: 'desc' }, { questionId: 'desc' }],
+      take,
+      include: { question: { include: QUESTION_VIEW_INCLUDE } },
+    });
+  }
+}

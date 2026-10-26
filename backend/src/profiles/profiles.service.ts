@@ -58,6 +58,11 @@ export class ProfilesService {
     for (const reaction of reactions) {
       kindsByQuestion.set(reaction.questionId, [reaction.kind]);
     }
+    const saved = await this.profiles.findViewerSaved(
+      viewer.id,
+      page.map((row) => row.id),
+    );
+    const savedIds = new Set(saved.map((row) => row.questionId));
     const viewerFollows =
       account.id !== viewer.id && (await this.profiles.viewerFollows(viewer.id, account.id));
     const threshold = this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD');
@@ -65,7 +70,13 @@ export class ProfilesService {
 
     return {
       questions: page.map((row) =>
-        toQuestionView(row, threshold, kindsByQuestion.get(row.id) ?? [], viewerFollows),
+        toQuestionView(
+          row,
+          threshold,
+          kindsByQuestion.get(row.id) ?? [],
+          viewerFollows,
+          savedIds.has(row.id),
+        ),
       ),
       nextCursor: rows.length > limit && last !== undefined ? encodeKeysetCursor(last) : null,
     };

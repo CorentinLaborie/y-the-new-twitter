@@ -106,6 +106,7 @@ describe('QuestionsService (B2, section 9.1)', () => {
       yThreshold: 50,
       conversationOpen: false,
       viewerReactions: [],
+      viewerSaved: false,
     });
   });
 
@@ -224,7 +225,7 @@ describe('QuestionsService (B2, section 9.1)', () => {
   });
 });
 
-type DetailRepository = jest.Mocked<Pick<QuestionsRepository, 'findVisibleQuestion' | 'findViewerReactions' | 'findFollowedAuthorIds'>>;
+type DetailRepository = jest.Mocked<Pick<QuestionsRepository, 'findVisibleQuestion' | 'findViewerReactions' | 'findViewerSaved' | 'findFollowedAuthorIds'>>;
 type VisibleRow = NonNullable<Awaited<ReturnType<QuestionsRepository['findVisibleQuestion']>>>;
 
 describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
@@ -260,6 +261,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
     repository = {
       findVisibleQuestion: jest.fn().mockResolvedValue(visibleRow()),
       findViewerReactions: jest.fn().mockResolvedValue([]),
+      findViewerSaved: jest.fn().mockResolvedValue([]),
       findFollowedAuthorIds: jest.fn().mockResolvedValue([]),
     } as unknown as DetailRepository;
     const prisma = { $transaction: jest.fn() };
@@ -273,6 +275,15 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
       config,
       mentions as unknown as MentionsService,
     );
+  });
+
+  it('says the viewer saved the question when a saved row exists (viewerSaved, L4)', async () => {
+    repository.findViewerSaved.mockResolvedValue([{ questionId: 'question-1' }] as never);
+
+    const response = await service.findVisible(VIEWER, 'question-1');
+
+    expect(repository.findViewerSaved).toHaveBeenCalledWith('viewer-1', ['question-1']);
+    expect(response.viewerSaved).toBe(true);
   });
 
   it('returns the question as the feed does: counters, Y progress and the viewer reaction', async () => {
@@ -292,6 +303,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
       yThreshold: 50,
       conversationOpen: true,
       viewerReactions: ['y'],
+      viewerSaved: false,
     });
   });
 

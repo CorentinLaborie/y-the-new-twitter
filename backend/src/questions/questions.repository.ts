@@ -35,6 +35,14 @@ export class QuestionsRepository {
     });
   }
 
+  /** The questions among these that the viewer saved (viewerSaved, L4). */
+  findViewerSaved(viewerId: string, questionIds: readonly string[]) {
+    return this.prisma.bookmark.findMany({
+      where: { userId: viewerId, questionId: { in: [...questionIds] } },
+      select: { questionId: true },
+    });
+  }
+
   createQuestion(db: QuestionsDb, authorId: string, body: string) {
     return db.question.create({ data: { authorId, body } });
   }

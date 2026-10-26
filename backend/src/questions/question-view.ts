@@ -51,12 +51,14 @@ type QuestionViewSource = Pick<
  * A question as the API returns it. Hashtags are sorted by name, so every endpoint gives the same order.
  * `viewerReactions` is the reaction the signed-in viewer gave, read by the caller (at most one, R11).
  * `viewerFollowsAuthor` tells whether the viewer follows the author, read by the caller (L3).
+ * `viewerSaved` tells whether the viewer saved the question, read by the caller (L4).
  */
 export function toQuestionView(
   row: QuestionViewSource,
   threshold: number,
   viewerReactions: readonly ReactionKind[],
   viewerFollowsAuthor: boolean,
+  viewerSaved: boolean,
 ): QuestionResponseDto {
   return {
     id: row.id,
@@ -77,5 +79,6 @@ export function toQuestionView(
     yThreshold: threshold,
     conversationOpen: row.conversationOpenedAt !== null,
     viewerReactions: [...viewerReactions],
+    viewerSaved,
   };
 }
