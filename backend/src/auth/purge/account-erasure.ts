@@ -84,18 +84,10 @@ export async function eraseAccount(db: ErasureDb, userId: string, now: Date): Pr
   await db.questionReaction.deleteMany({ where: { userId } });
   await db.replyReaction.deleteMany({ where: { userId } });
 
-  // Follow counters of the other accounts, then the links themselves (R16).
-  const followees = await db.follow.findMany({ where: { followerId: userId }, select: { followeeId: true } });
-  await db.user.updateMany({
-    where: { id: { in: followees.map((row) => row.followeeId) } },
-    data: { followerCount: { decrement: 1 } },
-  });
-  const followers = await db.follow.findMany({ where: { followeeId: userId }, select: { followerId: true } });
-  await db.user.updateMany({
-    where: { id: { in: followers.map((row) => row.followerId) } },
-    data: { followingCount: { decrement: 1 } },
-  });
+  // The follow counters of the other accounts were recounted above, while the links still exist (R13); then the links (R16).
   await db.follow.deleteMany({ where: { OR: [{ followerId: userId }, { followeeId: userId }] } });
+  // The links are gone, so this account has no follower and follows nobody: the recount above counted them (R16).
+  await db.user.updateMany({ where: { id: userId }, data: { followerCount: 0, followingCount: 0 } });
   await db.block.deleteMany({ where: { OR: [{ blockerId: userId }, { blockedId: userId }] } });
 
   await db.bookmark.deleteMany({ where: { userId } });

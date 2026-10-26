@@ -63,7 +63,7 @@ export class FollowsService {
         throw new NotFoundException(ACCOUNT_NOT_FOUND_MESSAGE);
       }
       if (await this.follows.createFollow(tx, viewer.id, target.id)) {
-        await this.follows.changeFollowCounters(tx, viewer.id, target.id, 1);
+        await this.follows.recountCounters(tx, viewer.id, target.id);
         await this.follows.writeFollowNotification(tx, target.id, viewer.id);
       }
 
@@ -78,7 +78,7 @@ export class FollowsService {
       await this.lockViewerAndTarget(tx, viewer.id, target.id);
       const removed = await this.follows.deleteFollow(tx, viewer.id, target.id);
       if (removed.count === 1) {
-        await this.follows.changeFollowCounters(tx, viewer.id, target.id, -1);
+        await this.follows.recountCounters(tx, viewer.id, target.id);
       }
     });
   }

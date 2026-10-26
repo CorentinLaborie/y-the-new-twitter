@@ -53,6 +53,7 @@ function fakeTransaction(accountCount = 1) {
       calls.push('recalculateCounters');
       return 0;
     }),
+    $queryRaw: jest.fn(async () => []),
   };
   return { tx, calls };
 }
@@ -130,22 +131,15 @@ describe('eraseAccount (R16, DEC-024, DEC-067)', () => {
     });
   });
 
-  it('decrements the follower counts of the people it followed and the following counts of its followers', async () => {
+  it('leaves the follow counts of the other accounts to the recount, and removes the links after it', async () => {
     const { tx } = fakeTransaction();
-    tx.follow.findMany
-      .mockResolvedValueOnce([{ followeeId: 'bob' }])
-      .mockResolvedValueOnce([{ followerId: 'carol' }]);
 
     await eraseAccount(tx as unknown as ErasureDb, 'user-1', NOW);
 
-    expect(tx.user.updateMany).toHaveBeenNthCalledWith(2, {
-      where: { id: { in: ['bob'] } },
-      data: { followerCount: { decrement: 1 } },
-    });
-    expect(tx.user.updateMany).toHaveBeenNthCalledWith(3, {
-      where: { id: { in: ['carol'] } },
-      data: { followingCount: { decrement: 1 } },
-    });
+    const decrements = tx.user.updateMany.mock.calls.filter(([args]) =>
+      JSON.stringify(args).includes('decrement'),
+    );
+    expect(decrements).toEqual([]);
     expect(tx.follow.deleteMany).toHaveBeenCalledWith({
       where: { OR: [{ followerId: 'user-1' }, { followeeId: 'user-1' }] },
     });

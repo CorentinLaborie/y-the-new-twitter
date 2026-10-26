@@ -10,6 +10,7 @@ function sqlOf(call: unknown[]): string {
 describe('UsersRepository counters (R13)', () => {
   let tx: {
     user: { update: jest.Mock };
+    follow: { findMany: jest.Mock };
     $executeRaw: jest.Mock;
     $queryRaw: jest.Mock;
   };
@@ -18,6 +19,7 @@ describe('UsersRepository counters (R13)', () => {
   beforeEach(() => {
     tx = {
       user: { update: jest.fn().mockResolvedValue({ id: 'user-1' }) },
+      follow: { findMany: jest.fn().mockResolvedValue([]) },
       $executeRaw: jest.fn().mockResolvedValue(0),
       $queryRaw: jest.fn().mockResolvedValue([{ status: 'active' }]),
     };
@@ -34,7 +36,7 @@ describe('UsersRepository counters (R13)', () => {
         where: { id: 'user-1' },
         data: { status: 'active', emailVerifiedAt: at, statusChangedAt: at },
       });
-      expect(tx.$executeRaw).toHaveBeenCalledTimes(2);
+      expect(tx.$executeRaw).toHaveBeenCalledTimes(3);
       expect(tx.user.update.mock.invocationCallOrder[0]).toBeLessThan(
         tx.$executeRaw.mock.invocationCallOrder[0],
       );
@@ -65,6 +67,19 @@ describe('UsersRepository counters (R13)', () => {
 
       expect(sqlOf(tx.$executeRaw.mock.calls[0])).toContain('UPDATE replies');
       expect(sqlOf(tx.$executeRaw.mock.calls[1])).toContain('UPDATE questions');
+    });
+
+    it('recounts the follow counters of this account and of its links, counting only active accounts, after locking them', async () => {
+      tx.follow.findMany.mockResolvedValueOnce([{ followerId: 'user-2', followeeId: 'user-1' }]);
+
+      await recalculateCounters(tx as never, 'user-1');
+
+      expect(sqlOf(tx.$queryRaw.mock.calls[0])).toContain('FOR UPDATE');
+      const followSql = sqlOf(tx.$executeRaw.mock.calls[2]);
+      expect(followSql).toContain('UPDATE users');
+      expect(followSql).toContain('follower_count');
+      expect(followSql).toContain('following_count');
+      expect(followSql.match(/a\.status = 'active'/g)).toHaveLength(2);
     });
 
     it('limits both statements to the questions and replies this account touched', async () => {

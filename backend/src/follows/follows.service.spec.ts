@@ -19,7 +19,7 @@ type Repository = jest.Mocked<
     | 'createFollow'
     | 'writeFollowNotification'
     | 'deleteFollow'
-    | 'changeFollowCounters'
+    | 'recountCounters'
     | 'findFollowerPage'
     | 'findFollowingPage'
     | 'findFollowedIds'
@@ -56,7 +56,7 @@ describe('FollowsService (E1, E2, E5)', () => {
       createFollow: jest.fn().mockResolvedValue(true),
       writeFollowNotification: jest.fn().mockResolvedValue(undefined),
       deleteFollow: jest.fn().mockResolvedValue({ count: 1 }),
-      changeFollowCounters: jest.fn().mockResolvedValue(undefined),
+      recountCounters: jest.fn().mockResolvedValue(undefined),
       findFollowerPage: jest.fn().mockResolvedValue([]),
       findFollowingPage: jest.fn().mockResolvedValue([]),
       findFollowedIds: jest.fn().mockResolvedValue(new Set<string>()),
@@ -77,10 +77,10 @@ describe('FollowsService (E1, E2, E5)', () => {
       expect(response).toEqual({ handle: 'bob', viewerFollows: true });
     });
 
-    it('moves the follow counters of both accounts by one, in the same transaction', async () => {
+    it('recounts the follow counters of both accounts, in the same transaction', async () => {
       await service.follow(VIEWER, 'bob');
 
-      expect(repository.changeFollowCounters).toHaveBeenCalledWith(DB, 'viewer-1', 'target-1', 1);
+      expect(repository.recountCounters).toHaveBeenCalledWith(DB, 'viewer-1', 'target-1');
     });
 
     it('leaves the counters alone when the follow exists already', async () => {
@@ -88,7 +88,7 @@ describe('FollowsService (E1, E2, E5)', () => {
 
       await service.follow(VIEWER, 'bob');
 
-      expect(repository.changeFollowCounters).not.toHaveBeenCalled();
+      expect(repository.recountCounters).not.toHaveBeenCalled();
     });
 
     it('writes no notice when the follow exists already, and answers the same (idempotence)', async () => {
@@ -166,10 +166,10 @@ describe('FollowsService (E1, E2, E5)', () => {
       expect(repository.writeFollowNotification).not.toHaveBeenCalled();
     });
 
-    it('moves the follow counters back by one when a row was removed', async () => {
+    it('recounts the follow counters when a row was removed', async () => {
       await service.unfollow(VIEWER, 'bob');
 
-      expect(repository.changeFollowCounters).toHaveBeenCalledWith(DB, 'viewer-1', 'target-1', -1);
+      expect(repository.recountCounters).toHaveBeenCalledWith(DB, 'viewer-1', 'target-1');
     });
 
     it('leaves the counters alone when there was no follow to remove', async () => {
@@ -177,7 +177,7 @@ describe('FollowsService (E1, E2, E5)', () => {
 
       await service.unfollow(VIEWER, 'bob');
 
-      expect(repository.changeFollowCounters).not.toHaveBeenCalled();
+      expect(repository.recountCounters).not.toHaveBeenCalled();
     });
 
     it('answers 404 for an unknown handle only', async () => {

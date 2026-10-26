@@ -69,17 +69,17 @@ describe('FollowsRepository (E1, E2, E5)', () => {
       );
     });
 
-    it('moves the following count of the viewer and the follower count of the target', async () => {
-      await repository.changeFollowCounters(db as unknown as FollowsDb, 'viewer', 'target', -1);
+    it('recounts the follow counters of both accounts from the rows, after locking them, active accounts only', async () => {
+      const tx = {
+        ...db,
+        $executeRaw: jest.fn().mockResolvedValue(2),
+      };
 
-      expect(db.user.update).toHaveBeenCalledWith({
-        where: { id: 'viewer' },
-        data: { followingCount: { increment: -1 } },
-      });
-      expect(db.user.update).toHaveBeenCalledWith({
-        where: { id: 'target' },
-        data: { followerCount: { increment: -1 } },
-      });
+      await repository.recountCounters(tx as unknown as FollowsDb, 'viewer', 'target');
+
+      expect(sqlOf(tx.$queryRaw.mock.calls[0])).toContain('FOR UPDATE');
+      expect(sqlOf(tx.$executeRaw.mock.calls[0])).toContain("a.status = 'active'");
+      expect(db.user.update).not.toHaveBeenCalled();
     });
 
     it('writes the follow notice to the followed account, with the viewer as the actor and no question', async () => {

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { AccountStatus, Prisma } from '../database/generated/client/client';
 import type { KeysetPosition } from '../common/pagination/keyset-cursor';
+import { recountFollowCounters } from '../users/recalculate-counters';
 
 /** The Prisma client or a transaction opened by the service. */
 export type BlocksDb = Prisma.TransactionClient;
@@ -60,8 +61,8 @@ export class BlocksRepository {
   }
 
   /**
-   * Removes the follows in both directions between the two accounts, and corrects the four counters each removed
-   * follow touches: the follower's following count and the followee's follower count (R14, section 6.3).
+   * Removes the follows in both directions between the two accounts, and recounts the follow counters of both accounts
+   * when a row was removed, counting only active accounts (R14, section 6.3).
    */
   async removeFollowsBetween(db: BlocksDb, firstId: string, secondId: string): Promise<void> {
     await this.removeFollow(db, firstId, secondId);
@@ -71,8 +72,7 @@ export class BlocksRepository {
   private async removeFollow(db: BlocksDb, followerId: string, followeeId: string): Promise<void> {
     const removed = await db.follow.deleteMany({ where: { followerId, followeeId } });
     if (removed.count === 1) {
-      await db.user.update({ where: { id: followerId }, data: { followingCount: { decrement: 1 } } });
-      await db.user.update({ where: { id: followeeId }, data: { followerCount: { decrement: 1 } } });
+      await recountFollowCounters(db, [followerId, followeeId]);
     }
   }
 

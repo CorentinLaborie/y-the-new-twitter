@@ -255,6 +255,18 @@ describe('Follows (e2e, L3 E1, E2, E5)', () => {
     expect(await followRows(viewer.id, target.id)).toBe('0');
   });
 
+  it('counts only the active followers: a follow by a suspended account leaves the count after the next recount (DEC-086)', async () => {
+    const suspended = await createAccount('suspended');
+    const viewer = await createAccount();
+    const target = await createAccount();
+    await insertFollow(suspended.id, target.id);
+    const client = await clientFor(viewer.id);
+
+    await follow(client, target.handle).expect(200);
+
+    expect(await sql(`SELECT follower_count FROM users WHERE id = '${target.id}';`)).toBe('1');
+  });
+
   it('refuses a suspended viewer (403) on both routes, and a request without a session (401)', async () => {
     const target = await createAccount();
     const suspended = await createAccount('suspended');

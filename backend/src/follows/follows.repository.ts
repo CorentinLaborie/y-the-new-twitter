@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { AccountStatus, Prisma } from '../database/generated/client/client';
 import type { KeysetPosition } from '../common/pagination/keyset-cursor';
 import { visibleAccountTo } from '../users/account-visibility';
+import { recountFollowCounters } from '../users/recalculate-counters';
 
 /** The Prisma client or a transaction opened by the service. */
 export type FollowsDb = Prisma.TransactionClient;
@@ -99,15 +100,9 @@ export class FollowsRepository {
     return db.follow.deleteMany({ where: { followerId, followeeId } });
   }
 
-  /** Moves the follow counters of both accounts by `delta` (+1 on a new follow, -1 on an unfollow), in the same transaction. */
-  async changeFollowCounters(
-    db: FollowsDb,
-    followerId: string,
-    followeeId: string,
-    delta: number,
-  ): Promise<void> {
-    await db.user.update({ where: { id: followerId }, data: { followingCount: { increment: delta } } });
-    await db.user.update({ where: { id: followeeId }, data: { followerCount: { increment: delta } } });
+  /** Recounts the follow counters of both accounts from the rows, in the same transaction (active accounts only). */
+  recountCounters(db: FollowsDb, followerId: string, followeeId: string): Promise<void> {
+    return recountFollowCounters(db, [followerId, followeeId]);
   }
 
   /** One page of the accounts that follow `ownerId`, the most recent follow first. Hidden or blocked accounts are left out. */
