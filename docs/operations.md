@@ -92,7 +92,7 @@ State of the production server `135.125.53.103` (Ubuntu, user `ubuntu`, SSH key 
 
 **Services** (systemd, start at boot, restart on failure)
 - `y-backend`: `/srv/y/backend`, configuration in `/srv/y/backend/.env`, production profile. It refuses to start if a required key is missing.
-- `y-frontend`: `/srv/y/frontend`, built with `NEXT_PUBLIC_API_URL=https://y.corentin-laborie.com`.
+- `y-frontend`: `/srv/y/frontend`, built with `NEXT_PUBLIC_API_URL` set to an empty value (the API is on the same host, requests are relative: `/api/v1`). A production build refuses to start without this variable. Rebuild with `NEXT_PUBLIC_API_URL= npm run build`, then `sudo systemctl restart y-frontend` (rebuilt on 2026-10-26 with the « Comptes bloqués » link).
 - `TRUST_PROXY_HOPS=1`: the backend sits behind one reverse proxy.
 
 **Personal website** (`/srv/site`): systemd unit `site` on `127.0.0.1:3001`, built with `SITE_URL=https://corentin-laborie.com`. Its contact-form keys are in `/srv/site/.env.production` (Brevo key and sender address). nginx vhost `/etc/nginx/sites-available/site.conf`, with its Let's Encrypt certificate (valid until 2027-01-19, automatic renewal) and the same security headers as Y. The root and `www` names point to `135.125.53.103`; `www` and plain HTTP redirect to `https://corentin-laborie.com`. The certificate covers both names.
