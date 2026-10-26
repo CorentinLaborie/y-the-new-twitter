@@ -53,6 +53,8 @@ export type FeedQuestion = ReactionState & {
   author: { handle: string; displayName: string; viewerFollows: boolean };
   /** The reactions and the reply count (QuestionCountersDto). The reaction answers do not send `reply`. */
   counters: ReactionCounters & { reply: number };
+  /** `viewerSaved`: whether the signed-in viewer saved the question (L4, false for the question just published). */
+  viewerSaved: boolean;
 };
 
 /** One page of the feed. `trending` (the top 10 by reactions in the last 24 h) is sent on the first page only. */

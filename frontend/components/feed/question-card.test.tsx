@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { unsaveQuestion } from '@/lib/bookmarks-api';
 import { blockAccount } from '@/lib/blocks-api';
 import type { FeedQuestion } from '@/lib/feed-api';
 import { unfollowUser } from '@/lib/follows-api';
@@ -8,6 +9,11 @@ import { QuestionCard } from './question-card';
 vi.mock('@/lib/follows-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/follows-api')>();
   return { ...actual, followUser: vi.fn(), unfollowUser: vi.fn() };
+});
+
+vi.mock('@/lib/bookmarks-api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/bookmarks-api')>();
+  return { ...actual, saveQuestion: vi.fn(), unsaveQuestion: vi.fn() };
 });
 
 vi.mock('@/lib/blocks-api', () => ({ blockAccount: vi.fn(), unblockAccount: vi.fn(), listBlockedAccounts: vi.fn() }));
@@ -37,6 +43,7 @@ function question(overrides: Partial<FeedQuestion> = {}): FeedQuestion {
     yThreshold: 50,
     conversationOpen: false,
     viewerReactions: [],
+    viewerSaved: false,
     ...overrides,
   };
 }
@@ -306,5 +313,33 @@ describe('QuestionCard follow control (L3)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Plus d’options' }));
     expect(screen.queryByRole('menuitem', { name: 'Ne plus suivre @alice' })).not.toBeInTheDocument();
+  });
+});
+
+describe('QuestionCard save button (L4)', () => {
+  it('shows the save button to a signed-in viewer, with its state', () => {
+    renderCard({ viewer: { handle: 'viewer', suspended: false } });
+
+    expect(screen.getByRole('button', { name: 'Enregistrer dans les signets' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('shows no save button without a viewer (anonymous view)', () => {
+    renderCard();
+
+    expect(screen.queryByRole('button', { name: /signets/ })).not.toBeInTheDocument();
+  });
+
+  it('tells the parent when the viewer unsaves the question from the card', async () => {
+    vi.mocked(unsaveQuestion).mockResolvedValue({ ok: true, status: 204, body: undefined } as never);
+    const onBookmarkChange = vi.fn();
+    renderCard({
+      question: question({ viewerSaved: true }),
+      viewer: { handle: 'viewer', suspended: false },
+      onBookmarkChange,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer des signets' }));
+
+    await waitFor(() => expect(onBookmarkChange).toHaveBeenCalledWith(false));
   });
 });

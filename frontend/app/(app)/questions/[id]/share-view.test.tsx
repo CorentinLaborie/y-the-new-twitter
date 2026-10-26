@@ -32,6 +32,7 @@ function detail(overrides: Partial<QuestionDetail> = {}): QuestionDetail {
     yThreshold: 50,
     conversationOpen: false,
     viewerReactions: [],
+    viewerSaved: false,
     ...overrides,
   };
 }

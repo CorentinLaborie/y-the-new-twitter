@@ -104,7 +104,7 @@ export async function mockProfileApi(page: Page, handlers: ProfileHandlers) {
   return { unfollowCalls };
 }
 
-function corsHeaders(origin: string | undefined): Record<string, string> {
+export function corsHeaders(origin: string | undefined): Record<string, string> {
   return {
     'access-control-allow-origin': origin ?? '*',
     'access-control-allow-credentials': 'true',
@@ -124,5 +124,6 @@ export function questionOf(id: string, text: string, author: AccountJson): FeedQ
     yThreshold: 50,
     conversationOpen: false,
     viewerReactions: [],
+    viewerSaved: false,
   };
 }

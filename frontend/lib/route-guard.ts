@@ -6,7 +6,7 @@
 import { SESSION_EXPIRED_REASON } from '@/lib/session-expired';
 
 /** Routes of the protected area (app/(app)/). A path is protected when it equals an entry or starts with it. */
-const PROTECTED_PATHS: readonly string[] = ['/home', '/notifications', '/settings'];
+const PROTECTED_PATHS: readonly string[] = ['/home', '/notifications', '/settings', '/bookmarks'];
 
 /** Where the user lands after logging in when no valid `next` is given. */
 export const DEFAULT_AFTER_LOGIN_PATH = '/home';

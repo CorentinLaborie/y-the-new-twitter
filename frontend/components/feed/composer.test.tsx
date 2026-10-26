@@ -15,6 +15,7 @@ const CREATED: FeedQuestion = {
   yThreshold: 50,
   conversationOpen: false,
   viewerReactions: [],
+  viewerSaved: false,
 };
 
 const SUSPENDED_MESSAGE = 'Votre compte est suspendu : la publication est désactivée.';

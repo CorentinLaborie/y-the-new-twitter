@@ -25,6 +25,7 @@ function followedQuestion(id: string, text: string, handle: string) {
     yThreshold: 50,
     conversationOpen: false,
     viewerReactions: [],
+    viewerSaved: false,
   };
 }
 

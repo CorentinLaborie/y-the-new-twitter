@@ -41,6 +41,7 @@ function question(id: string, text: string): FeedQuestion {
     yThreshold: 50,
     conversationOpen: false,
     viewerReactions: [],
+    viewerSaved: false,
   };
 }
 

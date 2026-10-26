@@ -23,6 +23,7 @@ export type FeedQuestionJson = {
   yThreshold: number;
   conversationOpen: boolean;
   viewerReactions: string[];
+  viewerSaved: boolean;
 };
 
 export type ReactionCall = {
@@ -141,6 +142,7 @@ export function question(id: string, text: string, hashtags: string[] = []): Fee
     yThreshold: 50,
     conversationOpen: false,
     viewerReactions: [],
+    viewerSaved: false,
   };
 }
 

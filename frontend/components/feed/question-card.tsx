@@ -5,6 +5,7 @@ import { ConversationRuleDialog } from '@/components/question/conversation-rule-
 import { copyQuestionLink, questionLink } from '@/components/question/copy-link';
 import questionStyles from '@/components/question/question.module.css';
 import { YMark } from '@/components/brand/y-mark';
+import { BookmarkButton } from '@/components/bookmark/bookmark-button';
 import { FollowButton } from '@/components/follow/follow-button';
 import { BlockDialog } from '@/components/block/block-dialog';
 import { ReportDialog } from '@/components/report/report-dialog';
@@ -36,6 +37,8 @@ type QuestionCardProps = {
   viewer?: { handle: string; suspended: boolean };
   /** Called when the viewer stops following the author from this card (the "Abonnements" tab drops their questions). */
   onAuthorUnfollowed?: () => void;
+  /** Called with the new save state from this card (the saved list drops a question once it is unsaved). */
+  onBookmarkChange?: (saved: boolean) => void;
 };
 
 function ReactionGlyph({ kind }: { kind: ReactionKind }) {
@@ -87,6 +90,7 @@ export function QuestionCard({
   conversationOpen: conversationShown = false,
   viewer,
   onAuthorUnfollowed,
+  onBookmarkChange,
 }: QuestionCardProps) {
   const { counters, yThreshold, conversationOpen, viewerReactions } = question;
   const [followed, setFollowed] = useState(question.author.viewerFollows);
@@ -324,6 +328,14 @@ export function QuestionCard({
         ) : (
           <span className={questionStyles.replyCount}>{replyLabel(replyCount)}</span>
         )}
+        {viewer ? (
+          <BookmarkButton
+            questionId={question.id}
+            initialSaved={question.viewerSaved}
+            disabled={viewer.suspended}
+            onChange={onBookmarkChange}
+          />
+        ) : null}
       </div>
       {reactionError ? (
         <p role="alert" className={styles.reactionError}>
