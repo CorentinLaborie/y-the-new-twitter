@@ -237,7 +237,7 @@ describe('Back-office suspension and reactivation (e2e, DEC-077, DEC-088, DEC-11
     expect(audit[0].reason).toBe('Erreur de saisie');
   });
 
-  it('recounts the Y, the replies and the reactions of the account on suspension, and restores them on lifting (R13, DEC-192)', async () => {
+  it('recounts the Y, the replies, the reactions and the follows of the account on suspension, and restores them on lifting (R13, DEC-192)', async () => {
     const admin = await administrator('susp_count_admin');
     const author = await createAccount(app, 'susp_count_author');
     const target = await createAccount(app, 'susp_count_target');
@@ -257,6 +257,15 @@ describe('Back-office suspension and reactivation (e2e, DEC-077, DEC-088, DEC-11
       data: { questionId: question.id, authorId: target.id, body: 'Réponse de test', likeCount: 1 },
     });
     await prisma.replyReaction.create({ data: { userId: target.id, replyId: reply.id, kind: 'like' } });
+    // The target follows `other` and is followed by `fan`: their follow counters count the target while it is active.
+    await prisma.follow.createMany({
+      data: [
+        { followerId: target.id, followeeId: other.id },
+        { followerId: fan.id, followeeId: target.id },
+      ],
+    });
+    await prisma.user.update({ where: { id: other.id }, data: { followerCount: 1 } });
+    await prisma.user.update({ where: { id: fan.id }, data: { followingCount: 1 } });
     await reauthenticate(admin);
 
     await changeStatus(admin, target.id, { status: 'suspended', reason: 'Test de compte' }).expect(200);
@@ -264,6 +273,8 @@ describe('Back-office suspension and reactivation (e2e, DEC-077, DEC-088, DEC-11
     const suspendedReply = await prisma.reply.findUniqueOrThrow({ where: { id: reply.id } });
     expect(suspended).toMatchObject({ yCount: 2, replyCount: 0 });
     expect(suspendedReply.likeCount).toBe(0);
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: other.id } })).followerCount).toBe(0);
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: fan.id } })).followingCount).toBe(0);
 
     await reauthenticate(admin);
     await changeStatus(admin, target.id, { status: 'active', reason: 'Test de compte' }).expect(200);
@@ -271,6 +282,8 @@ describe('Back-office suspension and reactivation (e2e, DEC-077, DEC-088, DEC-11
     const liftedReply = await prisma.reply.findUniqueOrThrow({ where: { id: reply.id } });
     expect(lifted).toMatchObject({ yCount: 3, replyCount: 1 });
     expect(liftedReply.likeCount).toBe(1);
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: other.id } })).followerCount).toBe(1);
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: fan.id } })).followingCount).toBe(1);
   });
 
   it('closes the open contact thread at a lifting, and reopens it under the same reference at the next suspension (DEC-116)', async () => {

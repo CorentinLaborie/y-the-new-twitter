@@ -136,7 +136,7 @@ export class AdminUsersRepository {
       if (change.status === 'suspended') {
         await tx.session.deleteMany({ where: { userId: change.userId } });
       }
-      await recountCounters(tx, change.userId);
+      await recalculateCounters(tx, change.userId);
       await applyThreadPlan(tx, change);
       await change.record(tx);
     });
@@ -206,50 +206,6 @@ const ACCOUNT_ROW_SELECT = {
   role: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
-
-/**
- * Recounts the counters of the questions and replies the account touched, from the reactions and replies of the
- * active accounts only (R13, DEC-192). Only those rows change. The counters are read in the same transaction as the
- * status, so no reader sees a count that still includes the account.
- */
-async function recountCounters(tx: Prisma.TransactionClient, userId: string): Promise<void> {
-  const [reactedQuestions, repliedQuestions, reactedReplies] = await Promise.all([
-    tx.questionReaction.findMany({ where: { userId }, select: { questionId: true } }),
-    tx.reply.findMany({ where: { authorId: userId }, select: { questionId: true } }),
-    tx.replyReaction.findMany({ where: { userId }, select: { replyId: true } }),
-  ]);
-  const questionIds = [
-    ...new Set([
-      ...reactedQuestions.map((row) => row.questionId),
-      ...repliedQuestions.map((row) => row.questionId),
-    ]),
-  ];
-  const replyIds = [...new Set(reactedReplies.map((row) => row.replyId))];
-
-  if (questionIds.length > 0) {
-    await tx.$executeRaw`
-      UPDATE questions AS q SET
-        like_count = (SELECT count(*)::int FROM question_reactions r JOIN users u ON u.id = r.user_id
-          WHERE r.question_id = q.id AND r.kind = 'like' AND u.status = 'active'),
-        dislike_count = (SELECT count(*)::int FROM question_reactions r JOIN users u ON u.id = r.user_id
-          WHERE r.question_id = q.id AND r.kind = 'dislike' AND u.status = 'active'),
-        y_count = (SELECT count(*)::int FROM question_reactions r JOIN users u ON u.id = r.user_id
-          WHERE r.question_id = q.id AND r.kind = 'y' AND u.status = 'active'),
-        reply_count = (SELECT count(*)::int FROM replies p JOIN users a ON a.id = p.author_id
-          WHERE p.question_id = q.id AND p.deleted_at IS NULL AND a.status = 'active')
-      WHERE q.id = ANY(${questionIds}::uuid[])`;
-  }
-
-  if (replyIds.length > 0) {
-    await tx.$executeRaw`
-      UPDATE replies AS p SET
-        like_count = (SELECT count(*)::int FROM reply_reactions r JOIN users u ON u.id = r.user_id
-          WHERE r.reply_id = p.id AND r.kind = 'like' AND u.status = 'active'),
-        dislike_count = (SELECT count(*)::int FROM reply_reactions r JOIN users u ON u.id = r.user_id
-          WHERE r.reply_id = p.id AND r.kind = 'dislike' AND u.status = 'active')
-      WHERE p.id = ANY(${replyIds}::uuid[])`;
-  }
-}
 
 /** Closes the open contact thread when an administrator starts a deletion (DEC-116). It is not closed by a lifting. */
 async function closeThreadAtDeletion(tx: Prisma.TransactionClient, change: DeletionWrite): Promise<void> {
