@@ -23,6 +23,7 @@ import { RepliesModule } from './replies/replies.module';
 import { BlocksModule } from './blocks/blocks.module';
 import { ReportsModule } from './reports/reports.module';
 import { FeedModule } from './feed/feed.module';
+import { ExploreModule } from './explore/explore.module';
 import { FollowsModule } from './follows/follows.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { MessagesModule } from './messages/messages.module';
@@ -54,6 +55,7 @@ import { SupportModule } from './support/support.module';
     BlocksModule,
     ReportsModule,
     FeedModule,
+    ExploreModule,
     FollowsModule,
     BookmarksModule,
     MessagesModule,

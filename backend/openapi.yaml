@@ -1103,6 +1103,117 @@ paths:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags:
         - Feed
+  /api/v1/explore/trends:
+    get:
+      operationId: ExploreController_trends
+      parameters: []
+      responses:
+        "200":
+          description: The hashtags with the most reactions in the last 24 hours.
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a11
+        - Explore
+  /api/v1/explore/popular:
+    get:
+      operationId: ExploreController_popular
+      parameters: []
+      responses:
+        "200":
+          description: The visible questions with the most reactions in the last 24 hours.
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a11
+  /api/v1/explore/suggestions:
+    get:
+      operationId: ExploreController_suggestions
+      parameters: []
+      responses:
+        "200":
+          description: Active accounts the viewer does not follow, best first.
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a11
+  /api/v1/search:
+    get:
+      operationId: SearchController_search
+      parameters:
+        - name: q
+          required: true
+          in: query
+          schema:
+            minLength: 1
+            maxLength: 100
+            type: string
+      responses:
+        "200":
+          description: The questions, hashtags and accounts matching the text.
+        "400":
+          description: The text is empty or longer than 100 characters.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - Search
+  /api/v1/hashtags/{tag}/questions:
+    get:
+      operationId: HashtagsController_questions
+      parameters:
+        - name: tag
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: cursor
+          required: false
+          in: query
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+      responses:
+        "200":
+          description: One page of the visible questions with this hashtag, newest first.
+        "400":
+          description: Invalid hashtag, cursor or limit.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - Hashtags
   /api/v1/users/{handle}/follow:
     put:
       operationId: FollowsController_follow
@@ -1159,7 +1270,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a11
+      tags: &a12
         - Follows
     delete:
       operationId: FollowsController_unfollow
@@ -1205,7 +1316,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a11
+      tags: *a12
   /api/v1/users/{handle}/followers:
     get:
       operationId: FollowsController_followers
@@ -1272,7 +1383,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a11
+      tags: *a12
   /api/v1/users/{handle}/following:
     get:
       operationId: FollowsController_following
@@ -1339,7 +1450,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a11
+      tags: *a12
   /api/v1/questions/{questionId}/bookmark:
     put:
       operationId: BookmarksController_save
@@ -1388,7 +1499,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a12
+      tags: &a13
         - Bookmarks
     delete:
       operationId: BookmarksController_remove
@@ -1427,7 +1538,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a12
+      tags: *a13
   /api/v1/bookmarks:
     get:
       operationId: BookmarksController_list
@@ -1500,7 +1611,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a12
+      tags: *a13
   /api/v1/messages/conversations:
     post:
       operationId: MessagesController_start
@@ -1546,7 +1657,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a13
+      tags: &a14
         - Messages
     get:
       operationId: MessagesController_list
@@ -1603,7 +1714,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/messages/conversations/{conversationId}:
     get:
       operationId: MessagesController_conversation
@@ -1637,7 +1748,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/messages/conversations/{conversationId}/messages:
     post:
       operationId: MessagesController_send
@@ -1688,7 +1799,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
     get:
       operationId: MessagesController_messagesOf
       parameters:
@@ -1730,7 +1841,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/messages/conversations/{conversationId}/accept:
     put:
       operationId: MessagesController_accept
@@ -1756,7 +1867,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/messages/conversations/{conversationId}/decline:
     put:
       operationId: MessagesController_decline
@@ -1782,7 +1893,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/messages/conversations/{conversationId}/read:
     put:
       operationId: MessagesController_read
@@ -1802,7 +1913,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/messages/conversations/{conversationId}/mute:
     put:
       operationId: MessagesController_mute
@@ -1822,7 +1933,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
     delete:
       operationId: MessagesController_unmute
       parameters:
@@ -1841,7 +1952,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/messages/conversations/{conversationId}/archive:
     put:
       operationId: MessagesController_archive
@@ -1861,7 +1972,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
     delete:
       operationId: MessagesController_unarchive
       parameters:
@@ -1880,7 +1991,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/users/{handle}:
     get:
       operationId: ProfilesController_profile
@@ -1931,7 +2042,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a14
+      tags: &a15
         - Profiles
   /api/v1/users/{handle}/questions:
     get:
@@ -1998,7 +2109,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a14
+      tags: *a15
   /api/v1/notifications:
     get:
       operationId: NotificationsController_list
@@ -2056,7 +2167,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a15
+      tags: &a16
         - Notifications
   /api/v1/notifications/unread-count:
     get:
@@ -2087,7 +2198,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a15
+      tags: *a16
   /api/v1/notifications/read-all:
     post:
       operationId: NotificationsController_markAllRead
@@ -2126,7 +2237,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a15
+      tags: *a16
   /api/v1/notification-preferences:
     get:
       operationId: NotificationPreferencesController_list
@@ -2150,7 +2261,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a16
+      tags: &a17
         - NotificationPreferences
   /api/v1/notification-preferences/{type}:
     put:
@@ -2198,7 +2309,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a16
+      tags: *a17
   /api/v1/support/messages:
     post:
       operationId: SupportController_send
@@ -2267,7 +2378,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a17
+                    example: &a18
                       database:
                         status: up
                     additionalProperties:
@@ -2293,7 +2404,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a17
+                    example: *a18
                     additionalProperties:
                       type: object
                       required:
@@ -2315,7 +2426,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a18
+                      database: &a19
                         status: up
                     additionalProperties:
                       type: object
@@ -2329,7 +2440,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a19
+                      redis: &a20
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -2344,8 +2455,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a18
-                      redis: *a19
+                      database: *a19
+                      redis: *a20
                     additionalProperties:
                       type: object
                       required:
