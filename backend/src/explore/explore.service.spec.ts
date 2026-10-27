@@ -27,9 +27,12 @@ function row(id: string, createdAt: Date) {
     yCount: 3,
     replyCount: 0,
     conversationOpenedAt: null,
+    deletedAt: null,
+    moderationStatus: 'visible' as const,
+    moderatedAt: null,
     authorId: 'author-1',
     author: { handle: 'bob', displayName: 'Bob' },
-    hashtags: [{ hashtag: { name: 'tests' } }],
+    hashtags: [{ hashtag: { name: 'tests' }, createdAt, questionId: id, hashtagId: 'hashtag-1' }],
   };
 }
 

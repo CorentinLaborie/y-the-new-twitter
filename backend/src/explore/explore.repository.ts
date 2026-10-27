@@ -3,6 +3,7 @@ import { Prisma } from '../database/generated/client/client';
 import { PrismaService } from '../database/prisma.service';
 import { QUESTION_VIEW_INCLUDE, visibleTo } from '../questions/question-view';
 import { visibleAccountTo } from '../users/account-visibility';
+import { toPrefixQuery } from './prefix-query';
 
 /** A hashtag with the reactions it received in the window (trends, DEC-091). */
 export interface TrendingHashtagRow {
@@ -103,12 +104,32 @@ export class ExploreRepository {
     });
   }
 
-  /** The visible questions whose body contains the text, newest first. */
-  searchQuestions(viewerId: string, text: string, take: number) {
+  /**
+   * The visible questions matching the text, newest first. The match uses the French full-text index on the question
+   * body (DEC-022) with prefix matching; the rows are then read through the question view, like every other read.
+   */
+  async searchQuestions(viewerId: string, text: string, take: number) {
+    const query = toPrefixQuery(text);
+    if (query === null) {
+      return [];
+    }
+    const matches = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
+      SELECT q.id
+      FROM questions q
+      JOIN users author ON author.id = q.author_id
+      WHERE to_tsvector('french', q.body) @@ to_tsquery('french', ${query})
+        AND q.deleted_at IS NULL
+        AND q.moderation_status = 'visible'
+        AND author.status = 'active'
+        AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = ${viewerId}::uuid AND b.blocked_id = q.author_id)
+          OR (b.blocker_id = q.author_id AND b.blocked_id = ${viewerId}::uuid))
+      ORDER BY q.created_at DESC, q.id DESC
+      LIMIT ${take}
+    `);
+
     return this.prisma.question.findMany({
-      where: { AND: [visibleTo(viewerId), { body: { contains: text, mode: 'insensitive' } }] },
+      where: { id: { in: matches.map((match) => match.id) } },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take,
       include: QUESTION_VIEW_INCLUDE,
     });
   }
