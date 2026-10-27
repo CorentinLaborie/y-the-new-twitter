@@ -152,6 +152,28 @@ describe('Private messages (e2e, section 9 of the conditions, R14)', () => {
     await start(alice, 'msg_chk_alice', '   ').expect(400);
   });
 
+  it('shows one conversation to its two participants, each with the other account, and answers 404 to the others', async () => {
+    await createAccount(app, 'msg_one_alice');
+    await createAccount(app, 'msg_one_bob');
+    await createAccount(app, 'msg_one_carol');
+    const alice = await userSignedIn(app, 'msg_one_alice');
+    const bob = await userSignedIn(app, 'msg_one_bob');
+    const carol = await userSignedIn(app, 'msg_one_carol');
+    const opened = await start(alice, 'msg_one_bob', 'Bonjour').expect(201);
+    const path = `${MESSAGES}/conversations/${opened.body.conversationId}`;
+
+    const sender = await alice.agent.get(path).expect(200);
+    expect(sender.body).toMatchObject({
+      id: opened.body.conversationId,
+      status: 'accepted',
+      initiatedByViewer: true,
+      other: { handle: 'msg_one_bob' },
+    });
+    const recipient = await bob.agent.get(path).expect(200);
+    expect(recipient.body).toMatchObject({ status: 'pending', initiatedByViewer: false, other: { handle: 'msg_one_alice' } });
+    await carol.agent.get(path).expect(404);
+  });
+
   it('answers 404 to a viewer who takes no part in the conversation', async () => {
     await createAccount(app, 'msg_out_alice');
     await createAccount(app, 'msg_out_bob');

@@ -47,6 +47,19 @@ export class MessagesController {
     return this.messages.list(viewer, query);
   }
 
+  @Get('conversations/:conversationId')
+  @ApiParam({ name: 'conversationId', format: 'uuid' })
+  @ApiOkResponse({ description: 'The conversation, as the viewer sees it: its request state, the other account, the viewer’s flags.' })
+  @problemDetailsResponse(400, 'The conversation id is not a UUID.')
+  @problemDetailsResponse(401, 'Not logged in.')
+  @problemDetailsResponse(404, 'The conversation does not exist for the viewer, or the other account is not visible.')
+  conversation(
+    @CurrentUser() viewer: SessionUser,
+    @Param('conversationId', ParseUUIDPipe) conversationId: string,
+  ): Promise<ConversationView> {
+    return this.messages.conversation(viewer, conversationId);
+  }
+
   @Post('conversations/:conversationId/messages')
   @HttpCode(HttpStatus.CREATED)
   @ApiParam({ name: 'conversationId', format: 'uuid' })

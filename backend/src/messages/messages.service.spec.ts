@@ -29,9 +29,18 @@ function conversation(mine: Status, other: Status, initiatedById = 'viewer-1'): 
         userId: 'viewer-1',
         requestStatus: mine,
         lastReadAt: null,
+        mutedAt: null,
+        archivedAt: null,
         user: { id: 'viewer-1', handle: 'viewer', displayName: 'Viewer' },
       },
-      { userId: 'other-1', requestStatus: other, lastReadAt: null, user: { id: 'other-1', handle: 'alice', displayName: 'Alice' } },
+      {
+        userId: 'other-1',
+        requestStatus: other,
+        lastReadAt: null,
+        mutedAt: null,
+        archivedAt: null,
+        user: { id: 'other-1', handle: 'alice', displayName: 'Alice' },
+      },
     ],
   } as unknown as ConversationRow;
 }
@@ -148,6 +157,22 @@ describe('MessagesService (section 9 of the conditions)', () => {
     repository.findParticipation.mockResolvedValueOnce(conversation('accepted', 'declined'));
 
     await expect(service.send(VIEWER, CONVERSATION_ID, 'Encore', NOW)).rejects.toThrow(DECLINED_MESSAGE);
+  });
+
+  it('shows one conversation to its participant, with the other account and the viewer’s flags', async () => {
+    await expect(service.conversation(VIEWER, CONVERSATION_ID)).resolves.toMatchObject({
+      id: CONVERSATION_ID,
+      status: 'accepted',
+      initiatedByViewer: true,
+      other: { handle: 'alice', displayName: 'Alice' },
+      muted: false,
+      archived: false,
+    });
+  });
+
+  it('answers 404 to a conversation the viewer does not take part in when it is shown alone', async () => {
+    repository.findParticipation.mockResolvedValueOnce(null);
+    await expect(service.conversation(VIEWER, CONVERSATION_ID)).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('writes a message in an accepted conversation and returns it as the viewer’s', async () => {

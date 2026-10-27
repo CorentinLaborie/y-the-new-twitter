@@ -1563,6 +1563,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a13
+  /api/v1/messages/conversations/{conversationId}:
+    get:
+      operationId: MessagesController_conversation
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          description: "The conversation, as the viewer sees it: its request state, the
+            other account, the viewer’s flags."
+        "400":
+          description: The conversation id is not a UUID.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The conversation does not exist for the viewer, or the other
+            account is not visible.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
   /api/v1/messages/conversations/{conversationId}/messages:
     post:
       operationId: MessagesController_send

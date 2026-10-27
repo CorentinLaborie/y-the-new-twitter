@@ -133,6 +133,13 @@ export class MessagesService {
     };
   }
 
+  /** One conversation the viewer takes part in, as the lists show it. 404 when the viewer cannot see it. */
+  async conversation(viewer: SessionUser, conversationId: string): Promise<ConversationView> {
+    const conversation = await this.participation(viewer, conversationId);
+
+    return toConversationView({ ...ownRow(conversation, viewer.id), conversation }, viewer.id);
+  }
+
   /** One page of the messages of a conversation, the newest first. */
   async messagesOf(viewer: SessionUser, conversationId: string, query: MessageQueryDto): Promise<{ messages: MessageView[]; nextCursor: string | null }> {
     await this.participation(viewer, conversationId);
