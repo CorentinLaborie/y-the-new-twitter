@@ -39,6 +39,15 @@ export class ReportListQueryDto {
   limit = DEFAULT_LIMIT;
 }
 
+/** The restoration of hidden content: the note is required and kept in the audit log, like a decision's. */
+export class ReportRestoreDto {
+  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(NOTE_MAX_LENGTH)
+  note!: string;
+}
+
 /**
  * The decision on a report: hide the content, or dismiss the report. The note is required and kept in the audit log.
  * It is trimmed here: a blank note is refused, like the reason of a suspension.

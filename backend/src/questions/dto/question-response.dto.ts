@@ -74,4 +74,11 @@ export class QuestionResponseDto {
       'Whether the signed-in viewer saved this question (L4, section 9.2). False for anonymous views and for the question just published.',
   })
   readonly viewerSaved!: boolean;
+
+  @ApiProperty({
+    example: false,
+    description:
+      'True only for the author of a question hidden by moderation (L7): the text and the hashtags are empty, and the other fields stay. Every other viewer gets 404.',
+  })
+  readonly removedByModeration!: boolean;
 }

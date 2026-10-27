@@ -70,6 +70,12 @@ export interface ReportDecisionResult {
 
 export type ReportDecisionName = 'hide' | 'dismiss';
 
+/** The answer to a restoration: the content is visible again. */
+export interface ReportRestoreResult {
+  id: string;
+  restoredAt: string;
+}
+
 export interface ReportListOptions {
   /** Absent: every report. */
   status?: ReportListStatus;

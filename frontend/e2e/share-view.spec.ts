@@ -33,6 +33,24 @@ test('the question and its replies are shown, and the page has no reply composer
   await expect(page.getByRole('button', { name: 'Répondre', exact: true })).toHaveCount(0);
 });
 
+test('the author of a question removed by moderation sees the notice, not its text or its conversation (L7)', async ({
+  page,
+}) => {
+  await mockConversationApi(page, {
+    question: {
+      ...questionDetail({ y: 0, reply: 0, conversationOpen: false, text: 'Texte retiré' }),
+      removedByModeration: true,
+    },
+    replies: [makeReply(1)],
+  });
+
+  await page.goto(`/questions/${QUESTION_ID}`);
+
+  await expect(page.getByRole('heading', { name: 'Retirée par la modération' })).toBeVisible();
+  await expect(page.getByText('Texte retiré')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Réponses à la question' })).toHaveCount(0);
+});
+
 test('an unknown question shows that it is not available', async ({ page }) => {
   await mockConversationApi(page, { question: null, replies: [] });
 

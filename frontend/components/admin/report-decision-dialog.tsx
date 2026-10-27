@@ -4,15 +4,30 @@ import { useState, type FormEvent } from 'react';
 import { AdminDialog } from '@/components/admin/admin-dialog';
 import { ReauthDialog } from '@/components/admin/reauth-dialog';
 import styles from '@/components/admin/admin.module.css';
-import { decideReport, type ReportDecisionName, type ReportDecisionResult } from '@/lib/admin-api';
+import {
+  decideReport,
+  restoreReport,
+  type ReportDecisionName,
+  type ReportDecisionResult,
+  type ReportRestoreResult,
+} from '@/lib/admin-api';
 import { needsReauthentication } from '@/lib/admin-suspension';
 import { decisionNoteError } from '@/lib/admin-reports';
 
-/** The French texts of the two decisions: the title, the explanation and the button. */
+/** What the dialog records: one of the two decisions, or the restoration of a hidden content (L7). */
+export type ReportDialogAction = ReportDecisionName | 'restore';
+
+/** The French texts of the actions: the title, the explanation and the button. */
 const DECISION_TEXTS: Record<
-  ReportDecisionName,
+  ReportDialogAction,
   { title: string; text: string; action: string; busy: string }
 > = {
+  restore: {
+    title: 'Restaurer ce contenu ?',
+    text: 'Le contenu redevient visible dans Y, pour tout le monde. Le signalement reste dans l’historique.',
+    action: 'Restaurer le contenu',
+    busy: 'Restauration…',
+  },
   hide: {
     title: 'Masquer ce contenu ?',
     text: 'Le contenu n’apparaîtra plus dans Y. Les autres signalements ouverts sur ce contenu sont clos avec lui.',
@@ -38,8 +53,8 @@ export function ReportDecisionDialog({
   onCancel,
 }: {
   reportId: string;
-  decision: ReportDecisionName;
-  onDecided: (result: ReportDecisionResult) => void;
+  decision: ReportDialogAction;
+  onDecided: (result: ReportDecisionResult | ReportRestoreResult) => void;
   onCancel: () => void;
 }) {
   const [note, setNote] = useState('');
@@ -54,7 +69,10 @@ export function ReportDecisionDialog({
   async function decide() {
     setMessage(null);
     setSubmitting(true);
-    const result = await decideReport(reportId, decision, note.trim());
+    const result =
+      decision === 'restore'
+        ? await restoreReport(reportId, note.trim())
+        : await decideReport(reportId, decision, note.trim());
     setSubmitting(false);
 
     if (result.ok) {

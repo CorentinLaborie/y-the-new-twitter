@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
-import { ReportDecisionDialog } from '@/components/admin/report-decision-dialog';
+import { ReportDecisionDialog, type ReportDialogAction } from '@/components/admin/report-decision-dialog';
 import { StatusLabel } from '@/components/admin/status-label';
 import styles from '@/components/admin/admin.module.css';
-import { getReport, type ReportDecisionName, type ReportDetail } from '@/lib/admin-api';
+import { getReport, type ReportDetail } from '@/lib/admin-api';
 import {
   REPORT_DECISION_LABELS,
   REPORT_MODERATION_LABELS,
@@ -30,7 +30,7 @@ type ReportState =
  */
 export function ReportScreen({ id }: { id: string }) {
   const [state, setState] = useState<ReportState>({ status: 'loading' });
-  const [decision, setDecision] = useState<ReportDecisionName | null>(null);
+  const [decision, setDecision] = useState<ReportDialogAction | null>(null);
 
   const load = useCallback(() => {
     return getReport(id).then((result) => {
@@ -61,6 +61,8 @@ export function ReportScreen({ id }: { id: string }) {
 
   const { report } = state;
   const decided = report.status !== 'open';
+  // A content hidden by a decision can be restored (L7), by an administrator, with the note and the re-authentication.
+  const restorable = report.decision === 'content_hidden' && report.target.moderationStatus === 'hidden';
 
   return (
     <AdminPage title="Examen du signalement">
@@ -153,6 +155,11 @@ export function ReportScreen({ id }: { id: string }) {
                 </button>
               </div>
               {decided ? <p className={styles.muted}>Ce signalement a déjà été traité.</p> : null}
+              {restorable ? (
+                <button type="button" className={styles.secondaryButton} onClick={() => setDecision('restore')}>
+                  Restaurer le contenu
+                </button>
+              ) : null}
             </div>
           </section>
         </div>

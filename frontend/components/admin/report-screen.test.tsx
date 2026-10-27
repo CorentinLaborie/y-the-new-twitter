@@ -1,12 +1,13 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { decideReport, getReport, reauthenticate, type ReportDetail } from '@/lib/admin-api';
+import { decideReport, getReport, reauthenticate, restoreReport, type ReportDetail } from '@/lib/admin-api';
 import { ReportScreen } from './report-screen';
 
 vi.mock('@/lib/admin-api', () => ({
   getReport: vi.fn(),
   decideReport: vi.fn(),
   reauthenticate: vi.fn(),
+  restoreReport: vi.fn(),
 }));
 
 const REPORT_ID = '2c1d0e9f-8a7b-4c6d-9e5f-1a2b3c4d5e6f';
@@ -85,6 +86,19 @@ describe('ReportScreen', () => {
     const history = screen.getByRole('heading', { name: 'Historique du signalement' }).closest('section');
     expect(within(history!).getByText('Contenu masqué')).toBeInTheDocument();
     expect(screen.getByText('Contenu masqué', { selector: 'dd' })).toBeInTheDocument();
+  });
+
+  it('offers the restoration only for a content hidden by a decision (L7)', async () => {
+    vi.mocked(getReport).mockResolvedValue({ ok: true, status: 200, body: HIDDEN });
+    const { unmount } = render(<ReportScreen id={REPORT_ID} />);
+
+    expect(await screen.findByRole('button', { name: 'Restaurer le contenu' })).toBeEnabled();
+    unmount();
+
+    vi.mocked(getReport).mockResolvedValue({ ok: true, status: 200, body: OPEN });
+    render(<ReportScreen id={REPORT_ID} />);
+    await screen.findByRole('button', { name: 'Masquer le contenu' });
+    expect(screen.queryByRole('button', { name: 'Restaurer le contenu' })).not.toBeInTheDocument();
   });
 
   it('records the hiding of the content, then reads the report again', async () => {

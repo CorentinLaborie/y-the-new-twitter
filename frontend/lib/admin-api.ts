@@ -358,6 +358,19 @@ export function decideReport(
   });
 }
 
+/** The answer to a restoration: the content is visible again (L7). */
+export type ReportRestoreResult = { id: string; restoredAt: string };
+
+/**
+ * Makes the hidden content visible again, with its required note. Needs a current re-authentication, like a decision:
+ * otherwise the answer carries reauth_required. Answers 409 when the content is not hidden any more.
+ */
+export function restoreReport(id: string, note: string): Promise<ApiResult<ReportRestoreResult>> {
+  return apiRequest<ReportRestoreResult>('PUT', `/admin/reports/${encodeURIComponent(id)}/restore`, {
+    body: { note },
+  });
+}
+
 export function listSupportThreads(options: SupportListOptions = {}): Promise<ApiResult<SupportThreadPage>> {
   return apiRequest<SupportThreadPage>('GET', supportListPath(options));
 }

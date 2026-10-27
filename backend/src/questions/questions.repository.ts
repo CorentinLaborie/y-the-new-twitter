@@ -19,6 +19,17 @@ export class QuestionsRepository {
     });
   }
 
+  /**
+   * The question of its own author, when moderation hid it (L7): the author sees that it was removed, never its text.
+   * Null for every other case, so nobody else learns that a hidden question exists.
+   */
+  findOwnHiddenQuestion(authorId: string, questionId: string) {
+    return this.prisma.question.findFirst({
+      where: { id: questionId, authorId, deletedAt: null, moderationStatus: 'hidden' },
+      include: QUESTION_VIEW_INCLUDE,
+    });
+  }
+
   /** The viewer's own reactions on these questions: at most one per question (R11). */
   findViewerReactions(viewerId: string, questionIds: readonly string[]) {
     return this.prisma.questionReaction.findMany({

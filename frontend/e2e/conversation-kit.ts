@@ -38,6 +38,8 @@ export type QuestionJson = {
   yThreshold: number;
   conversationOpen: boolean;
   viewerReactions: string[];
+  /** True only for the author of a question hidden by moderation (L7). */
+  removedByModeration?: boolean;
 };
 
 export type ConversationFixture = {

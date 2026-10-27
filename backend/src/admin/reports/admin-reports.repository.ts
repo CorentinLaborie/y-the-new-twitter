@@ -64,6 +64,14 @@ export interface ReportDecisionWrite {
   record: (db: AuditDb) => Promise<void>;
 }
 
+/** One restoration of hidden content, as the repository writes it. The audit entry is written in the same transaction. */
+export interface ReportRestoreWrite {
+  target: ReportTarget;
+  now: Date;
+  /** Writes the audit entry inside the same transaction: if it fails, the restoration is rolled back. */
+  record: (db: AuditDb) => Promise<void>;
+}
+
 /**
  * The back-office reads of the reports (section 3.5), and the decisions on them. The only place that writes the
  * reports and the moderation status of the questions and replies from the back-office.
@@ -167,6 +175,27 @@ export class AdminReportsRepository {
         } else if (change.target.replyId !== null) {
           await tx.reply.update({ where: { id: change.target.replyId }, data: moderation });
         }
+      }
+
+      await change.record(tx);
+      return true;
+    });
+  }
+
+  /**
+   * Makes a hidden content visible again, in one transaction. The reports that closed with the hiding stay decided, as
+   * their history. False, with no write, when the content is not hidden any more (another administrator restored it).
+   */
+  restore(change: ReportRestoreWrite): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const moderation = { moderationStatus: 'visible' as const, moderatedAt: change.now };
+      const hidden = { moderationStatus: 'hidden' as const };
+      const result =
+        change.target.questionId !== null
+          ? await tx.question.updateMany({ where: { id: change.target.questionId, ...hidden }, data: moderation })
+          : await tx.reply.updateMany({ where: { id: change.target.replyId ?? '', ...hidden }, data: moderation });
+      if (result.count !== 1) {
+        return false;
       }
 
       await change.record(tx);

@@ -76,6 +76,19 @@ describe('ShareView', () => {
     });
   });
 
+  it('shows the author that the question was removed by moderation, with no text and no conversation (L7)', async () => {
+    vi.mocked(getQuestion).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...detail({ text: '', hashtags: [] }), removedByModeration: true },
+    });
+    render(<ShareView questionId={QUESTION_ID} viewerHandle="alice" />);
+
+    expect(await screen.findByRole('heading', { name: 'Retirée par la modération' })).toBeInTheDocument();
+    expect(screen.queryByText('Faut-il partager ses doutes ?')).not.toBeInTheDocument();
+    expect(Conversation).not.toHaveBeenCalled();
+  });
+
   it('shows the not-found message with a link to /home on a 404', async () => {
     vi.mocked(getQuestion).mockResolvedValue({ ok: false, problem: NOT_FOUND_PROBLEM });
 

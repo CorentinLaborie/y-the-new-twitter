@@ -80,5 +80,6 @@ export function toQuestionView(
     conversationOpen: row.conversationOpenedAt !== null,
     viewerReactions: [...viewerReactions],
     viewerSaved,
+    removedByModeration: false,
   };
 }

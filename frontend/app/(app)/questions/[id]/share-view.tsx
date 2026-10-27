@@ -123,7 +123,20 @@ export function ShareView({ questionId, viewerHandle }: ShareViewProps) {
         </div>
       ) : null}
 
-      {load.phase === 'ready' ? (
+      {load.phase === 'ready' && load.question.removedByModeration === true ? (
+        <div className="y-empty">
+          <span className="y-empty-icon">
+            <FeedIcon name="triangle-alert" size={28} />
+          </span>
+          <h2>Retirée par la modération</h2>
+          <p>Cette question n’est plus visible pour les autres membres de Y. Son texte n’est plus affiché.</p>
+          <p>
+            <Link href="/home">Retour à l’accueil</Link>
+          </p>
+        </div>
+      ) : null}
+
+      {load.phase === 'ready' && load.question.removedByModeration !== true ? (
         <>
           <QuestionCard
             question={load.question}

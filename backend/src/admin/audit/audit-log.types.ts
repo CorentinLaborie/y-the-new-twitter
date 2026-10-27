@@ -15,6 +15,8 @@ export const AUDIT_ACTIONS = {
   contactReply: 'contact.reply',
   /** A decision on a report: the content is hidden, or the report is dismissed (the decision is in the details). */
   reportDecide: 'report.decide',
+  /** A restoration of content hidden by a report decision: the content is visible again (the note is the reason). */
+  reportRestore: 'report.restore',
 } as const;
 
 /** The result column (DEC-085): 'ok', 'failed' or 'refused'. */

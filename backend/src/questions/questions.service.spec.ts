@@ -107,6 +107,7 @@ describe('QuestionsService (B2, section 9.1)', () => {
       conversationOpen: false,
       viewerReactions: [],
       viewerSaved: false,
+      removedByModeration: false,
     });
   });
 
@@ -225,7 +226,12 @@ describe('QuestionsService (B2, section 9.1)', () => {
   });
 });
 
-type DetailRepository = jest.Mocked<Pick<QuestionsRepository, 'findVisibleQuestion' | 'findViewerReactions' | 'findViewerSaved' | 'findFollowedAuthorIds'>>;
+type DetailRepository = jest.Mocked<
+  Pick<
+    QuestionsRepository,
+    'findVisibleQuestion' | 'findOwnHiddenQuestion' | 'findViewerReactions' | 'findViewerSaved' | 'findFollowedAuthorIds'
+  >
+>;
 type VisibleRow = NonNullable<Awaited<ReturnType<QuestionsRepository['findVisibleQuestion']>>>;
 
 describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
@@ -260,6 +266,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
   beforeEach(() => {
     repository = {
       findVisibleQuestion: jest.fn().mockResolvedValue(visibleRow()),
+      findOwnHiddenQuestion: jest.fn().mockResolvedValue(null),
       findViewerReactions: jest.fn().mockResolvedValue([]),
       findViewerSaved: jest.fn().mockResolvedValue([]),
       findFollowedAuthorIds: jest.fn().mockResolvedValue([]),
@@ -304,7 +311,19 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
       conversationOpen: true,
       viewerReactions: ['y'],
       viewerSaved: false,
+      removedByModeration: false,
     });
+  });
+
+  it('shows the author of a question hidden by moderation that it was removed, without its text (L7)', async () => {
+    repository.findVisibleQuestion.mockResolvedValue(null);
+    repository.findOwnHiddenQuestion.mockResolvedValue(visibleRow() as never);
+
+    const response = await service.findVisible(VIEWER, 'question-1');
+
+    expect(repository.findOwnHiddenQuestion).toHaveBeenCalledWith('viewer-1', 'question-1');
+    expect(response).toMatchObject({ id: 'question-1', text: '', hashtags: [], removedByModeration: true });
+    expect(repository.findViewerReactions).not.toHaveBeenCalled();
   });
 
   it('says the viewer follows the author when a follow exists (L3)', async () => {
@@ -329,6 +348,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
     'answers 404 when the question is %s, and reads no reaction',
     async () => {
       repository.findVisibleQuestion.mockResolvedValue(null);
+      repository.findOwnHiddenQuestion.mockResolvedValue(null);
 
       await expect(service.findVisible(VIEWER, 'question-1')).rejects.toThrow(NotFoundException);
       await expect(service.findVisible(VIEWER, 'question-1')).rejects.toThrow('Question introuvable.');

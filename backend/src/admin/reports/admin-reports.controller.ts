@@ -3,9 +3,14 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { CurrentUser } from '../../auth/session/access.decorators';
 import type { SessionUser } from '../../auth/session/session-user.repository';
 import { Admin } from '../admin.decorators';
-import { ReportDecisionDto, ReportListQueryDto } from './admin-reports.dto';
+import { ReportDecisionDto, ReportListQueryDto, ReportRestoreDto } from './admin-reports.dto';
 import { AdminReportsService } from './admin-reports.service';
-import type { ReportDecisionResult, ReportDetailView, ReportPage } from './admin-reports.types';
+import type {
+  ReportDecisionResult,
+  ReportDetailView,
+  ReportPage,
+  ReportRestoreResult,
+} from './admin-reports.types';
 
 /** The reports of the back-office: the list, one report, and the decision on it (section 3.5). Not in the public OpenAPI. */
 @ApiExcludeController()
@@ -30,6 +35,20 @@ export class AdminReportsController {
   @Get(':id')
   view(@Param('id', ParseUUIDPipe) id: string): Promise<ReportDetailView> {
     return this.reports.view(id);
+  }
+
+  /**
+   * Makes hidden content visible again (L7). Needs a re-authentication of the last 10 minutes (DEC-088). Answers 409
+   * when the report did not hide the content, or when it is no longer hidden.
+   */
+  @Admin({ reauth: true })
+  @Put(':id/restore')
+  restore(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: ReportRestoreDto,
+    @CurrentUser() admin: SessionUser,
+  ): Promise<ReportRestoreResult> {
+    return this.reports.restore(admin.id, id, { note: body.note }, new Date());
   }
 
   /**

@@ -55,6 +55,8 @@ export type FeedQuestion = ReactionState & {
   counters: ReactionCounters & { reply: number };
   /** `viewerSaved`: whether the signed-in viewer saved the question (L4, false for the question just published). */
   viewerSaved: boolean;
+  /** `removedByModeration`: true only for the author of a question hidden by moderation (L7). Its text is empty. */
+  removedByModeration?: boolean;
 };
 
 /** One page of the feed. `trending` (the top 10 by reactions in the last 24 h) is sent on the first page only. */

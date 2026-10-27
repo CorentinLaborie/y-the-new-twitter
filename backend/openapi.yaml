@@ -2164,6 +2164,12 @@ components:
           type: boolean
           description: Whether the signed-in viewer saved this question (L4, section 9.2).
             False for anonymous views and for the question just published.
+        removedByModeration:
+          type: boolean
+          example: false
+          description: "True only for the author of a question hidden by moderation (L7):
+            the text and the hashtags are empty, and the other fields stay.
+            Every other viewer gets 404."
       required:
         - id
         - text
@@ -2175,6 +2181,7 @@ components:
         - conversationOpen
         - viewerReactions
         - viewerSaved
+        - removedByModeration
     CreateQuestionDto:
       type: object
       properties:

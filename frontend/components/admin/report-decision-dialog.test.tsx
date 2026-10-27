@@ -1,9 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { decideReport, reauthenticate } from '@/lib/admin-api';
-import { ReportDecisionDialog } from './report-decision-dialog';
+import { decideReport, reauthenticate, restoreReport } from '@/lib/admin-api';
+import { ReportDecisionDialog, type ReportDialogAction } from './report-decision-dialog';
 
-vi.mock('@/lib/admin-api', () => ({ decideReport: vi.fn(), reauthenticate: vi.fn() }));
+vi.mock('@/lib/admin-api', () => ({
+  decideReport: vi.fn(),
+  reauthenticate: vi.fn(),
+  restoreReport: vi.fn(),
+}));
 
 const REPORT_ID = '2c1d0e9f-8a7b-4c6d-9e5f-1a2b3c4d5e6f';
 
@@ -24,7 +28,7 @@ const REAUTH_REQUIRED = {
   },
 };
 
-function renderDialog(decision: 'hide' | 'dismiss' = 'hide') {
+function renderDialog(decision: ReportDialogAction = 'hide') {
   const onDecided = vi.fn();
   const onCancel = vi.fn();
   render(
@@ -54,6 +58,26 @@ describe('ReportDecisionDialog', () => {
   beforeEach(() => {
     vi.mocked(decideReport).mockReset();
     vi.mocked(reauthenticate).mockReset();
+    vi.mocked(restoreReport).mockReset();
+  });
+
+  it('names the restoration of the content, and sends it with the trimmed note (L7)', async () => {
+    vi.mocked(restoreReport).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { id: REPORT_ID, restoredAt: '2026-10-27T08:00:00.000Z' },
+    });
+    const { onDecided } = renderDialog('restore');
+
+    expect(screen.getByRole('heading', { name: 'Restaurer ce contenu ?' })).toBeInTheDocument();
+    typeNote('  Signalement erroné  ');
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurer le contenu' }));
+
+    await waitFor(() =>
+      expect(onDecided).toHaveBeenCalledWith({ id: REPORT_ID, restoredAt: '2026-10-27T08:00:00.000Z' }),
+    );
+    expect(restoreReport).toHaveBeenCalledWith(REPORT_ID, 'Signalement erroné');
+    expect(decideReport).not.toHaveBeenCalled();
   });
 
   it('names the hiding of the content, and keeps its button disabled until a note is written', () => {

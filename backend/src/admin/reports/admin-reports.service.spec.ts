@@ -41,6 +41,7 @@ describe('AdminReportsService', () => {
     findById: jest.Mock;
     reportsOnContent: jest.Mock;
     decide: jest.Mock;
+    restore: jest.Mock;
   };
   let audit: { appendIn: jest.Mock };
   let service: AdminReportsService;
@@ -52,6 +53,7 @@ describe('AdminReportsService', () => {
       findById: jest.fn(async () => null),
       reportsOnContent: jest.fn(async () => []),
       decide: jest.fn(async () => true),
+      restore: jest.fn(async () => true),
     };
     audit = { appendIn: jest.fn().mockResolvedValue(undefined) };
     service = new AdminReportsService(
@@ -328,6 +330,66 @@ describe('AdminReportsService', () => {
         targetId: REPORT_ID,
         reason: 'Contenu injurieux',
         details: { decision: 'hide' },
+      });
+    });
+  });
+
+  describe('restore', () => {
+    const hidden = () =>
+      row({
+        status: 'resolved',
+        decision: 'content_hidden',
+        decisionNote: 'Contenu injurieux',
+        reviewedAt: new Date('2026-10-20T10:00:00.000Z'),
+      });
+
+    it('answers 404 to an unknown report, with no write', async () => {
+      await expect(service.restore(ADMIN_ID, REPORT_ID, { note: 'Erreur' }, NOW)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(repository.restore).not.toHaveBeenCalled();
+    });
+
+    it('refuses a report that did not hide the content, with 409 and no write', async () => {
+      repository.findById.mockResolvedValueOnce(row({ status: 'dismissed', decision: 'no_action' }));
+
+      await expect(service.restore(ADMIN_ID, REPORT_ID, { note: 'Erreur' }, NOW)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(repository.restore).not.toHaveBeenCalled();
+    });
+
+    it('refuses with 409 when the content is no longer hidden, and audits nothing', async () => {
+      repository.findById.mockResolvedValueOnce(hidden());
+      repository.restore.mockResolvedValueOnce(false);
+
+      await expect(service.restore(ADMIN_ID, REPORT_ID, { note: 'Erreur' }, NOW)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(audit.appendIn).not.toHaveBeenCalled();
+    });
+
+    it('makes the question visible again, and audits it with the note as the reason', async () => {
+      repository.findById.mockResolvedValueOnce(hidden());
+      repository.restore.mockImplementationOnce(async (change: { record: (db: unknown) => Promise<void> }) => {
+        await change.record('transaction');
+        return true;
+      });
+
+      const result = await service.restore(ADMIN_ID, REPORT_ID, { note: 'Signalement erroné' }, NOW);
+
+      expect(repository.restore).toHaveBeenCalledWith(
+        expect.objectContaining({ target: { questionId: QUESTION_ID, replyId: null }, now: NOW }),
+      );
+      expect(result).toEqual({ id: REPORT_ID, restoredAt: NOW.toISOString() });
+      expect(audit.appendIn).toHaveBeenCalledWith('transaction', {
+        actorId: ADMIN_ID,
+        action: 'report.restore',
+        result: 'ok',
+        targetType: 'report',
+        targetId: REPORT_ID,
+        reason: 'Signalement erroné',
+        details: {},
       });
     });
   });

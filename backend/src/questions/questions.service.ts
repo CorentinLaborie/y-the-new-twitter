@@ -61,9 +61,22 @@ export class QuestionsService {
    * a hidden, deleted, inactive-author or blocked question is not found (R13, R14).
    */
   async findVisible(viewer: SessionUser, questionId: string): Promise<QuestionResponseDto> {
+    const threshold = this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD');
     const row = await this.questions.findVisibleQuestion(viewer.id, questionId);
     if (row === null) {
-      throw new NotFoundException(QUESTION_NOT_FOUND_MESSAGE);
+      // The author of a question hidden by moderation sees that it was removed, without its text (L7).
+      const removed = await this.questions.findOwnHiddenQuestion(viewer.id, questionId);
+      if (removed === null) {
+        throw new NotFoundException(QUESTION_NOT_FOUND_MESSAGE);
+      }
+      const view = toQuestionView(
+        { ...removed, body: '', hashtags: [] },
+        threshold,
+        [],
+        false,
+        false,
+      );
+      return { ...view, removedByModeration: true };
     }
     const reactions = await this.questions.findViewerReactions(viewer.id, [questionId]);
     const follows = await this.questions.findFollowedAuthorIds(viewer.id, [row.authorId]);
@@ -71,7 +84,7 @@ export class QuestionsService {
 
     return toQuestionView(
       row,
-      this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD'),
+      threshold,
       reactions.map((reaction) => reaction.kind),
       follows.length > 0,
       saved.length > 0,

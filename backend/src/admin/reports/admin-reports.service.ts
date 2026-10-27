@@ -18,6 +18,7 @@ import type {
   ReportListStatus,
   ReportOnContentView,
   ReportPage,
+  ReportRestoreResult,
   ReportTargetType,
   ReportTargetView,
 } from './admin-reports.types';
@@ -27,6 +28,7 @@ type TargetContent = NonNullable<ReportRow['question']>;
 
 const NOT_FOUND_MESSAGE = 'Signalement introuvable.';
 const ALREADY_DECIDED_MESSAGE = 'Ce signalement a déjà été traité.';
+const NOT_HIDDEN_MESSAGE = 'Ce contenu n’est pas masqué : rien à restaurer.';
 
 /** The status and the decision that each decision gives the report (see the report model in the schema). */
 const DECISION_PLANS: Record<
@@ -137,6 +139,46 @@ export class AdminReportsService {
     }
 
     return { id, status: plan.status, decision: plan.decision, decidedAt: now.toISOString() };
+  }
+
+  /**
+   * Restores the content of a report that was hidden by a decision: the content is visible again, for its author and for
+   * everyone. Only a report whose decision hid the content can restore it; otherwise, or when the content is no longer
+   * hidden, the answer is 409. The restoration is audited with the note as its reason (L7, admin only).
+   */
+  async restore(
+    actorId: string,
+    id: string,
+    request: { note: string },
+    now: Date,
+  ): Promise<ReportRestoreResult> {
+    const row = await this.repository.findById(id);
+    if (row === null) {
+      throw new NotFoundException(NOT_FOUND_MESSAGE);
+    }
+    if (row.decision !== 'content_hidden') {
+      throw new ConflictException(NOT_HIDDEN_MESSAGE);
+    }
+
+    const restored = await this.repository.restore({
+      target: targetOf(row),
+      now,
+      record: (db) =>
+        this.audit.appendIn(db, {
+          actorId,
+          action: AUDIT_ACTIONS.reportRestore,
+          result: 'ok',
+          targetType: AUDIT_TARGET_TYPES.report,
+          targetId: id,
+          reason: request.note,
+          details: {},
+        }),
+    });
+    if (!restored) {
+      throw new ConflictException(NOT_HIDDEN_MESSAGE);
+    }
+
+    return { id, restoredAt: now.toISOString() };
   }
 
   /** The number of reports made on each content of the page, counted over all the reports of that content. */
