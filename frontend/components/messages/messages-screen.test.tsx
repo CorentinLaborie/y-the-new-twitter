@@ -52,7 +52,7 @@ describe('MessagesScreen', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Demandes' }));
 
     await waitFor(() => expect(fetchConversations).toHaveBeenLastCalledWith({ requests: true }));
-    expect(await screen.findByText('Aucune demande en attente.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Aucune demande en attente' })).toBeInTheDocument();
   });
 
   it('shows the French failure text when the list cannot be read', async () => {

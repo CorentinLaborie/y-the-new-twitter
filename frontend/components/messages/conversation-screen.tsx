@@ -185,7 +185,7 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
 
   return (
     <section aria-label={`Conversation avec ${conversation.other.displayName}`}>
-      <header className={styles.header}>
+      <header className={styles.threadHeader}>
         <Link href={`/u/${encodeURIComponent(conversation.other.handle)}`}>
           <strong>{conversation.other.displayName}</strong> <span>@{conversation.other.handle}</span>
         </Link>

@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { requireSession } from '../session-guard';
 import { MessagesScreen } from '@/components/messages/messages-screen';
-import styles from '../home/home.module.css';
-import messagesStyles from '@/components/messages/messages.module.css';
+import styles from '@/components/messages/messages.module.css';
 
 /** The private messages of the viewer (section 9): the conversations, the requests waiting for them, the archives. */
 export default async function MessagesPage() {
@@ -10,12 +9,12 @@ export default async function MessagesPage() {
 
   return (
     <main className={styles.column}>
-      <div className={messagesStyles.pageHeader}>
-        <h1>Messages</h1>
-        <Link href="/messages/new" className={`${messagesStyles.button} ${messagesStyles.buttonOutline}`}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Messages</h1>
+        <Link href="/messages/new" className={`y-btn y-btn-outline y-btn-sm ${styles.newMessage}`}>
           Nouveau message
         </Link>
-      </div>
+      </header>
       <MessagesScreen />
     </main>
   );

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { avatarInitial } from '@/components/feed/avatar-initial';
+import { FeedIcon } from '@/components/feed/feed-icon';
 import { fetchConversations, type ConversationView } from '@/lib/messages-api';
 import {
   conversationStateLabel,
@@ -21,15 +22,22 @@ type ReadyList = {
   more: 'idle' | 'loading' | 'failed';
 };
 
-type ListState = { phase: 'loading' } | { phase: 'failed'; message: string } | ReadyList;
+type ListState = { phase: 'failed'; message: string } | ReadyList;
 
-/** The list of the viewer's conversations, one tab per list (Messages, Demandes, Archivées), with a search on the loaded ones. */
+const SKELETON_ROWS = 5;
+
+/**
+ * The list of the viewer's conversations, one tab per list (Messages, Demandes, Archivées), with a search on the loaded
+ * ones. Same states as the Notifications page: skeleton lines while loading, the empty state, the error with a retry.
+ */
 export function MessagesScreen() {
   const [tab, setTab] = useState<MessagesTab>('messages');
   const [query, setQuery] = useState('');
   /** The last answer, kept with its tab: a tab with no answer yet shows the loading state. */
   const [answer, setAnswer] = useState<{ tab: MessagesTab; state: ListState } | null>(null);
-  const state: ListState = answer?.tab === tab ? answer.state : { phase: 'loading' };
+  /** Changes to ask the first page again (the retry button). */
+  const [attempt, setAttempt] = useState(0);
+  const state: ListState | null = answer?.tab === tab ? answer.state : null;
 
   useEffect(() => {
     let active = true;
@@ -45,7 +53,12 @@ export function MessagesScreen() {
     return () => {
       active = false;
     };
-  }, [tab]);
+  }, [tab, attempt]);
+
+  function retry() {
+    setAnswer(null);
+    setAttempt((count) => count + 1);
+  }
 
   async function loadMore(cursor: string) {
     setAnswer((current) =>
@@ -81,7 +94,7 @@ export function MessagesScreen() {
             key={item.id}
             type="button"
             role="tab"
-            className={tab === item.id ? `${styles.tab} ${styles.tabCurrent}` : styles.tab}
+            className={styles.tab}
             aria-selected={tab === item.id}
             onClick={() => setTab(item.id)}
           >
@@ -90,44 +103,46 @@ export function MessagesScreen() {
         ))}
       </div>
 
-      <div className={styles.search}>
-        <label htmlFor="messages-search" className={styles.visuallyHidden}>
-          Rechercher dans les messages
-        </label>
-        <input
-          id="messages-search"
-          type="search"
-          className={styles.field}
-          placeholder="Rechercher"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
+      <div className={styles.panel}>
+        <div className={styles.search}>
+          <label htmlFor="messages-search" className={styles.visuallyHidden}>
+            Rechercher dans les messages
+          </label>
+          <input
+            id="messages-search"
+            type="search"
+            className={styles.field}
+            placeholder="Rechercher"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+
+        {state === null ? <MessagesLoading /> : null}
+        {state?.phase === 'failed' ? <MessagesError message={state.message} onRetry={retry} /> : null}
+        {state?.phase === 'ready' && state.conversations.length === 0 ? <MessagesEmpty tab={tab} /> : null}
+
+        {state?.phase === 'ready' && state.conversations.length > 0 ? (
+          <ul aria-label="Conversations" className={styles.list}>
+            {state.conversations
+              .filter((conversation) => matchesQuery(conversation, query))
+              .map((conversation) => (
+                <ConversationRow key={conversation.id} conversation={conversation} />
+              ))}
+          </ul>
+        ) : null}
+
+        {state?.phase === 'ready' && state.nextCursor !== null ? (
+          <button
+            type="button"
+            className={`y-btn y-btn-outline y-btn-md y-btn-pill ${styles.more}`}
+            onClick={() => loadMore(state.nextCursor as string)}
+            disabled={state.more === 'loading'}
+          >
+            {state.more === 'failed' ? 'Réessayer' : 'Voir plus de conversations'}
+          </button>
+        ) : null}
       </div>
-
-      {state.phase === 'loading' ? <p role="status">Chargement des messages…</p> : null}
-      {state.phase === 'failed' ? <p role="alert">{state.message}</p> : null}
-      {state.phase === 'ready' && state.conversations.length === 0 ? <EmptyList tab={tab} /> : null}
-
-      {state.phase === 'ready' && state.conversations.length > 0 ? (
-        <ul aria-label="Conversations" className={styles.list}>
-          {state.conversations
-            .filter((conversation) => matchesQuery(conversation, query))
-            .map((conversation) => (
-              <ConversationRow key={conversation.id} conversation={conversation} />
-            ))}
-        </ul>
-      ) : null}
-
-      {state.phase === 'ready' && state.nextCursor !== null ? (
-        <button
-          type="button"
-          className={`${styles.button} ${styles.buttonOutline}`}
-          onClick={() => loadMore(state.nextCursor as string)}
-          disabled={state.more === 'loading'}
-        >
-          {state.more === 'failed' ? 'Réessayer' : 'Voir plus de conversations'}
-        </button>
-      ) : null}
     </section>
   );
 }
@@ -147,33 +162,93 @@ function matchesQuery(conversation: ConversationView, query: string): boolean {
 function ConversationRow({ conversation }: { conversation: ConversationView }) {
   const state = conversationStateLabel(conversation);
   return (
-    <li>
-      <Link href={`/messages/${conversation.id}`} className={styles.row} aria-label={`Conversation avec ${conversation.other.displayName}`}>
+    <li className={conversation.unread ? `${styles.item} ${styles.isUnread}` : styles.item}>
+      <Link
+        href={`/messages/${conversation.id}`}
+        className={styles.row}
+        aria-label={`Conversation avec ${conversation.other.displayName}${conversation.unread ? ', non lue' : ''}`}
+      >
         <span className={styles.avatar} aria-hidden="true">
           {avatarInitial(conversation.other.displayName)}
         </span>
         <span className={styles.rowText}>
           <strong>{conversation.other.displayName}</strong> <span className={styles.handle}>@{conversation.other.handle}</span>
         </span>
-        <time className={styles.count} dateTime={conversation.lastMessageAt}>
+        <time className={styles.meta} dateTime={conversation.lastMessageAt}>
           {formatMessageTime(conversation.lastMessageAt)}
         </time>
-        {state !== '' ? <span className={styles.count}>{state}</span> : null}
-        {conversation.unread ? <span aria-label="Non lu" className={styles.unread} /> : null}
+        {state !== '' ? <span className={styles.meta}>{state}</span> : null}
+        {conversation.unread ? <span className={styles.unreadDot} aria-hidden="true" /> : null}
       </Link>
     </li>
   );
 }
 
-function EmptyList({ tab }: { tab: MessagesTab }) {
-  if (tab !== 'messages') {
-    return <p className={styles.emptyText}>{tab === 'requests' ? 'Aucune demande en attente.' : 'Aucune conversation archivée.'}</p>;
+/** First load: skeleton lines in a busy region, with a text for screen readers. */
+function MessagesLoading() {
+  return (
+    <div aria-busy="true" className={styles.list}>
+      <span className="y-sr">Chargement des messages…</span>
+      {Array.from({ length: SKELETON_ROWS }, (_, index) => (
+        <div key={index} className={styles.skeletonRow} aria-hidden="true">
+          <span className="y-skeleton-block y-skeleton-avatar" />
+          <div className={styles.skeletonLines}>
+            <span className="y-skeleton-block y-skeleton-line is-short" />
+            <span className="y-skeleton-block y-skeleton-line" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The list did not load. The retry control is a real button. */
+function MessagesError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="y-errorstate" role="alert">
+      <span className="y-errorstate-icon">
+        <FeedIcon name="triangle-alert" size={24} />
+      </span>
+      <h2 className="y-errorstate-title">Impossible de charger les messages</h2>
+      <p className="y-errorstate-message">{message}</p>
+      <button type="button" className="y-errorstate-retry" onClick={onRetry}>
+        Réessayer
+      </button>
+    </div>
+  );
+}
+
+function MessagesEmpty({ tab }: { tab: MessagesTab }) {
+  if (tab === 'requests') {
+    return (
+      <div className="y-empty">
+        <span className="y-empty-icon">
+          <FeedIcon name="message-circle" size={28} />
+        </span>
+        <h2>Aucune demande en attente</h2>
+        <p>Les messages de personnes qui ne vous suivent pas apparaîtront ici, à accepter ou à refuser.</p>
+      </div>
+    );
+  }
+  if (tab === 'archived') {
+    return (
+      <div className="y-empty">
+        <span className="y-empty-icon">
+          <FeedIcon name="message-circle" size={28} />
+        </span>
+        <h2>Aucune conversation archivée</h2>
+        <p>Les conversations que vous archivez apparaîtront ici.</p>
+      </div>
+    );
   }
   return (
-    <div className={styles.empty}>
+    <div className="y-empty">
+      <span className="y-empty-icon">
+        <FeedIcon name="message-circle" size={28} />
+      </span>
       <h2>Aucune conversation</h2>
       <p>Écrivez à quelqu’un pour commencer.</p>
-      <Link href="/messages/new" className={`${styles.button} ${styles.buttonOutline}`}>
+      <Link href="/messages/new" className="y-btn y-btn-outline y-btn-md y-btn-pill">
         Nouveau message
       </Link>
     </div>

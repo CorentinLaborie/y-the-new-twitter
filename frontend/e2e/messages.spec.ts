@@ -70,7 +70,7 @@ test('the list shows the accepted conversations with their state, and the reques
 
   await page.getByRole('tab', { name: 'Demandes' }).click();
 
-  await expect(page.getByText('Aucune demande en attente.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Aucune demande en attente' })).toBeVisible();
   expect(calls.flags).toEqual([]);
 });
 
@@ -135,12 +135,14 @@ test('the menu mutes and archives the conversation for the viewer only', async (
   await page.goto(`/messages/${C1}`);
   await page.getByRole('button', { name: 'Options de la conversation' }).click();
   await page.getByRole('menuitem', { name: 'Mettre en sourdine' }).click();
+  // The menu closes once the server has answered: reopen it only then.
+  await expect(page.getByRole('menu')).toBeHidden();
 
   await page.getByRole('button', { name: 'Options de la conversation' }).click();
   await page.getByRole('menuitem', { name: 'Archiver' }).click();
 
-  expect(calls.flags).toContainEqual({ conversationId: C1, verb: 'PUT mute' });
-  expect(calls.flags).toContainEqual({ conversationId: C1, verb: 'PUT archive' });
+  await expect.poll(() => calls.flags).toContainEqual({ conversationId: C1, verb: 'PUT mute' });
+  await expect.poll(() => calls.flags).toContainEqual({ conversationId: C1, verb: 'PUT archive' });
 });
 
 test('blocking from the menu asks for confirmation, then blocks the account and returns to the list', async ({ page }) => {
