@@ -26,6 +26,8 @@ interface PurgeReport {
   emailChangeCodes: number;
   sessions: number;
   idempotencyKeys: number;
+  /** Saved questions removed because the question is hidden or deleted (L4, decision of 2026-10-27). */
+  bookmarks: number;
   erasedQuestions: number;
   erasedReplies: number;
   purgedAccounts: number;
@@ -45,8 +47,8 @@ export class PurgeService {
 
   /**
    * Deletes the codes that expired more than 24 hours ago, the sessions and the idempotency keys whose expiry is in the past,
-   * erases the accounts whose 90-day window has passed (R16), then erases the content deleted more than 90 days ago.
-   * Each step runs on its own, in this order.
+   * removes the saved questions that are hidden or deleted, erases the accounts whose 90-day window has passed (R16), then
+   * erases the content deleted more than 90 days ago. Each step runs on its own, in this order.
    */
   async purgeExpired(): Promise<PurgeReport> {
     const now = this.clock.now();
@@ -65,6 +67,10 @@ export class PurgeService {
     const idempotencyKeys = await this.database.idempotencyKey.deleteMany({
       where: { expiresAt: { lte: now } },
     });
+    // A saved question that is hidden or deleted is no longer shown to anyone: its saves go with it (decision of 2026-10-27).
+    const bookmarks = await this.database.bookmark.deleteMany({
+      where: { question: { OR: [{ deletedAt: { not: null } }, { moderationStatus: { not: 'visible' } }] } },
+    });
     const purgedAccounts = await this.purgeDueAccounts(now);
     const erased = await this.eraseDeletedContent(now);
 
@@ -74,6 +80,7 @@ export class PurgeService {
       emailChangeCodes: emailChangeCodes.count,
       sessions: sessions.count,
       idempotencyKeys: idempotencyKeys.count,
+      bookmarks: bookmarks.count,
       erasedQuestions: erased.questions,
       erasedReplies: erased.replies,
       purgedAccounts,

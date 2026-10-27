@@ -20,6 +20,7 @@ function fakeDatabase(
     emailChangeCode: { deleteMany: deleteMany(counts.emailChangeCode) },
     session: { deleteMany: deleteMany(counts.session) },
     idempotencyKey: { deleteMany: deleteMany(counts.idempotencyKey) },
+    bookmark: { deleteMany: deleteMany(0) },
     user: { findMany: jest.fn().mockResolvedValue(dueAccounts) },
     question: { findMany: jest.fn().mockResolvedValue([]), updateMany: deleteMany(0) },
     reply: { findMany: jest.fn().mockResolvedValue([]), updateMany: deleteMany(0) },
@@ -110,9 +111,21 @@ describe('PurgeService', () => {
       emailChangeCodes: 3,
       sessions: 5,
       idempotencyKeys: 4,
+      bookmarks: 0,
       erasedQuestions: 0,
       erasedReplies: 0,
       purgedAccounts: 0,
+    });
+  });
+
+  it('removes the saves of questions that are hidden or deleted, and keeps the others (decision of 2026-10-27)', async () => {
+    const database = fakeDatabase();
+    const service = new PurgeService(database as unknown as MaintenancePrismaService, clockAt(NOW));
+
+    await service.purgeExpired();
+
+    expect(database.bookmark.deleteMany).toHaveBeenCalledWith({
+      where: { question: { OR: [{ deletedAt: { not: null } }, { moderationStatus: { not: 'visible' } }] } },
     });
   });
 

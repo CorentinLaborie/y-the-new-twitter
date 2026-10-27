@@ -84,6 +84,7 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
       sessions: 1,
       idempotencyKeys: 0,
       erasedQuestions: 0,
+      bookmarks: 0,
       erasedReplies: 0,
       purgedAccounts: 0,
     });
@@ -125,6 +126,7 @@ describe('Retention purge on PostgreSQL (e2e)', () => {
       sessions: 0,
       idempotencyKeys: 0,
       erasedQuestions: 0,
+      bookmarks: 0,
       erasedReplies: 0,
       purgedAccounts: 0,
     });
