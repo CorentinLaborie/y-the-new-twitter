@@ -1,4 +1,5 @@
 import type { Prisma, ReplyReactionKind } from '../database/generated/client/client';
+import { extractMentionHandles } from '../mentions/mention-text';
 import { visibleTo } from '../questions/question-view';
 import type { ReplyResponseDto } from './dto/reply-response.dto';
 
@@ -26,11 +27,15 @@ export function visibleReplyTo(viewerId: string) {
   } satisfies Prisma.ReplyWhereInput;
 }
 
-/** A reply as the API returns it. `viewerReactions` is read by the caller: both kinds can be set (R2). */
+/**
+ * A reply as the API returns it. `viewerReactions` is read by the caller: both kinds can be set (R2). `linkable` holds
+ * the lowercase handles whose profile the viewer may open (MentionsService.linkableHandles): only those are linked.
+ */
 export function toReplyView(
   row: ReplyRow,
   counters: { readonly likeCount: number; readonly dislikeCount: number },
   viewerReactions: readonly ReplyReactionKind[],
+  linkable: ReadonlySet<string>,
 ): ReplyResponseDto {
   return {
     id: row.id,
@@ -40,5 +45,6 @@ export function toReplyView(
     author: { handle: row.author.handle, displayName: row.author.displayName },
     counters: { like: counters.likeCount, dislike: counters.dislikeCount },
     viewerReactions: [...viewerReactions],
+    mentionLinks: extractMentionHandles(row.body).filter((handle) => linkable.has(handle)),
   };
 }

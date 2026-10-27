@@ -38,6 +38,13 @@ export class ReplyResponseDto {
   readonly counters!: ReplyCountersDto;
 
   @ApiProperty({
+    isArray: true,
+    type: String,
+    description: 'Lowercase handles of the mentions whose profile can be opened. The other mentions are plain text.',
+  })
+  readonly mentionLinks!: readonly string[];
+
+  @ApiProperty({
     enum: Object.values(ReplyReactionKind),
     isArray: true,
     description: 'Empty when the viewer has none.',

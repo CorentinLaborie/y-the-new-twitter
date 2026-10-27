@@ -90,6 +90,11 @@ export class RepliesService {
       page.map((row) => row.id),
     );
     const last = page.at(-1);
+    const linkable = await this.mentions.linkableHandles(
+      this.prisma,
+      viewer.id,
+      page.map((row) => row.body),
+    );
 
     return {
       items: page.map((row) =>
@@ -99,6 +104,7 @@ export class RepliesService {
           viewerReactionRows
             .filter((reaction) => reaction.replyId === row.id)
             .map((reaction) => reaction.kind),
+          linkable,
         ),
       ),
       nextCursor:
@@ -149,7 +155,9 @@ export class RepliesService {
     await this.mentions.record(db, author.id, { questionId, replyId: reply.id }, mentionedUserIds);
     await this.notifyQuestionAuthor(db, author.id, question.authorId, questionId, reply.id, mentionedUserIds);
 
-    return toReplyView(reply, reply, []);
+    const linkable = await this.mentions.linkableHandles(db, author.id, [text]);
+
+    return toReplyView(reply, reply, [], linkable);
   }
 
   /**
