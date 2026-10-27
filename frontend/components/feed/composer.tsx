@@ -2,6 +2,8 @@
 
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { Notice } from '@/components/auth/notice';
+import { MentionPicker } from '@/components/conversation/mention-picker';
+import { useMentionPicker } from '@/components/conversation/use-mention-picker';
 import { messageForCode, messageForStatus } from '@/lib/api-messages';
 import { newIdempotencyKey } from '@/lib/idempotency';
 import { postQuestion, type FeedQuestion } from '@/lib/feed-api';
@@ -39,6 +41,8 @@ export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   // One key per text: a repeated submit of the same text returns the first result (Idempotency-Key).
   const idempotencyKey = useRef<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mentions = useMentionPicker(textareaRef);
   const textareaId = useId();
   const hintId = useId();
   const refusalId = useId();
@@ -49,10 +53,15 @@ export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
   const tooLong = !questionCheck.ok && questionCheck.reason === 'too-long';
   const canSubmit = questionCheck.ok && !submitting && !suspended;
 
-  function handleChange(value: string) {
+  function applyText(value: string) {
     setText(value);
     idempotencyKey.current = null;
     setSubmitError(null);
+  }
+
+  function handleChange(value: string, caret: number) {
+    applyText(value);
+    mentions.onTextChange(value, caret);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -67,6 +76,7 @@ export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
     setSubmitting(false);
     if (result.ok) {
       idempotencyKey.current = null;
+      mentions.close();
       setText('');
       onPosted(result.body);
     } else {
@@ -86,15 +96,32 @@ export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
           Posez votre question
         </label>
         <textarea
+          ref={textareaRef}
           id={textareaId}
           className={styles.textarea}
           placeholder={'Quelle est votre question ?'}
           value={text}
-          onChange={(event) => handleChange(event.target.value)}
+          onChange={(event) => handleChange(event.target.value, event.target.selectionStart ?? event.target.value.length)}
+          onKeyDown={(event) => {
+            const picked = mentions.handleKeyDown(event, text);
+            if (picked !== null) {
+              applyText(picked);
+            }
+          }}
+          aria-autocomplete="list"
+          aria-controls={mentions.picker !== null ? mentions.pickerId : undefined}
           aria-invalid={tooLong ? true : undefined}
           aria-describedby={describedBy}
           disabled={submitting}
         />
+        {mentions.picker !== null ? (
+          <MentionPicker
+            id={mentions.pickerId}
+            suggestions={mentions.picker.suggestions}
+            activeIndex={mentions.picker.activeIndex}
+            onPick={(handle) => applyText(mentions.pick(text, handle))}
+          />
+        ) : null}
         {tooLong ? (
           <p id={refusalId} className={styles.refusal}>
             {TOO_LONG_MESSAGE}
