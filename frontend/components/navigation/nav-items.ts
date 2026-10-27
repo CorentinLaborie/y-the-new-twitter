@@ -41,13 +41,12 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     countsUnread: false,
   },
   {
-    // Planned route: /explore (lot M4). Its screen is not built in L0.
     id: 'explore',
     label: 'Explorer',
     icon: 'search',
     href: () => '/explore',
     alsoActiveOn: ['/hashtags'],
-    plannedLot: 'M4',
+    plannedLot: null,
     countsUnread: false,
   },
   {

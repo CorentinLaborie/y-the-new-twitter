@@ -31,7 +31,7 @@ describe('NAV_ENTRIES (plan L0, section 3.2)', () => {
   });
 
   it('names the planned lot of each route that does not exist yet', () => {
-    expect(entry('explore').plannedLot).toBe('M4');
+    expect(entry('explore').plannedLot).toBeNull();
     expect(entry('messages').plannedLot).toBe('L4');
     expect(entry('bookmarks').plannedLot).toBe('L4');
     expect(entry('profile').plannedLot).toBe('L1');

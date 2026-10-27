@@ -1,0 +1,172 @@
+/*
+ * Explore screens (M4): the search, the sections and the two columns. One column under 1024 px; on desktop the trends
+ * and the suggestions sit in a side column. Every control is at least 44 px high (DEC-347).
+ */
+
+.screen {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-8) var(--space-16) var(--space-16);
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.field {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-background);
+  font: inherit;
+  color: var(--color-foreground);
+}
+
+.clear {
+  min-height: 44px;
+  padding: 0 var(--space-12);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.typeahead {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4) 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-card);
+}
+
+.typeaheadItem {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-16);
+  color: var(--color-foreground);
+  text-decoration: none;
+}
+
+.typeaheadItem:hover,
+.typeaheadItem:focus-visible {
+  background: var(--color-background);
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24, 24px);
+  margin-top: var(--space-16);
+}
+
+.main,
+.side {
+  min-width: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-foreground);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trend,
+.account {
+  display: flex;
+  flex-direction: column;
+  min-height: 44px;
+  padding: var(--space-8) 0;
+  color: var(--color-foreground);
+  text-decoration: none;
+}
+
+.trendName {
+  font-weight: 700;
+}
+
+.muted {
+  font-size: 13px;
+  color: var(--color-muted, #6b7280);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-12);
+  border-radius: var(--radius-full);
+  background: var(--color-background);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.nothing {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-muted, #6b7280);
+}
+
+.more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .main {
+    flex: 1 1 0;
+  }
+
+  .side {
+    flex: 0 0 320px;
+  }
+}

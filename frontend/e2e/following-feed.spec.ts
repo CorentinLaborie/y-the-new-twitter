@@ -44,13 +44,13 @@ test('the URL opens the Abonnements tab directly', async ({ page }) => {
   await expect(page.getByText('Question suivie directe')).toBeVisible();
 });
 
-test('an empty Abonnements tab shows its text and no action', async ({ page }) => {
+test('an empty Abonnements tab shows its text and the way to Explorer', async ({ page }) => {
   await mockFeedApi(page, { feed: () => feedPage([]) });
 
   await page.goto('/home?tab=following');
 
   await expect(page.getByText('Les questions des comptes que vous suivez apparaîtront ici.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Explorer' })).toHaveCount(0);
+  await expect(page.getByRole('main').getByRole('link', { name: 'Explorer' })).toBeVisible();
 });
 
 test('unfollowing an author on Abonnements takes their questions off the list at once', async ({ page }) => {

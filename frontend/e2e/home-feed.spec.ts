@@ -93,8 +93,8 @@ test('the empty state shows when the feed has no question', async ({ page }) => 
 
   await expect(page.getByRole('heading', { name: 'Rien à lire pour l’instant' })).toBeVisible();
   await expect(page.getByText('Posez la première question ou explorez les tendances.')).toBeVisible();
-  // The navigation keeps its "Explorer" entry; only the empty state must not offer it.
-  await expect(page.getByRole('main').getByRole('link', { name: 'Explorer' })).toHaveCount(0);
+  // The empty state offers the way to Explorer (DEC-168, restored with the /explore page in M4).
+  await expect(page.getByRole('main').getByRole('link', { name: 'Explorer' })).toBeVisible();
   await expectNoHorizontalScroll(page);
 });
 

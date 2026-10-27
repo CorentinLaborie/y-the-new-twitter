@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ApiProblem } from '@/lib/api-client';
 import { messageForCode } from '@/lib/api-messages';
 import { FeedIcon } from './feed-icon';
@@ -32,8 +33,8 @@ export function FeedLoading() {
 }
 
 /**
- * The feed has no question yet (Home-Empty boards). The board's "Explorer" action is left out: its page is a later
- * milestone (M4), and a link to a missing page would be a 404.
+ * The feed has no question yet (Home-Empty boards). The "Explorer" action leads to /explore, which exists since M4
+ * (DEC-168, restored on 2026-10-27).
  */
 export function FeedEmpty() {
   return (
@@ -43,13 +44,16 @@ export function FeedEmpty() {
       </span>
       <h2>Rien à lire pour l’instant</h2>
       <p>Posez la première question ou explorez les tendances.</p>
+      <Link href="/explore" className="y-btn y-btn-outline y-btn-md y-btn-pill">
+        Explorer
+      </Link>
     </div>
   );
 }
 
 /**
- * The "Abonnements" tab has no question yet: an account followed with no question, or none of them. Text only, with
- * no action: the page to explore the accounts does not exist yet (DEC-168).
+ * The "Abonnements" tab has no question yet: an account followed with no question, or none of them. The "Explorer"
+ * action leads to /explore (DEC-168, restored on 2026-10-27).
  */
 export function FollowingEmpty() {
   return (
@@ -59,6 +63,9 @@ export function FollowingEmpty() {
       </span>
       <h2>Rien à lire pour l’instant</h2>
       <p>Les questions des comptes que vous suivez apparaîtront ici.</p>
+      <Link href="/explore" className="y-btn y-btn-outline y-btn-md y-btn-pill">
+        Explorer
+      </Link>
     </div>
   );
 }

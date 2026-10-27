@@ -239,13 +239,13 @@ describe('HomeFeed', () => {
     expect(within(items[1]).getByText('Question existante')).toBeInTheDocument();
   });
 
-  it('shows the empty state without a link to the explore page, which does not exist yet', async () => {
+  it('shows the empty state with a link to the explore page (DEC-168)', async () => {
     vi.mocked(fetchFeedPage).mockResolvedValue(page([]));
 
     render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
 
     expect(await screen.findByRole('heading', { name: 'Rien à lire pour l’instant' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Explorer' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Explorer' })).toHaveAttribute('href', '/explore');
   });
 
   it('does not show the empty state when the trending block has questions', async () => {
