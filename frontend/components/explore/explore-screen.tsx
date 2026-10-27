@@ -181,6 +181,7 @@ export function ExploreScreen({
                   ) : (
                     <ExploreQuestionList
                       label="Questions populaires"
+                      separated
                       questions={data.questions}
                       viewer={viewer}
                     />

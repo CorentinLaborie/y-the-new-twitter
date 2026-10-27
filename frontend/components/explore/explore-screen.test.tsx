@@ -54,6 +54,10 @@ describe('ExploreScreen (M4)', () => {
     expect(trends.getByText('#tests')).toBeInTheDocument();
     expect(trends.getByText('3 réactions sur 24 h')).toBeInTheDocument();
     expect(await screen.findByText('Question populaire')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Questions populaires' })).toHaveAttribute(
+      'data-separated',
+      'true',
+    );
     expect(await screen.findByText('Carol')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Carol/ })).toHaveAttribute('href', '/u/carol');
   });

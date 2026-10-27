@@ -10,6 +10,7 @@ import {
 } from '@/components/feed/reaction-rules';
 import { QuestionCard } from '@/components/feed/question-card';
 import feedStyles from '@/components/feed/feed.module.css';
+import styles from './explore.module.css';
 
 /**
  * A list of questions on an Explore screen, with the reactions of the feed: optimistic, rolled back on failure. The
@@ -19,10 +20,13 @@ export function ExploreQuestionList({
   questions,
   label,
   viewer,
+  separated = false,
 }: {
   questions: FeedQuestion[];
   label: string;
   viewer: { handle: string; suspended: boolean };
+  /** A hairline between two questions (the popular questions). */
+  separated?: boolean;
 }) {
   const [changed, setChanged] = useState<Record<string, FeedQuestion>>({});
   const [pendingIds, setPendingIds] = useState<string[]>([]);
@@ -63,7 +67,11 @@ export function ExploreQuestionList({
   }
 
   return (
-    <ul className={feedStyles.list} aria-label={label}>
+    <ul
+      className={`${feedStyles.list} ${separated ? styles.separated : ''}`}
+      aria-label={label}
+      data-separated={separated}
+    >
       {shown.map((question) => (
         <li key={question.id}>
           <QuestionCard

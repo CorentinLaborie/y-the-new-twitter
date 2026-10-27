@@ -33,7 +33,10 @@ type ExploreHandlers = {
 const DEFAULT_HANDLERS: ExploreHandlers = {
   trends: () => ({ status: 200, body: { hashtags: [{ name: 'tests', reactions: 3 }] } }),
   popular: () => ({ status: 200, body: { questions: [QUESTION] } }),
-  suggestions: () => ({ status: 200, body: { accounts: [{ id: 'a-1', handle: 'carol', displayName: 'Carol' }] } }),
+  suggestions: () => ({
+    status: 200,
+    body: { accounts: [{ id: 'a-1', handle: 'carol', displayName: 'Carol' }] },
+  }),
   search: () => ({ status: 200, body: { questions: [], hashtags: [], accounts: [] } }),
   hashtag: () => ({ status: 200, body: { questions: [QUESTION], nextCursor: null } }),
 };
@@ -91,7 +94,9 @@ test('Explorer shows the trends, the popular questions and the accounts to follo
 
   await page.goto('/explore');
 
-  await expect(page.getByRole('region', { name: 'Tendances' }).getByRole('link', { name: /#tests/ })).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Tendances' }).getByRole('link', { name: /#tests/ }),
+  ).toBeVisible();
   await expect(page.getByText('3 réactions sur 24 h')).toBeVisible();
   await expect(page.getByText('Quelle est la meilleure façon de tester #tests ?')).toBeVisible();
   await expect(page.getByRole('link', { name: /Carol/ })).toHaveAttribute('href', '/u/carol');
@@ -104,7 +109,11 @@ test('a search keeps its text in the address and shows the hashtags and accounts
       text === 'tests'
         ? {
             status: 200,
-            body: { questions: [], hashtags: [{ name: 'tests' }], accounts: [{ handle: 'bob', displayName: 'Bob' }] },
+            body: {
+              questions: [],
+              hashtags: [{ name: 'tests' }],
+              accounts: [{ handle: 'bob', displayName: 'Bob' }],
+            },
           }
         : { status: 200, body: { questions: [], hashtags: [], accounts: [] } },
   });
@@ -114,8 +123,12 @@ test('a search keeps its text in the address and shows the hashtags and accounts
   await page.getByRole('button', { name: 'Rechercher' }).click();
 
   await expect(page).toHaveURL(/\/explore\?q=tests$/);
-  await expect(page.getByRole('list', { name: 'Hashtags trouvés' }).getByRole('link', { name: '#tests' })).toBeVisible();
-  await expect(page.getByRole('list', { name: 'Comptes trouvés' }).getByRole('link', { name: /Bob/ })).toBeVisible();
+  await expect(
+    page.getByRole('list', { name: 'Hashtags trouvés' }).getByRole('link', { name: '#tests' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('list', { name: 'Comptes trouvés' }).getByRole('link', { name: /Bob/ }),
+  ).toBeVisible();
   await expectNoHorizontalScroll(page);
 });
 
@@ -124,7 +137,11 @@ test('a hashtag page lists its questions', async ({ page }) => {
 
   await page.goto('/hashtags/tests');
 
-  await expect(page.getByRole('heading', { name: '#tests' })).toBeVisible();
+  const title = page.getByRole('heading', { name: '#tests' });
+  await expect(title).toBeVisible();
+  await expect(title).toHaveCSS('padding-top', '8px');
+  // On desktop (1024 px and more) the title also moves 8 px to the right.
+  await expect(title).toHaveCSS('padding-left', test.info().project.name === 'desktop' ? '8px' : '0px');
   await expect(page.getByText('Quelle est la meilleure façon de tester #tests ?')).toBeVisible();
   await expectNoHorizontalScroll(page);
 });

@@ -133,6 +133,17 @@
   text-decoration: none;
 }
 
+/* The title of a hashtag page: 8 px below the navigation bar. */
+.hashtagTitle {
+  margin: 0;
+  padding-top: 8px;
+}
+
+/* A hairline between two questions of a list (the popular questions). */
+.separated > li + li {
+  border-top: 1px solid var(--color-border);
+}
+
 .nothing {
   margin: 0;
   font-size: 14px;
@@ -157,6 +168,10 @@
 }
 
 @media (min-width: 1024px) {
+  .hashtagTitle {
+    padding-left: 8px;
+  }
+
   .layout {
     flex-direction: row;
     align-items: flex-start;
