@@ -92,6 +92,14 @@ export function loadFailureMessage(problem: ApiProblem): string {
 }
 
 /** The time shown in a list or a thread: the clock time for today, the date otherwise. */
+/** The preview under the other account in a list: the newest text, with « Vous : » when the viewer wrote it. */
+export function listPreview(conversation: ConversationView): string {
+  if (conversation.lastMessage === null) {
+    return '';
+  }
+  return conversation.lastMessage.mine ? `Vous : ${conversation.lastMessage.text}` : conversation.lastMessage.text;
+}
+
 export function formatMessageTime(iso: string, now: Date = new Date()): string {
   const date = new Date(iso);
   const sameDay = date.toDateString() === now.toDateString();

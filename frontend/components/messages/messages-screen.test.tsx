@@ -17,6 +17,7 @@ function conversation(id: string, overrides: Partial<ConversationView> = {}): Co
     initiatedByViewer: true,
     other: { handle: 'alice', displayName: 'Alice' },
     lastMessageAt: '2026-10-27T09:33:00.000Z',
+    lastMessage: null,
     unread: false,
     muted: false,
     archived: false,

@@ -51,7 +51,7 @@ test('the list shows the accepted conversations with their state, and the reques
               status: 200,
               body: {
                 conversations: [
-                  conversationOf(C1, { unread: true }),
+                  conversationOf(C1, { unread: true, lastMessage: { text: 'Salut Alice', mine: true } }),
                   conversationOf('c2', { handle: 'bob', displayName: 'Bob' }),
                 ],
                 nextCursor: null,
@@ -66,6 +66,8 @@ test('the list shows the accepted conversations with their state, and the reques
   await expect(page.getByRole('link', { name: 'Conversation avec Alice' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Conversation avec Bob' })).toBeVisible();
   await expect(page.getByLabel('Non lu')).toHaveCount(1);
+  // The list shows the newest message under each account: « Vous : » when the viewer wrote it (Messages boards).
+  await expect(page.getByText('Vous : Salut Alice')).toBeVisible();
   await expectNoHorizontalScroll(page);
 
   await page.getByRole('tab', { name: 'Demandes' }).click();

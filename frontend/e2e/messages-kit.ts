@@ -124,6 +124,7 @@ export function conversationOf(
     unread: boolean;
     muted: boolean;
     archived: boolean;
+    lastMessage: { text: string; mine: boolean } | null;
   }> = {},
 ) {
   return {
@@ -132,6 +133,7 @@ export function conversationOf(
     initiatedByViewer: overrides.initiatedByViewer ?? true,
     other: { handle: overrides.handle ?? 'alice', displayName: overrides.displayName ?? 'Alice' },
     lastMessageAt: '2026-10-27T09:33:00Z',
+    lastMessage: overrides.lastMessage === undefined ? null : overrides.lastMessage,
     unread: overrides.unread ?? false,
     muted: overrides.muted ?? false,
     archived: overrides.archived ?? false,

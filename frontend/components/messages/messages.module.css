@@ -166,6 +166,16 @@
   min-width: 0;
 }
 
+/* The newest message under the other account: one line, cut with an ellipsis. */
+.preview {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--color-muted, #6b7280);
+}
+
 .handle {
   color: var(--color-muted, #6b7280);
   font-size: 13px;

@@ -24,6 +24,8 @@ export type ConversationView = {
   initiatedByViewer: boolean;
   other: { handle: string; displayName: string };
   lastMessageAt: string;
+  /** The newest message: its text, and whether the viewer wrote it. Null when there is no message yet. */
+  lastMessage: { text: string; mine: boolean } | null;
   unread: boolean;
   muted: boolean;
   archived: boolean;

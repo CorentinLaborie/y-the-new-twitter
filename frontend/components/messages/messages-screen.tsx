@@ -9,6 +9,7 @@ import {
   conversationStateLabel,
   formatMessageTime,
   listOptionsFor,
+  listPreview,
   loadFailureMessage,
   MESSAGES_TABS,
   type MessagesTab,
@@ -173,6 +174,7 @@ function ConversationRow({ conversation }: { conversation: ConversationView }) {
         </span>
         <span className={styles.rowText}>
           <strong>{conversation.other.displayName}</strong> <span className={styles.handle}>@{conversation.other.handle}</span>
+          <span className={styles.preview}>{listPreview(conversation)}</span>
         </span>
         <time className={styles.meta} dateTime={conversation.lastMessageAt}>
           {formatMessageTime(conversation.lastMessageAt)}

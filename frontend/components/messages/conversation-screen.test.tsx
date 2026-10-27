@@ -40,6 +40,7 @@ function conversation(overrides: Partial<ConversationView> = {}): ConversationVi
     initiatedByViewer: true,
     other: { handle: 'alice', displayName: 'Alice' },
     lastMessageAt: '2026-10-27T09:33:00.000Z',
+    lastMessage: null,
     unread: false,
     muted: false,
     archived: false,

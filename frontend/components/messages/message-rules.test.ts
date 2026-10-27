@@ -9,6 +9,7 @@ import {
   listOptionsFor,
   loadFailureMessage,
   sendFailureMessage,
+  listPreview,
 } from './message-rules';
 
 const BASE: ConversationView = {
@@ -17,6 +18,7 @@ const BASE: ConversationView = {
   initiatedByViewer: true,
   other: { handle: 'MarkL', displayName: 'MarkL' },
   lastMessageAt: '2026-10-27T09:33:00.000Z',
+  lastMessage: null,
   unread: false,
   muted: false,
   archived: false,
@@ -93,5 +95,16 @@ describe('formatMessageTime', () => {
     const now = new Date('2026-10-27T12:00:00');
     expect(formatMessageTime('2026-10-27T09:33:00', now)).toMatch(/09.*33/);
     expect(formatMessageTime('2026-10-14T09:33:00', now)).toBe('14/10');
+  });
+});
+
+describe('listPreview (Messages boards)', () => {
+  it('shows the newest text, with « Vous : » when the viewer wrote it', () => {
+    expect(listPreview({ ...BASE, lastMessage: { text: 'Salut', mine: true } })).toBe('Vous : Salut');
+    expect(listPreview({ ...BASE, lastMessage: { text: 'Bonjour', mine: false } })).toBe('Bonjour');
+  });
+
+  it('is empty when the conversation has no message yet', () => {
+    expect(listPreview({ ...BASE, lastMessage: null })).toBe('');
   });
 });
