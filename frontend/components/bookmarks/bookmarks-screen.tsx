@@ -14,6 +14,7 @@ import { FeedIcon } from '@/components/feed/feed-icon';
 import { feedFailureMessage, FeedError, FeedLoading } from '@/components/feed/feed-states';
 import { QuestionCard } from '@/components/feed/question-card';
 import feedStyles from '@/components/feed/feed.module.css';
+import styles from './bookmarks.module.css';
 
 type Phase = 'loading' | 'ready' | 'failed';
 
@@ -240,36 +241,44 @@ export function BookmarksScreen({
 
   return (
     <section aria-label="Questions enregistrées">
-      <form role="search" onSubmit={submitSearch}>
-        <label htmlFor="bookmarks-search">Rechercher dans vos signets</label>
-        <input
-          id="bookmarks-search"
-          type="search"
-          name="q"
-          value={draft}
-          maxLength={100}
-          placeholder="Texte ou nom de l’auteur"
-          onChange={(event) => setDraft(event.target.value)}
-        />
-        <button type="submit">Rechercher</button>
-      </form>
-      <div>
-        <label htmlFor="bookmarks-sort">Trier par</label>
-        <select
-          id="bookmarks-sort"
-          value={sort}
-          onChange={(event) => {
-            setState(INITIAL_STATE);
-            setSort(event.target.value as BookmarkSort);
-          }}
-        >
-          <option value="saved">Date d’enregistrement</option>
-          <option value="question">Date de la question</option>
-        </select>
+      <div className={styles.controls}>
+        <form role="search" className={styles.search} onSubmit={submitSearch}>
+          <label htmlFor="bookmarks-search" className={styles.visuallyHidden}>
+            Rechercher dans vos signets
+          </label>
+          <input
+            id="bookmarks-search"
+            type="search"
+            name="q"
+            className={styles.field}
+            value={draft}
+            maxLength={100}
+            placeholder="Texte ou nom de l’auteur"
+            onChange={(event) => setDraft(event.target.value)}
+          />
+          <button type="submit" className="y-btn y-btn-outline y-btn-md y-btn-pill">
+            Rechercher
+          </button>
+        </form>
+        <div className={styles.sort}>
+          <label htmlFor="bookmarks-sort">Trier par</label>
+          <select
+            id="bookmarks-sort"
+            className={styles.select}
+            value={sort}
+            onChange={(event) => {
+              setState(INITIAL_STATE);
+              setSort(event.target.value as BookmarkSort);
+            }}
+          >
+            <option value="saved">Date d’enregistrement</option>
+            <option value="question">Date de la question</option>
+          </select>
+        </div>
       </div>
       {state.phase === 'ready' ? (
-        <p aria-live="polite">
-          {`@${viewerHandle} · ${state.total === 1 ? "1 question enregistrée" : `${state.total} questions enregistrées`}`}
+        <p aria-live="polite" className={styles.subtitle}>
+          {`@${viewerHandle} · ${state.total === 1 ? '1 question enregistrée' : `${state.total} questions enregistrées`}`}
         </p>
       ) : null}
       {renderList()}
