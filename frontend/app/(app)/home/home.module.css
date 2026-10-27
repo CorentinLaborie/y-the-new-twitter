@@ -36,7 +36,7 @@
   font-weight: 700;
 }
 
-.tab::after {
+.tab[aria-selected='true']::after {
   content: '';
   position: absolute;
   bottom: 0;
