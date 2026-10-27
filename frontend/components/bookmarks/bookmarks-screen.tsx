@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import type { ApiResult } from '@/lib/api-client';
 import { fetchBookmarkPage, type BookmarkPage } from '@/lib/bookmarks-api';
 import { deleteReaction, putReaction, type FeedQuestion, type ReactionKind } from '@/lib/feed-api';
@@ -22,6 +22,7 @@ type ListState = {
   loadError: string;
   questions: FeedQuestion[];
   nextCursor: string | null;
+  total: number;
   nextPageStatus: 'idle' | 'loading' | 'failed';
   /** Questions whose reaction call is in flight: their reactions are off until the answer comes. */
   pendingReactionIds: string[];
@@ -34,6 +35,7 @@ const INITIAL_STATE: ListState = {
   loadError: '',
   questions: [],
   nextCursor: null,
+  total: 0,
   nextPageStatus: 'idle',
   pendingReactionIds: [],
   reactionError: null,
@@ -61,9 +63,24 @@ function SavedEmpty() {
   );
 }
 
+/** A search that matches no saved question: the list is not empty, the search is. */
+function NoMatch({ search }: { search: string }) {
+  return (
+    <div className="y-empty">
+      <span className="y-empty-icon">
+        <FeedIcon name="message-circle" size={28} />
+      </span>
+      <h2>Aucune question ne correspond</h2>
+      <p>Aucune question enregistrée ne contient « {search} ».</p>
+    </div>
+  );
+}
+
 /**
  * The saved questions of the viewer (L4, section 7). The list is the newest save first, with "Voir plus" pages. A
- * question unsaved here leaves the list at once. Reactions work as in the feed: optimistic, rolled back on failure.
+ * search (text, or the name or handle of the author, without case) narrows it; the header gives the total of every
+ * saved question. A question unsaved here leaves the list at once. Reactions work as in the feed: optimistic, rolled
+ * back on failure.
  */
 export function BookmarksScreen({
   viewerHandle,
@@ -73,10 +90,13 @@ export function BookmarksScreen({
   viewerSuspended: boolean;
 }) {
   const [state, setState] = useState<ListState>(INITIAL_STATE);
+  // The search typed in the field, and the search the list shows: the list changes only when the search is submitted.
+  const [draft, setDraft] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     let current = true;
-    void fetchBookmarkPage().then((result) => {
+    void fetchBookmarkPage({ search }).then((result) => {
       if (current) {
         setState(firstPageState(result));
       }
@@ -85,14 +105,24 @@ export function BookmarksScreen({
     return () => {
       current = false;
     };
-  }, []);
+  }, [search]);
+
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const next = draft.trim();
+    if (next === search) {
+      return;
+    }
+    setState(INITIAL_STATE);
+    setSearch(next);
+  }
 
   async function loadNextPage() {
     if (state.nextCursor === null || state.nextPageStatus === 'loading') {
       return;
     }
     setState((current) => ({ ...current, nextPageStatus: 'loading' }));
-    const result = await fetchBookmarkPage(state.nextCursor);
+    const result = await fetchBookmarkPage({ cursor: state.nextCursor, search });
     if (result.ok) {
       setState((current) => ({
         ...current,
@@ -140,68 +170,94 @@ export function BookmarksScreen({
     }));
   }
 
-  if (state.phase === 'loading') {
-    return <FeedLoading />;
-  }
-  if (state.phase === 'failed') {
+  function renderList() {
+    if (state.phase === 'loading') {
+      return <FeedLoading />;
+    }
+    if (state.phase === 'failed') {
+      return (
+        <FeedError
+          message={state.loadError}
+          onRetry={() => {
+            setState(INITIAL_STATE);
+            void fetchBookmarkPage({ search }).then((result) => setState(firstPageState(result)));
+          }}
+        />
+      );
+    }
+    if (state.questions.length === 0) {
+      return search === '' ? <SavedEmpty /> : <NoMatch search={search} />;
+    }
+
     return (
-      <FeedError
-        message={state.loadError}
-        onRetry={() => {
-          setState(INITIAL_STATE);
-          void fetchBookmarkPage().then((result) => setState(firstPageState(result)));
-        }}
-      />
+      <>
+        <ul className={feedStyles.list} aria-label="Questions enregistrées">
+          {state.questions.map((question) => (
+            <li key={question.id}>
+              <QuestionCard
+                question={question}
+                reactionPending={state.pendingReactionIds.includes(question.id)}
+                reactionError={
+                  state.reactionError?.questionId === question.id ? state.reactionError.message : null
+                }
+                onReact={(kind) => void react(question, kind)}
+                viewer={{ handle: viewerHandle, suspended: viewerSuspended }}
+                onBookmarkChange={(saved) => {
+                  if (!saved) {
+                    setState((current) => ({
+                      ...current,
+                      questions: current.questions.filter((item) => item.id !== question.id),
+                    }));
+                  }
+                }}
+              />
+            </li>
+          ))}
+        </ul>
+        {state.nextCursor !== null ? (
+          <div
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 16 }}
+          >
+            <button
+              type="button"
+              className="y-loadmore"
+              onClick={() => void loadNextPage()}
+              disabled={state.nextPageStatus === 'loading'}
+            >
+              {state.nextPageStatus === 'loading' ? 'Chargement…' : 'Voir plus'}
+            </button>
+            {state.nextPageStatus === 'failed' ? (
+              <p role="alert" className="y-errorstate-message">
+                La page suivante n’a pas pu être chargée. Réessayez.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </>
     );
-  }
-  if (state.questions.length === 0) {
-    return <SavedEmpty />;
   }
 
   return (
     <section aria-label="Questions enregistrées">
-      <ul className={feedStyles.list} aria-label="Questions enregistrées">
-        {state.questions.map((question) => (
-          <li key={question.id}>
-            <QuestionCard
-              question={question}
-              reactionPending={state.pendingReactionIds.includes(question.id)}
-              reactionError={
-                state.reactionError?.questionId === question.id ? state.reactionError.message : null
-              }
-              onReact={(kind) => void react(question, kind)}
-              viewer={{ handle: viewerHandle, suspended: viewerSuspended }}
-              onBookmarkChange={(saved) => {
-                if (!saved) {
-                  setState((current) => ({
-                    ...current,
-                    questions: current.questions.filter((item) => item.id !== question.id),
-                  }));
-                }
-              }}
-            />
-          </li>
-        ))}
-      </ul>
-      {state.nextCursor !== null ? (
-        <div
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 16 }}
-        >
-          <button
-            type="button"
-            className="y-loadmore"
-            onClick={() => void loadNextPage()}
-            disabled={state.nextPageStatus === 'loading'}
-          >
-            {state.nextPageStatus === 'loading' ? 'Chargement…' : 'Voir plus'}
-          </button>
-          {state.nextPageStatus === 'failed' ? (
-            <p role="alert" className="y-errorstate-message">
-              La page suivante n’a pas pu être chargée. Réessayez.
-            </p>
-          ) : null}
-        </div>
+      <form role="search" onSubmit={submitSearch}>
+        <label htmlFor="bookmarks-search">Rechercher dans les signets</label>
+        <input
+          id="bookmarks-search"
+          type="search"
+          name="q"
+          value={draft}
+          maxLength={100}
+          placeholder="Texte ou nom de l’auteur"
+          onChange={(event) => setDraft(event.target.value)}
+        />
+        <button type="submit">Rechercher</button>
+      </form>
+      {state.phase === 'ready' ? (
+        <p aria-live="polite">
+          {state.total === 1 ? '1 question enregistrée' : `${state.total} questions enregistrées`}
+        </p>
       ) : null}
+      {renderList()}
     </section>
   );
 }

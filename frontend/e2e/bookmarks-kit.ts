@@ -9,17 +9,19 @@ const API_ORIGIN = 'http://localhost:8080';
 
 export type BookmarksHandlers = {
   /** The answer of GET /bookmarks for a cursor (null on the first page). */
-  page: (cursor: string | null) => Reply;
+  page: (cursor: string | null, search: string | null) => Reply;
 };
 
 export type BookmarksCalls = {
   saved: string[];
   unsaved: string[];
   cursors: (string | null)[];
+  /** The search of each GET, null when none was sent. */
+  searches: (string | null)[];
 };
 
 export async function mockBookmarksApi(page: Page, handlers: BookmarksHandlers): Promise<BookmarksCalls> {
-  const calls: BookmarksCalls = { saved: [], unsaved: [], cursors: [] };
+  const calls: BookmarksCalls = { saved: [], unsaved: [], cursors: [], searches: [] };
 
   await page.route(`${API_ORIGIN}/api/v1/**`, async (route) => {
     const request = route.request();
@@ -50,8 +52,10 @@ export async function mockBookmarksApi(page: Page, handlers: BookmarksHandlers):
     }
     if (url.pathname === '/api/v1/bookmarks' && request.method() === 'GET') {
       const cursor = url.searchParams.get('cursor');
+      const search = url.searchParams.get('q');
       calls.cursors.push(cursor);
-      const reply = handlers.page(cursor);
+      calls.searches.push(search);
+      const reply = handlers.page(cursor, search);
       await route.fulfill({
         status: reply.status,
         contentType: 'application/json',

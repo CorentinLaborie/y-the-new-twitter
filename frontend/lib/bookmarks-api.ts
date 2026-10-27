@@ -22,8 +22,11 @@ import type { FeedQuestion } from '@/lib/feed-api';
 /** The answer of PUT: the question and its save state after the call. */
 export type BookmarkState = { questionId: string; saved: true };
 
-/** One page of the saved questions. `nextCursor` is null on the last page. */
-export type BookmarkPage = { questions: FeedQuestion[]; nextCursor: string | null };
+/** One page of the saved questions. `nextCursor` is null on the last page. `total` counts every saved question (L4). */
+export type BookmarkPage = { questions: FeedQuestion[]; nextCursor: string | null; total: number };
+
+/** What the list asks for: the page after a cursor, and a search (blank or absent means none). */
+export type BookmarkPageOptions = { cursor?: string; search?: string };
 
 function bookmarkPath(questionId: string): string {
   return `/questions/${encodeURIComponent(questionId)}/bookmark`;
@@ -59,8 +62,16 @@ export function bookmarkFailureMessage(problem: ApiProblem, saving: boolean): st
     : 'La question n’a pas pu être retirée des signets. Réessayez.';
 }
 
-/** One page of the saved questions, after the cursor of the previous page when one is given. */
-export function fetchBookmarkPage(cursor?: string): Promise<ApiResult<BookmarkPage>> {
-  const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
-  return protectedApiRequest<BookmarkPage>('GET', `/bookmarks${query}`);
+/** One page of the saved questions, after the cursor of the previous page, and filtered by the search when one is given. */
+export function fetchBookmarkPage(options: BookmarkPageOptions = {}): Promise<ApiResult<BookmarkPage>> {
+  const params = new URLSearchParams();
+  if (options.cursor) {
+    params.set('cursor', options.cursor);
+  }
+  const search = options.search?.trim() ?? '';
+  if (search !== '') {
+    params.set('q', search);
+  }
+  const query = params.toString();
+  return protectedApiRequest<BookmarkPage>('GET', `/bookmarks${query === '' ? '' : `?${query}`}`);
 }

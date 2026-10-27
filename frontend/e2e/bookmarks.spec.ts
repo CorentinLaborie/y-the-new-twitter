@@ -102,3 +102,31 @@ test('"Voir plus" loads the next page with its cursor and adds it after the firs
   expect(calls.cursors).toEqual([null, 'c1']);
   await expect(page.getByRole('button', { name: 'Voir plus', exact: true })).toHaveCount(0);
 });
+
+test('the search sends the text, the list shows the matches and the header gives the total', async ({ page }) => {
+  const calls = await mockBookmarksApi(page, {
+    page: (_cursor, search) => ({
+      status: 200,
+      body: {
+        questions: [
+          search === 'vélo'
+            ? { ...questionOf('b1', 'Le vélo en ville', alice), viewerSaved: true }
+            : { ...questionOf('b2', 'Recette du pain', bob), viewerSaved: true },
+        ],
+        nextCursor: null,
+        total: 4,
+      },
+    }),
+  });
+
+  await page.goto('/bookmarks');
+
+  await expect(page.getByText('4 questions enregistrées')).toBeVisible();
+  await page.getByLabel('Rechercher dans les signets').fill('vélo');
+  await page.getByRole('button', { name: 'Rechercher' }).click();
+
+  await expect(page.getByText('Le vélo en ville')).toBeVisible();
+  await expect(page.getByText('Recette du pain')).toHaveCount(0);
+  expect(calls.searches).toContain('vélo');
+  await expectNoHorizontalScroll(page);
+});
