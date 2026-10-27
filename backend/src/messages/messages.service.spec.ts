@@ -23,6 +23,7 @@ function conversation(mine: Status, other: Status, initiatedById = 'viewer-1'): 
     id: CONVERSATION_ID,
     createdAt: new Date('2026-10-26T09:00:00.000Z'),
     lastMessageAt: new Date('2026-10-26T10:00:00.000Z'),
+    messages: [],
     initiatedById,
     participants: [
       {
@@ -206,6 +207,24 @@ describe('MessagesService (section 9 of the conditions)', () => {
     await service.decline(VIEWER, CONVERSATION_ID);
 
     expect(repository.answerRequest).toHaveBeenCalledWith(CONVERSATION_ID, 'viewer-1', 'declined');
+  });
+
+  it('shows the newest message on the list, and whether the viewer wrote it', async () => {
+    const newest = (senderId: string, body: string) => ({ ...conversation('accepted', 'accepted'), messages: [{ body, senderId }] });
+    const rows = [
+      { conversationId: 'c-1', requestStatus: 'accepted' as const, lastReadAt: null, conversation: newest('viewer-1', 'Vous') },
+      { conversationId: 'c-2', requestStatus: 'accepted' as const, lastReadAt: null, conversation: newest('other-1', 'Bonjour') },
+      { conversationId: 'c-3', requestStatus: 'accepted' as const, lastReadAt: null, conversation: { ...conversation('accepted', 'accepted'), messages: [] } },
+    ];
+    repository.listConversations.mockResolvedValueOnce(rows as never);
+
+    const page = await service.list(VIEWER, {} as never);
+
+    expect(page.conversations.map((item) => item.lastMessage)).toEqual([
+      { text: 'Vous', mine: true },
+      { text: 'Bonjour', mine: false },
+      null,
+    ]);
   });
 
   it('lists the requests waiting for the viewer when asked, and gives the cursor of the next page', async () => {

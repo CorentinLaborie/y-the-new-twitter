@@ -41,6 +41,8 @@ export interface ConversationView {
   initiatedByViewer: boolean;
   other: { handle: string; displayName: string };
   lastMessageAt: string;
+  /** The newest message: its text, and whether the viewer wrote it. Null when the conversation has no message yet. */
+  lastMessage: { text: string; mine: boolean } | null;
   unread: boolean;
   muted: boolean;
   archived: boolean;
@@ -246,6 +248,7 @@ function toConversationView(row: ParticipationRow, viewerId: string): Conversati
   const conversation = row.conversation;
   const other = conversation.participants.find((participant) => participant.userId !== viewerId);
   const lastMessageAt = conversation.lastMessageAt ?? conversation.createdAt;
+  const [latest] = conversation.messages;
   if (other === undefined) {
     throw new Error(`The conversation ${conversation.id} has no other participant.`);
   }
@@ -256,6 +259,7 @@ function toConversationView(row: ParticipationRow, viewerId: string): Conversati
     initiatedByViewer: conversation.initiatedById === viewerId,
     other: { handle: other.user.handle, displayName: other.user.displayName },
     lastMessageAt: lastMessageAt.toISOString(),
+    lastMessage: latest === undefined ? null : { text: latest.body, mine: latest.senderId === viewerId },
     unread: row.lastReadAt === null || row.lastReadAt < lastMessageAt,
     muted: row.mutedAt !== null,
     archived: row.archivedAt !== null,

@@ -12,6 +12,12 @@ const CONVERSATION_INCLUDE = {
   participants: {
     include: { user: { select: { id: true, handle: true, displayName: true } } },
   },
+  // The newest message only: the list shows its text under the other account.
+  messages: {
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: 1,
+    select: { body: true, senderId: true },
+  },
 } satisfies Prisma.ConversationInclude;
 
 export type ConversationRow = Prisma.ConversationGetPayload<{ include: typeof CONVERSATION_INCLUDE }>;
