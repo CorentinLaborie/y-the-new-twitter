@@ -195,7 +195,9 @@
   overflow: hidden;
   border-radius: 16px;
   background: var(--color-background);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.1);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
 .thread > * + * {
@@ -205,6 +207,12 @@
 .thread .card {
   border-radius: 0;
   background: transparent;
+}
+
+/* The reply cards of Y (the replies under a question, framed or not) have their own background. */
+.replyCard,
+.thread .replyCard {
+  background: #dbe2e8;
 }
 
 /* The replies, inside the thread: a hairline between two replies, and no heading (the heading stays for screen readers). */

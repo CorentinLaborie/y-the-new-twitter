@@ -125,7 +125,7 @@ export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDel
   }
 
   return (
-    <article className={styles.card}>
+    <article className={`${styles.card} ${styles.replyCard}`}>
       <header className={styles.cardHead}>
         <span className={`${styles.avatar} ${styles.cardAvatar}`} aria-hidden="true">
           {avatarInitial(reply.author.displayName)}
