@@ -131,14 +131,14 @@ describe('Replies and reply reactions (e2e, M3 B3 to B7)', () => {
     expect(await sql(`SELECT count(*) FROM replies WHERE question_id = '${question}';`)).toBe('0');
   });
 
-  it('accepts a reply once the conversation is open (201, Location) and counts it', async () => {
+  it('accepts a reply once the conversation is open (201) and counts it', async () => {
     const author = await createUser();
     const question = await createOpenQuestion(author);
     const replier = await clientFor(await createUser());
 
     const created = await postReply(replier, question, '  Une réponse  ').expect(201);
 
-    expect(created.headers.location).toBe(`/api/v1/replies/${created.body.id}`);
+    expect(created.headers.location).toBeUndefined();
     expect(created.body).toMatchObject({
       questionId: question,
       text: 'Une réponse',

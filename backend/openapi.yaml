@@ -532,11 +532,6 @@ paths:
       responses:
         "201":
           description: The reply.
-          headers:
-            Location:
-              description: Path of the new reply.
-              schema:
-                type: string
           content:
             application/json:
               schema:

@@ -10,10 +10,8 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
-  Res,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiHeader, ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
-import type { Response } from 'express';
 import { CurrentUser } from '../auth/session/access.decorators';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { problemDetailsResponse } from '../common/problem-details/problem-details.swagger';
@@ -38,7 +36,6 @@ export class RepliesController {
   @ApiCreatedResponse({
     description: 'The reply.',
     type: ReplyResponseDto,
-    headers: { Location: { description: 'Path of the new reply.', schema: { type: 'string' } } },
   })
   @problemDetailsResponse(400, 'The question id is not a UUID, or the Idempotency-Key is empty or too long.')
   @problemDetailsResponse(401, 'Not logged in.')
@@ -57,12 +54,8 @@ export class RepliesController {
     @Param('questionId', ParseUUIDPipe) questionId: string,
     @Body() body: CreateReplyDto,
     @Headers('idempotency-key') idempotencyKey: string | undefined,
-    @Res({ passthrough: true }) response: Response,
   ): Promise<ReplyResponseDto> {
-    const reply = await this.replies.create(author, questionId, body, idempotencyKey);
-    response.setHeader('Location', `/api/v1/replies/${reply.id}`);
-
-    return reply;
+    return this.replies.create(author, questionId, body, idempotencyKey);
   }
 
   @Get('questions/:questionId/replies')
