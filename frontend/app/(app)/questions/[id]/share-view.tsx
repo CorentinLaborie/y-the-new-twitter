@@ -137,7 +137,7 @@ export function ShareView({ questionId, viewerHandle }: ShareViewProps) {
       ) : null}
 
       {load.phase === 'ready' && load.question.removedByModeration !== true ? (
-        <>
+        <div className={feedStyles.thread}>
           <QuestionCard
             question={load.question}
             replyCount={load.replyCount}
@@ -154,7 +154,7 @@ export function ShareView({ questionId, viewerHandle }: ShareViewProps) {
             viewerHandle={viewerHandle}
             readOnly
           />
-        </>
+        </div>
       ) : null}
     </main>
   );

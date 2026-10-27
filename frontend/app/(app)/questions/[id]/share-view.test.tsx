@@ -76,6 +76,17 @@ describe('ShareView', () => {
     });
   });
 
+  it('frames the question card and its conversation in one thread (Replies-Framed boards)', async () => {
+    vi.mocked(getQuestion).mockResolvedValue({ ok: true, status: 200, body: detail() });
+
+    render(<ShareView questionId={QUESTION_ID} viewerHandle="bob" />);
+
+    const questionCard = await screen.findByRole('article');
+    const thread = questionCard.parentElement;
+    expect(thread?.className).toMatch(/thread/);
+    expect(thread).toContainElement(screen.getByRole('article'));
+  });
+
   it('shows the author that the question was removed by moderation, with no text and no conversation (L7)', async () => {
     vi.mocked(getQuestion).mockResolvedValue({
       ok: true,

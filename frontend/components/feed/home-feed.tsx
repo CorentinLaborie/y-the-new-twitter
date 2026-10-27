@@ -295,12 +295,18 @@ export function HomeFeed({
     );
   }
 
-  /** The card, and under it the conversation when it is open, in the same list item. */
+  /**
+   * The card, and under it the conversation when it is open. An open conversation is framed with its question: both are
+   * one white card (Replies-Framed boards).
+   */
   function renderQuestionItem(question: FeedQuestion) {
+    // The wrapper is always there, so the card is not remounted when its conversation opens or closes (focus kept).
+    const open = openConversations.has(question.id);
+
     return (
-      <>
+      <div className={open ? styles.thread : undefined}>
         {renderQuestionCard(question)}
-        {openConversations.has(question.id) ? (
+        {open ? (
           <Conversation
             questionId={question.id}
             yCount={question.counters.y}
@@ -311,7 +317,7 @@ export function HomeFeed({
             onReplyCountChange={(count) => handleReplyCountChange(question.id, count)}
           />
         ) : null}
-      </>
+      </div>
     );
   }
 

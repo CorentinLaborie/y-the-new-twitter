@@ -1,0 +1,53 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: #f8fafc;
+}
+
+.option[aria-selected='true'] {
+  background: #eef2ff;
+  outline: 2px solid #4f46e5;
+  outline-offset: -2px;
+}
+
+.option:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: -2px;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.handle {
+  font-size: 13px;
+  line-height: 18px;
+  color: #6b7280;
+}

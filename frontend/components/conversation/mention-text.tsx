@@ -1,9 +1,11 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 /*
- * Mentions in the text of a reply (F7): '@' and a handle, shown as plain text until the profile route exists, so
- * nothing here is a link. The rule is the one of the backend (backend/src/mentions/mention-text.ts): letters, digits
- * and underscore, 1 to 30 characters, and no letter, digit, underscore or '@' right before the '@'.
+ * Mentions in the text of a reply (F7): '@' and a handle. A mention is a link to the profile only when the server says
+ * the viewer may open that profile (`linkable`, the lowercase handles of ReplyView.mentionLinks): a banned, deleted or
+ * blocked account stays plain text. The rule is the one of the backend (backend/src/mentions/mention-text.ts): letters,
+ * digits and underscore, 1 to 30 characters, and no letter, digit, underscore or '@' right before the '@'.
  */
 
 const MENTION_PATTERN = /(?<![A-Za-z0-9_@])@([A-Za-z0-9_]{1,30})(?![A-Za-z0-9_])/g;
@@ -26,8 +28,13 @@ export function findMentions(text: string): Mention[] {
   }));
 }
 
-/** The text as it was written: each mention is wrapped in a span with its handle, and nothing becomes a link. */
-export function MentionText({ text }: { text: string }) {
+const NOT_LINKABLE: ReadonlySet<string> = new Set();
+
+/**
+ * The text as it was written. Each mention is wrapped with its handle; the ones in `linkable` link to the profile, the
+ * others stay plain text.
+ */
+export function MentionText({ text, linkable = NOT_LINKABLE }: { text: string; linkable?: ReadonlySet<string> }) {
   const parts: ReactNode[] = [];
   let cursor = 0;
 
@@ -35,10 +42,17 @@ export function MentionText({ text }: { text: string }) {
     if (mention.index > cursor) {
       parts.push(text.slice(cursor, mention.index));
     }
+    const shown = text.slice(mention.index, mention.index + mention.length);
     parts.push(
-      <span key={mention.index} data-mention={mention.handle}>
-        {text.slice(mention.index, mention.index + mention.length)}
-      </span>,
+      linkable.has(mention.handle.toLowerCase()) ? (
+        <Link key={mention.index} href={`/u/${mention.handle}`} data-mention={mention.handle}>
+          {shown}
+        </Link>
+      ) : (
+        <span key={mention.index} data-mention={mention.handle}>
+          {shown}
+        </span>
+      ),
     );
     cursor = mention.index + mention.length;
   }

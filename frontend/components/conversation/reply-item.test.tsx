@@ -25,6 +25,7 @@ const REPLY: ReplyView = {
   author: { handle: 'corentin', displayName: 'Corentin Laborie' },
   counters: { like: 3, dislike: 1 },
   viewerReactions: [],
+  mentionLinks: [],
 };
 
 const MENU_BUTTON = 'Options de cette réponse';

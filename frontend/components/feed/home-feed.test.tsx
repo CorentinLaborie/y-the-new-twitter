@@ -68,6 +68,7 @@ function reply(id: string, text: string): ReplyView {
     author: { handle: 'bob', displayName: 'Bob' },
     counters: { like: 0, dislike: 0 },
     viewerReactions: [],
+    mentionLinks: [],
   };
 }
 
@@ -500,6 +501,23 @@ describe('HomeFeed', () => {
 
       fireEvent.click(countButton);
       expect(countButton).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('frames the question card and its open conversation in one thread', async () => {
+      vi.mocked(fetchFeedPage).mockResolvedValue(
+        page([questionWithReplies('a', 'Question ouverte', 1, true)]),
+      );
+      vi.mocked(listReplies).mockResolvedValue({
+        ok: true,
+        status: 200,
+        body: { items: [reply('r1', 'Réponse dans le cadre')], nextCursor: null },
+      });
+
+      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      fireEvent.click(await screen.findByRole('button', { name: '1 réponse' }));
+
+      const thread = (await screen.findByText('Réponse dans le cadre')).closest('[class*="thread"]');
+      expect(thread).toContainElement(screen.getByText('Question ouverte'));
     });
 
     it('posting a reply in the open conversation raises the count of the card', async () => {

@@ -36,6 +36,8 @@ export type ReplyView = {
   author: { handle: string; displayName: string };
   counters: ReplyCounters;
   viewerReactions: ReplyReactionKind[];
+  /** Lowercase handles of the mentions whose profile can be opened; the other mentions stay plain text. */
+  mentionLinks: string[];
 };
 
 /** One page of replies. `nextCursor` is null on the last page. */

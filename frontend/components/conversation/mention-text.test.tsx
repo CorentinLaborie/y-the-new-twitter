@@ -68,4 +68,19 @@ describe('MentionText', () => {
     expect(container.querySelector('[data-mention]')).toBeNull();
     expect(container.textContent).toBe('Rien à signaler.');
   });
+
+  it('links a mention whose profile the viewer may open, to /u/{handle}', () => {
+    const { container } = render(<MentionText text="Merci @Robert44 !" linkable={new Set(['robert44'])} />);
+
+    const link = container.querySelector('a');
+    expect(link?.getAttribute('href')).toBe('/u/Robert44');
+    expect(link?.textContent).toBe('@Robert44');
+  });
+
+  it('keeps a mention plain when its account is not linkable: banned, deleted or blocked', () => {
+    const { container } = render(<MentionText text="Merci @Robert44 !" linkable={new Set(['someone-else'])} />);
+
+    expect(container.querySelector('a')).toBeNull();
+    expect(container.querySelector('[data-mention="Robert44"]')?.textContent).toBe('@Robert44');
+  });
 });

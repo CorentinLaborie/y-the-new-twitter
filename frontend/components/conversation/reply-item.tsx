@@ -195,7 +195,7 @@ export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDel
         ) : null}
       </header>
       <p className={styles.body}>
-        <MentionText text={reply.text} />
+        <MentionText text={reply.text} linkable={new Set(reply.mentionLinks)} />
       </p>
       <div className={styles.reactions} role="group" aria-label="Réactions à la réponse">
         {REACTIONS.map(({ kind, label, icon }) => (

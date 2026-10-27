@@ -60,6 +60,7 @@ function reply(id: string, overrides: Partial<ReplyView> = {}): ReplyView {
     author: { handle: 'robert', displayName: 'Robert' },
     counters: { like: 2, dislike: 0 },
     viewerReactions: [],
+    mentionLinks: [],
     ...overrides,
   };
 }

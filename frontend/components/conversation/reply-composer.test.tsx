@@ -16,6 +16,7 @@ const POSTED: ReplyView = {
   author: { handle: 'alice', displayName: 'Alice' },
   counters: { like: 0, dislike: 0 },
   viewerReactions: [],
+  mentionLinks: [],
 };
 
 function typeText(text: string) {
