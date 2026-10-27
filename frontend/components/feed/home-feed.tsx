@@ -290,7 +290,9 @@ export function HomeFeed({
         onOpenConversation={() => toggleConversation(question.id)}
         conversationOpen={conversationShown}
         viewer={viewerHandle === null ? undefined : { handle: viewerHandle, suspended }}
-        onAuthorUnfollowed={tab === 'following' ? () => removeAuthorQuestions(question.author.handle) : undefined}
+        onAuthorUnfollowed={
+          tab === 'following' ? () => removeAuthorQuestions(question.author.handle) : undefined
+        }
       />
     );
   }
@@ -362,7 +364,11 @@ export function HomeFeed({
       ) : null}
       {questions.length === 0 && phase === 'loading' ? <FeedLoading /> : null}
       {trendingQuestions.length === 0 && questions.length === 0 && phase === 'ready' ? (
-        tab === 'following' ? <FollowingEmpty /> : <FeedEmpty />
+        tab === 'following' ? (
+          <FollowingEmpty />
+        ) : (
+          <FeedEmpty />
+        )
       ) : null}
       {phase === 'failed' ? <FeedError message={loadError} onRetry={retryFirstPage} /> : null}
 

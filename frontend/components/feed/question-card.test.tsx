@@ -16,7 +16,11 @@ vi.mock('@/lib/bookmarks-api', async (importOriginal) => {
   return { ...actual, saveQuestion: vi.fn(), unsaveQuestion: vi.fn() };
 });
 
-vi.mock('@/lib/blocks-api', () => ({ blockAccount: vi.fn(), unblockAccount: vi.fn(), listBlockedAccounts: vi.fn() }));
+vi.mock('@/lib/blocks-api', () => ({
+  blockAccount: vi.fn(),
+  unblockAccount: vi.fn(),
+  listBlockedAccounts: vi.fn(),
+}));
 
 // jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
 beforeAll(() => {
@@ -204,7 +208,9 @@ describe('QuestionCard menu and copied link', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Bloquer @alice' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Bloquer' }));
 
-    await waitFor(() => expect(screen.queryByText('Le télétravail rend-il les débats moins violents ?')).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByText('Le télétravail rend-il les débats moins violents ?')).toBeNull(),
+    );
     expect(blockAccount).toHaveBeenCalledWith('alice');
   });
 
@@ -320,7 +326,10 @@ describe('QuestionCard save button (L4)', () => {
   it('shows the save button to a signed-in viewer, with its state', () => {
     renderCard({ viewer: { handle: 'viewer', suspended: false } });
 
-    expect(screen.getByRole('button', { name: 'Enregistrer dans les signets' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Enregistrer dans les signets' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 
   it('shows no save button without a viewer (anonymous view)', () => {

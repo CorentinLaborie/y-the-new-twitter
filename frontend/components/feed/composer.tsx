@@ -101,7 +101,9 @@ export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
           className={styles.textarea}
           placeholder={'Quelle est votre question ?'}
           value={text}
-          onChange={(event) => handleChange(event.target.value, event.target.selectionStart ?? event.target.value.length)}
+          onChange={(event) =>
+            handleChange(event.target.value, event.target.selectionStart ?? event.target.value.length)
+          }
           onKeyDown={(event) => {
             const picked = mentions.handleKeyDown(event, text);
             if (picked !== null) {

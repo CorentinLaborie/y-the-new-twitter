@@ -92,6 +92,7 @@ export function HashtagScreen({
               label={`Questions avec #${tag}`}
               questions={state.page.questions}
               viewer={viewer}
+              separated
             />
             {state.page.nextCursor !== null ? (
               <div className={styles.more}>

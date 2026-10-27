@@ -90,7 +90,12 @@ describe('Composer', () => {
   it('keeps the text and shows the API message when the post fails', async () => {
     vi.mocked(postQuestion).mockResolvedValue({
       ok: false,
-      problem: { status: 403, title: 'Interdit', detail: 'Votre compte est suspendu.', code: 'account_suspended' },
+      problem: {
+        status: 403,
+        title: 'Interdit',
+        detail: 'Votre compte est suspendu.',
+        code: 'account_suspended',
+      },
     });
     const onPosted = vi.fn();
     render(<Composer displayName="Alice" suspended={false} onPosted={onPosted} />);

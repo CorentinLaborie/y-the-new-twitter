@@ -38,6 +38,10 @@ describe('HashtagScreen (M4)', () => {
     render(<HashtagScreen tag="tests" viewer={{ handle: 'viewer', suspended: false }} />);
 
     expect(await screen.findByText('Première')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Questions avec #tests' })).toHaveAttribute(
+      'data-separated',
+      'true',
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Voir plus' }));
 
     expect(await screen.findByText('Seconde')).toBeInTheDocument();

@@ -283,6 +283,15 @@
   color: var(--color-muted-foreground);
 }
 
+.tagLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tagLink:hover {
+  text-decoration: underline;
+}
+
 .tags {
   display: flex;
   flex-basis: 100%;

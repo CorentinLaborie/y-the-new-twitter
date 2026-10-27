@@ -100,6 +100,11 @@ test('Explorer shows the trends, the popular questions and the accounts to follo
   await expect(page.getByText('3 réactions sur 24 h')).toBeVisible();
   await expect(page.getByText('Quelle est la meilleure façon de tester #tests ?')).toBeVisible();
   await expect(page.getByRole('link', { name: /Carol/ })).toHaveAttribute('href', '/u/carol');
+  // Each hashtag of a question card leads to its page.
+  await expect(page.getByRole('main').getByRole('link', { name: '#tests' }).first()).toHaveAttribute(
+    'href',
+    '/hashtags/tests',
+  );
   await expectNoHorizontalScroll(page);
 });
 

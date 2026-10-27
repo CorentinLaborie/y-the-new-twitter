@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ConversationRuleDialog } from '@/components/question/conversation-rule-dialog';
 import { copyQuestionLink, questionLink } from '@/components/question/copy-link';
@@ -11,6 +12,7 @@ import { BlockDialog } from '@/components/block/block-dialog';
 import { ReportDialog } from '@/components/report/report-dialog';
 import { REPORT_SENT_MESSAGE } from '@/components/report/report-rules';
 import { UnfollowMenuItem } from '@/components/follow/unfollow-menu-item';
+import { hashtagHref } from '@/lib/explore-rules';
 import type { FeedQuestion, ReactionKind } from '@/lib/feed-api';
 import { avatarInitial } from './avatar-initial';
 import { FeedIcon } from './feed-icon';
@@ -176,7 +178,9 @@ export function QuestionCard({
         {question.hashtags.length > 0 ? (
           <div className={styles.tags}>
             {question.hashtags.map((hashtag) => (
-              <span key={hashtag}>#{hashtag}</span>
+              <Link key={hashtag} href={hashtagHref(hashtag)} className={styles.tagLink}>
+                #{hashtag}
+              </Link>
             ))}
           </div>
         ) : null}
