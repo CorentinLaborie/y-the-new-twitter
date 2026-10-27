@@ -202,6 +202,11 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
         {menuOpen ? (
           <ul className={styles.menu} role="menu" aria-label="Options de la conversation">
             <li role="none">
+              <Link href={`/u/${conversation.other.handle}`} role="menuitem" className={styles.menuItem}>
+                Voir le profil
+              </Link>
+            </li>
+            <li role="none">
               <button type="button" role="menuitem" className={styles.menuItem} onClick={toggleMute}>
                 {conversation.muted ? 'Réactiver les notifications' : 'Mettre en sourdine'}
               </button>
@@ -246,7 +251,7 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
 
       {waitingForAnswer ? (
         <div role="group" aria-label="Répondre à la demande">
-          <p>{conversation.other.displayName} vous a écrit : acceptez la demande pour répondre.</p>
+          <p>Acceptez la demande avant de répondre.</p>
           <button type="button" className={styles.button} onClick={() => answer(true)}>
             Accepter
           </button>

@@ -108,7 +108,7 @@ test('a request waiting for the viewer is accepted from the thread, which then o
 
   await page.goto(`/messages/${C1}`);
 
-  await expect(page.getByText('Bob vous a écrit : acceptez la demande pour répondre.')).toBeVisible();
+  await expect(page.getByText('Acceptez la demande avant de répondre.')).toBeVisible();
   await page.getByRole('button', { name: 'Accepter' }).click();
 
   await expect(page.getByLabel('Écrire un message à Bob')).toBeEnabled();
@@ -134,6 +134,8 @@ test('the menu mutes and archives the conversation for the viewer only', async (
 
   await page.goto(`/messages/${C1}`);
   await page.getByRole('button', { name: 'Options de la conversation' }).click();
+  // The menu opens the profile of the other account (Voir le profil, Messages-Desktop boards).
+  await expect(page.getByRole('menuitem', { name: 'Voir le profil' })).toHaveAttribute('href', '/u/alice');
   await page.getByRole('menuitem', { name: 'Mettre en sourdine' }).click();
   // The menu closes once the server has answered: reopen it only then.
   await expect(page.getByRole('menu')).toBeHidden();

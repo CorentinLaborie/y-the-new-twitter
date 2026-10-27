@@ -69,7 +69,7 @@ describe('composerNotice', () => {
   it('explains a refusal, a request to accept, and the one-message rule', () => {
     expect(composerNotice({ ...BASE, status: 'declined' }, false)).toBe('Cette demande a été refusée.');
     expect(composerNotice({ ...BASE, status: 'pending', initiatedByViewer: false }, false)).toBe(
-      'Acceptez la demande pour répondre.',
+      'Acceptez la demande avant de répondre.',
     );
     expect(composerNotice({ ...BASE, status: 'pending', initiatedByViewer: true }, true)).toBe(
       'La demande attend une réponse : un seul message à la fois.',

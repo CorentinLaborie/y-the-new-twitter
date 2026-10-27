@@ -60,7 +60,7 @@ export function composerNotice(conversation: ConversationView, viewerHasWritten:
     return 'Cette demande a été refusée.';
   }
   if (conversation.status === 'pending' && !conversation.initiatedByViewer) {
-    return 'Acceptez la demande pour répondre.';
+    return 'Acceptez la demande avant de répondre.';
   }
   if (conversation.status === 'pending' && viewerHasWritten) {
     return 'La demande attend une réponse : un seul message à la fois.';
