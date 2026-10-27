@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { Notice } from '@/components/auth/notice';
-import { messageForCode } from '@/lib/api-messages';
+import { messageForCode, messageForStatus } from '@/lib/api-messages';
 import { newIdempotencyKey } from '@/lib/idempotency';
 import { postQuestion, type FeedQuestion } from '@/lib/feed-api';
 import { avatarInitial } from './avatar-initial';
@@ -70,7 +70,7 @@ export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
       setText('');
       onPosted(result.body);
     } else {
-      setSubmitError(messageForCode(result.problem) ?? result.problem.detail);
+      setSubmitError(messageForCode(result.problem) ?? messageForStatus(result.problem));
     }
   }
 

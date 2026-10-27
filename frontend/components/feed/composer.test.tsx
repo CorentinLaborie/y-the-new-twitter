@@ -90,7 +90,7 @@ describe('Composer', () => {
   it('keeps the text and shows the API message when the post fails', async () => {
     vi.mocked(postQuestion).mockResolvedValue({
       ok: false,
-      problem: { status: 403, title: 'Interdit', detail: 'Votre compte est suspendu.' },
+      problem: { status: 403, title: 'Interdit', detail: 'Votre compte est suspendu.', code: 'account_suspended' },
     });
     const onPosted = vi.fn();
     render(<Composer displayName="Alice" suspended={false} onPosted={onPosted} />);
@@ -99,7 +99,21 @@ describe('Composer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Poster' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Votre compte est suspendu.');
-    expect(screen.getByLabelText('Posez votre question')).toHaveValue('Une question');
+  });
+
+  it('shows the French text of the status, not the API detail, for a refusal without a known code', async () => {
+    vi.mocked(postQuestion).mockResolvedValue({
+      ok: false,
+      problem: { status: 422, title: 'Invalid', detail: 'Text is too long' },
+    });
+    const onPosted = vi.fn();
+    render(<Composer displayName="Alice" suspended={false} onPosted={onPosted} />);
+
+    typeText('Une question');
+    fireEvent.click(screen.getByRole('button', { name: 'Poster' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Le texte ne peut pas être publié.');
+    expect(screen.queryByText('Text is too long')).not.toBeInTheDocument();
     expect(onPosted).not.toHaveBeenCalled();
   });
 

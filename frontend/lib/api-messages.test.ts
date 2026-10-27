@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ApiProblem } from '@/lib/api-client';
-import { messageForCode, UNVERIFIED_ACCOUNT_MESSAGE } from './api-messages';
+import { messageForCode, messageForStatus, UNVERIFIED_ACCOUNT_MESSAGE } from './api-messages';
 
 function problem(code?: string): ApiProblem {
   return { status: 403, title: 'Forbidden', detail: 'Server detail, possibly in English.', code };
@@ -20,5 +20,14 @@ describe('messageForCode', () => {
     expect(messageForCode(problem())).toBeNull();
     expect(messageForCode(problem('unknown_code'))).toBeNull();
     expect(messageForCode(problem('constructor'))).toBeNull();
+  });
+
+  it('gives a French text by status for a refusal without a known code, never the API detail (decision 2026-10-27)', () => {
+    const byStatus = (status: number) => messageForStatus({ status, title: 'x', detail: 'Too long, in English' } as never);
+
+    expect(byStatus(422)).toBe('Le texte ne peut pas être publié. Vérifiez sa longueur et que la conversation est ouverte.');
+    expect(byStatus(429)).toBe('Trop de tentatives. Réessayez dans un moment.');
+    expect(byStatus(500)).toBe('La publication a échoué. Réessayez.');
+    expect(byStatus(422)).not.toContain('English');
   });
 });
