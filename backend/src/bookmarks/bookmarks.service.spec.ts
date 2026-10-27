@@ -134,7 +134,23 @@ describe('BookmarksService (L4)', () => {
       'viewer-1',
       { createdAt: new Date('2026-10-21T10:00:00Z'), id: OTHER_ID },
       21,
+      'saved',
       undefined,
+    );
+  });
+
+  it('orders by the question date and pages by the question time when asked for it (DEC-350)', async () => {
+    bookmarks.findPage.mockResolvedValue([
+      bookmarkRow(QUESTION_ID, '2026-10-22T10:00:00Z'),
+      bookmarkRow(OTHER_ID, '2026-10-21T10:00:00Z'),
+      bookmarkRow(THIRD_ID, '2026-10-20T10:00:00Z'),
+    ] as never);
+
+    const page = await service.list(VIEWER, { limit: 2, sort: 'question' } as never);
+
+    expect(bookmarks.findPage).toHaveBeenCalledWith('viewer-1', undefined, 3, 'question', undefined);
+    expect(page.nextCursor).toBe(
+      encodeKeysetCursor({ createdAt: new Date('2026-10-20T10:00:00Z'), id: OTHER_ID }),
     );
   });
 
@@ -144,7 +160,7 @@ describe('BookmarksService (L4)', () => {
 
     const page = await service.list(VIEWER, { limit: 20, q: 'alice' } as never);
 
-    expect(bookmarks.findPage).toHaveBeenCalledWith('viewer-1', undefined, 21, 'alice');
+    expect(bookmarks.findPage).toHaveBeenCalledWith('viewer-1', undefined, 21, 'saved', 'alice');
     expect(bookmarks.countVisible).toHaveBeenCalledWith('viewer-1');
     expect(page.total).toBe(12);
   });

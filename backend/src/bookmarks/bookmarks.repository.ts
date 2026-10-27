@@ -3,11 +3,24 @@ import type { KeysetPosition } from '../common/pagination/keyset-cursor';
 import type { Prisma } from '../database/generated/client/client';
 import { PrismaService } from '../database/prisma.service';
 import { QUESTION_VIEW_INCLUDE, visibleTo } from '../questions/question-view';
+import type { BookmarkSort } from './dto/bookmark-list-query.dto';
 
-/** The rows after a keyset position, in the order (saved at desc, question id desc): the newest saves first. */
-function afterPosition(after: KeysetPosition | undefined): Prisma.BookmarkWhereInput {
+/**
+ * The rows after a keyset position, in the given order. By save date: (saved at desc, question id desc). By question
+ * date: (question created at desc, question id desc). The position carries the time of that order.
+ */
+function afterPosition(after: KeysetPosition | undefined, sort: BookmarkSort): Prisma.BookmarkWhereInput {
   if (after === undefined) {
     return {};
+  }
+
+  if (sort === 'question') {
+    return {
+      OR: [
+        { question: { createdAt: { lt: after.createdAt } } },
+        { question: { createdAt: after.createdAt }, questionId: { lt: after.id } },
+      ],
+    };
   }
 
   return {
@@ -46,15 +59,18 @@ export class BookmarksRepository {
   }
 
   /**
-   * One page of the saved questions, the most recently saved first. A question the viewer may no longer see (hidden,
-   * deleted, author inactive or blocked, R13, R14) is left out, like in the feed.
+   * One page of the saved questions, in the given order. A question the viewer may no longer see (hidden, deleted,
+   * author inactive or blocked, R13, R14) is left out, like in the feed.
    */
-  findPage(viewerId: string, after: KeysetPosition | undefined, take: number, search?: string) {
+  findPage(viewerId: string, after: KeysetPosition | undefined, take: number, sort: BookmarkSort, search?: string) {
     return this.prisma.bookmark.findMany({
       where: {
-        AND: [{ userId: viewerId }, { question: visibleTo(viewerId) }, afterPosition(after), searchFilter(search)],
+        AND: [{ userId: viewerId }, { question: visibleTo(viewerId) }, afterPosition(after, sort), searchFilter(search)],
       },
-      orderBy: [{ createdAt: 'desc' }, { questionId: 'desc' }],
+      orderBy:
+        sort === 'question'
+          ? [{ question: { createdAt: 'desc' } }, { questionId: 'desc' }]
+          : [{ createdAt: 'desc' }, { questionId: 'desc' }],
       take,
       include: { question: { include: QUESTION_VIEW_INCLUDE } },
     });

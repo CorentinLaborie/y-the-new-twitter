@@ -45,7 +45,8 @@ export class BookmarksService {
   async list(viewer: SessionUser, query: BookmarkListQueryDto): Promise<BookmarkPageDto> {
     const limit = query.limit;
     const after = query.cursor === undefined ? undefined : decodeKeysetCursor(query.cursor);
-    const rows = await this.bookmarks.findPage(viewer.id, after, limit + 1, query.q);
+    const sort = query.sort ?? 'saved';
+    const rows = await this.bookmarks.findPage(viewer.id, after, limit + 1, sort, query.q);
     const total = await this.bookmarks.countVisible(viewer.id);
     const page = rows.slice(0, limit);
     const questionIds = page.map((row) => row.questionId);
@@ -72,10 +73,13 @@ export class BookmarksService {
           true,
         ),
       ),
-      // The cursor is the save position of the last row, not the question: the list is ordered by it.
+      // The cursor is the position of the last row in the order asked: its save time, or the question time.
       nextCursor:
         rows.length > limit && last !== undefined
-          ? encodeKeysetCursor({ createdAt: last.createdAt, id: last.questionId })
+          ? encodeKeysetCursor({
+              createdAt: sort === 'question' ? last.question.createdAt : last.createdAt,
+              id: last.questionId,
+            })
           : null,
       total,
     };

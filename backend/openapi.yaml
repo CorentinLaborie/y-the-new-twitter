@@ -1426,6 +1426,17 @@ paths:
           schema:
             maxLength: 100
             type: string
+        - name: sort
+          required: false
+          in: query
+          description: "`saved`: the most recently saved first. `question`: the most
+            recent question first. Use the cursor of the same order only."
+          schema:
+            default: saved
+            type: string
+            enum:
+              - saved
+              - question
       responses:
         "200":
           description: The saved questions, the most recently saved first, with a cursor
