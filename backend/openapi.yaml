@@ -397,6 +397,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a5
+  /api/v1/mentions/suggestions:
+    get:
+      operationId: MentionSuggestionsController_suggestions
+      parameters:
+        - name: q
+          required: false
+          in: query
+          description: The part of the handle typed so far.
+          schema:
+            maxLength: 30
+            allOf:
+              - $ref: "#/components/schemas/Object"
+      responses:
+        "200":
+          description: Up to five accounts the viewer follows or that follow the viewer,
+            matching the query.
+        "400":
+          description: The query is not a handle part.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags:
+        - MentionSuggestions
   /api/v1/questions/{questionId}/reactions/{kind}:
     put:
       operationId: ReactionsController_set
@@ -2586,6 +2616,9 @@ components:
           description: Text of the question, trimmed. Counted in characters.
       required:
         - text
+    Object:
+      type: object
+      properties: {}
     ReactionCountsDto:
       type: object
       properties:
@@ -2687,6 +2720,12 @@ components:
           $ref: "#/components/schemas/ReplyAuthorDto"
         counters:
           $ref: "#/components/schemas/ReplyCountersDto"
+        mentionLinks:
+          description: Lowercase handles of the mentions whose profile can be opened. The
+            other mentions are plain text.
+          type: array
+          items:
+            type: string
         viewerReactions:
           type: array
           description: Empty when the viewer has none.
@@ -2702,6 +2741,7 @@ components:
         - createdAt
         - author
         - counters
+        - mentionLinks
         - viewerReactions
     ReplyPageDto:
       type: object
@@ -2749,9 +2789,6 @@ components:
         - replyId
         - counts
         - viewerReactions
-    Object:
-      type: object
-      properties: {}
     BlockedAccountDto:
       type: object
       properties:
