@@ -26,6 +26,7 @@ import {
   MESSAGE_MAX_LENGTH,
   sendFailureMessage,
 } from './message-rules';
+import styles from './messages.module.css';
 
 type ReadyThread = {
   phase: 'ready';
@@ -184,11 +185,12 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
 
   return (
     <section aria-label={`Conversation avec ${conversation.other.displayName}`}>
-      <header>
+      <header className={styles.header}>
         <Link href={`/u/${encodeURIComponent(conversation.other.handle)}`}>
           <strong>{conversation.other.displayName}</strong> <span>@{conversation.other.handle}</span>
         </Link>
         <button
+          className={`${styles.button} ${styles.buttonOutline}`}
           type="button"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
@@ -198,19 +200,20 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
           ⋯
         </button>
         {menuOpen ? (
-          <ul role="menu" aria-label="Options de la conversation">
+          <ul className={styles.menu} role="menu" aria-label="Options de la conversation">
             <li role="none">
-              <button type="button" role="menuitem" onClick={toggleMute}>
+              <button type="button" role="menuitem" className={styles.menuItem} onClick={toggleMute}>
                 {conversation.muted ? 'Réactiver les notifications' : 'Mettre en sourdine'}
               </button>
             </li>
             <li role="none">
-              <button type="button" role="menuitem" onClick={toggleArchive}>
+              <button type="button" role="menuitem" className={styles.menuItem} onClick={toggleArchive}>
                 {conversation.archived ? 'Désarchiver' : 'Archiver'}
               </button>
             </li>
             <li role="none">
               <button
+                className={styles.menuItem}
                 type="button"
                 role="menuitem"
                 onClick={() => {
@@ -227,7 +230,7 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
 
       {more === 'failed' ? <p role="alert">Les messages précédents n’ont pas pu être chargés.</p> : null}
       {nextCursor !== null ? (
-        <button type="button" onClick={loadOlder} disabled={more === 'loading'}>
+        <button type="button" className={`${styles.button} ${styles.buttonOutline}`} onClick={loadOlder} disabled={more === 'loading'}>
           Voir les messages précédents
         </button>
       ) : null}
@@ -244,10 +247,10 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
       {waitingForAnswer ? (
         <div role="group" aria-label="Répondre à la demande">
           <p>{conversation.other.displayName} vous a écrit : acceptez la demande pour répondre.</p>
-          <button type="button" onClick={() => answer(true)}>
+          <button type="button" className={styles.button} onClick={() => answer(true)}>
             Accepter
           </button>
-          <button type="button" onClick={() => answer(false)}>
+          <button type="button" className={`${styles.button} ${styles.buttonOutline}`} onClick={() => answer(false)}>
             Refuser
           </button>
         </div>
@@ -259,6 +262,7 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
       <form onSubmit={send} aria-label="Écrire un message">
         <label htmlFor="message-draft">Écrire un message à {conversation.other.displayName}</label>
         <textarea
+          className={styles.field}
           id="message-draft"
           value={draft}
           maxLength={MESSAGE_MAX_LENGTH}
@@ -269,7 +273,7 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
         <p aria-live="polite">
           {draft.length} / {MESSAGE_MAX_LENGTH}
         </p>
-        <button type="submit" disabled={!writable || sending || draft.trim() === ''}>
+        <button type="submit" className={styles.button} disabled={!writable || sending || draft.trim() === ''}>
           Envoyer
         </button>
       </form>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { fetchConversations, type ConversationView } from '@/lib/messages-api';
+import styles from './messages.module.css';
 import {
   conversationStateLabel,
   formatMessageTime,
@@ -72,14 +73,23 @@ export function MessagesScreen() {
 
   return (
     <section aria-label="Messages privés">
-      <div role="tablist" aria-label="Vues des messages">
+      <div role="tablist" aria-label="Vues des messages" className={styles.tabs}>
         {MESSAGES_TABS.map((item) => (
-          <button key={item.id} type="button" role="tab" aria-selected={tab === item.id} onClick={() => setTab(item.id)}>
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            className={tab === item.id ? `${styles.tab} ${styles.tabCurrent}` : styles.tab}
+            aria-selected={tab === item.id}
+            onClick={() => setTab(item.id)}
+          >
             {item.label}
           </button>
         ))}
       </div>
-      <Link href="/messages/new">Nouveau message</Link>
+      <Link href="/messages/new" className={styles.link}>
+        Nouveau message
+      </Link>
 
       {state.phase === 'loading' ? <p role="status">Chargement des messages…</p> : null}
       {state.phase === 'failed' ? <p role="alert">{state.message}</p> : null}
@@ -94,7 +104,12 @@ export function MessagesScreen() {
       ) : null}
 
       {state.phase === 'ready' && state.nextCursor !== null ? (
-        <button type="button" onClick={() => loadMore(state.nextCursor as string)} disabled={state.more === 'loading'}>
+        <button
+          type="button"
+          className={`${styles.button} ${styles.buttonOutline}`}
+          onClick={() => loadMore(state.nextCursor as string)}
+          disabled={state.more === 'loading'}
+        >
           {state.more === 'failed' ? 'Réessayer' : 'Voir plus de conversations'}
         </button>
       ) : null}
@@ -106,7 +121,7 @@ function ConversationRow({ conversation }: { conversation: ConversationView }) {
   const state = conversationStateLabel(conversation);
   return (
     <li>
-      <Link href={`/messages/${conversation.id}`} aria-label={`Conversation avec ${conversation.other.displayName}`}>
+      <Link href={`/messages/${conversation.id}`} className={styles.row} aria-label={`Conversation avec ${conversation.other.displayName}`}>
         <strong>{conversation.other.displayName}</strong> <span>@{conversation.other.handle}</span>{' '}
         <time dateTime={conversation.lastMessageAt}>{formatMessageTime(conversation.lastMessageAt)}</time>
         {state !== '' ? <span>{state}</span> : null}

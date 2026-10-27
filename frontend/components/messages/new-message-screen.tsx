@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { startConversation } from '@/lib/messages-api';
 import { MESSAGE_MAX_LENGTH, sendFailureMessage } from './message-rules';
+import styles from './messages.module.css';
 
 /** The texts for the refusals of a new conversation (the handle is looked up by the API). */
 function newMessageFailureMessage(status: number, fallback: string): string {
@@ -51,6 +52,7 @@ export function NewMessageScreen() {
       <form onSubmit={submit}>
         <label htmlFor="new-message-handle">Destinataire</label>
         <input
+          className={styles.field}
           id="new-message-handle"
           value={handle}
           onChange={(event) => setHandle(event.target.value)}
@@ -60,6 +62,7 @@ export function NewMessageScreen() {
         />
         <label htmlFor="new-message-text">Message</label>
         <textarea
+          className={styles.field}
           id="new-message-text"
           value={text}
           onChange={(event) => setText(event.target.value)}
@@ -71,7 +74,7 @@ export function NewMessageScreen() {
         </p>
         <p>Si cette personne ne vous suit pas, votre message devient une demande.</p>
         {failure !== null ? <p role="alert">{failure}</p> : null}
-        <button type="submit" disabled={sending || handle.trim() === '' || text.trim() === ''}>
+        <button type="submit" className={styles.button} disabled={sending || handle.trim() === '' || text.trim() === ''}>
           Envoyer
         </button>
       </form>
