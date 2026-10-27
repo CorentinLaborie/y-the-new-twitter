@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { AccountStatus, Prisma } from '../database/generated/client/client';
 import { PrismaService } from '../database/prisma.service';
+import { lockAccountGraphExclusive, lockAccountGraphShared } from './account-graph-lock';
 import { recalculateCounters } from './recalculate-counters';
 
 /** The Prisma client or a transaction opened by a caller. */
@@ -80,6 +81,7 @@ export class UsersRepository {
    * change waits for it, and it waits for a status change, so no counter is left with an inactive account counted (R13).
    */
   async lockActiveAccount(db: UsersDb, userId: string): Promise<boolean> {
+    await lockAccountGraphShared(db);
     const rows = await db.$queryRaw<{ status: AccountStatus }[]>`
       SELECT status FROM users WHERE id = ${userId}::uuid FOR SHARE`;
 
@@ -88,6 +90,7 @@ export class UsersRepository {
 
   /** Moves the account to active once its e-mail is verified (section 3.2), and recalculates its counters (R13). */
   async activate(db: UsersDb, userId: string, at: Date) {
+    await lockAccountGraphExclusive(db);
     const user = await db.user.update({
       where: { id: userId },
       data: { status: 'active', emailVerifiedAt: at, statusChangedAt: at },
@@ -103,6 +106,7 @@ export class UsersRepository {
    */
   cancelDeletion(userId: string, now: Date): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
+      await lockAccountGraphExclusive(tx);
       const result = await tx.user.updateMany({
         where: {
           id: userId,

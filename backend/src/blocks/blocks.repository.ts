@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { AccountStatus, Prisma } from '../database/generated/client/client';
 import type { KeysetPosition } from '../common/pagination/keyset-cursor';
+import { lockAccountGraphShared } from '../users/account-graph-lock';
 import { recountFollowCounters } from '../users/recalculate-counters';
 
 /** The Prisma client or a transaction opened by the service. */
@@ -37,6 +38,7 @@ export class BlocksRepository {
    * Returns the status read under each lock.
    */
   async lockAccounts(db: BlocksDb, userIds: readonly string[]): Promise<Map<string, AccountStatus>> {
+    await lockAccountGraphShared(db);
     const statuses = new Map<string, AccountStatus>();
     for (const userId of [...new Set(userIds)].sort()) {
       const rows = await db.$queryRaw<{ status: AccountStatus }[]>`

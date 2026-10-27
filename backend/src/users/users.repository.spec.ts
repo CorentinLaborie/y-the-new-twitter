@@ -97,7 +97,7 @@ describe('UsersRepository counters (R13)', () => {
   describe('lockActiveAccount', () => {
     it('answers true only when the account is active under the lock', async () => {
       await expect(repository.lockActiveAccount(tx as never, 'user-1')).resolves.toBe(true);
-      expect(sqlOf(tx.$queryRaw.mock.calls[0])).toContain('FOR SHARE');
+      expect(sqlOf(tx.$queryRaw.mock.calls[1])).toContain('FOR SHARE');
     });
 
     it.each([

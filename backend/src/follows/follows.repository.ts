@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { AccountStatus, Prisma } from '../database/generated/client/client';
 import type { KeysetPosition } from '../common/pagination/keyset-cursor';
+import { lockAccountGraphShared } from '../users/account-graph-lock';
 import { visibleAccountTo } from '../users/account-visibility';
 import { recountFollowCounters } from '../users/recalculate-counters';
 
@@ -72,6 +73,7 @@ export class FollowsRepository {
    * Returns the status read under each lock.
    */
   async lockAccounts(db: FollowsDb, userIds: readonly string[]): Promise<Map<string, AccountStatus>> {
+    await lockAccountGraphShared(db);
     const statuses = new Map<string, AccountStatus>();
     for (const userId of [...new Set(userIds)].sort()) {
       const rows = await db.$queryRaw<{ status: AccountStatus }[]>`

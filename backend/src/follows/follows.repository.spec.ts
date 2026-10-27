@@ -33,9 +33,10 @@ describe('FollowsRepository (E1, E2, E5)', () => {
     it('locks each account once, exclusively, in the order of the ids, whatever the order they are given in', async () => {
       const statuses = await repository.lockAccounts(db as unknown as FollowsDb, ['b-id', 'a-id', 'b-id']);
 
-      expect(db.$queryRaw).toHaveBeenCalledTimes(2);
-      expect(db.$queryRaw.mock.calls.map((call) => call[1])).toEqual(['a-id', 'b-id']);
-      expect(sqlOf(db.$queryRaw.mock.calls[0])).toContain('FOR UPDATE');
+      // The graph lock is taken first (one call), then each row, in the order of the ids.
+      expect(db.$queryRaw).toHaveBeenCalledTimes(3);
+      expect(db.$queryRaw.mock.calls.slice(1).map((call) => call[1])).toEqual(['a-id', 'b-id']);
+      expect(sqlOf(db.$queryRaw.mock.calls[1])).toContain('FOR UPDATE');
       expect(statuses).toEqual(
         new Map([
           ['a-id', 'active'],
@@ -45,7 +46,8 @@ describe('FollowsRepository (E1, E2, E5)', () => {
     });
 
     it('leaves out an account that does not exist', async () => {
-      db.$queryRaw.mockResolvedValueOnce([]);
+      // The first answer is the graph lock; the second is the row lock of the account, which is missing.
+      db.$queryRaw.mockResolvedValueOnce([{ locked: '' }]).mockResolvedValueOnce([]);
 
       const statuses = await repository.lockAccounts(db as unknown as FollowsDb, ['a-id']);
 

@@ -1,4 +1,5 @@
 import type { Prisma } from '../../database/generated/client/client';
+import { lockAccountGraphExclusive } from '../../users/account-graph-lock';
 import { recalculateCounters } from '../../users/recalculate-counters';
 
 /** The maintenance client or a transaction of it: the purge runs on the maintenance account only (DEC-059). */
@@ -29,6 +30,7 @@ function ids(rows: { id: string }[]): string[] {
  * the content and the foreign keys that point at it keep a valid target.
  */
 export async function eraseAccount(db: ErasureDb, userId: string, now: Date): Promise<boolean> {
+  await lockAccountGraphExclusive(db);
   const closed = await db.user.updateMany({
     where: { id: userId, status: 'pending_deletion', deletionPurgeAt: { lte: now } },
     data: {

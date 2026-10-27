@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import type { KeysetPosition } from '../../common/pagination/keyset-cursor';
 import { AccountStatus, DeletionOrigin, Prisma, UserRole } from '../../database/generated/client/client';
 import { PrismaService } from '../../database/prisma.service';
+import { lockAccountGraphExclusive } from '../../users/account-graph-lock';
 import { recalculateCounters } from '../../users/recalculate-counters';
 import type { AuditDb } from '../audit/audit-log.repository';
 import type { ContactThreadPlan, ContactThreadState, RequestedAccountStatus } from './status-change';
@@ -125,6 +126,7 @@ export class AdminUsersRepository {
    */
   applyStatusChange(change: StatusChangeWrite): Promise<void> {
     return this.prisma.$transaction(async (tx) => {
+      await lockAccountGraphExclusive(tx);
       const { count } = await tx.user.updateMany({
         where: { id: change.userId, status: change.expectedStatus },
         data: { status: change.status, statusChangedAt: change.now, suspensionReason: change.reason },
@@ -149,6 +151,7 @@ export class AdminUsersRepository {
    */
   startDeletion(change: DeletionWrite): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
+      await lockAccountGraphExclusive(tx);
       const result = await tx.user.updateMany({
         where: { id: change.userId, status: { in: ['active', 'suspended'] } },
         data: {

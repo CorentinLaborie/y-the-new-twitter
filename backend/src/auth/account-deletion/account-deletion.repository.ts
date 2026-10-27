@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { AccountStatus } from '../../database/generated/client/client';
 import { PrismaService } from '../../database/prisma.service';
+import { lockAccountGraphExclusive } from '../../users/account-graph-lock';
 import { recalculateCounters } from '../../users/recalculate-counters';
 
 interface DeletionAccount {
@@ -32,6 +33,7 @@ export class AccountDeletionRepository {
     deletion: { reason: string; email: string },
   ): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
+      await lockAccountGraphExclusive(tx);
       const result = await tx.user.updateMany({
         where: { id: userId, status: 'active' },
         data: {
