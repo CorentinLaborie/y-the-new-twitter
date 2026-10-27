@@ -163,6 +163,7 @@ describe('Feed "Pour vous" and "Abonnements" (e2e, B6, L3)', () => {
       'createdAt',
       'hashtags',
       'id',
+      'removedByModeration',
       'text',
       'viewerReactions',
       'viewerSaved',
@@ -304,12 +305,16 @@ describe('Feed "Pour vous" and "Abonnements" (e2e, B6, L3)', () => {
   it('pages "Abonnements" without duplicates or gaps, with the same questions as the followed author on "Pour vous"', async () => {
     const following = await walk(7, 'following');
     const everyone = await walk(50);
-    // The trending block of "Pour vous" can hold questions of this author: they count too. Its order is by reactions,
-    // so the two lists are compared as sets. The order by date is checked by the test above.
-    const writerIds = [...everyone.trending, ...everyone.questions]
-      .filter((question) => question.author.handle === 'feed_writer')
-      .map((question) => question.id)
-      .sort();
+    // The trending block of "Pour vous" can hold questions of this author: they count too. The first page leaves them
+    // out of the list, but a later page can show one again, so the ids are de-duplicated before the comparison. Its
+    // order is by reactions, so the two lists are compared as sets. The order by date is checked by the test above.
+    const writerIds = [
+      ...new Set(
+        [...everyone.trending, ...everyone.questions]
+          .filter((question) => question.author.handle === 'feed_writer')
+          .map((question) => question.id),
+      ),
+    ].sort();
     const followingIds = following.questions.map((question) => question.id);
 
     expect(following.pages.length).toBeGreaterThan(1);
