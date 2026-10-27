@@ -26,7 +26,10 @@ export type BookmarkState = { questionId: string; saved: true };
 export type BookmarkPage = { questions: FeedQuestion[]; nextCursor: string | null; total: number };
 
 /** What the list asks for: the page after a cursor, and a search (blank or absent means none). */
-export type BookmarkPageOptions = { cursor?: string; search?: string };
+/** The order of the saved list: by save date (default), or by the date of the question (DEC-350). */
+export type BookmarkSort = 'saved' | 'question';
+
+export type BookmarkPageOptions = { cursor?: string; search?: string; sort?: BookmarkSort };
 
 function bookmarkPath(questionId: string): string {
   return `/questions/${encodeURIComponent(questionId)}/bookmark`;
@@ -71,6 +74,9 @@ export function fetchBookmarkPage(options: BookmarkPageOptions = {}): Promise<Ap
   const search = options.search?.trim() ?? '';
   if (search !== '') {
     params.set('q', search);
+  }
+  if (options.sort === 'question') {
+    params.set('sort', 'question');
   }
   const query = params.toString();
   return protectedApiRequest<BookmarkPage>('GET', `/bookmarks${query === '' ? '' : `?${query}`}`);

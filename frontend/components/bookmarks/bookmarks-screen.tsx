@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import type { ApiResult } from '@/lib/api-client';
-import { fetchBookmarkPage, type BookmarkPage } from '@/lib/bookmarks-api';
+import { fetchBookmarkPage, type BookmarkPage, type BookmarkSort } from '@/lib/bookmarks-api';
 import { deleteReaction, putReaction, type FeedQuestion, type ReactionKind } from '@/lib/feed-api';
 import {
   applyReaction,
@@ -93,10 +93,11 @@ export function BookmarksScreen({
   // The search typed in the field, and the search the list shows: the list changes only when the search is submitted.
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<BookmarkSort>('saved');
 
   useEffect(() => {
     let current = true;
-    void fetchBookmarkPage({ search }).then((result) => {
+    void fetchBookmarkPage({ search, sort }).then((result) => {
       if (current) {
         setState(firstPageState(result));
       }
@@ -105,7 +106,7 @@ export function BookmarksScreen({
     return () => {
       current = false;
     };
-  }, [search]);
+  }, [search, sort]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -122,7 +123,7 @@ export function BookmarksScreen({
       return;
     }
     setState((current) => ({ ...current, nextPageStatus: 'loading' }));
-    const result = await fetchBookmarkPage({ cursor: state.nextCursor, search });
+    const result = await fetchBookmarkPage({ cursor: state.nextCursor, search, sort });
     if (result.ok) {
       setState((current) => ({
         ...current,
@@ -180,7 +181,7 @@ export function BookmarksScreen({
           message={state.loadError}
           onRetry={() => {
             setState(INITIAL_STATE);
-            void fetchBookmarkPage({ search }).then((result) => setState(firstPageState(result)));
+            void fetchBookmarkPage({ search, sort }).then((result) => setState(firstPageState(result)));
           }}
         />
       );
@@ -240,7 +241,7 @@ export function BookmarksScreen({
   return (
     <section aria-label="Questions enregistrées">
       <form role="search" onSubmit={submitSearch}>
-        <label htmlFor="bookmarks-search">Rechercher dans les signets</label>
+        <label htmlFor="bookmarks-search">Rechercher dans vos signets</label>
         <input
           id="bookmarks-search"
           type="search"
@@ -252,9 +253,23 @@ export function BookmarksScreen({
         />
         <button type="submit">Rechercher</button>
       </form>
+      <div>
+        <label htmlFor="bookmarks-sort">Trier par</label>
+        <select
+          id="bookmarks-sort"
+          value={sort}
+          onChange={(event) => {
+            setState(INITIAL_STATE);
+            setSort(event.target.value as BookmarkSort);
+          }}
+        >
+          <option value="saved">Date d’enregistrement</option>
+          <option value="question">Date de la question</option>
+        </select>
+      </div>
       {state.phase === 'ready' ? (
         <p aria-live="polite">
-          {state.total === 1 ? '1 question enregistrée' : `${state.total} questions enregistrées`}
+          {`@${viewerHandle} · ${state.total === 1 ? "1 question enregistrée" : `${state.total} questions enregistrées`}`}
         </p>
       ) : null}
       {renderList()}

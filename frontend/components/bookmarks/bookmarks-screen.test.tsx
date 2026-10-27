@@ -90,7 +90,7 @@ describe('BookmarksScreen (L4)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Voir plus' }));
 
     expect(await screen.findByText('Page deux')).toBeInTheDocument();
-    expect(fetchBookmarkPage).toHaveBeenLastCalledWith({ cursor: 'c1', search: '' });
+    expect(fetchBookmarkPage).toHaveBeenLastCalledWith({ cursor: 'c1', search: '', sort: 'saved' });
   });
 
   it('shows the total of every saved question, and searches only when the search is submitted (L4)', async () => {
@@ -99,14 +99,14 @@ describe('BookmarksScreen (L4)', () => {
       .mockResolvedValueOnce(OK({ questions: [], nextCursor: null, total: 4 }));
     render(<BookmarksScreen viewerHandle="bob" viewerSuspended={false} />);
 
-    expect(await screen.findByText('4 questions enregistrées')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Rechercher dans les signets'), { target: { value: '  pain ' } });
+    expect(await screen.findByText(/4 questions enregistrées/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Rechercher dans vos signets'), { target: { value: '  pain ' } });
     expect(fetchBookmarkPage).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }));
 
     expect(await screen.findByRole('heading', { name: 'Aucune question ne correspond' })).toBeInTheDocument();
-    expect(fetchBookmarkPage).toHaveBeenLastCalledWith({ search: 'pain' });
+    expect(fetchBookmarkPage).toHaveBeenLastCalledWith({ search: 'pain', sort: 'saved' });
     expect(screen.queryByRole('button', { name: 'Voir plus' })).not.toBeInTheDocument();
   });
 });

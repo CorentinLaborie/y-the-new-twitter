@@ -122,7 +122,7 @@ test('the search sends the text, the list shows the matches and the header gives
   await page.goto('/bookmarks');
 
   await expect(page.getByText('4 questions enregistrées')).toBeVisible();
-  await page.getByLabel('Rechercher dans les signets').fill('vélo');
+  await page.getByLabel('Rechercher dans vos signets').fill('vélo');
   await page.getByRole('button', { name: 'Rechercher' }).click();
 
   await expect(page.getByText('Le vélo en ville')).toBeVisible();
