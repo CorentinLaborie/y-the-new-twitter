@@ -25,6 +25,7 @@ import { ReportsModule } from './reports/reports.module';
 import { FeedModule } from './feed/feed.module';
 import { FollowsModule } from './follows/follows.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
+import { MessagesModule } from './messages/messages.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SupportModule } from './support/support.module';
@@ -55,6 +56,7 @@ import { SupportModule } from './support/support.module';
     FeedModule,
     FollowsModule,
     BookmarksModule,
+    MessagesModule,
     ProfilesModule,
     NotificationsModule,
     SupportModule,

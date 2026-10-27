@@ -1460,6 +1460,267 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
       tags: *a12
+  /api/v1/messages/conversations:
+    post:
+      operationId: MessagesController_start
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartConversationDto"
+      responses:
+        "200":
+          description: The conversation the message was written in.
+        "400":
+          description: The handle or the text is missing, blank, or longer than 1000
+            characters.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: No account has this handle, or it is not visible to the viewer (R14).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "422":
+          description: The viewer writes to themselves.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: &a13
+        - Messages
+    get:
+      operationId: MessagesController_list
+      parameters:
+        - name: requests
+          required: false
+          in: query
+          description: "true: the requests waiting for the viewer. Absent or false: the
+            accepted conversations."
+          schema:
+            type: boolean
+        - name: cursor
+          required: false
+          in: query
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            allOf:
+              - $ref: "#/components/schemas/Object"
+      responses:
+        "200":
+          description: One page of the conversations, or of the requests waiting for the
+            viewer.
+        "400":
+          description: The cursor or the limit is invalid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+  /api/v1/messages/conversations/{conversationId}/messages:
+    post:
+      operationId: MessagesController_send
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageTextDto"
+      responses:
+        "400":
+          description: The text is missing, blank, or longer than 1000 characters.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "401":
+          description: Not logged in.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "403":
+          description: The account is not active (suspended, pending verification or
+            pending deletion).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The conversation does not exist for the viewer, or the other
+            account is not visible.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "409":
+          description: The request is declined, waits for an answer, or already has the
+            message of its initiator.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+    get:
+      operationId: MessagesController_messagesOf
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: cursor
+          required: false
+          in: query
+          schema:
+            maxLength: 512
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            allOf:
+              - $ref: "#/components/schemas/Object"
+      responses:
+        "200":
+          description: One page of the messages, the newest first.
+        "400":
+          description: The conversation id is not a UUID, or the cursor or the limit is
+            invalid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "404":
+          description: The conversation does not exist for the viewer, or the other
+            account is not visible.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+  /api/v1/messages/conversations/{conversationId}/accept:
+    put:
+      operationId: MessagesController_accept
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "204":
+          description: The request is accepted.
+        "404":
+          description: The conversation does not exist for the viewer.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "409":
+          description: The request is not waiting for the viewer any more.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+  /api/v1/messages/conversations/{conversationId}/decline:
+    put:
+      operationId: MessagesController_decline
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "204":
+          description: The request is declined.
+        "404":
+          description: The conversation does not exist for the viewer.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+        "409":
+          description: The request is not waiting for the viewer any more.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+  /api/v1/messages/conversations/{conversationId}/read:
+    put:
+      operationId: MessagesController_read
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "204":
+          description: The conversation is read up to now.
+        "404":
+          description: The conversation does not exist for the viewer.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
   /api/v1/users/{handle}:
     get:
       operationId: ProfilesController_profile
@@ -1510,7 +1771,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a13
+      tags: &a14
         - Profiles
   /api/v1/users/{handle}/questions:
     get:
@@ -1577,7 +1838,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a13
+      tags: *a14
   /api/v1/notifications:
     get:
       operationId: NotificationsController_list
@@ -1635,7 +1896,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a14
+      tags: &a15
         - Notifications
   /api/v1/notifications/unread-count:
     get:
@@ -1666,7 +1927,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a14
+      tags: *a15
   /api/v1/notifications/read-all:
     post:
       operationId: NotificationsController_markAllRead
@@ -1705,7 +1966,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a14
+      tags: *a15
   /api/v1/notification-preferences:
     get:
       operationId: NotificationPreferencesController_list
@@ -1729,7 +1990,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: &a15
+      tags: &a16
         - NotificationPreferences
   /api/v1/notification-preferences/{type}:
     put:
@@ -1777,7 +2038,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetailsDto"
-      tags: *a15
+      tags: *a16
   /api/v1/support/messages:
     post:
       operationId: SupportController_send
@@ -1846,7 +2107,7 @@ paths:
                     example: ok
                   info:
                     type: object
-                    example: &a16
+                    example: &a17
                       database:
                         status: up
                     additionalProperties:
@@ -1872,7 +2133,7 @@ paths:
                     nullable: true
                   details:
                     type: object
-                    example: *a16
+                    example: *a17
                     additionalProperties:
                       type: object
                       required:
@@ -1894,7 +2155,7 @@ paths:
                   info:
                     type: object
                     example:
-                      database: &a17
+                      database: &a18
                         status: up
                     additionalProperties:
                       type: object
@@ -1908,7 +2169,7 @@ paths:
                   error:
                     type: object
                     example:
-                      redis: &a18
+                      redis: &a19
                         status: down
                         message: Could not connect
                     additionalProperties:
@@ -1923,8 +2184,8 @@ paths:
                   details:
                     type: object
                     example:
-                      database: *a17
-                      redis: *a18
+                      database: *a18
+                      redis: *a19
                     additionalProperties:
                       type: object
                       required:
@@ -2565,6 +2826,31 @@ components:
         - questions
         - nextCursor
         - total
+    StartConversationDto:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Text of the message, trimmed.
+        handle:
+          type: string
+          maxLength: 30
+          example: alice
+      required:
+        - text
+        - handle
+    MessageTextDto:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Text of the message, trimmed.
+      required:
+        - text
     ProfileResponseDto:
       type: object
       properties:
