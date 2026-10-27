@@ -47,7 +47,7 @@ describe('MessagesScreen', () => {
   it('reads the requests waiting for the viewer when the Demandes tab is chosen', async () => {
     vi.mocked(fetchConversations).mockResolvedValue(OK({ conversations: [], nextCursor: null }));
     render(<MessagesScreen />);
-    await screen.findByText('Aucune conversation pour le moment.');
+    await screen.findByRole('heading', { name: 'Aucune conversation' });
 
     fireEvent.click(screen.getByRole('tab', { name: 'Demandes' }));
 
@@ -74,5 +74,21 @@ describe('MessagesScreen', () => {
     expect(await screen.findByRole('link', { name: 'Conversation avec Bob' })).toBeInTheDocument();
     expect(fetchConversations).toHaveBeenLastCalledWith({ cursor: 'k1' });
     expect(screen.getByRole('link', { name: 'Conversation avec Alice' })).toBeInTheDocument();
+  });
+
+  it('filters the loaded conversations by name or handle, without case', async () => {
+    vi.mocked(fetchConversations).mockResolvedValue(
+      OK({
+        conversations: [conversation('c1'), conversation('c2', { other: { handle: 'bob', displayName: 'Bob' } })],
+        nextCursor: null,
+      }),
+    );
+    render(<MessagesScreen />);
+    await screen.findByRole('link', { name: 'Conversation avec Alice' });
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Rechercher dans les messages' }), { target: { value: '@BOB' } });
+
+    expect(screen.queryByRole('link', { name: 'Conversation avec Alice' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Conversation avec Bob' })).toBeInTheDocument();
   });
 });

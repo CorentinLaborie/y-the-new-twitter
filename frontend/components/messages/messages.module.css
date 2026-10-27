@@ -25,7 +25,9 @@
 }
 
 .row {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   min-height: 44px;
   padding: 12px 16px;
   color: #1e293b;
@@ -129,5 +131,95 @@
 
 .count {
   font-size: 12px;
+  color: #6b7280;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  min-height: 53px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 800;
+}
+
+.search {
+  padding: 12px 16px;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: #e0e7ff;
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+}
+
+.handle {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.unread {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #4f46e5;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.empty h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.empty p,
+.emptyText {
+  margin: 0;
+  padding: 16px;
   color: #6b7280;
 }
