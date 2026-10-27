@@ -194,6 +194,37 @@ describe('Bookmarks (e2e, L4)', () => {
     expect(page2.body.nextCursor).toBeNull();
   });
 
+  it('searches the saved questions by text or author name, without case, and gives the total of every save', async () => {
+    const viewer = await createAccount();
+    const alice = await createAccount();
+    const bob = await createAccount();
+    const bread = await createQuestion(alice.id);
+    const bike = await createQuestion(bob.id);
+    const both = await createQuestion(alice.id);
+    await sql(`UPDATE questions SET body = 'Recette du pain' WHERE id = '${bread}';`);
+    await sql(`UPDATE questions SET body = 'Le vélo en ville' WHERE id = '${bike}';`);
+    await sql(`UPDATE questions SET body = 'Le vélo et le pain' WHERE id = '${both}';`);
+    await insertBookmark(viewer.id, bread, '2026-10-20T10:00:00.000Z');
+    await insertBookmark(viewer.id, bike, '2026-10-21T10:00:00.000Z');
+    await insertBookmark(viewer.id, both, '2026-10-22T10:00:00.000Z');
+    const client = await clientFor(viewer.id);
+    const ids = (body: { questions: { id: string }[] }) => body.questions.map((question) => question.id);
+
+    const byText = await client.agent.get('/api/v1/bookmarks?q=VÉLO').expect(200);
+    expect(ids(byText.body)).toEqual([both, bike]);
+    expect(byText.body.total).toBe(3);
+
+    const byAuthor = await client.agent
+      .get(`/api/v1/bookmarks?q=${encodeURIComponent(alice.handle.toUpperCase())}`)
+      .expect(200);
+    expect(ids(byAuthor.body)).toEqual([both, bread]);
+
+    const blank = await client.agent.get('/api/v1/bookmarks?q=%20%20').expect(200);
+    expect(ids(blank.body)).toEqual([both, bike, bread]);
+
+    await client.agent.get(`/api/v1/bookmarks?q=${'x'.repeat(101)}`).expect(400);
+  });
+
   it('refuses a question id that is not a UUID (400), and a missing CSRF token (403)', async () => {
     const viewer = await createAccount();
     const client = await clientFor(viewer.id);

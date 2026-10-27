@@ -1418,6 +1418,14 @@ paths:
             default: 20
             allOf:
               - $ref: "#/components/schemas/Object"
+        - name: q
+          required: false
+          in: query
+          description: Text searched in the saved questions and in their authors (name or
+            handle). Blank means no search.
+          schema:
+            maxLength: 100
+            type: string
       responses:
         "200":
           description: The saved questions, the most recently saved first, with a cursor
@@ -2548,9 +2556,15 @@ components:
         nextCursor:
           type: string
           nullable: true
+        total:
+          type: number
+          example: 12
+          description: How many questions the viewer has saved and may still see, whatever
+            the search (L4).
       required:
         - questions
         - nextCursor
+        - total
     ProfileResponseDto:
       type: object
       properties:

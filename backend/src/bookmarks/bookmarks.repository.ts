@@ -49,14 +49,40 @@ export class BookmarksRepository {
    * One page of the saved questions, the most recently saved first. A question the viewer may no longer see (hidden,
    * deleted, author inactive or blocked, R13, R14) is left out, like in the feed.
    */
-  findPage(viewerId: string, after: KeysetPosition | undefined, take: number) {
+  findPage(viewerId: string, after: KeysetPosition | undefined, take: number, search?: string) {
     return this.prisma.bookmark.findMany({
       where: {
-        AND: [{ userId: viewerId }, { question: visibleTo(viewerId) }, afterPosition(after)],
+        AND: [{ userId: viewerId }, { question: visibleTo(viewerId) }, afterPosition(after), searchFilter(search)],
       },
       orderBy: [{ createdAt: 'desc' }, { questionId: 'desc' }],
       take,
       include: { question: { include: QUESTION_VIEW_INCLUDE } },
     });
   }
+
+  /** How many questions the viewer saved and may still see, whatever the search: the total of the header (L4). */
+  countVisible(viewerId: string): Promise<number> {
+    return this.prisma.bookmark.count({ where: { userId: viewerId, question: visibleTo(viewerId) } });
+  }
+}
+
+/**
+ * The saved questions matching a search: the question text, or the name or the handle of its author, without case.
+ * A blank or absent search matches everything.
+ */
+function searchFilter(search: string | undefined): Prisma.BookmarkWhereInput {
+  if (search === undefined || search === '') {
+    return {};
+  }
+  const contains = { contains: search, mode: 'insensitive' as const };
+
+  return {
+    question: {
+      OR: [
+        { body: contains },
+        { author: { handle: contains } },
+        { author: { displayName: contains } },
+      ],
+    },
+  };
 }

@@ -2,10 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { decodeKeysetCursor, encodeKeysetCursor } from '../common/pagination/keyset-cursor';
-import { FollowListQueryDto } from '../follows/dto/follow-list-query.dto';
 import type { ReactionKind } from '../database/generated/client/client';
 import { QUESTION_NOT_FOUND_MESSAGE, toQuestionView } from '../questions/question-view';
 import { QuestionsRepository } from '../questions/questions.repository';
+import { BookmarkListQueryDto } from './dto/bookmark-list-query.dto';
 import { BookmarkPageDto } from './dto/bookmark-page.dto';
 import { BookmarkStateDto } from './dto/bookmark-state.dto';
 import { BookmarksRepository } from './bookmarks.repository';
@@ -38,11 +38,15 @@ export class BookmarksService {
     await this.bookmarks.deleteBookmark(viewer.id, questionId);
   }
 
-  /** The saved questions, the most recently saved first, in pages with a cursor (section 9.1). */
-  async list(viewer: SessionUser, query: FollowListQueryDto): Promise<BookmarkPageDto> {
+  /**
+   * The saved questions, the most recently saved first, in pages with a cursor (section 9.1). A search narrows the
+   * list; the total always counts every saved question the viewer may see.
+   */
+  async list(viewer: SessionUser, query: BookmarkListQueryDto): Promise<BookmarkPageDto> {
     const limit = query.limit;
     const after = query.cursor === undefined ? undefined : decodeKeysetCursor(query.cursor);
-    const rows = await this.bookmarks.findPage(viewer.id, after, limit + 1);
+    const rows = await this.bookmarks.findPage(viewer.id, after, limit + 1, query.q);
+    const total = await this.bookmarks.countVisible(viewer.id);
     const page = rows.slice(0, limit);
     const questionIds = page.map((row) => row.questionId);
     const reactions = await this.questions.findViewerReactions(viewer.id, questionIds);
@@ -73,6 +77,7 @@ export class BookmarksService {
         rows.length > limit && last !== undefined
           ? encodeKeysetCursor({ createdAt: last.createdAt, id: last.questionId })
           : null,
+      total,
     };
   }
 }

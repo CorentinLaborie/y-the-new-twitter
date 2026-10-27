@@ -13,8 +13,8 @@ import { ApiNoContentResponse, ApiOkResponse, ApiParam } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/session/access.decorators';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { problemDetailsResponse } from '../common/problem-details/problem-details.swagger';
-import { FollowListQueryDto } from '../follows/dto/follow-list-query.dto';
 import { BookmarksService } from './bookmarks.service';
+import { BookmarkListQueryDto } from './dto/bookmark-list-query.dto';
 import { BookmarkPageDto } from './dto/bookmark-page.dto';
 import { BookmarkStateDto } from './dto/bookmark-state.dto';
 
@@ -72,7 +72,7 @@ export class BookmarksController {
     'The account is not active (suspended, pending verification or pending deletion).',
   )
   @problemDetailsResponse(429, 'Too many requests.')
-  list(@CurrentUser() viewer: SessionUser, @Query() query: FollowListQueryDto): Promise<BookmarkPageDto> {
+  list(@CurrentUser() viewer: SessionUser, @Query() query: BookmarkListQueryDto): Promise<BookmarkPageDto> {
     return this.bookmarks.list(viewer, query);
   }
 }

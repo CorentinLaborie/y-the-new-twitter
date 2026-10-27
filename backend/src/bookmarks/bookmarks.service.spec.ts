@@ -34,7 +34,7 @@ function bookmarkRow(questionId: string, savedAt: string, authorId = 'author-1')
 
 describe('BookmarksService (L4)', () => {
   let bookmarks: jest.Mocked<
-    Pick<BookmarksRepository, 'findVisibleQuestion' | 'createBookmark' | 'deleteBookmark' | 'findPage'>
+    Pick<BookmarksRepository, 'findVisibleQuestion' | 'createBookmark' | 'deleteBookmark' | 'findPage' | 'countVisible'>
   >;
   let questions: jest.Mocked<Pick<QuestionsRepository, 'findViewerReactions' | 'findFollowedAuthorIds'>>;
   let config: { getOrThrow: jest.Mock };
@@ -46,6 +46,7 @@ describe('BookmarksService (L4)', () => {
       createBookmark: jest.fn().mockResolvedValue(true),
       deleteBookmark: jest.fn().mockResolvedValue({ count: 1 }),
       findPage: jest.fn().mockResolvedValue([]),
+      countVisible: jest.fn().mockResolvedValue(0),
     } as never;
     questions = {
       findViewerReactions: jest.fn().mockResolvedValue([]),
@@ -133,6 +134,18 @@ describe('BookmarksService (L4)', () => {
       'viewer-1',
       { createdAt: new Date('2026-10-21T10:00:00Z'), id: OTHER_ID },
       21,
+      undefined,
     );
+  });
+
+  it('passes the search to the repository, and keeps the total of every saved question', async () => {
+    bookmarks.findPage.mockResolvedValue([bookmarkRow(QUESTION_ID, '2026-10-22T10:00:00Z')] as never);
+    bookmarks.countVisible.mockResolvedValue(12);
+
+    const page = await service.list(VIEWER, { limit: 20, q: 'alice' } as never);
+
+    expect(bookmarks.findPage).toHaveBeenCalledWith('viewer-1', undefined, 21, 'alice');
+    expect(bookmarks.countVisible).toHaveBeenCalledWith('viewer-1');
+    expect(page.total).toBe(12);
   });
 });
