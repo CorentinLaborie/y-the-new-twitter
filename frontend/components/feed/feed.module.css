@@ -207,6 +207,30 @@
   background: transparent;
 }
 
+/* The replies, inside the thread: a hairline between two replies, and no heading (the heading stays for screen readers). */
+.thread .list {
+  gap: 0;
+}
+
+.thread .list > ol > li + li {
+  border-top: 1px solid #e2e8f0;
+}
+
+.thread .list > .name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* The composer ends the thread, with the same inner gutter as the cards. */
+.thread .composerBody {
+  padding: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
 .cardHead {
   display: flex;
   flex-wrap: wrap;
