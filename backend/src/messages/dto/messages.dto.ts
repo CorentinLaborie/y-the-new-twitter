@@ -36,6 +36,12 @@ export class ConversationListQueryDto {
   @IsBoolean()
   requests?: boolean;
 
+  @ApiPropertyOptional({ description: 'true: the archived conversations of the viewer. Absent or false: the active ones.' })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => value === 'true' || value === true)
+  @IsBoolean()
+  archived?: boolean;
+
   @ApiPropertyOptional({ maxLength: CURSOR_MAX_LENGTH })
   @IsOptional()
   @IsString()

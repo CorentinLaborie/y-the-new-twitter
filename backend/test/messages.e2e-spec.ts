@@ -178,4 +178,73 @@ describe('Private messages (e2e, section 9 of the conditions, R14)', () => {
     expect(inbox.body.conversations).toEqual([]);
     await send(bob, opened.body.conversationId, 'Encore').expect(404);
   });
+
+  function mutation(visitor: Visitor, conversationId: string, path: 'mute' | 'archive', method: 'put' | 'delete') {
+    return visitor.agent[method](`${MESSAGES}/conversations/${conversationId}/${path}`).set('x-csrf-token', visitor.csrf);
+  }
+
+  it('archives a conversation for the viewer only: hidden by default, listed with archived=true, back once unarchived', async () => {
+    await createAccount(app, 'msg_arc_alice');
+    await createAccount(app, 'msg_arc_bob');
+    const alice = await userSignedIn(app, 'msg_arc_alice');
+    const bob = await userSignedIn(app, 'msg_arc_bob');
+    await bob.agent.put(`${BASE}/users/msg_arc_alice/follow`).set('x-csrf-token', bob.csrf).expect(200);
+    const opened = await start(alice, 'msg_arc_bob', 'Bonjour').expect(201);
+    const conversationId = opened.body.conversationId;
+
+    await mutation(bob, conversationId, 'archive', 'put').expect(204);
+    await mutation(bob, conversationId, 'archive', 'put').expect(204);
+
+    const hidden = await bob.agent.get(`${MESSAGES}/conversations`).expect(200);
+    expect(hidden.body.conversations).toEqual([]);
+    const archived = await bob.agent.get(`${MESSAGES}/conversations?archived=true`).expect(200);
+    expect(archived.body.conversations).toMatchObject([{ id: conversationId, archived: true, muted: false }]);
+
+    const aliceInbox = await alice.agent.get(`${MESSAGES}/conversations`).expect(200);
+    expect(aliceInbox.body.conversations).toMatchObject([{ id: conversationId, archived: false }]);
+
+    await mutation(bob, conversationId, 'archive', 'delete').expect(204);
+    await mutation(bob, conversationId, 'archive', 'delete').expect(204);
+
+    const back = await bob.agent.get(`${MESSAGES}/conversations`).expect(200);
+    expect(back.body.conversations).toMatchObject([{ id: conversationId, archived: false }]);
+    const noneArchived = await bob.agent.get(`${MESSAGES}/conversations?archived=true`).expect(200);
+    expect(noneArchived.body.conversations).toEqual([]);
+  });
+
+  it('mutes a conversation for the viewer without blocking the messages, and unmutes it', async () => {
+    await createAccount(app, 'msg_mut_alice');
+    await createAccount(app, 'msg_mut_bob');
+    const alice = await userSignedIn(app, 'msg_mut_alice');
+    const bob = await userSignedIn(app, 'msg_mut_bob');
+    await bob.agent.put(`${BASE}/users/msg_mut_alice/follow`).set('x-csrf-token', bob.csrf).expect(200);
+    const opened = await start(alice, 'msg_mut_bob', 'Bonjour').expect(201);
+    const conversationId = opened.body.conversationId;
+
+    await mutation(bob, conversationId, 'mute', 'put').expect(204);
+    await mutation(bob, conversationId, 'mute', 'put').expect(204);
+    await send(alice, conversationId, 'Toujours là').expect(201);
+
+    const muted = await bob.agent.get(`${MESSAGES}/conversations`).expect(200);
+    expect(muted.body.conversations).toMatchObject([{ id: conversationId, muted: true, archived: false }]);
+
+    await mutation(bob, conversationId, 'mute', 'delete').expect(204);
+    const unmuted = await bob.agent.get(`${MESSAGES}/conversations`).expect(200);
+    expect(unmuted.body.conversations).toMatchObject([{ id: conversationId, muted: false }]);
+  });
+
+  it('answers 404 to a viewer who takes no part in the conversation, on mute and on archive', async () => {
+    await createAccount(app, 'msg_mo_alice');
+    await createAccount(app, 'msg_mo_bob');
+    await createAccount(app, 'msg_mo_carol');
+    const alice = await userSignedIn(app, 'msg_mo_alice');
+    const carol = await userSignedIn(app, 'msg_mo_carol');
+    const opened = await start(alice, 'msg_mo_bob', 'Bonjour').expect(201);
+    const conversationId = opened.body.conversationId;
+
+    await mutation(carol, conversationId, 'mute', 'put').expect(404);
+    await mutation(carol, conversationId, 'mute', 'delete').expect(404);
+    await mutation(carol, conversationId, 'archive', 'put').expect(404);
+    await mutation(carol, conversationId, 'archive', 'delete').expect(404);
+  });
 });

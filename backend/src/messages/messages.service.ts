@@ -34,7 +34,7 @@ export interface MessageView {
   mine: boolean;
 }
 
-/** A conversation as the viewer sees it: the viewer's request status, the other account, and whether it is unread. */
+/** A conversation as the viewer sees it: the viewer's request status, the other account, and its unread, muted and archived state. */
 export interface ConversationView {
   id: string;
   status: 'pending' | 'accepted' | 'declined';
@@ -42,6 +42,8 @@ export interface ConversationView {
   other: { handle: string; displayName: string };
   lastMessageAt: string;
   unread: boolean;
+  muted: boolean;
+  archived: boolean;
 }
 
 /**
@@ -114,11 +116,11 @@ export class MessagesService {
     return this.answer(viewer, conversationId, 'declined');
   }
 
-  /** The viewer's conversations, or the requests waiting for them, the newest message first, in pages. */
+  /** The viewer's conversations, or the requests waiting for them, active or archived, the newest message first, in pages. */
   async list(viewer: SessionUser, query: ConversationListQueryDto): Promise<{ conversations: ConversationView[]; nextCursor: string | null }> {
     const limit = query.limit;
     const after = query.cursor === undefined ? undefined : decodeKeysetCursor(query.cursor);
-    const rows = await this.messages.listConversations(viewer.id, query.requests === true, after, limit + 1);
+    const rows = await this.messages.listConversations(viewer.id, query.requests === true, query.archived === true, after, limit + 1);
     const page = rows.slice(0, limit);
     const last = page.at(-1);
 
@@ -158,6 +160,36 @@ export class MessagesService {
   async markRead(viewer: SessionUser, conversationId: string, now: Date): Promise<void> {
     await this.participation(viewer, conversationId);
     await this.messages.markRead(conversationId, viewer.id, now);
+  }
+
+  /** The viewer mutes the conversation: its messages still flow, only the viewer's notifications stop (section 9). */
+  mute(viewer: SessionUser, conversationId: string, now: Date): Promise<void> {
+    return this.setMuted(viewer, conversationId, true, now);
+  }
+
+  /** The viewer unmutes the conversation. */
+  unmute(viewer: SessionUser, conversationId: string, now: Date): Promise<void> {
+    return this.setMuted(viewer, conversationId, false, now);
+  }
+
+  /** The viewer archives the conversation: it leaves the default lists, for the viewer only. */
+  archive(viewer: SessionUser, conversationId: string, now: Date): Promise<void> {
+    return this.setArchived(viewer, conversationId, true, now);
+  }
+
+  /** The viewer unarchives the conversation: it comes back in the default lists. */
+  unarchive(viewer: SessionUser, conversationId: string, now: Date): Promise<void> {
+    return this.setArchived(viewer, conversationId, false, now);
+  }
+
+  private async setMuted(viewer: SessionUser, conversationId: string, muted: boolean, now: Date): Promise<void> {
+    await this.participation(viewer, conversationId);
+    await this.messages.setMuted(conversationId, viewer.id, muted, now);
+  }
+
+  private async setArchived(viewer: SessionUser, conversationId: string, archived: boolean, now: Date): Promise<void> {
+    await this.participation(viewer, conversationId);
+    await this.messages.setArchived(conversationId, viewer.id, archived, now);
   }
 
   private async answer(viewer: SessionUser, conversationId: string, status: 'accepted' | 'declined'): Promise<void> {
@@ -218,5 +250,7 @@ function toConversationView(row: ParticipationRow, viewerId: string): Conversati
     other: { handle: other.user.handle, displayName: other.user.displayName },
     lastMessageAt: lastMessageAt.toISOString(),
     unread: row.lastReadAt === null || row.lastReadAt < lastMessageAt,
+    muted: row.mutedAt !== null,
+    archived: row.archivedAt !== null,
   };
 }

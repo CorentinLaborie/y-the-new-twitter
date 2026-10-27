@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -102,5 +103,41 @@ export class MessagesController {
   @problemDetailsResponse(404, 'The conversation does not exist for the viewer.')
   read(@CurrentUser() viewer: SessionUser, @Param('conversationId', ParseUUIDPipe) conversationId: string): Promise<void> {
     return this.messages.markRead(viewer, conversationId, new Date());
+  }
+
+  @Put('conversations/:conversationId/mute')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'conversationId', format: 'uuid' })
+  @ApiNoContentResponse({ description: 'The conversation is muted for the viewer. Idempotent.' })
+  @problemDetailsResponse(404, 'The conversation does not exist for the viewer.')
+  mute(@CurrentUser() viewer: SessionUser, @Param('conversationId', ParseUUIDPipe) conversationId: string): Promise<void> {
+    return this.messages.mute(viewer, conversationId, new Date());
+  }
+
+  @Delete('conversations/:conversationId/mute')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'conversationId', format: 'uuid' })
+  @ApiNoContentResponse({ description: 'The conversation is unmuted for the viewer. Idempotent.' })
+  @problemDetailsResponse(404, 'The conversation does not exist for the viewer.')
+  unmute(@CurrentUser() viewer: SessionUser, @Param('conversationId', ParseUUIDPipe) conversationId: string): Promise<void> {
+    return this.messages.unmute(viewer, conversationId, new Date());
+  }
+
+  @Put('conversations/:conversationId/archive')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'conversationId', format: 'uuid' })
+  @ApiNoContentResponse({ description: 'The conversation is archived for the viewer. Idempotent.' })
+  @problemDetailsResponse(404, 'The conversation does not exist for the viewer.')
+  archive(@CurrentUser() viewer: SessionUser, @Param('conversationId', ParseUUIDPipe) conversationId: string): Promise<void> {
+    return this.messages.archive(viewer, conversationId, new Date());
+  }
+
+  @Delete('conversations/:conversationId/archive')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'conversationId', format: 'uuid' })
+  @ApiNoContentResponse({ description: 'The conversation is unarchived for the viewer. Idempotent.' })
+  @problemDetailsResponse(404, 'The conversation does not exist for the viewer.')
+  unarchive(@CurrentUser() viewer: SessionUser, @Param('conversationId', ParseUUIDPipe) conversationId: string): Promise<void> {
+    return this.messages.unarchive(viewer, conversationId, new Date());
   }
 }

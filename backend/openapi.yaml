@@ -1517,6 +1517,13 @@ paths:
             accepted conversations."
           schema:
             type: boolean
+        - name: archived
+          required: false
+          in: query
+          description: "true: the archived conversations of the viewer. Absent or false:
+            the active ones."
+          schema:
+            type: boolean
         - name: cursor
           required: false
           in: query
@@ -1714,6 +1721,84 @@ paths:
       responses:
         "204":
           description: The conversation is read up to now.
+        "404":
+          description: The conversation does not exist for the viewer.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+  /api/v1/messages/conversations/{conversationId}/mute:
+    put:
+      operationId: MessagesController_mute
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "204":
+          description: The conversation is muted for the viewer. Idempotent.
+        "404":
+          description: The conversation does not exist for the viewer.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+    delete:
+      operationId: MessagesController_unmute
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "204":
+          description: The conversation is unmuted for the viewer. Idempotent.
+        "404":
+          description: The conversation does not exist for the viewer.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+  /api/v1/messages/conversations/{conversationId}/archive:
+    put:
+      operationId: MessagesController_archive
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "204":
+          description: The conversation is archived for the viewer. Idempotent.
+        "404":
+          description: The conversation does not exist for the viewer.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetailsDto"
+      tags: *a13
+    delete:
+      operationId: MessagesController_unarchive
+      parameters:
+        - name: conversationId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "204":
+          description: The conversation is unarchived for the viewer. Idempotent.
         "404":
           description: The conversation does not exist for the viewer.
           content:

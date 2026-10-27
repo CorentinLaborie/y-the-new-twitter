@@ -51,6 +51,8 @@ describe('MessagesService (section 9 of the conditions)', () => {
       | 'markRead'
       | 'listConversations'
       | 'listMessages'
+      | 'setMuted'
+      | 'setArchived'
     >
   >;
   let service: MessagesService;
@@ -68,6 +70,8 @@ describe('MessagesService (section 9 of the conditions)', () => {
       markRead: jest.fn().mockResolvedValue({ count: 1 }),
       listConversations: jest.fn().mockResolvedValue([]),
       listMessages: jest.fn().mockResolvedValue([]),
+      setMuted: jest.fn().mockResolvedValue({ count: 1 }),
+      setArchived: jest.fn().mockResolvedValue({ count: 1 }),
     } as never;
     service = new MessagesService(repository as unknown as MessagesRepository);
   });
@@ -190,11 +194,74 @@ describe('MessagesService (section 9 of the conditions)', () => {
 
     const page = await service.list(VIEWER, { requests: true, limit: 2 } as never);
 
-    expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', true, undefined, 3);
+    expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', true, false, undefined, 3);
     expect(page.conversations.map((item) => item.id)).toEqual(['c-1', 'c-2']);
     expect(page.conversations[0]).toMatchObject({ status: 'pending', initiatedByViewer: false, unread: true });
     expect(page.nextCursor).toBe(
       encodeKeysetCursor({ createdAt: new Date('2026-10-26T10:00:00.000Z'), id: 'c-2' }),
     );
+  });
+
+  it('mutes and unmutes the viewer’s own row, at the given time, and answers 404 to a non-participant', async () => {
+    await service.mute(VIEWER, CONVERSATION_ID, NOW);
+    expect(repository.setMuted).toHaveBeenLastCalledWith(CONVERSATION_ID, 'viewer-1', true, NOW);
+
+    await service.unmute(VIEWER, CONVERSATION_ID, NOW);
+    expect(repository.setMuted).toHaveBeenLastCalledWith(CONVERSATION_ID, 'viewer-1', false, NOW);
+
+    repository.findParticipation.mockResolvedValueOnce(null);
+    await expect(service.mute(VIEWER, CONVERSATION_ID, NOW)).rejects.toBeInstanceOf(NotFoundException);
+    expect(repository.setMuted).toHaveBeenCalledTimes(2);
+  });
+
+  it('archives and unarchives the viewer’s own row, at the given time, and answers 404 to a non-participant', async () => {
+    await service.archive(VIEWER, CONVERSATION_ID, NOW);
+    expect(repository.setArchived).toHaveBeenLastCalledWith(CONVERSATION_ID, 'viewer-1', true, NOW);
+
+    await service.unarchive(VIEWER, CONVERSATION_ID, NOW);
+    expect(repository.setArchived).toHaveBeenLastCalledWith(CONVERSATION_ID, 'viewer-1', false, NOW);
+
+    repository.findParticipation.mockResolvedValueOnce(null);
+    await expect(service.archive(VIEWER, CONVERSATION_ID, NOW)).rejects.toBeInstanceOf(NotFoundException);
+    expect(repository.setArchived).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets muting leave sending possible', async () => {
+    await service.mute(VIEWER, CONVERSATION_ID, NOW);
+
+    await expect(service.send(VIEWER, CONVERSATION_ID, 'Toujours là', NOW)).resolves.toMatchObject({ mine: true });
+  });
+
+  it('lists the archived conversations when asked, and shows muted and archived on the view', async () => {
+    const row = {
+      conversationId: CONVERSATION_ID,
+      requestStatus: 'accepted' as const,
+      lastReadAt: null,
+      mutedAt: NOW,
+      archivedAt: NOW,
+      conversation: conversation('accepted', 'accepted'),
+    };
+    repository.listConversations.mockResolvedValueOnce([row] as never);
+
+    const page = await service.list(VIEWER, { requests: false, archived: true, limit: 20 } as never);
+
+    expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', false, true, undefined, 21);
+    expect(page.conversations[0]).toMatchObject({ muted: true, archived: true });
+  });
+
+  it('shows a conversation neither muted nor archived when the viewer’s row has no time', async () => {
+    const row = {
+      conversationId: CONVERSATION_ID,
+      requestStatus: 'accepted' as const,
+      lastReadAt: null,
+      mutedAt: null,
+      archivedAt: null,
+      conversation: conversation('accepted', 'accepted'),
+    };
+    repository.listConversations.mockResolvedValueOnce([row] as never);
+
+    const page = await service.list(VIEWER, { limit: 20 } as never);
+
+    expect(page.conversations[0]).toMatchObject({ muted: false, archived: false });
   });
 });

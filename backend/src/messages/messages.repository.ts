@@ -156,14 +156,37 @@ export class MessagesRepository {
   }
 
   /**
-   * One page of the viewer's conversations: the accepted ones, or the requests waiting for the viewer. Only the
-   * conversations whose other participant may still be written to are listed; the newest message comes first.
+   * Mutes or unmutes the conversation for the viewer only. Idempotent: a row already in that state is left untouched, so
+   * its time is kept.
    */
-  listConversations(viewerId: string, requests: boolean, after: KeysetPosition | undefined, take: number) {
+  setMuted(conversationId: string, userId: string, muted: boolean, now: Date) {
+    return this.prisma.conversationParticipant.updateMany({
+      where: { conversationId, userId, mutedAt: muted ? null : { not: null } },
+      data: { mutedAt: muted ? now : null },
+    });
+  }
+
+  /**
+   * Archives or unarchives the conversation for the viewer only. Idempotent: a row already in that state is left
+   * untouched, so its time is kept.
+   */
+  setArchived(conversationId: string, userId: string, archived: boolean, now: Date) {
+    return this.prisma.conversationParticipant.updateMany({
+      where: { conversationId, userId, archivedAt: archived ? null : { not: null } },
+      data: { archivedAt: archived ? now : null },
+    });
+  }
+
+  /**
+   * One page of the viewer's conversations: the accepted ones, or the requests waiting for the viewer, either still
+   * active (not archived) or archived. Only the conversations whose other participant may still be written to are
+   * listed; the newest message comes first.
+   */
+  listConversations(viewerId: string, requests: boolean, archived: boolean, after: KeysetPosition | undefined, take: number) {
     return this.prisma.conversationParticipant.findMany({
       where: {
         AND: [
-          { userId: viewerId, requestStatus: requests ? 'pending' : 'accepted' },
+          { userId: viewerId, requestStatus: requests ? 'pending' : 'accepted', archivedAt: archived ? { not: null } : null },
           { conversation: { participants: { some: { userId: { not: viewerId }, user: visibleAccountTo(viewerId) } } } },
           afterConversation(after),
         ],
