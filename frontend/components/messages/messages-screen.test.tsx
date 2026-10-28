@@ -18,6 +18,7 @@ function conversation(id: string, overrides: Partial<ConversationView> = {}): Co
     other: { handle: 'alice', displayName: 'Alice' },
     lastMessageAt: '2026-10-27T09:33:00.000Z',
     lastMessage: null,
+    otherLastReadAt: null,
     unread: false,
     muted: false,
     archived: false,

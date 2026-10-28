@@ -9,8 +9,7 @@ export default async function MessagesPage() {
   return (
     <div className={styles.emptyPane}>
       <div className="y-empty">
-        <h2>Aucune conversation ouverte</h2>
-        <p>Choisissez une conversation dans la liste, ou commencez-en une.</p>
+        <h2>Aucune conversation</h2>
         <Link href="/messages/new" className="y-btn y-btn-outline y-btn-md y-btn-pill">
           Nouveau message
         </Link>

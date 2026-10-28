@@ -51,6 +51,7 @@
 .tab {
   position: relative;
   display: flex;
+  white-space: nowrap;
   flex: 1;
   align-items: center;
   justify-content: center;
@@ -129,8 +130,25 @@
 
 .item {
   position: relative;
-  border-radius: var(--radius-lg);
-  background: var(--color-background);
+}
+
+.nameLine,
+.previewLine {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4, 4px);
+  min-width: 0;
+}
+
+.previewLine {
+  justify-content: space-between;
+}
+
+.stateTag {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 .row {
@@ -144,8 +162,8 @@
   overflow-wrap: anywhere;
 }
 
-.item.isUnread {
-  background: var(--color-primary-soft, #eef2ff);
+.item.isUnread strong {
+  font-weight: 800;
 }
 
 .avatar {
@@ -526,4 +544,214 @@
   margin: 0;
   font-size: 13px;
   color: var(--color-muted-foreground);
+}
+
+/* The thread (07 · Messages boards): day separators, bubbles on each side, meta lines under a run of messages. */
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin: 0;
+  padding: var(--space-16);
+  list-style: none;
+}
+
+.dayDivider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin: var(--space-8) 0;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+
+.dayDivider::before,
+.dayDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.rowMine,
+.rowOther {
+  display: flex;
+  flex-direction: column;
+  max-width: 80%;
+}
+
+.rowMine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.rowOther {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.bubbleMine,
+.bubbleOther {
+  margin: 0;
+  padding: var(--space-8) var(--space-12);
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.bubbleMine {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground, #ffffff);
+}
+
+.bubbleOther {
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-foreground);
+}
+
+/* The header of a conversation: the round initial, the name, the profile button, the round menu button. */
+.profileButton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--space-16);
+  border: 1px solid var(--color-primary);
+  border-radius: 9999px;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.menuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  cursor: pointer;
+}
+
+.requestActions {
+  display: flex;
+  gap: var(--space-8);
+  padding: 0 var(--space-16);
+}
+
+/* The composer: a rounded field, the counter on the right, and a round send button. */
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-16);
+  border-top: 1px solid var(--color-border);
+}
+
+.composerField {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 72px;
+  padding: var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-background);
+  font: inherit;
+  color: var(--color-foreground);
+  resize: vertical;
+}
+
+.composerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.counter {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+
+.sendButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground, #ffffff);
+  cursor: pointer;
+}
+
+.sendButton:disabled {
+  background: var(--color-border);
+  color: var(--color-muted-foreground);
+  cursor: not-allowed;
+}
+
+/* The new message page: everything aligned to the left, as on the Messages-New boards. */
+.newMessage,
+.recipientsColumn,
+.composeColumn,
+.newHeader,
+.newForm,
+.searchRow,
+.sectionLabel {
+  text-align: left;
+}
+
+/* The round initial of a suggested account, 40 px as on the boards. */
+.pickerAvatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  font-weight: 700;
+}
+
+/* The profile block at the top of a thread (Messages-Desktop and Mobile-Conversation boards). */
+.profileCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4, 4px);
+  padding: var(--space-24) var(--space-16) var(--space-16);
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.profileCard h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+
+.profileHandle,
+.profileMeta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+
+.profileBio {
+  margin: var(--space-4, 4px) 0 0;
+  max-width: 420px;
+  font-size: 14px;
+  color: var(--color-foreground);
 }

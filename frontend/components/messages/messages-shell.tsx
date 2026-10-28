@@ -25,7 +25,10 @@ export function MessagesShell({ children }: { children: ReactNode }) {
         <header className={styles.listHeader}>
           <h1 className={styles.title}>Messages</h1>
           <Link href="/messages/new" aria-label="Nouveau message" className={styles.iconButton}>
-            +
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h16v12H4z" fill="none" stroke="currentColor" strokeWidth="2" />
+              <path d="M4 6l8 6 8-6" fill="none" stroke="currentColor" strokeWidth="2" />
+            </svg>
           </Link>
         </header>
         <MessagesScreen />

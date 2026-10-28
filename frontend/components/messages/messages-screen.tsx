@@ -7,7 +7,7 @@ import { FeedIcon } from '@/components/feed/feed-icon';
 import { fetchConversations, type ConversationView } from '@/lib/messages-api';
 import {
   conversationStateLabel,
-  formatMessageTime,
+  formatRowTime,
   listOptionsFor,
   listPreview,
   loadFailureMessage,
@@ -15,6 +15,13 @@ import {
   type MessagesTab,
 } from './message-rules';
 import styles from './messages.module.css';
+
+/** The name of the list for screen readers, per tab (the boards name each list). */
+const LIST_LABELS: Record<MessagesTab, string> = {
+  messages: 'Conversations',
+  requests: 'Demandes',
+  archived: 'Conversations archivées',
+};
 
 type ReadyList = {
   phase: 'ready';
@@ -144,7 +151,7 @@ export function MessagesScreen() {
         {state?.phase === 'ready' && state.conversations.length === 0 ? <MessagesEmpty tab={tab} /> : null}
 
         {state?.phase === 'ready' && state.conversations.length > 0 ? (
-          <ul aria-label="Conversations" className={styles.list}>
+          <ul aria-label={LIST_LABELS[tab]} className={styles.list}>
             {state.conversations
               .filter((conversation) => matchesQuery(conversation, query))
               .map((conversation) => (
@@ -193,14 +200,18 @@ function ConversationRow({ conversation }: { conversation: ConversationView }) {
           {avatarInitial(conversation.other.displayName)}
         </span>
         <span className={styles.rowText}>
-          <strong>{conversation.other.displayName}</strong>{' '}
-          <span className={styles.handle}>@{conversation.other.handle}</span>
-          <span className={styles.preview}>{listPreview(conversation)}</span>
+          <span className={styles.nameLine}>
+            <strong>{conversation.other.displayName}</strong>{' '}
+            <span className={styles.handle}>@{conversation.other.handle}</span>
+            <time className={styles.meta} dateTime={conversation.lastMessageAt}>
+              · {formatRowTime(conversation.lastMessageAt)}
+            </time>
+          </span>
+          <span className={styles.previewLine}>
+            <span className={styles.preview}>{listPreview(conversation)}</span>
+            {state !== '' ? <span className={styles.stateTag}>{state}</span> : null}
+          </span>
         </span>
-        <time className={styles.meta} dateTime={conversation.lastMessageAt}>
-          {formatMessageTime(conversation.lastMessageAt)}
-        </time>
-        {state !== '' ? <span className={styles.meta}>{state}</span> : null}
         {conversation.unread ? <span className={styles.unreadDot} aria-hidden="true" /> : null}
       </Link>
     </li>

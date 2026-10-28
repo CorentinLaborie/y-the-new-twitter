@@ -41,6 +41,7 @@ function conversation(overrides: Partial<ConversationView> = {}): ConversationVi
     other: { handle: 'alice', displayName: 'Alice' },
     lastMessageAt: '2026-10-27T09:33:00.000Z',
     lastMessage: null,
+    otherLastReadAt: null,
     unread: false,
     muted: false,
     archived: false,
@@ -77,7 +78,7 @@ describe('ConversationScreen', () => {
     render(<ConversationScreen conversationId={CONVERSATION_ID} />);
 
     const messages = await screen.findByRole('list', { name: 'Messages' });
-    const items = messages.querySelectorAll('li');
+    const items = messages.querySelectorAll('li[data-mine]');
     expect(items[0]).toHaveTextContent('Premier message');
     expect(items[1]).toHaveTextContent('Réponse');
     expect(markConversationRead).toHaveBeenCalledWith(CONVERSATION_ID);

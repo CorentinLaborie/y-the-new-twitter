@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { avatarInitial } from '@/components/feed/avatar-initial';
+import { fetchProfile, type ProfileView } from '@/lib/profile-api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { BlockDialog } from '@/components/block/block-dialog';
@@ -22,7 +23,7 @@ import {
 import {
   canWrite,
   composerNotice,
-  formatMessageTime,
+  threadItems,
   loadFailureMessage,
   MESSAGE_MAX_LENGTH,
   sendFailureMessage,
@@ -49,6 +50,7 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
   const [sending, setSending] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
+  const [profile, setProfile] = useState<ProfileView | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -80,6 +82,23 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
       active = false;
     };
   }, [conversationId]);
+
+  const otherHandle = state.phase === 'ready' ? state.conversation.other.handle : null;
+  useEffect(() => {
+    if (otherHandle === null) {
+      return;
+    }
+    let current = true;
+    void fetchProfile(otherHandle).then((result) => {
+      if (current) {
+        setProfile(result.ok ? result.body : null);
+      }
+    });
+
+    return () => {
+      current = false;
+    };
+  }, [otherHandle]);
 
   if (state.phase === 'loading') {
     return <p role="status">Chargement de la conversation…</p>;
@@ -196,31 +215,30 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
         </span>
         <div className={styles.threadName}>
           <h2>{conversation.other.displayName}</h2>
-          <p>@{conversation.other.handle}</p>
+          <p>
+            @{conversation.other.handle}
+            {conversation.archived ? ' · Archivée' : ''}
+          </p>
         </div>
-        <Link
-          href={`/u/${encodeURIComponent(conversation.other.handle)}`}
-          className={`${styles.button} ${styles.buttonOutline}`}
-        >
+        <Link href={`/u/${encodeURIComponent(conversation.other.handle)}`} className={styles.profileButton}>
           Voir le profil
         </Link>
         <button
-          className={`${styles.button} ${styles.buttonOutline}`}
+          className={styles.menuButton}
           type="button"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           aria-label="Options de la conversation"
           onClick={() => setMenuOpen((open) => !open)}
         >
-          ⋯
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="5" cy="12" r="2" fill="currentColor" />
+            <circle cx="12" cy="12" r="2" fill="currentColor" />
+            <circle cx="19" cy="12" r="2" fill="currentColor" />
+          </svg>
         </button>
         {menuOpen ? (
           <ul className={styles.menu} role="menu" aria-label="Options de la conversation">
-            <li role="none">
-              <Link href={`/u/${conversation.other.handle}`} role="menuitem" className={styles.menuItem}>
-                Voir le profil
-              </Link>
-            </li>
             <li role="none">
               <button type="button" role="menuitem" className={styles.menuItem} onClick={toggleMute}>
                 {conversation.muted ? 'Réactiver les notifications' : 'Mettre en sourdine'}
@@ -248,6 +266,18 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
         ) : null}
       </header>
 
+      {profile !== null ? (
+        <section aria-label="Profil" className={styles.profileCard}>
+          <h3>{profile.displayName}</h3>
+          <p className={styles.profileHandle}>@{profile.handle}</p>
+          {profile.bio ? <p className={styles.profileBio}>{profile.bio}</p> : null}
+          <p className={styles.profileMeta}>
+            A rejoint Y en{' '}
+            {new Date(profile.joinedAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })} ·{' '}
+            <strong>{profile.followerCount.toLocaleString('fr-FR')}</strong> abonnés
+          </p>
+        </section>
+      ) : null}
       {more === 'failed' ? <p role="alert">Les messages précédents n’ont pas pu être chargés.</p> : null}
       {nextCursor !== null ? (
         <button
@@ -260,17 +290,35 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
         </button>
       ) : null}
 
-      <ol aria-label="Messages">
-        {[...messages].reverse().map((message) => (
-          <li key={message.id} data-mine={message.mine ? 'true' : 'false'}>
-            <p>{message.text}</p>
-            <time dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
-          </li>
-        ))}
-      </ol>
+      <ul aria-label="Messages" className={styles.thread}>
+        {threadItems(
+          [...messages].reverse(),
+          conversation.other.displayName,
+          conversation.otherLastReadAt,
+        ).map((item) =>
+          item.kind === 'day' ? (
+            <li key={item.key} className={styles.dayDivider} role="none">
+              <span>{item.label}</span>
+            </li>
+          ) : (
+            <li
+              key={item.key}
+              className={item.mine ? styles.rowMine : styles.rowOther}
+              data-mine={item.mine ? 'true' : 'false'}
+            >
+              <p className={item.mine ? styles.bubbleMine : styles.bubbleOther}>{item.text}</p>
+              {item.meta !== null ? <time className={styles.meta}>{item.meta}</time> : null}
+            </li>
+          ),
+        )}
+      </ul>
 
       {waitingForAnswer ? (
-        <div role="group" aria-label="Répondre à la demande">
+        <div
+          role="group"
+          aria-label={`Demande de ${conversation.other.displayName}`}
+          className={styles.requestActions}
+        >
           <button type="button" className={styles.button} onClick={() => answer(true)}>
             Accepter
           </button>
@@ -287,10 +335,13 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
       {notice !== null ? <p>{notice}</p> : null}
       {actionError !== null ? <p role="alert">{actionError}</p> : null}
 
-      <form onSubmit={send} aria-label="Écrire un message">
-        <label htmlFor="message-draft">Écrire un message à {conversation.other.displayName}</label>
+      <form onSubmit={send} aria-label="Écrire un message" className={styles.composer}>
+        <label htmlFor="message-draft" className={styles.visuallyHidden}>
+          Écrire un message à {conversation.other.displayName}
+        </label>
         <textarea
-          className={styles.field}
+          className={styles.composerField}
+          placeholder="Écrire un message"
           id="message-draft"
           value={draft}
           maxLength={MESSAGE_MAX_LENGTH}
@@ -298,16 +349,21 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
           disabled={!writable || sending}
           rows={2}
         />
-        <p aria-live="polite">
-          {draft.length} / {MESSAGE_MAX_LENGTH}
-        </p>
-        <button
-          type="submit"
-          className={styles.button}
-          disabled={!writable || sending || draft.trim() === ''}
-        >
-          Envoyer
-        </button>
+        <div className={styles.composerFooter}>
+          <p aria-live="polite" className={styles.counter}>
+            {draft.length} / {MESSAGE_MAX_LENGTH}
+          </p>
+          <button
+            type="submit"
+            className={styles.sendButton}
+            aria-label="Envoyer"
+            disabled={!writable || sending || draft.trim() === ''}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 11l18-8-8 18-2-8-8-2z" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
       </form>
 
       <BlockDialog

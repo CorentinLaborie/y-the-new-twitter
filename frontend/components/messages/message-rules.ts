@@ -109,3 +109,62 @@ export function formatMessageTime(iso: string, now: Date = new Date()): string {
     ? date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     : date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
 }
+
+/** The clock time as the boards write it: 09h33. */
+function clockTime(iso: string): string {
+  const date = new Date(iso);
+  const pad = (value: number) => String(value).padStart(2, '0');
+
+  return `${pad(date.getHours())}h${pad(date.getMinutes())}`;
+}
+
+function isSameDay(a: string, b: string): boolean {
+  return new Date(a).toDateString() === new Date(b).toDateString();
+}
+
+/** The label that separates the messages of one day: « Aujourd’hui », or the date. */
+function dayLabel(iso: string, now: Date): string {
+  if (new Date(iso).toDateString() === now.toDateString()) {
+    return 'Aujourd’hui';
+  }
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+}
+
+/** One row of the thread: a day separator, or a message with the line under it when its run ends. */
+export type ThreadItem =
+  | { kind: 'day'; key: string; label: string }
+  | { kind: 'message'; key: string; text: string; mine: boolean; meta: string | null };
+
+/**
+ * The thread as the Messages boards show it, oldest first: a « Aujourd’hui » (or date) separator before each day, and,
+ * under the last message of a run from one author, its clock time (with the other account's name when it is theirs).
+ */
+export function threadItems(
+  messages: readonly { id: string; text: string; mine: boolean; createdAt: string }[],
+  otherName: string,
+  otherLastReadAt: string | null,
+  now: Date = new Date(),
+): ThreadItem[] {
+  const lastOwn = [...messages].reverse().find((message) => message.mine);
+  const seen = (message: { createdAt: string }) =>
+    otherLastReadAt !== null && new Date(otherLastReadAt) >= new Date(message.createdAt);
+  return messages.flatMap((message, index): ThreadItem[] => {
+    const previous = messages[index - 1];
+    const next = messages[index + 1];
+    const separator: ThreadItem[] =
+      previous === undefined || !isSameDay(previous.createdAt, message.createdAt)
+        ? [{ kind: 'day', key: `day-${message.id}`, label: dayLabel(message.createdAt, now) }]
+        : [];
+    const endsRun = next === undefined || next.mine !== message.mine;
+    const author = message.mine ? '' : `${otherName} · `;
+    const readMark = message === lastOwn && seen(message) ? ' · Vu' : '';
+    const meta = endsRun ? `${author}${clockTime(message.createdAt)}${readMark}` : null;
+
+    return [...separator, { kind: 'message', key: message.id, text: message.text, mine: message.mine, meta }];
+  });
+}
+
+/** The time shown on a row of the list: the clock for today (09h33), the date for the days before (14/10). */
+export function formatRowTime(iso: string, now: Date = new Date()): string {
+  return new Date(iso).toDateString() === now.toDateString() ? clockTime(iso) : dayLabel(iso, now);
+}

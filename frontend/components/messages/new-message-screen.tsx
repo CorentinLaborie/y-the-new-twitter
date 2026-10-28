@@ -147,7 +147,7 @@ export function NewMessageScreen() {
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => pick(account.handle)}
                 >
-                  <span className={styles.avatar} aria-hidden="true">
+                  <span className={styles.pickerAvatar} aria-hidden="true">
                     {avatarInitial(account.displayName)}
                   </span>
                   <span className={styles.rowText}>
@@ -171,7 +171,7 @@ export function NewMessageScreen() {
             Message
           </label>
           <textarea
-            className={styles.field}
+            className={styles.composerField}
             id="new-message-text"
             value={text}
             onChange={(event) => setText(event.target.value)}
@@ -189,10 +189,13 @@ export function NewMessageScreen() {
           <div className={styles.actions}>
             <button
               type="submit"
-              className={styles.button}
+              className={styles.sendButton}
+              aria-label="Envoyer"
               disabled={sending || recipient === '' || text.trim() === ''}
             >
-              Envoyer
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 11l18-8-8 18-2-8-8-2z" fill="currentColor" />
+              </svg>
             </button>
           </div>
         </form>

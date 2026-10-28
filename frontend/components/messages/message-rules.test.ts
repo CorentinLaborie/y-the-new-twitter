@@ -10,6 +10,8 @@ import {
   loadFailureMessage,
   sendFailureMessage,
   listPreview,
+  formatRowTime,
+  threadItems,
 } from './message-rules';
 
 const BASE: ConversationView = {
@@ -19,6 +21,7 @@ const BASE: ConversationView = {
   other: { handle: 'MarkL', displayName: 'MarkL' },
   lastMessageAt: '2026-10-27T09:33:00.000Z',
   lastMessage: null,
+  otherLastReadAt: null,
   unread: false,
   muted: false,
   archived: false,
@@ -106,5 +109,58 @@ describe('listPreview (Messages boards)', () => {
 
   it('is empty when the conversation has no message yet', () => {
     expect(listPreview({ ...BASE, lastMessage: null })).toBe('');
+  });
+});
+
+describe('threadItems and formatRowTime (Messages boards)', () => {
+  const now = new Date('2026-10-28T12:00:00');
+
+  it('puts a day separator before the first message of each day, labelled « Aujourd’hui » for today', () => {
+    const items = threadItems(
+      [
+        { id: 'm1', text: 'Hier', mine: true, createdAt: '2026-10-27T09:00:00' },
+        { id: 'm2', text: 'Aujourd’hui', mine: false, createdAt: '2026-10-28T09:20:00' },
+      ],
+      'MarkL',
+      null,
+      now,
+    );
+
+    expect(items.filter((item) => item.kind === 'day').map((item) => item.label)).toEqual([
+      '27/10',
+      'Aujourd’hui',
+    ]);
+  });
+
+  it('shows the clock time under the last message of a run, with the name for the other account', () => {
+    const items = threadItems(
+      [
+        { id: 'm1', text: 'a', mine: false, createdAt: '2026-10-28T09:20:00' },
+        { id: 'm2', text: 'b', mine: false, createdAt: '2026-10-28T09:21:00' },
+        { id: 'm3', text: 'c', mine: true, createdAt: '2026-10-28T09:24:00' },
+      ],
+      'MarkL',
+      null,
+      now,
+    );
+    const metas = items.flatMap((item) => (item.kind === 'message' ? [item.meta] : []));
+
+    expect(metas).toEqual([null, 'MarkL · 09h21', '09h24']);
+  });
+
+  it('adds « Vu » to the last message of the viewer once the other account has read it', () => {
+    const items = threadItems(
+      [{ id: 'm1', text: 'c', mine: true, createdAt: '2026-10-28T09:33:00' }],
+      'MarkL',
+      '2026-10-28T09:40:00',
+      now,
+    );
+
+    expect(items[items.length - 1]).toMatchObject({ meta: '09h33 · Vu' });
+  });
+
+  it('shows the clock for today and the date for the days before in the list', () => {
+    expect(formatRowTime('2026-10-28T09:33:00', now)).toBe('09h33');
+    expect(formatRowTime('2026-10-14T09:33:00', now)).toBe('14/10');
   });
 });

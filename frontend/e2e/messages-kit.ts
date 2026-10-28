@@ -134,6 +134,7 @@ export function conversationOf(
     other: { handle: overrides.handle ?? 'alice', displayName: overrides.displayName ?? 'Alice' },
     lastMessageAt: '2026-10-27T09:33:00Z',
     lastMessage: overrides.lastMessage === undefined ? null : overrides.lastMessage,
+    otherLastReadAt: null,
     unread: overrides.unread ?? false,
     muted: overrides.muted ?? false,
     archived: overrides.archived ?? false,

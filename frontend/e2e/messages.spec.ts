@@ -85,14 +85,14 @@ test('a conversation shows its messages oldest first, is marked read, and a sent
   await page.goto(`/messages/${C1}`);
 
   const thread = page.getByRole('list', { name: 'Messages' });
-  await expect(thread.locator('li').first()).toContainText('Bonjour Alice');
-  await expect(thread.locator('li').nth(1)).toContainText('Réponse d’Alice');
+  await expect(thread.locator('li[data-mine]').first()).toContainText('Bonjour Alice');
+  await expect(thread.locator('li[data-mine]').nth(1)).toContainText('Réponse d’Alice');
   expect(calls.flags).toContainEqual({ conversationId: C1, verb: 'PUT read' });
 
   await page.getByLabel('Écrire un message à Alice').fill('Merci');
   await page.getByRole('button', { name: 'Envoyer' }).click();
 
-  await expect(thread.locator('li').last()).toContainText('Merci');
+  await expect(thread.locator('li[data-mine]').last()).toContainText('Merci');
   await expect(page.getByLabel('Écrire un message à Alice')).toHaveValue('');
   expect(calls.sent).toEqual([{ conversationId: C1, text: 'Merci' }]);
   await expectNoHorizontalScroll(page);
@@ -137,8 +137,8 @@ test('the menu mutes and archives the conversation for the viewer only', async (
 
   await page.goto(`/messages/${C1}`);
   await page.getByRole('button', { name: 'Options de la conversation' }).click();
-  // The menu opens the profile of the other account (Voir le profil, Messages-Desktop boards).
-  await expect(page.getByRole('menuitem', { name: 'Voir le profil' })).toHaveAttribute('href', '/u/alice');
+  // The profile link sits in the header, as on the boards; the menu keeps mute, archive and block.
+  await expect(page.getByRole('link', { name: 'Voir le profil' })).toHaveAttribute('href', '/u/alice');
   await page.getByRole('menuitem', { name: 'Mettre en sourdine' }).click();
   // The menu closes once the server has answered: reopen it only then.
   await expect(page.getByRole('menu')).toBeHidden();

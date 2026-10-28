@@ -41,6 +41,8 @@ export interface ConversationView {
   initiatedByViewer: boolean;
   other: { handle: string; displayName: string };
   lastMessageAt: string;
+  /** When the other account last read the conversation, or null when it has not. */
+  otherLastReadAt: string | null;
   /** The newest message: its text, and whether the viewer wrote it. Null when the conversation has no message yet. */
   lastMessage: { text: string; mine: boolean } | null;
   unread: boolean;
@@ -259,6 +261,7 @@ function toConversationView(row: ParticipationRow, viewerId: string): Conversati
     initiatedByViewer: conversation.initiatedById === viewerId,
     other: { handle: other.user.handle, displayName: other.user.displayName },
     lastMessageAt: lastMessageAt.toISOString(),
+    otherLastReadAt: other.lastReadAt?.toISOString() ?? null,
     lastMessage: latest === undefined ? null : { text: latest.body, mine: latest.senderId === viewerId },
     unread: row.lastReadAt === null || row.lastReadAt < lastMessageAt,
     muted: row.mutedAt !== null,

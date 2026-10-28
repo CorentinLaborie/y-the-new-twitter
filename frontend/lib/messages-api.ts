@@ -24,6 +24,8 @@ export type ConversationView = {
   initiatedByViewer: boolean;
   other: { handle: string; displayName: string };
   lastMessageAt: string;
+  /** When the other account last read the conversation, or null when it has not. */
+  otherLastReadAt: string | null;
   /** The newest message: its text, and whether the viewer wrote it. Null when there is no message yet. */
   lastMessage: { text: string; mine: boolean } | null;
   unread: boolean;
