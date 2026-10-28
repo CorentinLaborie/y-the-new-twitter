@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { avatarInitial } from '@/components/feed/avatar-initial';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { BlockDialog } from '@/components/block/block-dialog';
@@ -51,28 +52,30 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchConversation(conversationId), fetchMessages(conversationId)]).then(([conversation, page]) => {
-      if (!active) {
-        return;
-      }
-      if (!conversation.ok) {
-        setState({ phase: 'failed', message: loadFailureMessage(conversation.problem) });
-        return;
-      }
-      if (!page.ok) {
-        setState({ phase: 'failed', message: loadFailureMessage(page.problem) });
-        return;
-      }
-      setState({
-        phase: 'ready',
-        conversation: conversation.body,
-        messages: page.body.messages,
-        nextCursor: page.body.nextCursor,
-        more: 'idle',
-        actionError: null,
-      });
-      void markConversationRead(conversationId);
-    });
+    Promise.all([fetchConversation(conversationId), fetchMessages(conversationId)]).then(
+      ([conversation, page]) => {
+        if (!active) {
+          return;
+        }
+        if (!conversation.ok) {
+          setState({ phase: 'failed', message: loadFailureMessage(conversation.problem) });
+          return;
+        }
+        if (!page.ok) {
+          setState({ phase: 'failed', message: loadFailureMessage(page.problem) });
+          return;
+        }
+        setState({
+          phase: 'ready',
+          conversation: conversation.body,
+          messages: page.body.messages,
+          nextCursor: page.body.nextCursor,
+          more: 'idle',
+          actionError: null,
+        });
+        void markConversationRead(conversationId);
+      },
+    );
     return () => {
       active = false;
     };
@@ -101,7 +104,9 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
 
   function patchConversation(update: Partial<ConversationView>) {
     setState((current) =>
-      current.phase === 'ready' ? { ...current, conversation: { ...current.conversation, ...update } } : current,
+      current.phase === 'ready'
+        ? { ...current, conversation: { ...current.conversation, ...update } }
+        : current,
     );
   }
 
@@ -186,8 +191,18 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
   return (
     <section aria-label={`Conversation avec ${conversation.other.displayName}`}>
       <header className={styles.threadHeader}>
-        <Link href={`/u/${encodeURIComponent(conversation.other.handle)}`}>
-          <strong>{conversation.other.displayName}</strong> <span>@{conversation.other.handle}</span>
+        <span className={styles.threadAvatar} aria-hidden="true">
+          {avatarInitial(conversation.other.displayName)}
+        </span>
+        <div className={styles.threadName}>
+          <h2>{conversation.other.displayName}</h2>
+          <p>@{conversation.other.handle}</p>
+        </div>
+        <Link
+          href={`/u/${encodeURIComponent(conversation.other.handle)}`}
+          className={`${styles.button} ${styles.buttonOutline}`}
+        >
+          Voir le profil
         </Link>
         <button
           className={`${styles.button} ${styles.buttonOutline}`}
@@ -235,7 +250,12 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
 
       {more === 'failed' ? <p role="alert">Les messages précédents n’ont pas pu être chargés.</p> : null}
       {nextCursor !== null ? (
-        <button type="button" className={`${styles.button} ${styles.buttonOutline}`} onClick={loadOlder} disabled={more === 'loading'}>
+        <button
+          type="button"
+          className={`${styles.button} ${styles.buttonOutline}`}
+          onClick={loadOlder}
+          disabled={more === 'loading'}
+        >
           Voir les messages précédents
         </button>
       ) : null}
@@ -254,7 +274,11 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
           <button type="button" className={styles.button} onClick={() => answer(true)}>
             Accepter
           </button>
-          <button type="button" className={`${styles.button} ${styles.buttonOutline}`} onClick={() => answer(false)}>
+          <button
+            type="button"
+            className={`${styles.button} ${styles.buttonOutline}`}
+            onClick={() => answer(false)}
+          >
             Refuser
           </button>
         </div>
@@ -277,7 +301,11 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
         <p aria-live="polite">
           {draft.length} / {MESSAGE_MAX_LENGTH}
         </p>
-        <button type="submit" className={styles.button} disabled={!writable || sending || draft.trim() === ''}>
+        <button
+          type="submit"
+          className={styles.button}
+          disabled={!writable || sending || draft.trim() === ''}
+        >
           Envoyer
         </button>
       </form>

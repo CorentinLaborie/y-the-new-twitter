@@ -70,7 +70,7 @@ test('the new message form fits 325 px and its send button keeps a 44 px target'
 
   await page.goto('/messages/new');
 
-  await expect(page.getByLabel('Destinataire', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Rechercher une personne', { exact: true })).toBeVisible();
   await expectNoHorizontalScroll(page);
   const send = await page.getByRole('button', { name: 'Envoyer' }).boundingBox();
   expect(send?.height ?? 0).toBeGreaterThanOrEqual(44);

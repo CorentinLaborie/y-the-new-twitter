@@ -49,7 +49,12 @@ function conversation(overrides: Partial<ConversationView> = {}): ConversationVi
 }
 
 const MESSAGE_B: MessageView = { id: 'm2', text: 'Réponse', createdAt: '2026-10-27T09:33:00Z', mine: false };
-const MESSAGE_A: MessageView = { id: 'm1', text: 'Premier message', createdAt: '2026-10-27T09:30:00Z', mine: true };
+const MESSAGE_A: MessageView = {
+  id: 'm1',
+  text: 'Premier message',
+  createdAt: '2026-10-27T09:30:00Z',
+  mine: true,
+};
 
 /** The newest message comes first, as the API lists them. */
 function loadThread(conv: ConversationView, messages: MessageView[] = [MESSAGE_B, MESSAGE_A]) {
@@ -79,7 +84,13 @@ describe('ConversationScreen', () => {
   });
 
   it('offers to accept or decline a request waiting for the viewer, and accepting opens the composer', async () => {
-    loadThread(conversation({ status: 'pending', initiatedByViewer: false, other: { handle: 'bob', displayName: 'Bob' } }));
+    loadThread(
+      conversation({
+        status: 'pending',
+        initiatedByViewer: false,
+        other: { handle: 'bob', displayName: 'Bob' },
+      }),
+    );
     vi.mocked(acceptRequest).mockResolvedValue(OK(undefined));
 
     render(<ConversationScreen conversationId={CONVERSATION_ID} />);
@@ -115,7 +126,10 @@ describe('ConversationScreen', () => {
 
   it('shows the French text when a message is refused', async () => {
     loadThread(conversation());
-    vi.mocked(sendMessage).mockResolvedValue({ ok: false, problem: { status: 409, title: 'x', detail: 'x' } } as never);
+    vi.mocked(sendMessage).mockResolvedValue({
+      ok: false,
+      problem: { status: 409, title: 'x', detail: 'x' },
+    } as never);
 
     render(<ConversationScreen conversationId={CONVERSATION_ID} />);
     fireEvent.change(await screen.findByRole('textbox'), { target: { value: 'Encore' } });
@@ -125,7 +139,10 @@ describe('ConversationScreen', () => {
   });
 
   it('shows the French failure text when the conversation is not reachable', async () => {
-    vi.mocked(fetchConversation).mockResolvedValue({ ok: false, problem: { status: 404, title: 'x', detail: 'x' } } as never);
+    vi.mocked(fetchConversation).mockResolvedValue({
+      ok: false,
+      problem: { status: 404, title: 'x', detail: 'x' },
+    } as never);
     vi.mocked(fetchMessages).mockResolvedValue(OK({ messages: [], nextCursor: null }));
 
     render(<ConversationScreen conversationId={CONVERSATION_ID} />);

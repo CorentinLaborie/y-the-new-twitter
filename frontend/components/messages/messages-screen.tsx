@@ -33,6 +33,21 @@ const SKELETON_ROWS = 5;
  */
 export function MessagesScreen() {
   const [tab, setTab] = useState<MessagesTab>('messages');
+  // The number of requests waiting for the viewer, on the « Demandes (N) » tab of the boards.
+  const [requestCount, setRequestCount] = useState(0);
+
+  useEffect(() => {
+    let current = true;
+    void fetchConversations({ requests: true, limit: 50 }).then((result) => {
+      if (current && result.ok) {
+        setRequestCount(result.body.conversations.length);
+      }
+    });
+
+    return () => {
+      current = false;
+    };
+  }, []);
   const [query, setQuery] = useState('');
   /** The last answer, kept with its tab: a tab with no answer yet shows the loading state. */
   const [answer, setAnswer] = useState<{ tab: MessagesTab; state: ListState } | null>(null);
@@ -47,7 +62,12 @@ export function MessagesScreen() {
         return;
       }
       const next: ListState = result.ok
-        ? { phase: 'ready', conversations: result.body.conversations, nextCursor: result.body.nextCursor, more: 'idle' }
+        ? {
+            phase: 'ready',
+            conversations: result.body.conversations,
+            nextCursor: result.body.nextCursor,
+            more: 'idle',
+          }
         : { phase: 'failed', message: loadFailureMessage(result.problem) };
       setAnswer({ tab, state: next });
     });
@@ -99,7 +119,7 @@ export function MessagesScreen() {
             aria-selected={tab === item.id}
             onClick={() => setTab(item.id)}
           >
-            {item.label}
+            {item.id === 'requests' && requestCount > 0 ? `${item.label} (${requestCount})` : item.label}
           </button>
         ))}
       </div>
@@ -173,7 +193,8 @@ function ConversationRow({ conversation }: { conversation: ConversationView }) {
           {avatarInitial(conversation.other.displayName)}
         </span>
         <span className={styles.rowText}>
-          <strong>{conversation.other.displayName}</strong> <span className={styles.handle}>@{conversation.other.handle}</span>
+          <strong>{conversation.other.displayName}</strong>{' '}
+          <span className={styles.handle}>@{conversation.other.handle}</span>
           <span className={styles.preview}>{listPreview(conversation)}</span>
         </span>
         <time className={styles.meta} dateTime={conversation.lastMessageAt}>

@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { MentionPicker } from '@/components/conversation/mention-picker';
+import { avatarInitial } from '@/components/feed/avatar-initial';
 import { fetchMentionSuggestions, type MentionSuggestion } from '@/lib/mention-api';
 import { startConversation } from '@/lib/messages-api';
 import { MESSAGE_MAX_LENGTH, sendFailureMessage } from './message-rules';
 import styles from './messages.module.css';
 
 const SUGGESTION_DELAY_MS = 200;
-const PICKER_ID = 'new-message-suggestions';
+const LIST_ID = 'new-message-suggestions';
 
 /** The texts for the refusals of a new conversation (the handle is looked up by the API). */
 function newMessageFailureMessage(status: number, fallback: string): string {
@@ -24,9 +24,9 @@ function newMessageFailureMessage(status: number, fallback: string): string {
 }
 
 /**
- * Starts a conversation with a handle. The recipient field proposes the accounts linked to the viewer, with the same
- * picker and keyboard as the mentions (arrows, Entrée, Échap). A request is opened when that account does not follow
- * the viewer.
+ * The new message page of the Messages-New boards (07 · Messages). The left column holds the search for the recipient
+ * and the list of people it finds: it follows the text typed, like the mention picker (arrows, Entrée, Échap). The right
+ * column holds the message. A request is opened when the recipient does not follow the viewer.
  */
 export function NewMessageScreen() {
   const router = useRouter();
@@ -36,15 +36,15 @@ export function NewMessageScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<MentionSuggestion[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [pickerOpen, setPickerOpen] = useState(true);
-  const pickerShown = pickerOpen && suggestions.length > 0;
+  const [listOpen, setListOpen] = useState(true);
+  const listShown = listOpen && suggestions.length > 0;
+  const recipient = handle.trim().replace(/^@/, '');
 
-  // The accounts the viewer follows or that follow the viewer, for the handle typed so far (the same list as the mentions).
+  // The accounts the viewer follows or that follow the viewer, for the text typed so far (the same list as the mentions).
   useEffect(() => {
     let current = true;
-    const query = handle.trim().replace(/^@/, '');
     const timer = window.setTimeout(() => {
-      void fetchMentionSuggestions(query).then((result) => {
+      void fetchMentionSuggestions(recipient).then((result) => {
         if (current) {
           setSuggestions(result.ok ? result.body.items : []);
           setActiveIndex(0);
@@ -56,16 +56,16 @@ export function NewMessageScreen() {
       current = false;
       window.clearTimeout(timer);
     };
-  }, [handle]);
+  }, [recipient]);
 
   function pick(account: string) {
     setHandle(account);
-    setPickerOpen(false);
+    setListOpen(false);
     setActiveIndex(0);
   }
 
   function onHandleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (!pickerShown) {
+    if (!listShown) {
       return;
     }
     if (event.key === 'ArrowDown') {
@@ -82,20 +82,19 @@ export function NewMessageScreen() {
       }
     } else if (event.key === 'Escape') {
       event.preventDefault();
-      setPickerOpen(false);
+      setListOpen(false);
     }
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const cleanHandle = handle.trim().replace(/^@/, '');
     const cleanText = text.trim();
-    if (cleanHandle === '' || cleanText === '' || sending) {
+    if (recipient === '' || cleanText === '' || sending) {
       return;
     }
     setSending(true);
     setFailure(null);
-    const result = await startConversation(cleanHandle, cleanText);
+    const result = await startConversation(recipient, cleanText);
     setSending(false);
     if (result.ok) {
       router.push(`/messages/${result.body.conversationId}`);
@@ -105,50 +104,69 @@ export function NewMessageScreen() {
   }
 
   return (
-    <section aria-label="Nouveau message">
-      <Link href="/messages" className={styles.backLink}>
-        Retour aux messages
-      </Link>
-      <form className={styles.newForm} onSubmit={submit}>
-        <div role="group" aria-label="Destinataires" className={styles.recipients}>
-          <label htmlFor="new-message-handle" className={styles.label}>
-            Destinataire
+    <section aria-label="Nouveau message" className={styles.newMessage}>
+      <section aria-label="Destinataires" className={styles.recipientsColumn}>
+        <header className={styles.newHeader}>
+          <Link href="/messages" className={`y-btn y-btn-ghost y-btn-sm ${styles.backButton}`}>
+            <span aria-hidden="true">←</span> Retour aux messages
+          </Link>
+          <h1 className={styles.title}>Nouveau message</h1>
+        </header>
+        <div className={styles.searchRow}>
+          <label htmlFor="new-message-handle" className={styles.visuallyHidden}>
+            Rechercher une personne
           </label>
           <input
-            className={styles.field}
             id="new-message-handle"
+            className={styles.field}
             role="combobox"
             aria-autocomplete="list"
-            aria-expanded={pickerShown}
-            aria-controls={PICKER_ID}
+            aria-expanded={listShown}
+            aria-controls={LIST_ID}
             value={handle}
             onChange={(event) => {
               setHandle(event.target.value);
-              setPickerOpen(true);
+              setListOpen(true);
             }}
             onKeyDown={onHandleKeyDown}
-            placeholder="Pseudo, par exemple alice"
+            placeholder="Nom ou @pseudo"
             maxLength={30}
             autoComplete="off"
           />
-          <p className={styles.hint}>
-            Destinataire :{' '}
-            {handle.trim() === '' ? 'aucun destinataire sélectionné' : `@${handle.trim().replace(/^@/, '')}`}
-          </p>
-          {pickerShown ? (
-            <>
-              <h2 className={styles.label}>Suggestions</h2>
-              <MentionPicker
-                id={PICKER_ID}
-                label="Personnes suggérées"
-                suggestions={suggestions}
-                activeIndex={activeIndex}
-                onPick={pick}
-              />
-            </>
-          ) : null}
         </div>
-        <div role="group" aria-label="Rédiger un message" className={styles.recipients}>
+        <h2 className={styles.sectionLabel}>Suggestions</h2>
+        {listShown ? (
+          <ul id={LIST_ID} role="listbox" aria-label="Personnes suggérées" className={styles.suggestionList}>
+            {suggestions.map((account, index) => (
+              <li key={account.handle}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={index === activeIndex}
+                  className={styles.suggestionRow}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => pick(account.handle)}
+                >
+                  <span className={styles.avatar} aria-hidden="true">
+                    {avatarInitial(account.displayName)}
+                  </span>
+                  <span className={styles.rowText}>
+                    <strong>{account.displayName}</strong>
+                    <span className={styles.handle}>@{account.handle}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
+
+      <section aria-label="Rédiger un message" className={styles.composeColumn}>
+        <form className={styles.newForm} onSubmit={submit}>
+          <p className={styles.recipientLine}>
+            Destinataire :{' '}
+            <strong>{recipient === '' ? 'aucun destinataire sélectionné' : `@${recipient}`}</strong>
+          </p>
           <label htmlFor="new-message-text" className={styles.label}>
             Message
           </label>
@@ -157,23 +175,28 @@ export function NewMessageScreen() {
             id="new-message-text"
             value={text}
             onChange={(event) => setText(event.target.value)}
+            placeholder="Écrivez votre message"
             maxLength={MESSAGE_MAX_LENGTH}
-            rows={4}
+            rows={6}
           />
-        </div>
-        <p aria-live="polite" className={styles.hint}>
-          {text.length} / {MESSAGE_MAX_LENGTH}
-        </p>
-        <p className={styles.hint}>Si cette personne ne vous suit pas, votre message devient une demande.</p>
-        {failure !== null ? <p role="alert">{failure}</p> : null}
-        <button
-          type="submit"
-          className={styles.button}
-          disabled={sending || handle.trim() === '' || text.trim() === ''}
-        >
-          Envoyer
-        </button>
-      </form>
+          <p aria-live="polite" className={styles.counter}>
+            {text.length} / {MESSAGE_MAX_LENGTH}
+          </p>
+          <p className={styles.hint}>
+            Si cette personne ne vous suit pas, votre message devient une demande.
+          </p>
+          {failure !== null ? <p role="alert">{failure}</p> : null}
+          <div className={styles.actions}>
+            <button
+              type="submit"
+              className={styles.button}
+              disabled={sending || recipient === '' || text.trim() === ''}
+            >
+              Envoyer
+            </button>
+          </div>
+        </form>
+      </section>
     </section>
   );
 }

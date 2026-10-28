@@ -293,35 +293,236 @@
   cursor: pointer;
 }
 
-/* The new-message screen: the form in one column, the labels and the hint under the field. */
-.newForm {
+/* The new-message page (07 · Messages, Messages-New boards). Desktop: the recipients (380 px) beside the message, the
+   navigation bar stays in the app shell. Under 1024 px the two parts stack. */
+.newPage {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--color-card);
+}
+
+.newMessage {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
-  padding: var(--space-8) var(--space-16) var(--space-16);
+  min-height: 100vh;
 }
 
-.label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-foreground);
+.recipientsColumn {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.backLink {
+.newHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 4px);
+  padding: var(--space-16);
+}
+
+.backButton {
   align-self: flex-start;
   min-height: 44px;
-  display: inline-flex;
-  align-items: center;
+  padding: 0 var(--space-12);
   color: var(--color-primary);
 }
 
-.recipients {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
+.searchRow {
+  padding: var(--space-8) var(--space-16) var(--space-16);
 }
 
-.hint {
+.sectionLabel {
+  margin: 0;
+  padding: var(--space-16) var(--space-16) var(--space-8);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  color: var(--color-muted-foreground);
+}
+
+.suggestionList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  width: 100%;
+  min-height: 56px;
+  box-sizing: border-box;
+  padding: var(--space-12) var(--space-16);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--color-foreground);
+  text-align: left;
+  cursor: pointer;
+}
+
+.suggestionRow:hover,
+.suggestionRow[aria-selected='true'] {
+  background: var(--color-background);
+}
+
+.suggestionRow:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.composeColumn {
+  flex: 1;
+  min-width: 0;
+}
+
+.newForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-24);
+}
+
+.recipientLine {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-muted-foreground);
+}
+
+.recipientLine strong {
+  color: var(--color-foreground);
+}
+
+.counter {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (min-width: 1024px) {
+  .newMessage {
+    flex-direction: row;
+  }
+
+  .recipientsColumn {
+    flex: none;
+    width: 380px;
+    border-right: 1px solid var(--color-border);
+  }
+}
+
+/* The Messages area (07 · Messages boards): the list beside the open conversation on desktop. */
+.shell {
+  display: flex;
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--color-card);
+}
+
+.listColumn {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding: var(--space-16);
+}
+
+/* The "+" that starts a new message: a 44 px round target, with the ink border of the boards. */
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-foreground);
+  border-radius: 9999px;
+  color: var(--color-foreground);
+  font-size: 22px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.pane {
+  flex: 1;
+  min-width: 0;
+}
+
+.emptyPane {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-24);
+}
+
+.threadPane {
+  min-height: 100vh;
+  min-width: 0;
+}
+
+/* Under 1024 px one part at a time: the list alone on /messages, the conversation alone on /messages/{id}. */
+@media (max-width: 1023px) {
+  .shell[data-view='list'] .pane {
+    display: none;
+  }
+
+  .shell[data-view='thread'] .listColumn {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .listColumn {
+    flex: none;
+    width: 380px;
+    border-right: 1px solid var(--color-border);
+  }
+}
+
+/* The conversation header of the boards: round initial, name and handle, the profile button, then the menu. */
+.threadAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  font-weight: 700;
+}
+
+.threadName {
+  flex: 1;
+  min-width: 0;
+}
+
+.threadName h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+
+.threadName p {
   margin: 0;
   font-size: 13px;
   color: var(--color-muted-foreground);

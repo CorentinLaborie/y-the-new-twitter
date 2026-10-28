@@ -33,7 +33,10 @@ describe('MessagesScreen', () => {
   it('lists the accepted conversations on the first tab, with their state', async () => {
     vi.mocked(fetchConversations).mockResolvedValue(
       OK({
-        conversations: [conversation('c1', { muted: true }), conversation('c2', { other: { handle: 'bob', displayName: 'Bob' } })],
+        conversations: [
+          conversation('c1', { muted: true }),
+          conversation('c2', { other: { handle: 'bob', displayName: 'Bob' } }),
+        ],
         nextCursor: null,
       }),
     );
@@ -57,17 +60,35 @@ describe('MessagesScreen', () => {
   });
 
   it('shows the French failure text when the list cannot be read', async () => {
-    vi.mocked(fetchConversations).mockResolvedValue({ ok: false, problem: { status: 500, title: 'x', detail: 'x' } } as never);
+    vi.mocked(fetchConversations).mockResolvedValue({
+      ok: false,
+      problem: { status: 500, title: 'x', detail: 'x' },
+    } as never);
 
     render(<MessagesScreen />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Les messages n’ont pas pu être chargés. Réessayez.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Les messages n’ont pas pu être chargés. Réessayez.',
+    );
   });
 
   it('adds the next page of conversations after the button is pressed', async () => {
-    vi.mocked(fetchConversations)
-      .mockResolvedValueOnce(OK({ conversations: [conversation('c1')], nextCursor: 'k1' }))
-      .mockResolvedValueOnce(OK({ conversations: [conversation('c2', { other: { handle: 'bob', displayName: 'Bob' } })], nextCursor: null }));
+    // The requests count of the tab is asked first and gets an empty page; the list gets its pages in order.
+    let page = 0;
+    vi.mocked(fetchConversations).mockImplementation(async (options) => {
+      if (options?.requests) {
+        return OK({ conversations: [], nextCursor: null }) as never;
+      }
+      page += 1;
+      return (
+        page === 1
+          ? OK({ conversations: [conversation('c1')], nextCursor: 'k1' })
+          : OK({
+              conversations: [conversation('c2', { other: { handle: 'bob', displayName: 'Bob' } })],
+              nextCursor: null,
+            })
+      ) as never;
+    });
     render(<MessagesScreen />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Voir plus de conversations' }));
@@ -80,14 +101,19 @@ describe('MessagesScreen', () => {
   it('filters the loaded conversations by name or handle, without case', async () => {
     vi.mocked(fetchConversations).mockResolvedValue(
       OK({
-        conversations: [conversation('c1'), conversation('c2', { other: { handle: 'bob', displayName: 'Bob' } })],
+        conversations: [
+          conversation('c1'),
+          conversation('c2', { other: { handle: 'bob', displayName: 'Bob' } }),
+        ],
         nextCursor: null,
       }),
     );
     render(<MessagesScreen />);
     await screen.findByRole('link', { name: 'Conversation avec Alice' });
 
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Rechercher dans les messages' }), { target: { value: '@BOB' } });
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Rechercher dans les messages' }), {
+      target: { value: '@BOB' },
+    });
 
     expect(screen.queryByRole('link', { name: 'Conversation avec Alice' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Conversation avec Bob' })).toBeInTheDocument();

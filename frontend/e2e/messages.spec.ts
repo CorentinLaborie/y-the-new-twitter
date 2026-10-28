@@ -173,7 +173,7 @@ test('a new message opens the conversation the API returns, and a refused handle
   );
 
   await page.goto('/messages/new');
-  await page.getByLabel('Destinataire', { exact: true }).fill('bob');
+  await page.getByLabel('Rechercher une personne', { exact: true }).fill('bob');
   await page.getByLabel('Message', { exact: true }).fill('Salut Bob');
   await page.getByRole('button', { name: 'Envoyer' }).click();
 
@@ -196,5 +196,5 @@ test('a new message suggests the linked accounts, and a click fills the recipien
   await page.goto('/messages/new');
   await page.getByRole('option', { name: /Bob/ }).click();
 
-  await expect(page.getByLabel('Destinataire', { exact: true })).toHaveValue('bob');
+  await expect(page.getByLabel('Rechercher une personne', { exact: true })).toHaveValue('bob');
 });

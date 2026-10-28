@@ -30,14 +30,14 @@ describe('NewMessageScreen (Messages-New boards)', () => {
 
     fireEvent.click(await screen.findByRole('option', { name: /Mark/ }));
 
-    expect(screen.getByLabelText('Destinataire')).toHaveValue('MarkL');
+    expect(screen.getByLabelText('Rechercher une personne')).toHaveValue('MarkL');
     expect(fetchMentionSuggestions).toHaveBeenCalledWith('');
   });
 
   it('asks for suggestions of the handle typed, without the @', async () => {
     render(<NewMessageScreen />);
 
-    fireEvent.change(screen.getByLabelText('Destinataire'), { target: { value: '@ma' } });
+    fireEvent.change(screen.getByLabelText('Rechercher une personne'), { target: { value: '@ma' } });
 
     expect(await screen.findByRole('option', { name: /Mark/ })).toBeInTheDocument();
     expect(fetchMentionSuggestions).toHaveBeenLastCalledWith('ma');
@@ -46,7 +46,7 @@ describe('NewMessageScreen (Messages-New boards)', () => {
   it('moves with the arrows and picks with Entrée, as the mention picker does', async () => {
     render(<NewMessageScreen />);
     await screen.findByRole('option', { name: /Mark/ });
-    const field = screen.getByLabelText('Destinataire');
+    const field = screen.getByLabelText('Rechercher une personne');
 
     fireEvent.keyDown(field, { key: 'ArrowDown' });
     fireEvent.keyDown(field, { key: 'Enter' });
@@ -58,7 +58,7 @@ describe('NewMessageScreen (Messages-New boards)', () => {
   it('closes the picker with Échap, and it comes back when the handle changes', async () => {
     render(<NewMessageScreen />);
     await screen.findByRole('option', { name: /Mark/ });
-    const field = screen.getByLabelText('Destinataire');
+    const field = screen.getByLabelText('Rechercher une personne');
 
     fireEvent.keyDown(field, { key: 'Escape' });
     expect(screen.queryByRole('listbox', { name: 'Personnes suggérées' })).not.toBeInTheDocument();
@@ -71,9 +71,9 @@ describe('NewMessageScreen (Messages-New boards)', () => {
     vi.mocked(fetchMentionSuggestions).mockResolvedValue(OK({ items: [] }));
     render(<NewMessageScreen />);
 
-    fireEvent.change(screen.getByLabelText('Destinataire'), { target: { value: 'alice' } });
+    fireEvent.change(screen.getByLabelText('Rechercher une personne'), { target: { value: 'alice' } });
 
-    expect(screen.getByLabelText('Destinataire')).toHaveValue('alice');
+    expect(screen.getByLabelText('Rechercher une personne')).toHaveValue('alice');
     expect(screen.queryByRole('listbox', { name: 'Personnes suggérées' })).not.toBeInTheDocument();
   });
 });
