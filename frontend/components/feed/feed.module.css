@@ -215,6 +215,11 @@
   background: #dbe2e8;
 }
 
+/* The muted text on the reply background needs a darker grey to reach 4.5:1 (axe: 3.69:1 with the default). */
+.replyCard .meta {
+  color: #4b5563;
+}
+
 /* The replies, inside the thread: a hairline between two replies, and no heading (the heading stays for screen readers). */
 .thread .list {
   gap: 0;
