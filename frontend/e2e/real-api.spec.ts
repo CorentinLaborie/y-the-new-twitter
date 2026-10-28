@@ -77,7 +77,8 @@ test('Alice writes to Bob, Bob accepts the request and replies, and Alice reads 
   await bob.goto('/messages');
   await bob.getByRole('tab', { name: 'Demandes' }).click();
   await bob.getByRole('link', { name: `Conversation avec ${ALICE.name}` }).click();
-  await expect(bob.getByText(`${ALICE.name} vous a écrit`)).toBeVisible();
+  // The request notice of the Messages-Demande boards.
+  await expect(bob.getByText('Acceptez la demande avant de répondre.')).toBeVisible();
   await bob.getByRole('button', { name: 'Accepter', exact: true }).click();
   await bob.getByLabel(`Écrire un message à ${ALICE.name}`).fill(reply);
   await bob.getByRole('button', { name: 'Envoyer', exact: true }).click();
