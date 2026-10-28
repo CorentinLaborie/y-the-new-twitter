@@ -251,7 +251,6 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
 
       {waitingForAnswer ? (
         <div role="group" aria-label="Répondre à la demande">
-          <p>Acceptez la demande avant de répondre.</p>
           <button type="button" className={styles.button} onClick={() => answer(true)}>
             Accepter
           </button>
