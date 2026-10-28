@@ -292,3 +292,29 @@
   text-align: left;
   cursor: pointer;
 }
+
+/* The suggested accounts of the new-message screen: each choice is a 44 px row. */
+.suggestions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestion {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 var(--space-12);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--color-foreground);
+  text-align: left;
+  cursor: pointer;
+}
+
+.suggestion:hover,
+.suggestion:focus-visible {
+  background: var(--color-background);
+}

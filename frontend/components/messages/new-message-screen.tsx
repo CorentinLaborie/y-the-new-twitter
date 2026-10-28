@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { fetchMentionSuggestions, type MentionSuggestion } from '@/lib/mention-api';
 import { startConversation } from '@/lib/messages-api';
 import { MESSAGE_MAX_LENGTH, sendFailureMessage } from './message-rules';
 import styles from './messages.module.css';
@@ -18,13 +19,34 @@ function newMessageFailureMessage(status: number, fallback: string): string {
   return fallback;
 }
 
+const SUGGESTION_DELAY_MS = 200;
+
 /** Starts a conversation with a handle. A request is opened when that account does not follow the viewer. */
 export function NewMessageScreen() {
   const router = useRouter();
   const [handle, setHandle] = useState('');
+  const [suggestions, setSuggestions] = useState<MentionSuggestion[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+
+  // The accounts the viewer follows or that follow the viewer, for the handle typed so far (the same list as the mentions).
+  useEffect(() => {
+    let current = true;
+    const query = handle.trim().replace(/^@/, '');
+    const timer = window.setTimeout(() => {
+      void fetchMentionSuggestions(query).then((result) => {
+        if (current) {
+          setSuggestions(result.ok ? result.body.items : []);
+        }
+      });
+    }, SUGGESTION_DELAY_MS);
+
+    return () => {
+      current = false;
+      window.clearTimeout(timer);
+    };
+  }, [handle]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,6 +82,17 @@ export function NewMessageScreen() {
           maxLength={30}
           autoComplete="off"
         />
+        {suggestions.length > 0 ? (
+          <ul aria-label="Suggestions" className={styles.suggestions}>
+            {suggestions.map((account) => (
+              <li key={account.handle}>
+                <button type="button" className={styles.suggestion} onClick={() => setHandle(account.handle)}>
+                  {account.displayName} <span className={styles.handle}>@{account.handle}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <label htmlFor="new-message-text">Message</label>
         <textarea
           className={styles.field}

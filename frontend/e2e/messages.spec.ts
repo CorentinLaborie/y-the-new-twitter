@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signIn } from './feed-kit';
 import { conversationOf, messageOf, mockMessagesApi, type MessagesHandlers } from './messages-kit';
+import { corsHeaders } from './profile-kit';
 
 // The private messages screens: the list (/messages, three tabs), a conversation (/messages/{id}) and a new message
 // (/messages/new). Mocked API, on the three screen sizes (desktop, tablet, mobile).
@@ -178,4 +179,22 @@ test('a new message opens the conversation the API returns, and a refused handle
 
   await expect(page).toHaveURL(new RegExp(`/messages/${NEW_ID}$`));
   expect(calls.started).toEqual([{ handle: 'bob', text: 'Salut Bob' }]);
+});
+
+test('a new message suggests the linked accounts, and a click fills the recipient', async ({ page }) => {
+  await mockMessagesApi(page, accepted());
+  // Registered after the messages mocks, so it answers the mention suggestions (the Messages-New boards).
+  await page.route('http://localhost:8080/api/v1/mentions/suggestions**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: corsHeaders(route.request().headers()['origin']),
+      body: JSON.stringify({ items: [{ handle: 'bob', displayName: 'Bob' }] }),
+    });
+  });
+
+  await page.goto('/messages/new');
+  await page.getByRole('button', { name: /Bob/ }).click();
+
+  await expect(page.getByLabel('Destinataire')).toHaveValue('bob');
 });
