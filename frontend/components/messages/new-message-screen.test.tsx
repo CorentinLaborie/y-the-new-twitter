@@ -12,18 +12,23 @@ vi.mock('@/lib/mention-api', async (importOriginal) => {
 
 const OK = (body: unknown) => ({ ok: true, status: 200, body }) as never;
 
+const TWO_ACCOUNTS = {
+  items: [
+    { handle: 'MarkL', displayName: 'Mark' },
+    { handle: 'RizaHawkeye', displayName: 'Riza' },
+  ],
+};
+
 describe('NewMessageScreen (Messages-New boards)', () => {
   beforeEach(() => {
     vi.mocked(fetchMentionSuggestions).mockReset();
-    vi.mocked(fetchMentionSuggestions).mockResolvedValue(
-      OK({ items: [{ handle: 'MarkL', displayName: 'Mark' }] }),
-    );
+    vi.mocked(fetchMentionSuggestions).mockResolvedValue(OK(TWO_ACCOUNTS));
   });
 
-  it('suggests the accounts linked to the viewer before any typing, and a click fills the recipient', async () => {
+  it('proposes the linked accounts before any typing, and a click fills the recipient', async () => {
     render(<NewMessageScreen />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /Mark/ }));
+    fireEvent.click(await screen.findByRole('option', { name: /Mark/ }));
 
     expect(screen.getByLabelText('Destinataire')).toHaveValue('MarkL');
     expect(fetchMentionSuggestions).toHaveBeenCalledWith('');
@@ -34,8 +39,32 @@ describe('NewMessageScreen (Messages-New boards)', () => {
 
     fireEvent.change(screen.getByLabelText('Destinataire'), { target: { value: '@ma' } });
 
-    expect(await screen.findByRole('button', { name: /Mark/ })).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: /Mark/ })).toBeInTheDocument();
     expect(fetchMentionSuggestions).toHaveBeenLastCalledWith('ma');
+  });
+
+  it('moves with the arrows and picks with Entrée, as the mention picker does', async () => {
+    render(<NewMessageScreen />);
+    await screen.findByRole('option', { name: /Mark/ });
+    const field = screen.getByLabelText('Destinataire');
+
+    fireEvent.keyDown(field, { key: 'ArrowDown' });
+    fireEvent.keyDown(field, { key: 'Enter' });
+
+    expect(field).toHaveValue('RizaHawkeye');
+    expect(screen.queryByRole('listbox', { name: 'Personnes suggérées' })).not.toBeInTheDocument();
+  });
+
+  it('closes the picker with Échap, and it comes back when the handle changes', async () => {
+    render(<NewMessageScreen />);
+    await screen.findByRole('option', { name: /Mark/ });
+    const field = screen.getByLabelText('Destinataire');
+
+    fireEvent.keyDown(field, { key: 'Escape' });
+    expect(screen.queryByRole('listbox', { name: 'Personnes suggérées' })).not.toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: 'm' } });
+    expect(await screen.findByRole('option', { name: /Mark/ })).toBeInTheDocument();
   });
 
   it('keeps the free handle field: a typed handle still works without a suggestion', async () => {
@@ -45,6 +74,6 @@ describe('NewMessageScreen (Messages-New boards)', () => {
     fireEvent.change(screen.getByLabelText('Destinataire'), { target: { value: 'alice' } });
 
     expect(screen.getByLabelText('Destinataire')).toHaveValue('alice');
-    expect(screen.queryByRole('list', { name: 'Suggestions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('listbox', { name: 'Personnes suggérées' })).not.toBeInTheDocument();
   });
 });

@@ -173,18 +173,18 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13px;
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted-foreground);
 }
 
 .handle {
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted-foreground);
   font-size: 13px;
 }
 
 .meta {
   flex: none;
   font-size: 12px;
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted-foreground);
 }
 
 .unreadDot {
@@ -245,7 +245,7 @@
 .buttonOutline:disabled {
   border-color: var(--color-border);
   background: var(--color-border);
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted-foreground);
   cursor: not-allowed;
 }
 
@@ -293,28 +293,36 @@
   cursor: pointer;
 }
 
-/* The suggested accounts of the new-message screen: each choice is a 44 px row. */
-.suggestions {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.suggestion {
+/* The new-message screen: the form in one column, the labels and the hint under the field. */
+.newForm {
   display: flex;
-  width: 100%;
-  min-height: 44px;
-  align-items: center;
-  padding: 0 var(--space-12);
-  border: 0;
-  background: transparent;
-  font: inherit;
-  color: var(--color-foreground);
-  text-align: left;
-  cursor: pointer;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-8) var(--space-16) var(--space-16);
 }
 
-.suggestion:hover,
-.suggestion:focus-visible {
-  background: var(--color-background);
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
+.backLink {
+  align-self: flex-start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-primary);
+}
+
+.recipients {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
 }

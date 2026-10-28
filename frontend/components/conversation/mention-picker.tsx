@@ -11,19 +11,27 @@ export type MentionPickerProps = {
   activeIndex: number;
   /** Called with the handle of the account picked by a click. */
   onPick: (handle: string) => void;
+  /** The name of the list for screen readers. */
+  label?: string;
 };
 
 /**
  * The accounts proposed while a reply is typed after an '@' (section M3). Each row is at least 44 px high. The composer
  * handles the keyboard (arrows, Entrée, Échap) and keeps the focus in the textarea.
  */
-export function MentionPicker({ id, suggestions, activeIndex, onPick }: MentionPickerProps) {
+export function MentionPicker({
+  id,
+  suggestions,
+  activeIndex,
+  onPick,
+  label = 'Comptes à mentionner',
+}: MentionPickerProps) {
   if (suggestions.length === 0) {
     return null;
   }
 
   return (
-    <div id={id} role="listbox" aria-label="Comptes à mentionner" className={styles.picker}>
+    <div id={id} role="listbox" aria-label={label} className={styles.picker}>
       {suggestions.map((suggestion, index) => (
         <button
           key={suggestion.handle}
