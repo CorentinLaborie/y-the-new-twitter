@@ -110,7 +110,7 @@
 
 .muted {
   font-size: 13px;
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted-foreground);
 }
 
 .chips {
@@ -147,7 +147,7 @@
 .nothing {
   margin: 0;
   font-size: 14px;
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted-foreground);
 }
 
 .more {
