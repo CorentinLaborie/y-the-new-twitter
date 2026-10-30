@@ -88,6 +88,32 @@ export class UsersRepository {
     return rows[0]?.status === 'active';
   }
 
+  /** Runs a unit of work in one transaction, for the account flows that lock rows before they write. */
+  transaction<T>(run: (db: UsersDb) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(run);
+  }
+
+  /** The account, other than `exceptId`, that already uses this handle, whatever its case (DEC-061). */
+  findOtherHandleOwner(db: UsersDb, handle: string, exceptId: string) {
+    return db.user.findFirst({
+      where: { handle: { equals: handle, mode: 'insensitive' }, id: { not: exceptId } },
+      select: { id: true },
+    });
+  }
+
+  /** Writes the profile fields that are given. An absent field is left unchanged; a null bio clears it (plan L1, 1.2). */
+  updateProfile(
+    db: UsersDb,
+    userId: string,
+    fields: { handle?: string; displayName?: string; bio?: string | null },
+  ) {
+    return db.user.update({
+      where: { id: userId },
+      data: fields,
+      select: { handle: true, displayName: true, bio: true },
+    });
+  }
+
   /** Moves the account to active once its e-mail is verified (section 3.2), and recalculates its counters (R13). */
   async activate(db: UsersDb, userId: string, at: Date) {
     await lockAccountGraphExclusive(db);
