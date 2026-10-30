@@ -28,7 +28,7 @@ class PasswordPolicy implements ValidatorConstraintInterface {
 }
 
 @ValidatorConstraint({ name: 'reservedHandle' })
-class NotReservedHandle implements ValidatorConstraintInterface {
+export class NotReservedHandle implements ValidatorConstraintInterface {
   validate(handle: unknown): boolean {
     return typeof handle === 'string' && !isReservedHandle(handle);
   }
