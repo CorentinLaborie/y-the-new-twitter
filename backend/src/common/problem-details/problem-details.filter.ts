@@ -25,7 +25,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     const request = http.getRequest<Request>();
     const response = http.getResponse<Response>();
 
-    const status = exception instanceof HttpException ? exception.getStatus() : 500;
+    const status = statusOf(exception);
 
     if (status >= 500) {
       this.logger.error(exception instanceof Error ? exception.stack : String(exception));
@@ -45,9 +45,23 @@ export class ProblemDetailsFilter implements ExceptionFilter {
   }
 }
 
+/**
+ * The status of an error. A Nest exception carries its own. A body parser (for example a body above its limit, or
+ * malformed JSON) flags its client errors with `status` and `expose`: those keep their 4xx. Anything else is a 500.
+ */
+function statusOf(exception: unknown): number {
+  if (exception instanceof HttpException) {
+    return exception.getStatus();
+  }
+
+  const parsed = exception as { status?: unknown; expose?: unknown };
+  const isClientError = typeof parsed.status === 'number' && parsed.status >= 400 && parsed.status < 500;
+  return isClientError && parsed.expose === true ? (parsed.status as number) : 500;
+}
+
 function messageOf(exception: unknown): string {
   if (!(exception instanceof HttpException)) {
-    return 'Unexpected error.';
+    return 'La requête ne peut pas être traitée.';
   }
 
   const response = exception.getResponse();
