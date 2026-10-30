@@ -18,7 +18,8 @@ export class AvatarController {
   @ApiOkResponse({ description: 'The address of the new photo.', type: AvatarDto })
   @problemDetailsResponse(401, 'Not logged in.')
   @problemDetailsResponse(403, 'The account is not active.')
-  @problemDetailsResponse(422, 'The file is not a JPEG, PNG or WebP photo of 2 MB at most.')
+  @problemDetailsResponse(413, 'The file is larger than 2 MB.')
+  @problemDetailsResponse(422, 'The file is not a JPEG, PNG or WebP photo.')
   async upload(@CurrentUser() viewer: SessionUser, @Body() body: unknown): Promise<AvatarDto> {
     // Anything that is not raw bytes is an empty photo, which the service refuses as a format error.
     const bytes = Buffer.isBuffer(body) ? body : Buffer.alloc(0);

@@ -31,3 +31,6 @@ design/archive/
 
 # Local agent worktrees (not part of the repository)
 .claude/worktrees/
+
+# Profile photos written by the app or its tests (never committed)
+backend/uploads/
