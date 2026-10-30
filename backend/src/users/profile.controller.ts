@@ -20,7 +20,7 @@ export class ProfileController {
     'The account is not active (suspended, pending verification or pending deletion).',
   )
   @problemDetailsResponse(409, 'The handle is already used by another account.')
-  @problemDetailsResponse(422, 'A field does not meet its rule.')
+  @problemDetailsResponse(400, 'A field does not meet its rule (malformed request).')
   update(@CurrentUser() viewer: SessionUser, @Body() body: UpdateProfileDto): Promise<ProfileDto> {
     return this.profiles.update(viewer, body);
   }

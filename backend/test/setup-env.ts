@@ -8,4 +8,5 @@ process.env.SESSION_SECRET = 'test-session-secret-0123456789abcdef0123';
 process.env.APP_PUBLIC_URL = 'http://localhost:3000';
 process.env.Y_CONVERSATION_THRESHOLD = '50';
 process.env.Y_CODE_TTL_MINUTES = '15';
+process.env.AVATAR_DIRECTORY = './uploads/avatars-test';
 process.env.LOG_LEVEL = 'silent';
