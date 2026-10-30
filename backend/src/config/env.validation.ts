@@ -46,6 +46,11 @@ class EnvironmentVariables {
   @IsUrl({ require_tld: false })
   APP_PUBLIC_URL!: string;
 
+  /** Folder of the profile photos, on the server's disk (plan L1, decision 0.1). Required, with no default. */
+  @IsString()
+  @IsNotEmpty()
+  AVATAR_DIRECTORY!: string;
+
   /** The back-office site (DEC-217). Required in production: it is allowed to call the API from its own origin. */
   @ValidateIf((config: EnvironmentVariables) => config.NODE_ENV === 'production')
   @IsUrl({ require_tld: false })

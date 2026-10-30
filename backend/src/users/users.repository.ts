@@ -101,6 +101,17 @@ export class UsersRepository {
     });
   }
 
+  /** The address of the profile photo, or null when the account has none (plan L1, 2.2). */
+  async avatarUrlOf(db: UsersDb, userId: string): Promise<string | null> {
+    const user = await db.user.findUnique({ where: { id: userId }, select: { avatarUrl: true } });
+    return user?.avatarUrl ?? null;
+  }
+
+  /** Sets or clears (null) the profile photo address (plan L1, 2.2 and 2.3). */
+  setAvatarUrl(db: UsersDb, userId: string, avatarUrl: string | null) {
+    return db.user.update({ where: { id: userId }, data: { avatarUrl } });
+  }
+
   /** Writes the profile fields that are given. An absent field is left unchanged; a null bio clears it (plan L1, 1.2). */
   updateProfile(
     db: UsersDb,
