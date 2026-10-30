@@ -1,24 +1,18 @@
 import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma } from '../database/generated/client/client';
 import type { SessionUser } from '../auth/session/session-user.repository';
+import { ProfileDto } from './dto/profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ACCOUNT_NOT_ACTIVE_MESSAGE, UsersRepository } from './users.repository';
 
 const HANDLE_TAKEN = 'Ce pseudo est déjà pris.';
-
-/** The profile fields after an edit, as the profile shows them. */
-export interface ProfileFields {
-  handle: string;
-  displayName: string;
-  bio: string | null;
-}
 
 /** Edits the signed-in account's profile (plan L1, 1.2). Only an active account may change it (R13). */
 @Injectable()
 export class ProfileService {
   constructor(private readonly users: UsersRepository) {}
 
-  async update(viewer: SessionUser, dto: UpdateProfileDto): Promise<ProfileFields> {
+  async update(viewer: SessionUser, dto: UpdateProfileDto): Promise<ProfileDto> {
     return this.users.transaction(async (db) => {
       if (!(await this.users.lockActiveAccount(db, viewer.id))) {
         throw new ForbiddenException(ACCOUNT_NOT_ACTIVE_MESSAGE);
