@@ -2,7 +2,13 @@
 
 import { useState, type FormEvent } from 'react';
 import { SheetDialog } from '@/components/dialog/sheet-dialog';
-import { updateOwnProfile, uploadAvatar, type OwnProfile, type ProfileView } from '@/lib/profile-api';
+import {
+  updateOwnProfile,
+  uploadAvatar,
+  type OwnProfile,
+  type OwnProfileFields,
+  type ProfileView,
+} from '@/lib/profile-api';
 import { DISPLAY_NAME_MAX_LENGTH, HANDLE_MAX_LENGTH } from '@/lib/validation';
 import { avatarFailureMessage, changedFields, photoError, saveFailureMessage } from './edit-profile-rules';
 import styles from './edit-profile-dialog.module.css';
@@ -64,6 +70,7 @@ function EditProfileForm({
     }
     setSaving(true);
     setSaveFailure(null);
+    let avatarUrl = profile.avatarUrl;
     if (photo !== null) {
       const uploaded = await uploadAvatar(photo);
       if (!uploaded.ok) {
@@ -71,8 +78,13 @@ function EditProfileForm({
         setSaveFailure(avatarFailureMessage(uploaded.problem.status));
         return;
       }
+      avatarUrl = uploaded.body.avatarUrl;
     }
-    let saved: OwnProfile = { handle: profile.handle, displayName: profile.displayName, bio: profile.bio };
+    let fields: OwnProfileFields = {
+      handle: profile.handle,
+      displayName: profile.displayName,
+      bio: profile.bio,
+    };
     if (Object.keys(changes).length > 0) {
       const result = await updateOwnProfile(changes);
       if (!result.ok) {
@@ -80,10 +92,10 @@ function EditProfileForm({
         setSaveFailure(saveFailureMessage(result.problem.status));
         return;
       }
-      saved = result.body;
+      fields = result.body;
     }
     setSaving(false);
-    onSaved(saved);
+    onSaved({ ...fields, avatarUrl });
   }
 
   return (

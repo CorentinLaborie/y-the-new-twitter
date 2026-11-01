@@ -90,7 +90,12 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith({ handle: 'alice', displayName: 'Bob', bio: 'Curieuse de tout.' }),
+      expect(onSaved).toHaveBeenCalledWith({
+        handle: 'alice',
+        displayName: 'Bob',
+        bio: 'Curieuse de tout.',
+        avatarUrl: null,
+      }),
     );
     expect(updateOwnProfile).toHaveBeenCalledWith({ displayName: 'Bob' });
   });
@@ -131,9 +136,33 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith({ handle: 'alice', displayName: 'Bob', bio: 'Curieuse de tout.' }),
+      expect(onSaved).toHaveBeenCalledWith({
+        handle: 'alice',
+        displayName: 'Bob',
+        bio: 'Curieuse de tout.',
+        avatarUrl: '/avatars/x.jpg',
+      }),
     );
     expect(uploadAvatar).toHaveBeenCalledWith(photo);
+  });
+
+  it('tells the page the new photo address when only the photo changed (6.1)', async () => {
+    const onSaved = vi.fn();
+    vi.mocked(uploadAvatar).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { avatarUrl: '/avatars/new.jpg' },
+    });
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={onSaved} />);
+
+    const photo = new File(['\xff\xd8\xff'], 'photo.jpg', { type: 'image/jpeg' });
+    fireEvent.change(screen.getByLabelText('Photo de profil'), { target: { files: [photo] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() =>
+      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({ avatarUrl: '/avatars/new.jpg' })),
+    );
+    expect(updateOwnProfile).not.toHaveBeenCalled();
   });
 
   it('says that the photo is too large when the API refuses it with 413 (5.3)', async () => {

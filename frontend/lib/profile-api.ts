@@ -16,8 +16,11 @@ export type ProfileView = {
   isOwnAccount: boolean;
 };
 
-/** The fields of one's own profile after a save (PATCH /users/me answers them). `bio` is null when empty. */
-export type OwnProfile = { handle: string; displayName: string; bio: string | null };
+/** The fields of one's own profile that PATCH /users/me answers. `bio` is null when empty. */
+export type OwnProfileFields = { handle: string; displayName: string; bio: string | null };
+
+/** One's own profile after a save: the fields, and the photo address (kept from the upload, or from before). */
+export type OwnProfile = OwnProfileFields & { avatarUrl: string | null };
 
 /** The fields to change: only the ones sent are changed. A `bio` of null clears it. */
 export type OwnProfileChanges = { handle?: string; displayName?: string; bio?: string | null };
@@ -38,8 +41,8 @@ export function fetchProfile(handle: string): Promise<ApiResult<ProfileView>> {
 }
 
 /** Saves the changed fields of one's own profile (PATCH /users/me). A taken handle answers 409. */
-export function updateOwnProfile(changes: OwnProfileChanges): Promise<ApiResult<OwnProfile>> {
-  return protectedApiRequest<OwnProfile>('PATCH', '/users/me', { body: changes });
+export function updateOwnProfile(changes: OwnProfileChanges): Promise<ApiResult<OwnProfileFields>> {
+  return protectedApiRequest<OwnProfileFields>('PATCH', '/users/me', { body: changes });
 }
 
 /** Uploads the profile photo as the raw image (PUT /users/me/avatar). Its address is the answer's `avatarUrl`. */
