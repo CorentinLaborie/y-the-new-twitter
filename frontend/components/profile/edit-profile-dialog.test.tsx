@@ -26,6 +26,7 @@ const PROFILE: ProfileView = {
   handle: 'alice',
   displayName: 'Alice',
   bio: 'Curieuse de tout.',
+  avatarUrl: null,
   joinedAt: '2026-03-01T10:00:00.000Z',
   followerCount: 2340,
   followingCount: 182,

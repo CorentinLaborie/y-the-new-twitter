@@ -27,6 +27,7 @@ const PROFILE: ProfileView = {
   handle: 'alice',
   displayName: 'Alice',
   bio: 'Curieuse de tout.',
+  avatarUrl: null,
   joinedAt: '2026-03-01T10:00:00.000Z',
   followerCount: 2340,
   followingCount: 182,
@@ -203,6 +204,38 @@ describe('ProfileScreen (L1)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/u/moi2'));
+  });
+
+  it('shows the profile photo when the account has one (5.4)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, avatarUrl: '/avatars/alice.jpg' },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    const { container } = render(<ProfileScreen handle="alice" viewerHandle="me" suspended={false} />);
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      expect.stringContaining('/avatars/alice.jpg'),
+    );
+  });
+
+  it('shows the initial, and no image, when the account has no photo (5.4)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, avatarUrl: null },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    const { container } = render(<ProfileScreen handle="alice" viewerHandle="me" suspended={false} />);
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(container.querySelector('img')).toBeNull();
+    expect(screen.getByText('A')).toBeInTheDocument();
   });
 
   it('opens the edit window from Modifier le profil (4.1)', async () => {

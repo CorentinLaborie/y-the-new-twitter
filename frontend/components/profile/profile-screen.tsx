@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { BlockDialog } from '@/components/block/block-dialog';
+import { apiBaseUrl } from '@/lib/api-client';
 import { EditProfileDialog } from './edit-profile-dialog';
 import { blockedMessage } from '@/components/block/block-rules';
 import { FollowButton } from '@/components/follow/follow-button';
@@ -118,9 +119,13 @@ export function ProfileScreen({
     <div className={styles.screen}>
       <section className={styles.head} aria-label={`Profil de ${profile.displayName}`}>
         <div className={styles.top}>
-          <span className={styles.avatar} aria-hidden="true">
-            {avatarInitial(profile.displayName)}
-          </span>
+          {profile.avatarUrl === null ? (
+            <span className={styles.avatar} aria-hidden="true">
+              {avatarInitial(profile.displayName)}
+            </span>
+          ) : (
+            <img className={styles.avatar} src={`${apiBaseUrl()}${profile.avatarUrl}`} alt="" />
+          )}
           {profile.isOwnAccount && !suspended ? (
             <button
               type="button"

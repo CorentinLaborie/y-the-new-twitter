@@ -39,6 +39,12 @@
   font-weight: 700;
 }
 
+/* The profile photo, in the same circle as the initial (section 12.7). */
+img.avatar {
+  object-fit: cover;
+  max-width: 100%;
+}
+
 .name {
   margin: 8px 0 0;
   font-size: 20px;

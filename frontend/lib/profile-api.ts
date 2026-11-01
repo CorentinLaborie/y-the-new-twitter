@@ -7,6 +7,8 @@ export type ProfileView = {
   handle: string;
   displayName: string;
   bio: string | null;
+  /** The address of the profile photo under the API host, or null for the default photo (5.4). */
+  avatarUrl: string | null;
   joinedAt: string;
   followerCount: number;
   followingCount: number;
