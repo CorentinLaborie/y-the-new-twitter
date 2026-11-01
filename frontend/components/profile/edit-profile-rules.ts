@@ -1,3 +1,5 @@
+import type { OwnProfileChanges } from '@/lib/profile-api';
+
 /** The profile photo is a JPEG, PNG or WebP image of at most 2 MB (plan L1, decisions 0.1 and 0.2). */
 export const PHOTO_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
 export const PHOTO_MAX_BYTES = 2 * 1024 * 1024;
@@ -11,6 +13,27 @@ export function photoError(photo: { type: string; size: number }): string | null
     return 'La photo ne doit pas dépasser 2 Mo.';
   }
   return null;
+}
+
+/**
+ * The fields that differ from the saved profile, as PATCH /users/me takes them. An empty bio is sent as null, which
+ * clears it. A field that did not change is not sent.
+ */
+export function changedFields(
+  profile: { handle: string; displayName: string; bio: string | null },
+  values: { handle: string; displayName: string; bio: string },
+): OwnProfileChanges {
+  const changes: OwnProfileChanges = {};
+  if (values.displayName !== profile.displayName) {
+    changes.displayName = values.displayName;
+  }
+  if (values.handle !== profile.handle) {
+    changes.handle = values.handle;
+  }
+  if (values.bio !== (profile.bio ?? '')) {
+    changes.bio = values.bio === '' ? null : values.bio;
+  }
+  return changes;
 }
 
 /** The French text shown when saving the profile fails, by HTTP status (the API answers 409 for a taken handle). */

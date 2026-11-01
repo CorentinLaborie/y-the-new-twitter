@@ -1,7 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import type { ProfileView } from '@/lib/profile-api';
+import { updateOwnProfile, type ProfileView } from '@/lib/profile-api';
 import { EditProfileDialog } from './edit-profile-dialog';
+
+vi.mock('@/lib/profile-api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/profile-api')>();
+  return { ...actual, updateOwnProfile: vi.fn() };
+});
 
 // jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
 beforeAll(() => {
@@ -30,7 +35,7 @@ const PROFILE: ProfileView = {
 
 describe('EditProfileDialog (L1, step 4.1)', () => {
   it('opens as a dialog titled Modifier le profil, with the four fields filled from the profile', () => {
-    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} />);
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={vi.fn()} />);
 
     expect(screen.getByRole('dialog', { name: 'Modifier le profil' })).toBeInTheDocument();
     expect(screen.getByLabelText('Nom affiché')).toHaveValue('Alice');
@@ -41,7 +46,7 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
 
   it('closes through Annuler, without saving anything', () => {
     const onClose = vi.fn();
-    render(<EditProfileDialog open profile={PROFILE} onClose={onClose} />);
+    render(<EditProfileDialog open profile={PROFILE} onClose={onClose} onSaved={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
 
@@ -49,13 +54,13 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
   });
 
   it('is closed when open is false', () => {
-    render(<EditProfileDialog open={false} profile={PROFILE} onClose={vi.fn()} />);
+    render(<EditProfileDialog open={false} profile={PROFILE} onClose={vi.fn()} onSaved={vi.fn()} />);
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('limits the display name to 50 characters, the handle to 30 and the bio to 160 (4.2)', () => {
-    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} />);
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={vi.fn()} />);
 
     expect(screen.getByLabelText('Nom affiché')).toHaveAttribute('maxLength', '50');
     expect(screen.getByLabelText('Pseudo')).toHaveAttribute('maxLength', '30');
@@ -63,7 +68,7 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
   });
 
   it('shows the French text in the window when a photo of another format is chosen (4.3)', () => {
-    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} />);
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={vi.fn()} />);
 
     const gif = new File(['GIF89a'], 'photo.gif', { type: 'image/gif' });
     fireEvent.change(screen.getByLabelText('Photo de profil'), { target: { files: [gif] } });
@@ -71,8 +76,42 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('La photo doit être au format JPEG, PNG ou WebP.');
   });
 
+  it('saves only the changed fields, then tells the page the saved profile (5.1)', async () => {
+    const onSaved = vi.fn();
+    vi.mocked(updateOwnProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { handle: 'alice', displayName: 'Bob', bio: 'Curieuse de tout.' },
+    });
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={onSaved} />);
+
+    fireEvent.change(screen.getByLabelText('Nom affiché'), { target: { value: 'Bob' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() =>
+      expect(onSaved).toHaveBeenCalledWith({ handle: 'alice', displayName: 'Bob', bio: 'Curieuse de tout.' }),
+    );
+    expect(updateOwnProfile).toHaveBeenCalledWith({ displayName: 'Bob' });
+  });
+
+  it('keeps the window open with the typed values, and says the handle is taken on 409 (5.1)', async () => {
+    const onSaved = vi.fn();
+    vi.mocked(updateOwnProfile).mockResolvedValue({
+      ok: false,
+      problem: { status: 409, title: 'Conflit', detail: 'Pseudo pris.' },
+    } as never);
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={onSaved} />);
+
+    fireEvent.change(screen.getByLabelText('Pseudo'), { target: { value: 'bob' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
+    expect(screen.getByLabelText('Pseudo')).toHaveValue('bob');
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
   it('shows the length of each text field against its limit, and follows the typing (4.2)', () => {
-    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} />);
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={vi.fn()} />);
 
     expect(screen.getByText('5 / 50')).toBeInTheDocument();
     expect(screen.getByText('5 / 30')).toBeInTheDocument();

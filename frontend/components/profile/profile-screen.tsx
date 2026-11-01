@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { BlockDialog } from '@/components/block/block-dialog';
 import { EditProfileDialog } from './edit-profile-dialog';
@@ -10,7 +11,7 @@ import { avatarInitial } from '@/components/feed/avatar-initial';
 import { FeedError, FeedLoading, CONNECTION_FAILURE_MESSAGE } from '@/components/feed/feed-states';
 import { QuestionCard } from '@/components/feed/question-card';
 import type { FeedQuestion } from '@/lib/feed-api';
-import { fetchProfile, fetchProfileQuestions, type ProfileView } from '@/lib/profile-api';
+import { fetchProfile, fetchProfileQuestions, type OwnProfile, type ProfileView } from '@/lib/profile-api';
 import { useProfileReactions } from './use-profile-reactions';
 import styles from './profile.module.css';
 
@@ -37,6 +38,16 @@ export function ProfileScreen({
   const [blockOpen, setBlockOpen] = useState(false);
   const [blockNotice, setBlockNotice] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const router = useRouter();
+
+  /** The page shows the saved fields at once. A new handle moves the page to its new address. */
+  function profileSaved(saved: OwnProfile) {
+    setEditOpen(false);
+    setProfile((current) => (current === null ? current : { ...current, ...saved }));
+    if (saved.handle !== handle) {
+      router.replace(`/u/${saved.handle}`);
+    }
+  }
 
   const loadFirst = useCallback(() => {
     Promise.all([fetchProfile(handle), fetchProfileQuestions(handle)]).then(([account, page]) => {
@@ -138,7 +149,12 @@ export function ProfileScreen({
         </div>
         {blockNotice ? <p role="status">{blockNotice}</p> : null}
         {profile.isOwnAccount && !suspended ? (
-          <EditProfileDialog open={editOpen} profile={profile} onClose={() => setEditOpen(false)} />
+          <EditProfileDialog
+            open={editOpen}
+            profile={profile}
+            onClose={() => setEditOpen(false)}
+            onSaved={profileSaved}
+          />
         ) : null}
         {profile.isOwnAccount || viewerHandle === null || suspended || !blockOpen ? null : (
           <BlockDialog

@@ -52,7 +52,7 @@ export type ApiProblem = {
 /** The answer of a call: the body on success, the Problem Details otherwise. Calls never throw on an API answer. */
 export type ApiResult<T> = { ok: true; status: number; body: T } | { ok: false; problem: ApiProblem };
 
-type ApiMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type ApiMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 type ApiRequestOptions = {
   body?: unknown;

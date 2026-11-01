@@ -14,6 +14,12 @@ export type ProfileView = {
   isOwnAccount: boolean;
 };
 
+/** The fields of one's own profile after a save (PATCH /users/me answers them). `bio` is null when empty. */
+export type OwnProfile = { handle: string; displayName: string; bio: string | null };
+
+/** The fields to change: only the ones sent are changed. A `bio` of null clears it. */
+export type OwnProfileChanges = { handle?: string; displayName?: string; bio?: string | null };
+
 /** One page of the questions of an account, newest first. `nextCursor` is null on the last page. */
 export type ProfileQuestionsPage = { questions: FeedQuestion[]; nextCursor: string | null };
 
@@ -27,6 +33,11 @@ const PAGE_SIZE = 20;
 /** The public profile of the account. A profile that is not visible answers 404 (the same as a missing one). */
 export function fetchProfile(handle: string): Promise<ApiResult<ProfileView>> {
   return protectedApiRequest<ProfileView>('GET', `/users/${handle}`);
+}
+
+/** Saves the changed fields of one's own profile (PATCH /users/me). A taken handle answers 409. */
+export function updateOwnProfile(changes: OwnProfileChanges): Promise<ApiResult<OwnProfile>> {
+  return protectedApiRequest<OwnProfile>('PATCH', '/users/me', { body: changes });
 }
 
 /** One page of the questions of the account. `cursor` is the nextCursor of the previous page. */

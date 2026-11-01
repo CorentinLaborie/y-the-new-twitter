@@ -1,5 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { photoError, saveFailureMessage, PHOTO_MAX_BYTES } from './edit-profile-rules';
+import { changedFields, photoError, saveFailureMessage, PHOTO_MAX_BYTES } from './edit-profile-rules';
+
+const SAVED = { handle: 'alice', displayName: 'Alice', bio: 'Curieuse de tout.' };
+
+describe('changedFields (5.2)', () => {
+  it('sends only the fields that changed', () => {
+    expect(changedFields(SAVED, { handle: 'alice', displayName: 'Bob', bio: 'Curieuse de tout.' })).toEqual({
+      displayName: 'Bob',
+    });
+  });
+
+  it('sends nothing when nothing changed', () => {
+    expect(changedFields(SAVED, { handle: 'alice', displayName: 'Alice', bio: 'Curieuse de tout.' })).toEqual(
+      {},
+    );
+  });
+
+  it('sends an emptied bio as null, which clears it', () => {
+    expect(changedFields(SAVED, { handle: 'alice', displayName: 'Alice', bio: '' })).toEqual({ bio: null });
+  });
+
+  it('treats a missing bio as an empty one', () => {
+    expect(
+      changedFields({ ...SAVED, bio: null }, { handle: 'alice', displayName: 'Alice', bio: '' }),
+    ).toEqual({});
+  });
+});
 
 describe('photoError (4.3)', () => {
   it('accepts a JPEG, a PNG and a WebP photo', () => {

@@ -4,14 +4,23 @@ import type { ApiResult } from '@/lib/api-client';
 import {
   fetchProfile,
   fetchProfileQuestions,
+  updateOwnProfile,
   type ProfileQuestionsPage,
   type ProfileView,
 } from '@/lib/profile-api';
 import { ProfileScreen } from './profile-screen';
 
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+
 vi.mock('@/lib/profile-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/profile-api')>();
-  return { ...actual, fetchProfile: vi.fn(), fetchProfileQuestions: vi.fn() };
+  return {
+    ...actual,
+    fetchProfile: vi.fn(),
+    fetchProfileQuestions: vi.fn(),
+    updateOwnProfile: vi.fn(),
+  };
 });
 
 const PROFILE: ProfileView = {
@@ -49,6 +58,7 @@ describe('ProfileScreen (L1)', () => {
   beforeEach(() => {
     vi.mocked(fetchProfile).mockReset();
     vi.mocked(fetchProfileQuestions).mockReset();
+    router.replace.mockReset();
   });
 
   it('shows the name, the handle, the bio, the date of joining and the counts with their lists', async () => {
@@ -150,6 +160,49 @@ describe('ProfileScreen (L1)', () => {
 
     await screen.findByRole('heading', { name: 'Alice' });
     expect(screen.queryByRole('button', { name: 'Modifier le profil' })).not.toBeInTheDocument();
+  });
+
+  it('shows the saved name on the page at once, without a reload (5.1)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', displayName: 'Moi', isOwnAccount: true },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+    vi.mocked(updateOwnProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { handle: 'me', displayName: 'Nouveau', bio: 'Curieuse de tout.' },
+    });
+
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier le profil' }));
+    fireEvent.change(await screen.findByLabelText('Nom affiché'), { target: { value: 'Nouveau' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(await screen.findByRole('heading', { name: 'Nouveau' })).toBeInTheDocument();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('moves to the new address when the handle changes (5.1)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', displayName: 'Moi', isOwnAccount: true },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+    vi.mocked(updateOwnProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { handle: 'moi2', displayName: 'Moi', bio: 'Curieuse de tout.' },
+    });
+
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier le profil' }));
+    fireEvent.change(await screen.findByLabelText('Pseudo'), { target: { value: 'moi2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/u/moi2'));
   });
 
   it('opens the edit window from Modifier le profil (4.1)', async () => {
