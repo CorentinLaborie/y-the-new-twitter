@@ -59,6 +59,10 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
         if (!active) {
           return;
         }
+        if (!conversation.ok && conversation.problem.status === 404) {
+          router.replace('/messages');
+          return;
+        }
         if (!conversation.ok) {
           setState({ phase: 'failed', message: loadFailureMessage(conversation.problem) });
           return;
@@ -81,7 +85,7 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
     return () => {
       active = false;
     };
-  }, [conversationId]);
+  }, [conversationId, router]);
 
   const otherHandle = state.phase === 'ready' ? state.conversation.other.handle : null;
   useEffect(() => {
@@ -370,7 +374,7 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
         open={blockOpen}
         handle={conversation.other.handle}
         onClose={() => setBlockOpen(false)}
-        onBlocked={() => router.push('/messages')}
+        onBlocked={() => router.replace('/messages')}
       />
     </section>
   );

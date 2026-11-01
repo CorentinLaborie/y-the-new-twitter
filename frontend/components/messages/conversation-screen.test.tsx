@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   acceptRequest,
   fetchConversation,
@@ -9,9 +9,13 @@ import {
   type ConversationView,
   type MessageView,
 } from '@/lib/messages-api';
+import { blockAccount } from '@/lib/blocks-api';
 import { ConversationScreen } from './conversation-screen';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+
+vi.mock('@/lib/blocks-api', () => ({ blockAccount: vi.fn() }));
 
 vi.mock('@/lib/messages-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/messages-api')>();
@@ -64,12 +68,27 @@ function loadThread(conv: ConversationView, messages: MessageView[] = [MESSAGE_B
   vi.mocked(markConversationRead).mockResolvedValue(OK(undefined));
 }
 
+// jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
+beforeAll(() => {
+  if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      this.setAttribute('open', '');
+    };
+  }
+  if (typeof HTMLDialogElement.prototype.close !== 'function') {
+    HTMLDialogElement.prototype.close = function close() {
+      this.removeAttribute('open');
+    };
+  }
+});
+
 describe('ConversationScreen', () => {
   beforeEach(() => {
     vi.mocked(fetchConversation).mockReset();
     vi.mocked(fetchMessages).mockReset();
     vi.mocked(sendMessage).mockReset();
     vi.mocked(acceptRequest).mockReset();
+    router.replace.mockReset();
   });
 
   it('shows the messages oldest first and marks the conversation read', async () => {
@@ -139,7 +158,7 @@ describe('ConversationScreen', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Actualisez la page');
   });
 
-  it('shows the French failure text when the conversation is not reachable', async () => {
+  it('goes back to the messages list when the conversation is gone, with no error screen', async () => {
     vi.mocked(fetchConversation).mockResolvedValue({
       ok: false,
       problem: { status: 404, title: 'x', detail: 'x' },
@@ -148,6 +167,20 @@ describe('ConversationScreen', () => {
 
     render(<ConversationScreen conversationId={CONVERSATION_ID} />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Cette conversation n’est plus disponible.');
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/messages'));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('goes straight back to the messages list after a block, with no error screen', async () => {
+    loadThread(conversation());
+    vi.mocked(blockAccount).mockResolvedValue(OK(undefined));
+
+    render(<ConversationScreen conversationId={CONVERSATION_ID} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Options de la conversation' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Bloquer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bloquer' }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/messages'));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
