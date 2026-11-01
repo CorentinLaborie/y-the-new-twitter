@@ -129,11 +129,11 @@ describe('Profile photo (e2e, L1 step 2.4)', () => {
     expect(await sql(`SELECT avatar_url FROM users WHERE id = '${userId}';`)).toBe(second);
   });
 
-  it('refuses a GIF, and records nothing (422)', async () => {
+  it('refuses a GIF, and records nothing (400)', async () => {
     const userId = await createUser('photo_d', 'active');
     const session = await sessionOf(userId);
 
-    await uploadPhoto(session, GIF, 'image/gif').expect(422);
+    await uploadPhoto(session, GIF, 'image/gif').expect(400);
 
     expect(await sql(`SELECT coalesce(avatar_url, '') FROM users WHERE id = '${userId}';`)).toBe('');
   });
@@ -181,5 +181,31 @@ describe('Profile photo (e2e, L1 step 2.4)', () => {
     await uploadPhoto(session, JPEG, 'image/jpeg').expect(403);
 
     expect(await sql(`SELECT coalesce(avatar_url, '') FROM users WHERE id = '${userId}';`)).toBe('');
+  });
+
+  it('serves a stored photo at its address, with a cache header and an ETag (200), and 304 when unchanged', async () => {
+    const userId = await createUser('photo_h', 'active');
+    const session = await sessionOf(userId);
+    const url = (await uploadPhoto(session, JPEG, 'image/jpeg').expect(200)).body.avatarUrl;
+
+    const served = await request(app.getHttpServer()).get(url).expect(200);
+
+    expect(served.headers['cache-control']).toBe('public, max-age=86400, immutable');
+    expect(served.headers.etag).toBeDefined();
+    expect(served.headers['cross-origin-resource-policy']).toBe('cross-origin');
+    await request(app.getHttpServer()).get(url).set('If-None-Match', served.headers.etag).expect(304);
+  });
+
+  it('answers 404 for a photo that was removed', async () => {
+    const userId = await createUser('photo_i', 'active');
+    const session = await sessionOf(userId);
+    const url = (await uploadPhoto(session, JPEG, 'image/jpeg').expect(200)).body.avatarUrl;
+    await removePhoto(session).expect(204);
+
+    await request(app.getHttpServer()).get(url).expect(404);
+  });
+
+  it('answers 404 for a name that is not a photo', async () => {
+    await request(app.getHttpServer()).get('/avatars/..%2Fsecret.txt').expect(404);
   });
 });

@@ -1,4 +1,4 @@
-import { ForbiddenException, UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, PayloadTooLargeException } from '@nestjs/common';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { AVATAR_MAX_BYTES, AvatarService } from './avatar.service';
 import type { AvatarStorage } from './avatar.storage';
@@ -44,18 +44,18 @@ describe('AvatarService (plan L1, step 2)', () => {
       expect(url).toBe('/avatars/user-1-new.jpg');
     });
 
-    it('refuses a format other than JPEG, PNG or WebP (422), and stores nothing', async () => {
+    it('refuses a format other than JPEG, PNG or WebP (400), and stores nothing', async () => {
       const { storage, service } = fakes();
 
-      await expect(service.upload(VIEWER, GIF)).rejects.toBeInstanceOf(UnprocessableEntityException);
+      await expect(service.upload(VIEWER, GIF)).rejects.toBeInstanceOf(BadRequestException);
       expect(storage.save).not.toHaveBeenCalled();
     });
 
-    it('refuses a file of more than 2 MB (422), and stores nothing', async () => {
+    it('refuses a file of more than 2 MB (413), and stores nothing', async () => {
       const { storage, service } = fakes();
       const tooLarge = Buffer.concat([JPEG, Buffer.alloc(AVATAR_MAX_BYTES)]);
 
-      await expect(service.upload(VIEWER, tooLarge)).rejects.toBeInstanceOf(UnprocessableEntityException);
+      await expect(service.upload(VIEWER, tooLarge)).rejects.toBeInstanceOf(PayloadTooLargeException);
       expect(storage.save).not.toHaveBeenCalled();
     });
 

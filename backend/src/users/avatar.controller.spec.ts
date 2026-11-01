@@ -16,7 +16,7 @@ describe('AvatarController (plan L1, 2.1 and 2.3)', () => {
     expect(result).toEqual({ avatarUrl: '/avatars/new.jpg' });
   });
 
-  it('refuses a body that is not raw bytes by sending the service an empty photo, which it refuses (422)', async () => {
+  it('refuses a body that is not raw bytes by sending the service an empty photo, which it refuses (400)', async () => {
     const service = { upload: jest.fn().mockResolvedValue('unused') };
     const controller = new AvatarController(service as unknown as AvatarService);
 

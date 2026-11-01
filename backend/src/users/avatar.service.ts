@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { AvatarStorage } from './avatar.storage';
 import { ACCOUNT_NOT_ACTIVE_MESSAGE, UsersRepository } from './users.repository';
@@ -6,7 +11,8 @@ import { ACCOUNT_NOT_ACTIVE_MESSAGE, UsersRepository } from './users.repository'
 /** The profile photo is at most 2 MB (plan L1, decision 0.2). */
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
-const FORMAT_REFUSED = 'La photo doit être au format JPEG, PNG ou WebP, de 2 Mo maximum.';
+const FORMAT_REFUSED = 'La photo doit être au format JPEG, PNG ou WebP.';
+const TOO_LARGE = 'La photo ne doit pas dépasser 2 Mo.';
 
 /** The extension of a photo whose first bytes match an accepted format, or null. */
 function extensionOf(bytes: Buffer): string | null {
@@ -36,9 +42,12 @@ export class AvatarService {
 
   /** Stores the photo and records its address; the previous file is removed once the new one is recorded. */
   async upload(viewer: SessionUser, bytes: Buffer): Promise<string> {
+    if (bytes.length > AVATAR_MAX_BYTES) {
+      throw new PayloadTooLargeException(TOO_LARGE);
+    }
     const extension = extensionOf(bytes);
-    if (extension === null || bytes.length > AVATAR_MAX_BYTES) {
-      throw new UnprocessableEntityException(FORMAT_REFUSED);
+    if (extension === null) {
+      throw new BadRequestException(FORMAT_REFUSED);
     }
 
     const { url, previous } = await this.users.transaction(async (db) => {

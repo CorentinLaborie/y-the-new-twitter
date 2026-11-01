@@ -3,6 +3,7 @@ import { raw } from 'express';
 import { AccountSettingsController } from './account-settings.controller';
 import { AccountSettingsService } from './account-settings.service';
 import { AvatarController } from './avatar.controller';
+import { AvatarFileController } from './avatar-file.controller';
 import { AVATAR_MAX_BYTES, AvatarService } from './avatar.service';
 import { AvatarStorage } from './avatar.storage';
 import { ProfileController } from './profile.controller';
@@ -10,7 +11,7 @@ import { ProfileService } from './profile.service';
 import { UsersRepository } from './users.repository';
 
 @Module({
-  controllers: [AccountSettingsController, ProfileController, AvatarController],
+  controllers: [AccountSettingsController, ProfileController, AvatarController, AvatarFileController],
   providers: [UsersRepository, AccountSettingsService, ProfileService, AvatarService, AvatarStorage],
   exports: [UsersRepository],
 })
