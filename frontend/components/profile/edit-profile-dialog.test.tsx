@@ -53,4 +53,26 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+
+  it('limits the display name to 50 characters, the handle to 30 and the bio to 160 (4.2)', () => {
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} />);
+
+    expect(screen.getByLabelText('Nom affiché')).toHaveAttribute('maxLength', '50');
+    expect(screen.getByLabelText('Pseudo')).toHaveAttribute('maxLength', '30');
+    expect(screen.getByLabelText('Bio')).toHaveAttribute('maxLength', '160');
+  });
+
+  it('shows the length of each text field against its limit, and follows the typing (4.2)', () => {
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} />);
+
+    expect(screen.getByText('5 / 50')).toBeInTheDocument();
+    expect(screen.getByText('5 / 30')).toBeInTheDocument();
+    expect(screen.getByText('17 / 160')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Nom affiché'), { target: { value: 'Bob' } });
+    fireEvent.change(screen.getByLabelText('Bio'), { target: { value: 'abc' } });
+
+    expect(screen.getByText('3 / 50')).toBeInTheDocument();
+    expect(screen.getByText('3 / 160')).toBeInTheDocument();
+  });
 });
