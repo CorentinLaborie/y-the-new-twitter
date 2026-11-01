@@ -113,4 +113,28 @@ describe('ProfileScreen (L1)', () => {
       expect(screen.getByText('Aucune question publiée pour l’instant.')).toBeInTheDocument(),
     );
   });
+
+  it('offers Modifier le profil on one’s own profile, and not the follow control (3.1)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', displayName: 'Moi', isOwnAccount: true },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+
+    expect(await screen.findByRole('button', { name: 'Modifier le profil' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Suivre/ })).not.toBeInTheDocument();
+  });
+
+  it('does not offer Modifier le profil on another account’s profile (3.2)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({ ok: true, status: 200, body: PROFILE });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    render(<ProfileScreen handle="alice" viewerHandle="me" suspended={false} />);
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(screen.queryByRole('button', { name: 'Modifier le profil' })).not.toBeInTheDocument();
+  });
 });

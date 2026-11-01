@@ -108,6 +108,11 @@ export function ProfileScreen({
           <span className={styles.avatar} aria-hidden="true">
             {avatarInitial(profile.displayName)}
           </span>
+          {profile.isOwnAccount && !suspended ? (
+            <button type="button" className="y-btn y-btn-md y-btn-outline y-btn-pill">
+              Modifier le profil
+            </button>
+          ) : null}
           {profile.isOwnAccount || viewerHandle === null ? null : (
             <FollowButton
               handle={profile.handle}
