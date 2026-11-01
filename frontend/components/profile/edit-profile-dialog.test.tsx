@@ -62,6 +62,15 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
     expect(screen.getByLabelText('Bio')).toHaveAttribute('maxLength', '160');
   });
 
+  it('shows the French text in the window when a photo of another format is chosen (4.3)', () => {
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} />);
+
+    const gif = new File(['GIF89a'], 'photo.gif', { type: 'image/gif' });
+    fireEvent.change(screen.getByLabelText('Photo de profil'), { target: { files: [gif] } });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('La photo doit être au format JPEG, PNG ou WebP.');
+  });
+
   it('shows the length of each text field against its limit, and follows the typing (4.2)', () => {
     render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} />);
 

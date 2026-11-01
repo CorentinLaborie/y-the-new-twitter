@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { SheetDialog } from '@/components/dialog/sheet-dialog';
 import type { ProfileView } from '@/lib/profile-api';
 import { DISPLAY_NAME_MAX_LENGTH, HANDLE_MAX_LENGTH } from '@/lib/validation';
+import { photoError } from './edit-profile-rules';
 import styles from './edit-profile-dialog.module.css';
 
 /** The bio of a profile is at most 160 characters (section 12.7, DEC-105). */
@@ -32,6 +33,11 @@ function EditProfileForm({ profile, onClose }: Pick<EditProfileDialogProps, 'pro
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [handle, setHandle] = useState(profile.handle);
   const [bio, setBio] = useState(profile.bio ?? '');
+  const [photoFailure, setPhotoFailure] = useState<string | null>(null);
+
+  function choosePhoto(photo: File | undefined) {
+    setPhotoFailure(photo === undefined ? null : photoError(photo));
+  }
 
   return (
     <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
@@ -76,7 +82,13 @@ function EditProfileForm({ profile, onClose }: Pick<EditProfileDialogProps, 'pro
       </div>
       <div className={styles.field}>
         <label htmlFor="profile-avatar">Photo de profil</label>
-        <input id="profile-avatar" type="file" accept="image/jpeg,image/png,image/webp" />
+        <input
+          id="profile-avatar"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(event) => choosePhoto(event.target.files?.[0])}
+        />
+        {photoFailure === null ? null : <p role="alert" className={styles.error}>{photoFailure}</p>}
       </div>
       <div className={styles.actions}>
         <button type="button" className="y-btn y-btn-md y-btn-outline y-btn-pill" onClick={onClose}>

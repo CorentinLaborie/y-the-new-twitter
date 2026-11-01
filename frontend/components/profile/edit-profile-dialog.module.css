@@ -22,6 +22,12 @@
   color: var(--text, #14171a);
 }
 
+.error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--danger, #b42318);
+}
+
 .counter {
   justify-self: end;
   font-size: 12px;

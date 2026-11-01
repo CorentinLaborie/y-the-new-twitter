@@ -1,0 +1,26 @@
+/** The profile photo is a JPEG, PNG or WebP image of at most 2 MB (plan L1, decisions 0.1 and 0.2). */
+export const PHOTO_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
+export const PHOTO_MAX_BYTES = 2 * 1024 * 1024;
+
+/** The French text for a photo the browser can check before any upload, or null when the photo is accepted. */
+export function photoError(photo: { type: string; size: number }): string | null {
+  if (!PHOTO_FORMATS.includes(photo.type)) {
+    return 'La photo doit être au format JPEG, PNG ou WebP.';
+  }
+  if (photo.size > PHOTO_MAX_BYTES) {
+    return 'La photo ne doit pas dépasser 2 Mo.';
+  }
+  return null;
+}
+
+/** The French text shown when saving the profile fails, by HTTP status (the API answers 409 for a taken handle). */
+export function saveFailureMessage(status: number): string {
+  switch (status) {
+    case 409:
+      return 'Ce pseudo est déjà pris.';
+    case 400:
+      return 'Vérifiez les informations saisies.';
+    default:
+      return 'Le profil n’a pas pu être enregistré. Réessayez.';
+  }
+}
