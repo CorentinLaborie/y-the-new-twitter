@@ -31,6 +31,7 @@ export class ProfilesService {
       handle: account.handle,
       displayName: account.displayName,
       bio: account.bio,
+      avatarUrl: account.avatarUrl,
       joinedAt: account.createdAt.toISOString(),
       followerCount: account.followerCount,
       followingCount: account.followingCount,
