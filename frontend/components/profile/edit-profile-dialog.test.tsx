@@ -1,11 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { updateOwnProfile, type ProfileView } from '@/lib/profile-api';
+import { updateOwnProfile, uploadAvatar, type ProfileView } from '@/lib/profile-api';
 import { EditProfileDialog } from './edit-profile-dialog';
 
 vi.mock('@/lib/profile-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/profile-api')>();
-  return { ...actual, updateOwnProfile: vi.fn() };
+  return { ...actual, updateOwnProfile: vi.fn(), uploadAvatar: vi.fn() };
 });
 
 // jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
@@ -107,6 +107,47 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
     expect(screen.getByLabelText('Pseudo')).toHaveValue('bob');
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('sends the chosen photo before the changed fields, then tells the page (5.3)', async () => {
+    const onSaved = vi.fn();
+    vi.mocked(uploadAvatar).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { avatarUrl: '/avatars/x.jpg' },
+    });
+    vi.mocked(updateOwnProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { handle: 'alice', displayName: 'Bob', bio: 'Curieuse de tout.' },
+    });
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={onSaved} />);
+
+    const photo = new File(['\xff\xd8\xff'], 'photo.jpg', { type: 'image/jpeg' });
+    fireEvent.change(screen.getByLabelText('Photo de profil'), { target: { files: [photo] } });
+    fireEvent.change(screen.getByLabelText('Nom affiché'), { target: { value: 'Bob' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() =>
+      expect(onSaved).toHaveBeenCalledWith({ handle: 'alice', displayName: 'Bob', bio: 'Curieuse de tout.' }),
+    );
+    expect(uploadAvatar).toHaveBeenCalledWith(photo);
+  });
+
+  it('says that the photo is too large when the API refuses it with 413 (5.3)', async () => {
+    const onSaved = vi.fn();
+    vi.mocked(uploadAvatar).mockResolvedValue({
+      ok: false,
+      problem: { status: 413, title: 'Trop grand', detail: 'Trop grand.' },
+    } as never);
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={onSaved} />);
+
+    const photo = new File(['\xff\xd8\xff'], 'photo.jpg', { type: 'image/jpeg' });
+    fireEvent.change(screen.getByLabelText('Photo de profil'), { target: { files: [photo] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('La photo ne doit pas dépasser 2 Mo.');
     expect(onSaved).not.toHaveBeenCalled();
   });
 

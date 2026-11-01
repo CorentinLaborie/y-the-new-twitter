@@ -40,6 +40,11 @@ export function updateOwnProfile(changes: OwnProfileChanges): Promise<ApiResult<
   return protectedApiRequest<OwnProfile>('PATCH', '/users/me', { body: changes });
 }
 
+/** Uploads the profile photo as the raw image (PUT /users/me/avatar). Its address is the answer's `avatarUrl`. */
+export function uploadAvatar(photo: Blob): Promise<ApiResult<{ avatarUrl: string }>> {
+  return protectedApiRequest<{ avatarUrl: string }>('PUT', '/users/me/avatar', { rawBody: photo });
+}
+
 /** One page of the questions of the account. `cursor` is the nextCursor of the previous page. */
 export function fetchProfileQuestions(
   handle: string,

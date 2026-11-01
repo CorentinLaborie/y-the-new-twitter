@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchFollowList, fetchProfile, fetchProfileQuestions } from './profile-api';
+import { fetchFollowList, fetchProfile, fetchProfileQuestions, uploadAvatar } from './profile-api';
 
 function requestedUrl(): string {
   return String(vi.mocked(fetch).mock.calls[0]?.[0]);
@@ -20,6 +20,23 @@ describe('the profile calls (L1, L3 section 7.4)', () => {
 
     expect(requestedUrl()).toContain('/users/alice');
     expect(result).toMatchObject({ ok: true, body: { handle: 'alice' } });
+  });
+
+  it('sends the photo as the raw body, with its own content type (5.3)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ avatarUrl: '/avatars/x.jpg' })),
+    );
+    const photo = new File(['\xff\xd8\xff'], 'photo.jpg', { type: 'image/jpeg' });
+
+    const result = await uploadAvatar(photo);
+
+    // The CSRF token may come from a first safe call, so the upload is the last request.
+    const upload = vi.mocked(fetch).mock.calls.at(-1);
+    expect(String(upload?.[0])).toContain('/users/me/avatar');
+    expect(upload?.[1]).toMatchObject({ method: 'PUT', headers: { 'Content-Type': 'image/jpeg' } });
+    expect((upload?.[1] as RequestInit).body).toBe(photo);
+    expect(result).toMatchObject({ ok: true, body: { avatarUrl: '/avatars/x.jpg' } });
   });
 
   it('reads one page of the questions, with its cursor when it has one', async () => {

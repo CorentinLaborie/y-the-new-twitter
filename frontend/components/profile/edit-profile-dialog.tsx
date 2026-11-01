@@ -2,9 +2,9 @@
 
 import { useState, type FormEvent } from 'react';
 import { SheetDialog } from '@/components/dialog/sheet-dialog';
-import { updateOwnProfile, type OwnProfile, type ProfileView } from '@/lib/profile-api';
+import { updateOwnProfile, uploadAvatar, type OwnProfile, type ProfileView } from '@/lib/profile-api';
 import { DISPLAY_NAME_MAX_LENGTH, HANDLE_MAX_LENGTH } from '@/lib/validation';
-import { changedFields, photoError, saveFailureMessage } from './edit-profile-rules';
+import { avatarFailureMessage, changedFields, photoError, saveFailureMessage } from './edit-profile-rules';
 import styles from './edit-profile-dialog.module.css';
 
 /** The bio of a profile is at most 160 characters (section 12.7, DEC-105). */
@@ -39,30 +39,51 @@ function EditProfileForm({
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [handle, setHandle] = useState(profile.handle);
   const [bio, setBio] = useState(profile.bio ?? '');
+  const [photo, setPhoto] = useState<File | null>(null);
   const [photoFailure, setPhotoFailure] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveFailure, setSaveFailure] = useState<string | null>(null);
 
-  function choosePhoto(photo: File | undefined) {
-    setPhotoFailure(photo === undefined ? null : photoError(photo));
+  /** A photo of another format or over 2 MB is refused here, before any upload. */
+  function choosePhoto(chosen: File | undefined) {
+    const failure = chosen === undefined ? null : photoError(chosen);
+    setPhoto(failure === null ? (chosen ?? null) : null);
+    setPhotoFailure(failure);
   }
 
+  /*
+   * The photo goes first, then the changed fields. If the photo is refused the window stays open with its message. If
+   * the fields are refused after the photo was stored, the photo stays saved and the window stays open to retry.
+   */
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const changes = changedFields(profile, { displayName, handle, bio });
-    if (Object.keys(changes).length === 0) {
+    if (photo === null && Object.keys(changes).length === 0) {
       onClose();
       return;
     }
     setSaving(true);
     setSaveFailure(null);
-    const result = await updateOwnProfile(changes);
-    setSaving(false);
-    if (result.ok) {
-      onSaved(result.body);
-      return;
+    if (photo !== null) {
+      const uploaded = await uploadAvatar(photo);
+      if (!uploaded.ok) {
+        setSaving(false);
+        setSaveFailure(avatarFailureMessage(uploaded.problem.status));
+        return;
+      }
     }
-    setSaveFailure(saveFailureMessage(result.problem.status));
+    let saved: OwnProfile = { handle: profile.handle, displayName: profile.displayName, bio: profile.bio };
+    if (Object.keys(changes).length > 0) {
+      const result = await updateOwnProfile(changes);
+      if (!result.ok) {
+        setSaving(false);
+        setSaveFailure(saveFailureMessage(result.problem.status));
+        return;
+      }
+      saved = result.body;
+    }
+    setSaving(false);
+    onSaved(saved);
   }
 
   return (

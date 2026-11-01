@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { changedFields, photoError, saveFailureMessage, PHOTO_MAX_BYTES } from './edit-profile-rules';
+import {
+  avatarFailureMessage,
+  changedFields,
+  photoError,
+  saveFailureMessage,
+  PHOTO_MAX_BYTES,
+} from './edit-profile-rules';
+
+describe('avatarFailureMessage (5.3)', () => {
+  it('says the photo is too large for 413, and the format for 400', () => {
+    expect(avatarFailureMessage(413)).toBe('La photo ne doit pas dépasser 2 Mo.');
+    expect(avatarFailureMessage(400)).toBe('La photo doit être au format JPEG, PNG ou WebP.');
+  });
+
+  it('gives a generic text for any other failure', () => {
+    expect(avatarFailureMessage(500)).toBe('La photo n’a pas pu être enregistrée. Réessayez.');
+  });
+});
 
 const SAVED = { handle: 'alice', displayName: 'Alice', bio: 'Curieuse de tout.' };
 

@@ -36,6 +36,18 @@ export function changedFields(
   return changes;
 }
 
+/** The French text shown when the API refuses the photo: 413 for a file over 2 MB, 400 for another format. */
+export function avatarFailureMessage(status: number): string {
+  switch (status) {
+    case 413:
+      return 'La photo ne doit pas dépasser 2 Mo.';
+    case 400:
+      return 'La photo doit être au format JPEG, PNG ou WebP.';
+    default:
+      return 'La photo n’a pas pu être enregistrée. Réessayez.';
+  }
+}
+
 /** The French text shown when saving the profile fails, by HTTP status (the API answers 409 for a taken handle). */
 export function saveFailureMessage(status: number): string {
   switch (status) {
