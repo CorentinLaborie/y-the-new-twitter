@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { BlockDialog } from '@/components/block/block-dialog';
+import { EditProfileDialog } from './edit-profile-dialog';
 import { blockedMessage } from '@/components/block/block-rules';
 import { FollowButton } from '@/components/follow/follow-button';
 import { avatarInitial } from '@/components/feed/avatar-initial';
@@ -35,6 +36,7 @@ export function ProfileScreen({
   const { pendingIds, errors, react } = useProfileReactions(setQuestions);
   const [blockOpen, setBlockOpen] = useState(false);
   const [blockNotice, setBlockNotice] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const loadFirst = useCallback(() => {
     Promise.all([fetchProfile(handle), fetchProfileQuestions(handle)]).then(([account, page]) => {
@@ -109,7 +111,11 @@ export function ProfileScreen({
             {avatarInitial(profile.displayName)}
           </span>
           {profile.isOwnAccount && !suspended ? (
-            <button type="button" className="y-btn y-btn-md y-btn-outline y-btn-pill">
+            <button
+              type="button"
+              className="y-btn y-btn-md y-btn-outline y-btn-pill"
+              onClick={() => setEditOpen(true)}
+            >
               Modifier le profil
             </button>
           ) : null}
@@ -131,6 +137,9 @@ export function ProfileScreen({
           )}
         </div>
         {blockNotice ? <p role="status">{blockNotice}</p> : null}
+        {profile.isOwnAccount && !suspended ? (
+          <EditProfileDialog open={editOpen} profile={profile} onClose={() => setEditOpen(false)} />
+        ) : null}
         {profile.isOwnAccount || viewerHandle === null || suspended || !blockOpen ? null : (
           <BlockDialog
             open={blockOpen}

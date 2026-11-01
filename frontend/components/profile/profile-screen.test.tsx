@@ -1,5 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiResult } from '@/lib/api-client';
 import {
   fetchProfile,
@@ -30,6 +30,20 @@ const EMPTY_PAGE: ApiResult<ProfileQuestionsPage> = {
   status: 200,
   body: { questions: [], nextCursor: null },
 };
+
+// jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
+beforeAll(() => {
+  if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      this.setAttribute('open', '');
+    };
+  }
+  if (typeof HTMLDialogElement.prototype.close !== 'function') {
+    HTMLDialogElement.prototype.close = function close() {
+      this.removeAttribute('open');
+    };
+  }
+});
 
 describe('ProfileScreen (L1)', () => {
   beforeEach(() => {
@@ -136,5 +150,20 @@ describe('ProfileScreen (L1)', () => {
 
     await screen.findByRole('heading', { name: 'Alice' });
     expect(screen.queryByRole('button', { name: 'Modifier le profil' })).not.toBeInTheDocument();
+  });
+
+  it('opens the edit window from Modifier le profil (4.1)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', displayName: 'Moi', isOwnAccount: true },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier le profil' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Modifier le profil' })).toBeInTheDocument();
   });
 });
