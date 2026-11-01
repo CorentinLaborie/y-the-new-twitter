@@ -122,7 +122,7 @@ test('a handle already taken keeps the window open, with the typed value and the
   await page.getByLabel('Pseudo').fill('marthe');
   await page.getByRole('button', { name: 'Enregistrer' }).click();
 
-  await expect(page.getByRole('alert')).toHaveText('Ce pseudo est déjà pris.');
+  await expect(page.getByRole('dialog', { name: 'Modifier le profil' }).getByRole('alert')).toHaveText('Ce pseudo est déjà pris.');
   await expect(dialog).toBeVisible();
   await expect(page.getByLabel('Pseudo')).toHaveValue('marthe');
 });
@@ -137,7 +137,7 @@ test('a photo of another format is refused in the window, and nothing is uploade
     buffer: Buffer.from('GIF89a'),
   });
 
-  await expect(page.getByRole('alert')).toHaveText('La photo doit être au format JPEG, PNG ou WebP.');
+  await expect(page.getByRole('dialog', { name: 'Modifier le profil' }).getByRole('alert')).toHaveText('La photo doit être au format JPEG, PNG ou WebP.');
   expect(calls).toHaveLength(0);
 });
 

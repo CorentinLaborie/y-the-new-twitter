@@ -41,3 +41,8 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* The buttons keep a touch target of 44 px at every width, down to 325 px (plan L1, section 8.4). */
+.actions button {
+  min-height: 44px;
+}
