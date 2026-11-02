@@ -78,6 +78,23 @@ describe('ProblemDetailsFilter', () => {
     expect(json.mock.calls[0][0].code).toBeUndefined();
   });
 
+  it('keeps the 413 of a body above its limit, as the body parser reports it, with no internal message', () => {
+    const { host, status, json } = hostFor('/api/v1/users/me/avatar');
+    const tooLarge = Object.assign(new Error('request entity too large'), {
+      status: 413,
+      statusCode: 413,
+      expose: true,
+      type: 'entity.too.large',
+    });
+
+    filter.catch(tooLarge, host);
+
+    expect(status).toHaveBeenCalledWith(413);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 413, detail: 'La requête ne peut pas être traitée.' }),
+    );
+  });
+
   it('hides the message of an unexpected error and logs it', () => {
     const logError = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     const { host, status, json } = hostFor('/api/v1/users');

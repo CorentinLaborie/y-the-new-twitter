@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, RequestMethod } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { allowedOrigins } from './config/allowed-origins';
@@ -18,7 +18,10 @@ export function configureApp(app: INestApplication): void {
     credentials: true,
     exposedHeaders: ['Retry-After'],
   });
-  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+  // The profile photos are served at /avatars/, outside the API prefix, to match the address stored on the profile.
+  app.setGlobalPrefix('api/v1', {
+    exclude: ['health', { path: 'avatars/:file', method: RequestMethod.GET }],
+  });
 
   // Swagger is available locally and in staging only (section 9 of the product doc).
   if (config.get<string>('NODE_ENV') !== 'production') {

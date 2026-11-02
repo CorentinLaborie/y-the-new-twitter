@@ -10,6 +10,7 @@ export type ProfileJson = {
   handle: string;
   displayName: string;
   bio: string | null;
+  avatarUrl: string | null;
   joinedAt: string;
   followerCount: number;
   followingCount: number;
@@ -31,6 +32,7 @@ export function profile(overrides: Partial<ProfileJson> = {}): ProfileJson {
     handle: 'marthe',
     displayName: 'Marthe Dupont',
     bio: 'Curieuse de tout, je pose les questions que personne n’ose poser.',
+    avatarUrl: null,
     joinedAt: '2026-03-01T10:00:00.000Z',
     followerCount: 2340,
     followingCount: 182,

@@ -13,4 +13,13 @@
     border-radius: 16px 16px 0 0;
     padding: 24px 16px 20px;
   }
+
+  /* The profile edit window covers the whole screen under 768 px (section 12.7). */
+  .fullscreen {
+    inset: 0;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    overflow-y: auto;
+  }
 }

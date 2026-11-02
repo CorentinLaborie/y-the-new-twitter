@@ -25,6 +25,7 @@ const ACCOUNT = {
   handle: 'bob',
   displayName: 'Bob',
   bio: 'Une bio',
+  avatarUrl: '/avatars/bob.jpg',
   createdAt: CREATED_AT,
   followerCount: 3,
   followingCount: 2,
@@ -73,12 +74,21 @@ describe('ProfilesService (L1)', () => {
         handle: 'bob',
         displayName: 'Bob',
         bio: 'Une bio',
+        avatarUrl: '/avatars/bob.jpg',
         joinedAt: '2026-03-01T10:00:00.000Z',
         followerCount: 3,
         followingCount: 2,
         viewerFollows: true,
         isOwnAccount: false,
       });
+    });
+
+    it('gives a null photo address for an account that has no photo (default photo)', async () => {
+      repository.findVisibleAccount.mockResolvedValue({ ...ACCOUNT, avatarUrl: null });
+
+      const profile = await service.profile(VIEWER, 'bob');
+
+      expect(profile.avatarUrl).toBeNull();
     });
 
     it('marks the viewer’s own account, and never reports a follow of oneself', async () => {

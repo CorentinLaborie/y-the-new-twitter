@@ -1,23 +1,33 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiResult } from '@/lib/api-client';
 import {
   fetchProfile,
   fetchProfileQuestions,
+  updateOwnProfile,
   type ProfileQuestionsPage,
   type ProfileView,
 } from '@/lib/profile-api';
 import { ProfileScreen } from './profile-screen';
 
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+
 vi.mock('@/lib/profile-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/profile-api')>();
-  return { ...actual, fetchProfile: vi.fn(), fetchProfileQuestions: vi.fn() };
+  return {
+    ...actual,
+    fetchProfile: vi.fn(),
+    fetchProfileQuestions: vi.fn(),
+    updateOwnProfile: vi.fn(),
+  };
 });
 
 const PROFILE: ProfileView = {
   handle: 'alice',
   displayName: 'Alice',
   bio: 'Curieuse de tout.',
+  avatarUrl: null,
   joinedAt: '2026-03-01T10:00:00.000Z',
   followerCount: 2340,
   followingCount: 182,
@@ -31,10 +41,25 @@ const EMPTY_PAGE: ApiResult<ProfileQuestionsPage> = {
   body: { questions: [], nextCursor: null },
 };
 
+// jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
+beforeAll(() => {
+  if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      this.setAttribute('open', '');
+    };
+  }
+  if (typeof HTMLDialogElement.prototype.close !== 'function') {
+    HTMLDialogElement.prototype.close = function close() {
+      this.removeAttribute('open');
+    };
+  }
+});
+
 describe('ProfileScreen (L1)', () => {
   beforeEach(() => {
     vi.mocked(fetchProfile).mockReset();
     vi.mocked(fetchProfileQuestions).mockReset();
+    router.replace.mockReset();
   });
 
   it('shows the name, the handle, the bio, the date of joining and the counts with their lists', async () => {
@@ -112,5 +137,119 @@ describe('ProfileScreen (L1)', () => {
     await waitFor(() =>
       expect(screen.getByText('Aucune question publiée pour l’instant.')).toBeInTheDocument(),
     );
+  });
+
+  it('offers Modifier le profil on one’s own profile, and not the follow control (3.1)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', displayName: 'Moi', isOwnAccount: true },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+
+    expect(await screen.findByRole('button', { name: 'Modifier le profil' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Suivre/ })).not.toBeInTheDocument();
+  });
+
+  it('does not offer Modifier le profil on another account’s profile (3.2)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({ ok: true, status: 200, body: PROFILE });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    render(<ProfileScreen handle="alice" viewerHandle="me" suspended={false} />);
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(screen.queryByRole('button', { name: 'Modifier le profil' })).not.toBeInTheDocument();
+  });
+
+  it('shows the saved name on the page at once, without a reload (5.1)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', displayName: 'Moi', isOwnAccount: true },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+    vi.mocked(updateOwnProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { handle: 'me', displayName: 'Nouveau', bio: 'Curieuse de tout.' },
+    });
+
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier le profil' }));
+    fireEvent.change(await screen.findByLabelText('Nom affiché'), { target: { value: 'Nouveau' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(await screen.findByRole('heading', { name: 'Nouveau' })).toBeInTheDocument();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('moves to the new address when the handle changes (5.1)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', displayName: 'Moi', isOwnAccount: true },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+    vi.mocked(updateOwnProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { handle: 'moi2', displayName: 'Moi', bio: 'Curieuse de tout.' },
+    });
+
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier le profil' }));
+    fireEvent.change(await screen.findByLabelText('Pseudo'), { target: { value: 'moi2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/u/moi2'));
+  });
+
+  it('shows the profile photo when the account has one (5.4)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, avatarUrl: '/avatars/alice.jpg' },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    const { container } = render(<ProfileScreen handle="alice" viewerHandle="me" suspended={false} />);
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      expect.stringContaining('/avatars/alice.jpg'),
+    );
+  });
+
+  it('shows the initial, and no image, when the account has no photo (5.4)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, avatarUrl: null },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    const { container } = render(<ProfileScreen handle="alice" viewerHandle="me" suspended={false} />);
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(container.querySelector('img')).toBeNull();
+    expect(screen.getByText('A')).toBeInTheDocument();
+  });
+
+  it('opens the edit window from Modifier le profil (4.1)', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { ...PROFILE, handle: 'me', displayName: 'Moi', isOwnAccount: true },
+    });
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(EMPTY_PAGE);
+
+    render(<ProfileScreen handle="me" viewerHandle="me" suspended={false} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier le profil' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Modifier le profil' })).toBeInTheDocument();
   });
 });

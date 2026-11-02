@@ -24,6 +24,7 @@ export class ProfilesRepository {
         handle: true,
         displayName: true,
         bio: true,
+        avatarUrl: true,
         createdAt: true,
         followerCount: true,
         followingCount: true,

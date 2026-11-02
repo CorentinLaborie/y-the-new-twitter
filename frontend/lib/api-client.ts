@@ -52,10 +52,12 @@ export type ApiProblem = {
 /** The answer of a call: the body on success, the Problem Details otherwise. Calls never throw on an API answer. */
 export type ApiResult<T> = { ok: true; status: number; body: T } | { ok: false; problem: ApiProblem };
 
-type ApiMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type ApiMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 type ApiRequestOptions = {
   body?: unknown;
+  /** A raw body, sent as it is with its own content type (the profile photo, plan L1, 2.1). */
+  rawBody?: Blob;
   /** Server-side calls (the protected area) have no browser cookies: the caller passes the session cookie. */
   cookie?: string;
   headers?: Record<string, string>;
@@ -92,10 +94,12 @@ async function csrfToken(): Promise<string | null> {
 export async function apiRequest<T>(
   method: ApiMethod,
   path: string,
-  { body, cookie, headers: extraHeaders = {} }: ApiRequestOptions = {},
+  { body, rawBody, cookie, headers: extraHeaders = {} }: ApiRequestOptions = {},
 ): Promise<ApiResult<T>> {
   const headers: Record<string, string> = { ...extraHeaders };
-  if (body !== undefined) {
+  if (rawBody !== undefined) {
+    headers['Content-Type'] = rawBody.type;
+  } else if (body !== undefined) {
     headers['Content-Type'] = 'application/json';
   }
   if (cookie) {
@@ -114,7 +118,7 @@ export async function apiRequest<T>(
       method,
       headers,
       credentials: 'include',
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: rawBody ?? (body === undefined ? undefined : JSON.stringify(body)),
     });
   } catch {
     return { ok: false, problem: { status: 0, title: 'Réseau', detail: 'Le serveur est injoignable.' } };

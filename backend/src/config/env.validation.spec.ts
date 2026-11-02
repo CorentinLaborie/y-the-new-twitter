@@ -10,6 +10,7 @@ const validConfig: Record<string, string> = {
   APP_PUBLIC_URL: 'http://localhost:3000',
   Y_CONVERSATION_THRESHOLD: '50',
   Y_CODE_TTL_MINUTES: '15',
+  AVATAR_DIRECTORY: './uploads/avatars',
 };
 
 function without(key: string): Record<string, string> {
@@ -24,6 +25,12 @@ describe('validateEnvironment', () => {
 
     expect(config.Y_CONVERSATION_THRESHOLD).toBe(50);
     expect(config.Y_CODE_TTL_MINUTES).toBe(15);
+  });
+
+  it('fails at startup when the photo folder is missing, with no default (plan L1, decision 0.1)', () => {
+    expect(() => validateEnvironment(without('AVATAR_DIRECTORY'))).toThrow(
+      'Invalid configuration: AVATAR_DIRECTORY',
+    );
   });
 
   it('fails at startup when a secret is missing, and names only the key', () => {
@@ -84,18 +91,29 @@ describe('validateEnvironment', () => {
   });
 
   it('requires the back-office address in production, and checks it is a URL', () => {
-    const production = { ...validConfig, NODE_ENV: 'production', BREVO_API_KEY: 'k', MAIL_FROM_ADDRESS: 'a@example.com' };
+    const production = {
+      ...validConfig,
+      NODE_ENV: 'production',
+      BREVO_API_KEY: 'k',
+      MAIL_FROM_ADDRESS: 'a@example.com',
+    };
 
     expect(() => validateEnvironment(production)).toThrow('ADMIN_PUBLIC_URL');
-    expect(() => validateEnvironment({ ...production, ADMIN_PUBLIC_URL: 'pas une url' })).toThrow('ADMIN_PUBLIC_URL');
+    expect(() => validateEnvironment({ ...production, ADMIN_PUBLIC_URL: 'pas une url' })).toThrow(
+      'ADMIN_PUBLIC_URL',
+    );
     expect(() =>
       validateEnvironment({ ...production, ADMIN_PUBLIC_URL: 'https://admin-y.corentin-laborie.com' }),
     ).not.toThrow();
   });
 
   it('refuses a secret shorter than 32 characters, and names only the key', () => {
-    expect(() => validateEnvironment({ ...validConfig, SESSION_SECRET: 'too-short' })).toThrow('SESSION_SECRET');
-    expect(() => validateEnvironment({ ...validConfig, AUDIT_HMAC_KEY: 'too-short' })).toThrow('AUDIT_HMAC_KEY');
+    expect(() => validateEnvironment({ ...validConfig, SESSION_SECRET: 'too-short' })).toThrow(
+      'SESSION_SECRET',
+    );
+    expect(() => validateEnvironment({ ...validConfig, AUDIT_HMAC_KEY: 'too-short' })).toThrow(
+      'AUDIT_HMAC_KEY',
+    );
   });
 
   it('defaults the proxy hops to 0, and refuses a negative number', () => {

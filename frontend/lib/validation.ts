@@ -3,8 +3,8 @@
  * (backend/src/auth/dto/signup.dto.ts, account-rules.ts and password.ts). The backend stays authoritative.
  */
 
-const HANDLE_MAX_LENGTH = 30;
-const DISPLAY_NAME_MAX_LENGTH = 50;
+export const HANDLE_MAX_LENGTH = 30;
+export const DISPLAY_NAME_MAX_LENGTH = 50;
 const EMAIL_MAX_LENGTH = 254;
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 128;

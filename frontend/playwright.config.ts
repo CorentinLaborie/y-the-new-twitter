@@ -34,7 +34,14 @@ export default defineConfig({
     {
       // The settings at 325 px wide (plan L5, decision 14): only the settings specs run here.
       name: 'mobile-325',
-      testMatch: ['**/settings-*.spec.ts', '**/bookmarks-325.spec.ts', '**/share-view-325.spec.ts', '**/messages-325.spec.ts', '**/explore-325.spec.ts'],
+      testMatch: [
+        '**/settings-*.spec.ts',
+        '**/bookmarks-325.spec.ts',
+        '**/share-view-325.spec.ts',
+        '**/messages-325.spec.ts',
+        '**/explore-325.spec.ts',
+        '**/profile-edit-325.spec.ts',
+      ],
       use: { ...devices['Pixel 7'], viewport: { width: 325, height: 640 } },
     },
   ],
