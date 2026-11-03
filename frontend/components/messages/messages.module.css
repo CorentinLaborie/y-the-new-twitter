@@ -4,25 +4,6 @@
  * lines. Every control keeps a 44 px touch target down to 325 px wide (plan section 9).
  */
 
-.column {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 600px;
-  min-height: 100vh;
-  margin-inline: auto;
-  background: var(--color-card);
-}
-
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-8) var(--space-12);
-  box-sizing: border-box;
-  padding: var(--space-16);
-}
-
 .title {
   margin: 0;
   font-size: 18px;
