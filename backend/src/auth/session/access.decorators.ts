@@ -4,7 +4,6 @@ import type { SessionUser } from './session-user.repository';
 
 export const PUBLIC_KEY = 'session:public';
 export const STATUSES_KEY = 'session:statuses';
-export const ROLES_KEY = 'session:roles';
 
 /** The route needs no logged-in user (signup, login, reset, status, health). */
 export const Public = () => SetMetadata(PUBLIC_KEY, true);

@@ -1,6 +1,6 @@
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PUBLIC_KEY, ROLES_KEY, STATUSES_KEY } from './access.decorators';
+import { PUBLIC_KEY, STATUSES_KEY } from './access.decorators';
 import { SessionGuard } from './session.guard';
 import { SessionUserService } from './session-user.service';
 
@@ -78,20 +78,19 @@ describe('SessionGuard', () => {
 
     expect(sessions.check).toHaveBeenCalledWith(
       { userId: 'user-1' },
-      { statuses: ['active'], roles: undefined },
+      { statuses: ['active'] },
     );
   });
 
-  it('uses the statuses and roles declared on the route', async () => {
+  it('uses the statuses declared on the route', async () => {
     const { guard, sessions } = guardWith({ allowed: false, reason: 'anonymous' });
 
     await guard
-      .canActivate(contextWith({ [STATUSES_KEY]: ['active', 'suspended'], [ROLES_KEY]: ['admin'] }).context)
+      .canActivate(contextWith({ [STATUSES_KEY]: ['active', 'suspended'] }).context)
       .catch(() => undefined);
 
     expect(sessions.check).toHaveBeenCalledWith(expect.anything(), {
       statuses: ['active', 'suspended'],
-      roles: ['admin'],
     });
   });
 
