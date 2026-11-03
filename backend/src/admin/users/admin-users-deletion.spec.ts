@@ -17,6 +17,7 @@ function account(status: AccountDetails['status']): AccountDetails {
     id: TARGET_ID,
     handle: 'alice',
     displayName: 'Compte alice',
+    avatarUrl: null,
     email: 'alice@example.test',
     status,
     role: 'user',

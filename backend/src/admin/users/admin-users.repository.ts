@@ -44,6 +44,7 @@ export interface AccountRow {
   id: string;
   handle: string;
   displayName: string;
+  avatarUrl: string | null;
   email: string;
   status: AccountStatus;
   role: UserRole;
@@ -204,6 +205,7 @@ const ACCOUNT_ROW_SELECT = {
   id: true,
   handle: true,
   displayName: true,
+  avatarUrl: true,
   email: true,
   status: true,
   role: true,

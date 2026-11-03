@@ -18,6 +18,7 @@ export interface ReportTargetView {
   body: string;
   authorHandle: string;
   authorDisplayName: string;
+  authorAvatarUrl: string | null;
   moderationStatus: ModerationStatus;
   createdAt: string;
 }

@@ -15,6 +15,7 @@ function account(status: AccountDetails['status']): AccountDetails {
     id: TARGET_ID,
     handle: 'alice',
     displayName: 'Compte alice',
+    avatarUrl: null,
     email: 'alice@example.test',
     status,
     role: 'user',
@@ -73,7 +74,9 @@ describe('AdminUsersService.changeStatus (DEC-077, DEC-116, R13, R18)', () => {
   it('writes the change only from the status it was decided from (no lost update)', async () => {
     await service.changeStatus(ACTOR_ID, TARGET_ID, { status: 'suspended', reason: 'Test' }, NOW);
 
-    expect(repository.applyStatusChange).toHaveBeenCalledWith(expect.objectContaining({ expectedStatus: 'active' }));
+    expect(repository.applyStatusChange).toHaveBeenCalledWith(
+      expect.objectContaining({ expectedStatus: 'active' }),
+    );
   });
 
   it('answers 404 to an unknown account, with no write', async () => {

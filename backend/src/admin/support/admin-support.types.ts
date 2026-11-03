@@ -15,6 +15,7 @@ export interface SupportAccountView {
   id: string;
   handle: string;
   displayName: string;
+  avatarUrl: string | null;
   status: AccountStatus;
   maskedEmail: string;
   createdAt: string;

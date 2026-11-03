@@ -239,6 +239,7 @@ function toTargetRow(type: ReportTargetType, content: TargetContent): ReportTarg
     body: content.body,
     authorHandle: content.author.handle,
     authorDisplayName: content.author.displayName,
+    authorAvatarUrl: content.author.avatarUrl,
     moderationStatus: content.moderationStatus,
     createdAt: content.createdAt.toISOString(),
   };

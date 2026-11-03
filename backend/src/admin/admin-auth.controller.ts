@@ -29,6 +29,7 @@ import { Admin } from './admin.decorators';
 interface AdminUserView {
   readonly handle: string;
   readonly displayName: string;
+  readonly avatarUrl: string | null;
 }
 
 interface AdminLoginResponse {
@@ -51,14 +52,12 @@ export class AdminAuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() body: AdminLoginDto, @Req() req: Request): Promise<AdminLoginResponse> {
     const now = new Date();
-    const outcome = await this.adminAuth.login(
-      {
-        email: body.email,
-        password: body.password,
-        ipAddress: req.ip ?? '',
-        userAgent: req.get('user-agent'),
-      },
-    );
+    const outcome = await this.adminAuth.login({
+      email: body.email,
+      password: body.password,
+      ipAddress: req.ip ?? '',
+      userAgent: req.get('user-agent'),
+    });
 
     switch (outcome.status) {
       case 'invalid':
@@ -90,10 +89,14 @@ export class AdminAuthController {
     @Req() req: Request,
   ): Promise<{ readonly reauthExpiresAt: string }> {
     const now = new Date();
-    const outcome = await this.adminAuth.reauthenticate(user.id, {
-      ipAddress: req.ip ?? '',
-      userAgent: req.get('user-agent'),
-    }, body.password);
+    const outcome = await this.adminAuth.reauthenticate(
+      user.id,
+      {
+        ipAddress: req.ip ?? '',
+        userAgent: req.get('user-agent'),
+      },
+      body.password,
+    );
 
     if (outcome === 'invalid') {
       throw new UnauthorizedException('Identifiants incorrects');
@@ -127,5 +130,5 @@ export class AdminAuthController {
 }
 
 function userView(user: SessionUser): AdminUserView {
-  return { handle: user.handle, displayName: user.displayName };
+  return { handle: user.handle, displayName: user.displayName, avatarUrl: user.avatarUrl };
 }

@@ -27,7 +27,7 @@ function row(overrides: Partial<ReportRow> = {}): ReportRow {
       body: 'Pourquoi les gens préfèrent-ils les réponses rapides ?',
       moderationStatus: 'visible',
       createdAt: new Date('2026-10-10T08:00:00.000Z'),
-      author: { handle: 'AliceY', displayName: 'Alice' },
+      author: { handle: 'AliceY', displayName: 'Alice', avatarUrl: null },
     },
     reply: null,
     ...overrides,
@@ -115,6 +115,7 @@ describe('AdminReportsService', () => {
               body: 'Pourquoi les gens préfèrent-ils les réponses rapides ?',
               authorHandle: 'AliceY',
               authorDisplayName: 'Alice',
+              authorAvatarUrl: null,
               moderationStatus: 'visible',
               createdAt: '2026-10-10T08:00:00.000Z',
             },
@@ -136,7 +137,7 @@ describe('AdminReportsService', () => {
             body: 'Réponse',
             moderationStatus: 'visible',
             createdAt: new Date('2026-10-12T08:00:00.000Z'),
-            author: { handle: 'MarkL', displayName: 'Mark' },
+            author: { handle: 'MarkL', displayName: 'Mark', avatarUrl: null },
           },
         }),
       ]);
@@ -206,6 +207,7 @@ describe('AdminReportsService', () => {
           body: 'Pourquoi les gens préfèrent-ils les réponses rapides ?',
           authorHandle: 'AliceY',
           authorDisplayName: 'Alice',
+          authorAvatarUrl: null,
           moderationStatus: 'visible',
           createdAt: '2026-10-10T08:00:00.000Z',
         },
@@ -371,10 +373,12 @@ describe('AdminReportsService', () => {
 
     it('makes the question visible again, and audits it with the note as the reason', async () => {
       repository.findById.mockResolvedValueOnce(hidden());
-      repository.restore.mockImplementationOnce(async (change: { record: (db: unknown) => Promise<void> }) => {
-        await change.record('transaction');
-        return true;
-      });
+      repository.restore.mockImplementationOnce(
+        async (change: { record: (db: unknown) => Promise<void> }) => {
+          await change.record('transaction');
+          return true;
+        },
+      );
 
       const result = await service.restore(ADMIN_ID, REPORT_ID, { note: 'Signalement erroné' }, NOW);
 

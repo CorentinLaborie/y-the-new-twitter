@@ -110,7 +110,9 @@ export class AdminUsersService {
       throw new ConflictException('Ce changement de statut n’est pas possible pour ce compte.');
     }
     if (kind === 'suspend' && (account.role === 'admin' || account.role === 'moderator')) {
-      throw new ConflictException('Un administrateur ou un modérateur ne peut pas être suspendu depuis le back-office.');
+      throw new ConflictException(
+        'Un administrateur ou un modérateur ne peut pas être suspendu depuis le back-office.',
+      );
     }
 
     const thread = contactThreadPlan(kind, await this.repository.contactThreadOf(targetId));
@@ -260,6 +262,7 @@ function toListItem(row: AccountRow): AccountListItem {
     id: row.id,
     handle: row.handle,
     displayName: row.displayName,
+    avatarUrl: row.avatarUrl,
     status: row.status,
     role: row.role,
     maskedEmail: maskEmail(row.email),

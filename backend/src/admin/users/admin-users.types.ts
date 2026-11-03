@@ -6,6 +6,7 @@ export interface AccountListItem {
   id: string;
   handle: string;
   displayName: string;
+  avatarUrl: string | null;
   status: AccountStatus;
   role: UserRole;
   maskedEmail: string;

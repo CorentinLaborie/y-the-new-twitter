@@ -15,7 +15,7 @@ const TARGET_SELECT = {
   body: true,
   moderationStatus: true,
   createdAt: true,
-  author: { select: { handle: true, displayName: true } },
+  author: { select: { handle: true, displayName: true, avatarUrl: true } },
 } as const;
 
 const REPORT_SELECT = {
@@ -192,8 +192,14 @@ export class AdminReportsRepository {
       const hidden = { moderationStatus: 'hidden' as const };
       const result =
         change.target.questionId !== null
-          ? await tx.question.updateMany({ where: { id: change.target.questionId, ...hidden }, data: moderation })
-          : await tx.reply.updateMany({ where: { id: change.target.replyId ?? '', ...hidden }, data: moderation });
+          ? await tx.question.updateMany({
+              where: { id: change.target.questionId, ...hidden },
+              data: moderation,
+            })
+          : await tx.reply.updateMany({
+              where: { id: change.target.replyId ?? '', ...hidden },
+              data: moderation,
+            });
       if (result.count !== 1) {
         return false;
       }

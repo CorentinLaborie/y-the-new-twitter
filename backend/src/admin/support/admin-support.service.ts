@@ -168,6 +168,7 @@ function toAccountView(user: SupportThreadRow['user']): SupportAccountView {
     id: user.id,
     handle: user.handle,
     displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
     status: user.status,
     maskedEmail: maskEmail(user.email),
     createdAt: user.createdAt.toISOString(),

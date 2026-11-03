@@ -8,6 +8,7 @@ const ACCOUNT_SELECT = {
   id: true,
   handle: true,
   displayName: true,
+  avatarUrl: true,
   email: true,
   status: true,
   createdAt: true,
