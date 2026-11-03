@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import type { AccountStatus, UserRole } from '../../database/generated/client/client';
-import { PUBLIC_KEY, ROLES_KEY, STATUSES_KEY } from './access.decorators';
+import type { AccountStatus } from '../../database/generated/client/client';
+import { PUBLIC_KEY, STATUSES_KEY } from './access.decorators';
 import { SessionUserService } from './session-user.service';
 import type { SessionUser } from './session-user.repository';
 
@@ -49,8 +49,7 @@ export class SessionGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<SessionRequest>();
     const statuses =
       this.reflector.getAllAndOverride<AccountStatus[]>(STATUSES_KEY, targets) ?? DEFAULT_STATUSES;
-    const roles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, targets);
-    const decision = await this.sessions.check(request.session, { statuses, roles });
+    const decision = await this.sessions.check(request.session, { statuses });
 
     if (!decision.allowed) {
       if (decision.reason === 'anonymous') {
