@@ -102,14 +102,6 @@ export function listPreview(conversation: ConversationView): string {
     : conversation.lastMessage.text;
 }
 
-export function formatMessageTime(iso: string, now: Date = new Date()): string {
-  const date = new Date(iso);
-  const sameDay = date.toDateString() === now.toDateString();
-  return sameDay
-    ? date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    : date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-}
-
 /** The clock time as the boards write it: 09h33. */
 function clockTime(iso: string): string {
   const date = new Date(iso);

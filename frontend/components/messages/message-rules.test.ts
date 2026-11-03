@@ -5,7 +5,6 @@ import {
   canWrite,
   composerNotice,
   conversationStateLabel,
-  formatMessageTime,
   listOptionsFor,
   loadFailureMessage,
   sendFailureMessage,
@@ -90,14 +89,6 @@ describe('failure messages', () => {
     expect(sendFailureMessage(problem(500))).toBe('Le message n’a pas pu être envoyé. Réessayez.');
     expect(loadFailureMessage(problem(404))).toBe('Cette conversation n’est plus disponible.');
     expect(loadFailureMessage(problem(500))).toBe('Les messages n’ont pas pu être chargés. Réessayez.');
-  });
-});
-
-describe('formatMessageTime', () => {
-  it('shows the clock time for today and the date for another day', () => {
-    const now = new Date('2026-10-27T12:00:00');
-    expect(formatMessageTime('2026-10-27T09:33:00', now)).toMatch(/09.*33/);
-    expect(formatMessageTime('2026-10-14T09:33:00', now)).toBe('14/10');
   });
 });
 
