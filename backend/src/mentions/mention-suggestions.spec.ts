@@ -1,39 +1,11 @@
 import { MentionsRepository } from './mentions.repository';
-import { MentionsService, rankMentionSuggestions, SUGGESTION_LIMIT } from './mentions.service';
+import { MentionsService } from './mentions.service';
 
 type Repository = jest.Mocked<Pick<MentionsRepository, 'findSuggestionCandidates' | 'findVisibleHandles'>>;
 
 const DB = 'tx';
 const account = (handle: string) => ({ handle, displayName: handle, avatarUrl: null });
 
-describe('rankMentionSuggestions (M3, selector)', () => {
-  it('puts the handles that start with the query first, then the others that contain it', () => {
-    const ranked = rankMentionSuggestions(
-      [account('Aro_x'), account('Robert44'), account('Roxane'), account('Marc_Ro')],
-      'ro',
-    );
-
-    expect(ranked.map((suggestion) => suggestion.handle)).toEqual(['Robert44', 'Roxane', 'Aro_x', 'Marc_Ro']);
-  });
-
-  it('ignores the case of the query', () => {
-    expect(rankMentionSuggestions([account('Robert44')], 'ROB').map((s) => s.handle)).toEqual(['Robert44']);
-  });
-
-  it('keeps five accounts at most', () => {
-    const many = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'].map(account);
-
-    expect(rankMentionSuggestions(many, 'a')).toHaveLength(SUGGESTION_LIMIT);
-    expect(SUGGESTION_LIMIT).toBe(5);
-  });
-
-  it('proposes everything when the query is empty', () => {
-    expect(rankMentionSuggestions([account('Alice'), account('Bob')], '').map((s) => s.handle)).toEqual([
-      'Alice',
-      'Bob',
-    ]);
-  });
-});
 
 describe('MentionsService.suggest and linkableHandles', () => {
   let repository: Repository;

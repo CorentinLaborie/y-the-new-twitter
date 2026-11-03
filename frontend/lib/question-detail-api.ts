@@ -15,7 +15,7 @@ import type { FeedQuestion } from '@/lib/feed-api';
 import { protectedApiRequest } from '@/lib/session-expired';
 
 /** A FeedQuestion whose counters also carry the reply count (QuestionCountersDto). */
-export type QuestionDetail = FeedQuestion & {
+type QuestionDetail = FeedQuestion & {
   counters: FeedQuestion['counters'] & { reply: number };
 };
 

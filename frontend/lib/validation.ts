@@ -63,7 +63,7 @@ export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
-export function validateHandle(value: string): string | undefined {
+function validateHandle(value: string): string | undefined {
   if (value.length === 0) {
     return 'Le pseudo est obligatoire.';
   }
@@ -79,7 +79,7 @@ export function validateHandle(value: string): string | undefined {
   return undefined;
 }
 
-export function validateDisplayName(value: string): string | undefined {
+function validateDisplayName(value: string): string | undefined {
   if (value.length === 0) {
     return 'Le nom affiché est obligatoire.';
   }
@@ -101,7 +101,7 @@ export function validateEmail(value: string): string | undefined {
 }
 
 /** Policy of DEC-136: 8 to 128 characters, at least one digit and one special character. */
-export function validatePassword(value: string): string | undefined {
+function validatePassword(value: string): string | undefined {
   if (value.length < PASSWORD_MIN_LENGTH) {
     return `${PASSWORD_MIN_LENGTH} caractères minimum.`;
   }
@@ -114,7 +114,7 @@ export function validatePassword(value: string): string | undefined {
   return undefined;
 }
 
-export function validatePasswordConfirmation(password: string, confirmation: string): string | undefined {
+function validatePasswordConfirmation(password: string, confirmation: string): string | undefined {
   if (confirmation.length === 0) {
     return 'Confirmez votre mot de passe.';
   }
@@ -157,7 +157,7 @@ function isOldEnough(isoDate: string, today: Date): boolean {
   return birth <= limit;
 }
 
-export function validateBirthDate(value: string, today: Date = new Date()): string | undefined {
+function validateBirthDate(value: string, today: Date = new Date()): string | undefined {
   if (value.trim().length === 0) {
     return 'La date de naissance est obligatoire.';
   }
@@ -172,7 +172,7 @@ export function validateBirthDate(value: string, today: Date = new Date()): stri
 }
 
 /** Optional. When filled in, it must be a French number, with or without spaces, dots or dashes. */
-export function validatePhone(value: string): string | undefined {
+function validatePhone(value: string): string | undefined {
   if (value.trim().length === 0) {
     return undefined;
   }
@@ -180,7 +180,7 @@ export function validatePhone(value: string): string | undefined {
   return PHONE_PATTERN.test(compact) ? undefined : 'Numéro de téléphone français invalide.';
 }
 
-export function validateTerms(accepted: boolean): string | undefined {
+function validateTerms(accepted: boolean): string | undefined {
   return accepted ? undefined : 'Vous devez accepter les conditions d’utilisation.';
 }
 

@@ -1,11 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { AuditLogService } from '../audit/audit-log.service';
-import {
-  AdminUsersRepository,
-  type AccountActivity,
-  type AccountDetails,
-  type AccountRow,
-} from './admin-users.repository';
+import { AdminUsersRepository, type AccountDetails, type AccountRow } from './admin-users.repository';
 import { AdminUsersService } from './admin-users.service';
 import { encodeKeysetCursor } from '../../common/pagination/keyset-cursor';
 
@@ -25,7 +20,7 @@ function row(id: string, handle: string, createdAt: string): AccountRow {
   };
 }
 
-const ACTIVITY: AccountActivity = {
+const ACTIVITY = {
   lastLoginAt: new Date('2026-10-20T09:00:00.000Z'),
   activeSessionCount: 2,
   reports: { total: 3, open: 1 },

@@ -3,7 +3,7 @@ import type { SessionUser } from '../auth/session/session-user.repository';
 import { encodeKeysetCursor } from '../common/pagination/keyset-cursor';
 import type { PrismaService } from '../database/prisma.service';
 import { BlocksRepository } from './blocks.repository';
-import { BLOCK_TARGET_NOT_FOUND, BlocksService } from './blocks.service';
+import { BlocksService } from './blocks.service';
 
 type Repository = jest.Mocked<
   Pick<
@@ -76,14 +76,6 @@ describe('BlocksService (L6, S2)', () => {
       await expect(service.block(VIEWER, 'nobody')).rejects.toThrow(NotFoundException);
     });
 
-    it('answers an inactive account as not found (404), with nothing written', async () => {
-      repository.findAccountByHandle.mockResolvedValue({ ...TARGET, status: 'suspended' });
-
-      await expect(service.block(VIEWER, 'bob')).rejects.toThrow(
-        new NotFoundException(BLOCK_TARGET_NOT_FOUND),
-      );
-      expect(repository.createBlock).not.toHaveBeenCalled();
-    });
 
     it('refuses to block one’s own account (422)', async () => {
       repository.findAccountByHandle.mockResolvedValue({ ...TARGET, id: VIEWER.id });

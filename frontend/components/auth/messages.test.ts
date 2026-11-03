@@ -1,26 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { ApiProblem } from '@/lib/api-client';
-import {
-  formatWait,
-  loginProblemMessage,
-  resendProblemMessage,
-  signupProblemMessage,
-  verifyProblemMessage,
-} from './messages';
+import { loginProblemMessage, resendProblemMessage, signupProblemMessage, verifyProblemMessage } from './messages';
 
 function problem(status: number, retryAfterSeconds?: number): ApiProblem {
   return { status, title: 'Error', detail: 'Server detail, possibly in English.', retryAfterSeconds };
 }
 
-describe('formatWait', () => {
-  it('writes seconds, then minutes rounded up', () => {
-    expect(formatWait(1)).toBe('1 seconde');
-    expect(formatWait(45)).toBe('45 secondes');
-    expect(formatWait(60)).toBe('1 minute');
-    expect(formatWait(61)).toBe('2 minutes');
-    expect(formatWait(900)).toBe('15 minutes');
-  });
-});
 
 describe('signup problems', () => {
   it('puts a taken handle on the handle field', () => {

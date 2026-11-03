@@ -1,5 +1,7 @@
 import type { PrismaService } from '../../database/prisma.service';
-import { AdminReportsRepository, type ReportDecisionWrite } from './admin-reports.repository';
+import { AdminReportsRepository } from './admin-reports.repository';
+
+type ReportDecisionWrite = Parameters<AdminReportsRepository['decide']>[0];
 
 const NOW = new Date('2026-10-21T10:00:00.000Z');
 const ADMIN_ID = '9d0c1e2f-3a4b-4c5d-8e6f-7a8b9c0d1e2f';

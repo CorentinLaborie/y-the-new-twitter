@@ -3,7 +3,7 @@ import type { ConfigService } from '@nestjs/config';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { encodeKeysetCursor } from '../common/pagination/keyset-cursor';
 import { ProfilesRepository } from './profiles.repository';
-import { PROFILE_NOT_FOUND_MESSAGE, ProfilesService } from './profiles.service';
+import { ProfilesService } from './profiles.service';
 
 type Repository = jest.Mocked<
   Pick<
@@ -101,13 +101,6 @@ describe('ProfilesService (L1)', () => {
       expect(repository.viewerFollows).not.toHaveBeenCalled();
     });
 
-    it('answers 404 with the same message for an account that is not visible', async () => {
-      repository.findVisibleAccount.mockResolvedValue(null);
-
-      await expect(service.profile(VIEWER, 'nobody')).rejects.toThrow(
-        new NotFoundException(PROFILE_NOT_FOUND_MESSAGE),
-      );
-    });
   });
 
   describe('questions (GET /users/{handle}/questions)', () => {

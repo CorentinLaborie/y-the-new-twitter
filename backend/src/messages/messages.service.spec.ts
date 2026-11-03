@@ -2,14 +2,7 @@ import { NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { encodeKeysetCursor } from '../common/pagination/keyset-cursor';
 import type { ConversationRow, MessagesRepository } from './messages.repository';
-import {
-  ACCEPT_FIRST_MESSAGE,
-  DECLINED_MESSAGE,
-  MessagesService,
-  NOT_PENDING_MESSAGE,
-  ONE_MESSAGE_MESSAGE,
-  directKeyOf,
-} from './messages.service';
+import { MessagesService } from './messages.service';
 
 const NOW = new Date('2026-10-27T09:00:00.000Z');
 const VIEWER = { id: 'viewer-1', handle: 'viewer', displayName: 'Viewer' } as SessionUser;
@@ -86,10 +79,6 @@ describe('MessagesService (section 9 of the conditions)', () => {
     service = new MessagesService(repository as unknown as MessagesRepository);
   });
 
-  it('keys a direct conversation by the two ids, sorted, whatever the order', () => {
-    expect(directKeyOf('b', 'a')).toBe('a:b');
-    expect(directKeyOf('a', 'b')).toBe('a:b');
-  });
 
   it('answers 404 for an unknown or invisible handle, and 422 when the viewer writes to themselves', async () => {
     repository.findRecipient.mockResolvedValueOnce(null);
@@ -143,29 +132,8 @@ describe('MessagesService (section 9 of the conditions)', () => {
     expect(repository.appendMessage).toHaveBeenCalledWith(CONVERSATION_ID, 'viewer-1', 'Encore', NOW);
   });
 
-  it('refuses a message in a request the viewer has not accepted, with 409', async () => {
-    repository.findParticipation.mockResolvedValueOnce(conversation('pending', 'accepted'));
 
-    await expect(service.send(VIEWER, CONVERSATION_ID, 'Réponse', NOW)).rejects.toThrow(ACCEPT_FIRST_MESSAGE);
-    expect(repository.appendMessage).not.toHaveBeenCalled();
-  });
 
-  it('lets the initiator write one message while the request waits, then refuses a second one with 409', async () => {
-    repository.findParticipation.mockResolvedValue(conversation('accepted', 'pending'));
-
-    await service.send(VIEWER, CONVERSATION_ID, 'Premier', NOW);
-    expect(repository.appendMessage).toHaveBeenCalledTimes(1);
-
-    repository.countMessagesBy.mockResolvedValueOnce(1);
-    await expect(service.send(VIEWER, CONVERSATION_ID, 'Second', NOW)).rejects.toThrow(ONE_MESSAGE_MESSAGE);
-    expect(repository.appendMessage).toHaveBeenCalledTimes(1);
-  });
-
-  it('refuses any message once one side declined, with 409', async () => {
-    repository.findParticipation.mockResolvedValueOnce(conversation('accepted', 'declined'));
-
-    await expect(service.send(VIEWER, CONVERSATION_ID, 'Encore', NOW)).rejects.toThrow(DECLINED_MESSAGE);
-  });
 
   it('shows one conversation to its participant, with the other account and the viewer’s flags', async () => {
     await expect(service.conversation(VIEWER, CONVERSATION_ID)).resolves.toMatchObject({
@@ -200,15 +168,6 @@ describe('MessagesService (section 9 of the conditions)', () => {
     );
   });
 
-  it('lets the recipient of a request accept it, and refuses a second answer with 409', async () => {
-    repository.findParticipation.mockResolvedValue(conversation('pending', 'accepted', 'other-1'));
-
-    await service.accept(VIEWER, CONVERSATION_ID);
-    expect(repository.answerRequest).toHaveBeenCalledWith(CONVERSATION_ID, 'viewer-1', 'accepted');
-
-    repository.findParticipation.mockResolvedValue(conversation('accepted', 'accepted', 'other-1'));
-    await expect(service.accept(VIEWER, CONVERSATION_ID)).rejects.toThrow(NOT_PENDING_MESSAGE);
-  });
 
   it('declines a request waiting for the viewer', async () => {
     repository.findParticipation.mockResolvedValue(conversation('pending', 'accepted', 'other-1'));

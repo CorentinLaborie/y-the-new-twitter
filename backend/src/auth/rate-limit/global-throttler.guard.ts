@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ThrottlerException, ThrottlerGuard, type ThrottlerRequest } from '@nestjs/throttler';
 
 /** Response header that says why a request was not counted: the counter store was unavailable (DEC-212). */
-export const RATE_LIMIT_ERROR_HEADER = 'X-RateLimit-Error';
-export const STORE_UNAVAILABLE = 'store-unavailable';
+const RATE_LIMIT_ERROR_HEADER = 'X-RateLimit-Error';
+const STORE_UNAVAILABLE = 'store-unavailable';
 
 /**
  * The global limit (DEC-212). A request over the limit is refused with 429, as usual. When the counter store is down

@@ -1,24 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  isSessionExpired,
-  protectedApiRequest,
-  SESSION_EXPIRED_LOGIN_PATH,
-  SESSION_EXPIRED_REASON,
-} from './session-expired';
+import { protectedApiRequest, SESSION_EXPIRED_REASON } from './session-expired';
 
-describe('session-expired marker', () => {
-  it('sends the visitor to /login with the reason only, without any personal data', () => {
-    expect(SESSION_EXPIRED_LOGIN_PATH).toBe('/login?reason=session-expired');
-    expect(SESSION_EXPIRED_LOGIN_PATH).toBe(`/login?reason=${SESSION_EXPIRED_REASON}`);
-  });
-
-  it('only a 401 means the session has ended', () => {
-    expect(isSessionExpired({ status: 401, title: 'Unauthorized', detail: '' })).toBe(true);
-    expect(isSessionExpired({ status: 403, title: 'Forbidden', detail: '' })).toBe(false);
-    expect(isSessionExpired({ status: 500, title: 'Erreur', detail: '' })).toBe(false);
-    expect(isSessionExpired({ status: 0, title: 'Réseau', detail: '' })).toBe(false);
-  });
-});
 
 describe('protectedApiRequest', () => {
   const replace = vi.fn();

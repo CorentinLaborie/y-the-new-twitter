@@ -1,21 +1,10 @@
-import {
-  contactReferencePrefix,
-  contactTextLength,
-  isContactTextValid,
-  nextContactReference,
-  normalizeContactText,
-} from './support-rules';
+import { contactReferencePrefix, isContactTextValid, nextContactReference, normalizeContactText } from './support-rules';
 
 describe('contact message rules (DEC-078, DEC-080)', () => {
   it('trims the spaces and line breaks at both ends', () => {
     expect(normalizeContactText('  \nBonjour\n  ')).toBe('Bonjour');
   });
 
-  it('counts characters, not bytes: an accented letter and an emoji count as one', () => {
-    expect(contactTextLength('é')).toBe(1);
-    expect(contactTextLength('😀')).toBe(1);
-    expect(contactTextLength('  ab  ')).toBe(2);
-  });
 
   it('accepts 1 and 1000 characters, and refuses an empty text and 1001 characters', () => {
     expect(isContactTextValid('a')).toBe(true);

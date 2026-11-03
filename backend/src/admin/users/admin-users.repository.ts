@@ -58,7 +58,7 @@ export type AccountDetails = AccountRow & {
 };
 
 /** The activity figures of one account, counted when the view is read. */
-export interface AccountActivity {
+interface AccountActivity {
   lastLoginAt: Date | null;
   activeSessionCount: number;
   reports: { total: number; open: number };

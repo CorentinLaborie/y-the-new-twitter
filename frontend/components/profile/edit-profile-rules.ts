@@ -2,7 +2,7 @@ import type { OwnProfileChanges } from '@/lib/profile-api';
 
 /** The profile photo is a JPEG, PNG or WebP image of at most 2 MB (plan L1, decisions 0.1 and 0.2). */
 const PHOTO_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
-export const PHOTO_MAX_BYTES = 2 * 1024 * 1024;
+const PHOTO_MAX_BYTES = 2 * 1024 * 1024;
 
 /** The French text for a photo the browser can check before any upload, or null when the photo is accepted. */
 export function photoError(photo: { type: string; size: number }): string | null {

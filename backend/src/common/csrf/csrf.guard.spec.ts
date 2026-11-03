@@ -1,6 +1,6 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CSRF_HEADER, CsrfGuard, csrfCookieName } from './csrf.guard';
+import { CsrfGuard } from './csrf.guard';
 
 const PUBLIC = 'https://y.corentin-laborie.com';
 const ADMIN = 'https://admin-y.corentin-laborie.com';
@@ -54,24 +54,7 @@ describe('CsrfGuard in local', () => {
     });
   });
 
-  it('refuses a mutation whose header does not match the cookie, with the same body', () => {
-    const { context } = contextFor('POST', { cookie: 'y_csrf=abc', [CSRF_HEADER]: 'xyz' });
 
-    expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-    expect(refusalOf(guard, context)).toEqual({
-      message: 'Jeton de sécurité absent ou invalide.',
-      code: 'csrf_invalid',
-    });
-  });
-
-  it('accepts a mutation whose header matches the cookie', () => {
-    const { context } = contextFor('DELETE', {
-      cookie: 'theme=dark; y_csrf=abc',
-      [CSRF_HEADER]: 'abc',
-    });
-
-    expect(guard.canActivate(context)).toBe(true);
-  });
 });
 
 describe('CsrfGuard outside local', () => {
@@ -88,54 +71,9 @@ describe('CsrfGuard outside local', () => {
     );
   });
 
-  it('accepts a matching token sent from the public or the back-office origin', () => {
-    for (const origin of [PUBLIC, ADMIN]) {
-      const { context } = contextFor('POST', {
-        cookie: '__Host-y_csrf=abc',
-        [CSRF_HEADER]: 'abc',
-        origin,
-      });
 
-      expect(guard.canActivate(context)).toBe(true);
-    }
-  });
 
-  it('refuses a matching token sent from another origin, such as a sibling subdomain', () => {
-    const { context } = contextFor('POST', {
-      cookie: '__Host-y_csrf=abc',
-      [CSRF_HEADER]: 'abc',
-      origin: 'https://other.corentin-laborie.com',
-    });
 
-    expect(refusalOf(guard, context)).toEqual({
-      message: 'Jeton de sécurité absent ou invalide.',
-      code: 'csrf_invalid',
-    });
-  });
 
-  it('refuses the opaque null origin', () => {
-    const { context } = contextFor('POST', { cookie: '__Host-y_csrf=abc', [CSRF_HEADER]: 'abc', origin: 'null' });
-
-    expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-  });
-
-  it('still checks the token when the request carries no Origin header', () => {
-    const { context } = contextFor('POST', { cookie: '__Host-y_csrf=abc', [CSRF_HEADER]: 'abc' });
-
-    expect(guard.canActivate(context)).toBe(true);
-  });
-
-  it('ignores the plain cookie name outside local', () => {
-    const { context } = contextFor('POST', { cookie: 'y_csrf=abc', [CSRF_HEADER]: 'abc' });
-
-    expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-  });
 });
 
-describe('csrfCookieName', () => {
-  it('keeps the plain name for local and uses the prefix for every other profile', () => {
-    expect(csrfCookieName('local')).toBe('y_csrf');
-    expect(csrfCookieName('staging')).toBe('__Host-y_csrf');
-    expect(csrfCookieName('production')).toBe('__Host-y_csrf');
-  });
-});

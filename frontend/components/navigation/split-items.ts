@@ -31,7 +31,7 @@ export function splitForBottomBar(entries: readonly NavEntry[]): SplitEntries {
  * How many rail entries fit in the viewport height, from the top. Never negative, never more than the entries.
  * Tablet landscape at a very low height is the only case where entries go to "Plus" (plan section 4.3).
  */
-export function railVisibleCount(viewportHeight: number, entryCount: number): number {
+function railVisibleCount(viewportHeight: number, entryCount: number): number {
   const room = Math.floor((viewportHeight - RAIL_FIXED_HEIGHT) / RAIL_ROW_HEIGHT);
   return Math.min(entryCount, Math.max(0, room));
 }

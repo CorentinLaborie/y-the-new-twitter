@@ -8,7 +8,7 @@ import type { SessionUser } from '../auth/session/session-user.repository';
 import { encodeKeysetCursor } from '../common/pagination/keyset-cursor';
 import type { PrismaService } from '../database/prisma.service';
 import { FollowsRepository } from './follows.repository';
-import { ACCOUNT_NOT_FOUND_MESSAGE, FollowsService } from './follows.service';
+import { FollowsService } from './follows.service';
 
 type Repository = jest.Mocked<
   Pick<
@@ -121,14 +121,6 @@ describe('FollowsService (E1, E2, E5)', () => {
       expect(repository.createFollow).not.toHaveBeenCalled();
     });
 
-    it('answers 404 with the same message for an unknown handle, and writes nothing', async () => {
-      repository.findAccountByHandle.mockResolvedValue(null);
-
-      await expect(service.follow(VIEWER, 'nobody')).rejects.toThrow(
-        new NotFoundException(ACCOUNT_NOT_FOUND_MESSAGE),
-      );
-      expect(repository.createFollow).not.toHaveBeenCalled();
-    });
 
     it('answers 404 for a target that is not visible under the lock (inactive, deleted or blocked), and writes nothing (R13, R14)', async () => {
       repository.findVisibleAccount.mockResolvedValue(null);

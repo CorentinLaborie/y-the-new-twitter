@@ -22,7 +22,7 @@ const ADMIN_NAV_ITEMS = [
  * The current section of the menu. The dashboard is only current on its own path; the other sections are current on
  * their path and below it.
  */
-export function isActiveNavItem(itemHref: string, pathname: string): boolean {
+function isActiveNavItem(itemHref: string, pathname: string): boolean {
   if (itemHref === '/admin') {
     return pathname === '/admin';
   }

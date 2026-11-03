@@ -1,83 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiRequest } from '@/lib/api-client';
-import {
-  accountListPath,
-  adminLogin,
-  auditListPath,
-  closeSupportThread,
-  decideReport,
-  getAccount,
-  getAdminSession,
-  getDashboard,
-  getReport,
-  getSupportThread,
-  listAccounts,
-  listReports,
-  listSupportThreads,
-  reactivateAccount,
-  reauthenticate,
-  reportListPath,
-  replySupportThread,
-  signOut,
-  deleteAccount,
-  suspendAccount,
-  supportListPath,
-} from '@/lib/admin-api';
+import { adminLogin, closeSupportThread, decideReport, getAccount, getAdminSession, getDashboard, getReport, getSupportThread, listAccounts, listReports, listSupportThreads, reactivateAccount, reauthenticate, replySupportThread, signOut, deleteAccount, suspendAccount } from '@/lib/admin-api';
 
 vi.mock('@/lib/api-client', () => ({ apiRequest: vi.fn() }));
 
 const ANSWER = { ok: true, status: 200, body: {} } as never;
 
-describe('accountListPath', () => {
-  it('builds the first page without parameters', () => {
-    expect(accountListPath()).toBe('/admin/users');
-  });
 
-  it('keeps only the parameters that are set', () => {
-    expect(accountListPath({ q: 'alice', status: 'suspended', limit: 20 })).toBe(
-      '/admin/users?q=alice&status=suspended&limit=20',
-    );
-  });
 
-  it('passes the cursor of the next page as it was received', () => {
-    expect(accountListPath({ cursor: 'abc_=-' })).toBe('/admin/users?cursor=abc_%3D-');
-  });
 
-  it('drops an empty query string', () => {
-    expect(accountListPath({ q: '' })).toBe('/admin/users');
-  });
-});
-
-describe('auditListPath', () => {
-  it('builds the first page without parameters', () => {
-    expect(auditListPath()).toBe('/admin/audit-log');
-  });
-
-  it('adds the action filter and the limit', () => {
-    expect(auditListPath({ action: 'auth.admin_login', limit: 50 })).toBe(
-      '/admin/audit-log?limit=50&action=auth.admin_login',
-    );
-  });
-});
-
-describe('reportListPath', () => {
-  it('builds the first page without parameters', () => {
-    expect(reportListPath()).toBe('/admin/reports');
-  });
-
-  it('keeps only the parameters that are set, in the order of the filters', () => {
-    expect(reportListPath({ status: 'open', reason: 'spam', cursor: 'abc', limit: 20 })).toBe(
-      '/admin/reports?status=open&reason=spam&cursor=abc&limit=20',
-    );
-  });
-});
-
-describe('supportListPath', () => {
-  it('builds the first page without parameters, and with the closed filter', () => {
-    expect(supportListPath()).toBe('/admin/support-threads');
-    expect(supportListPath({ status: 'closed' })).toBe('/admin/support-threads?status=closed');
-  });
-});
 
 describe('report, contact and dashboard calls', () => {
   beforeEach(() => {

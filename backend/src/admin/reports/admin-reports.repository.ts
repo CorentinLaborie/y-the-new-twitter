@@ -51,7 +51,7 @@ export interface ReportTarget {
 }
 
 /** One decision on a report, as the repository writes it. The rules that choose it are in the service. */
-export interface ReportDecisionWrite {
+interface ReportDecisionWrite {
   reportId: string;
   target: ReportTarget;
   now: Date;

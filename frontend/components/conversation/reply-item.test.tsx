@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReplyView } from '@/lib/replies-api';
-import { ReplyItem, type ReplyItemProps } from './reply-item';
+import { ReplyItem } from './reply-item';
+
+type ReplyItemProps = Parameters<typeof ReplyItem>[0];
 
 // jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
 beforeAll(() => {

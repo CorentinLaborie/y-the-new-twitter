@@ -14,7 +14,7 @@ import { FollowStateDto } from './dto/follow-state.dto';
 import { FollowsDb, FollowsRepository, FollowListRow } from './follows.repository';
 
 /** The 404 message of the follow routes: an unknown, inactive or blocked account (R13, R14). */
-export const ACCOUNT_NOT_FOUND_MESSAGE = 'Compte introuvable.';
+const ACCOUNT_NOT_FOUND_MESSAGE = 'Compte introuvable.';
 const SELF_FOLLOW_MESSAGE = 'Vous ne pouvez pas vous suivre vous-même.';
 
 /** The page of a list: the rows read with one more than the limit, so the presence of a next page is known. */

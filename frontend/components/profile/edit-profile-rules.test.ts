@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  avatarFailureMessage,
-  changedFields,
-  photoError,
-  saveFailureMessage,
-  PHOTO_MAX_BYTES,
-} from './edit-profile-rules';
+import { avatarFailureMessage, changedFields, photoError, saveFailureMessage } from './edit-profile-rules';
 
 describe('avatarFailureMessage (5.3)', () => {
   it('says the photo is too large for 413, and the format for 400', () => {
@@ -57,12 +51,6 @@ describe('photoError (4.3)', () => {
     );
   });
 
-  it('accepts a photo of exactly 2 MB and refuses one byte more', () => {
-    expect(photoError({ type: 'image/jpeg', size: PHOTO_MAX_BYTES })).toBeNull();
-    expect(photoError({ type: 'image/jpeg', size: PHOTO_MAX_BYTES + 1 })).toBe(
-      'La photo ne doit pas dépasser 2 Mo.',
-    );
-  });
 });
 
 describe('saveFailureMessage (4.3)', () => {

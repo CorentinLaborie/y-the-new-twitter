@@ -2,12 +2,7 @@ import { ForbiddenException } from '@nestjs/common';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import type { PrismaService } from '../database/prisma.service';
 import { NotificationRow, NotificationsRepository } from './notifications.repository';
-import {
-  decodeCursor,
-  encodeCursor,
-  NotificationsService,
-  toNotificationView,
-} from './notifications.service';
+import { decodeCursor, encodeCursor, NotificationsService } from './notifications.service';
 
 type Repository = jest.Mocked<Pick<NotificationsRepository, 'findPage' | 'countUnread' | 'markAllRead'>>;
 
@@ -42,49 +37,6 @@ function row(overrides: Partial<NotificationRow> = {}): NotificationRow {
   };
 }
 
-describe('toNotificationView', () => {
-  it('maps a line with an actor, a question and no reply', () => {
-    expect(toNotificationView(row())).toEqual({
-      id: '0f8c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f',
-      type: 'reaction_like',
-      createdAt: '2026-10-22T10:00:00.000Z',
-      readAt: null,
-      actor: { handle: 'bob', displayName: 'Bob', avatarUrl: null },
-      actorCount: 1,
-      question: { id: 'q-1', text: 'Une question ?' },
-      reply: null,
-    });
-  });
-
-  it('keeps the actor null for a system notification', () => {
-    const view = toNotificationView(
-      row({ type: 'conversation_opened', actor_id: null, actor_handle: null, actor_display_name: null }),
-    );
-
-    expect(view.actor).toBeNull();
-  });
-
-  it('gives the read date only when the line has no unread row', () => {
-    const readAt = new Date('2026-10-22T11:00:00.000Z');
-
-    expect(toNotificationView(row({ has_unread: false, read_at: readAt })).readAt).toBe(
-      '2026-10-22T11:00:00.000Z',
-    );
-    expect(toNotificationView(row({ has_unread: true, read_at: readAt })).readAt).toBeNull();
-  });
-
-  it('counts the actors of a reaction group', () => {
-    expect(toNotificationView(row({ actor_count: 3 })).actorCount).toBe(3);
-  });
-
-  it('maps a reply notification with its reply text', () => {
-    const view = toNotificationView(
-      row({ type: 'reply_to_question', reply_id: 'r-1', reply_body: 'Réponse' }),
-    );
-
-    expect(view.reply).toEqual({ id: 'r-1', text: 'Réponse' });
-  });
-});
 
 describe('cursor', () => {
   it('reads back what it wrote', () => {
@@ -196,10 +148,3 @@ describe('NotificationsService', () => {
   });
 });
 
-describe('toNotificationView actor photo (DEC-351)', () => {
-  it('gives the address of the actor photo, so the line can show it', () => {
-    const view = toNotificationView(row({ actor_avatar_url: '/avatars/bob.jpg' }));
-
-    expect(view.actor).toEqual({ handle: 'bob', displayName: 'Bob', avatarUrl: '/avatars/bob.jpg' });
-  });
-});

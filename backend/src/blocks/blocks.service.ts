@@ -13,7 +13,7 @@ import type { BlockPageDto } from './dto/block-page.dto';
 import type { FollowListQueryDto } from '../follows/dto/follow-list-query.dto';
 
 /** The 404 message of the block routes: an unknown or inactive account (plan L6, 5.2). */
-export const BLOCK_TARGET_NOT_FOUND = 'Compte introuvable.';
+const BLOCK_TARGET_NOT_FOUND = 'Compte introuvable.';
 const SELF_BLOCK_MESSAGE = 'Vous ne pouvez pas vous bloquer.';
 
 /**

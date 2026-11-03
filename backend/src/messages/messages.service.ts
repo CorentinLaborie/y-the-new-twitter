@@ -12,13 +12,13 @@ import { ConversationListQueryDto, MessageQueryDto, StartConversationDto } from 
 const RECIPIENT_NOT_FOUND_MESSAGE = 'Compte introuvable.';
 const SELF_MESSAGE = 'Vous ne pouvez pas vous écrire à vous-même.';
 const CONVERSATION_NOT_FOUND_MESSAGE = 'Conversation introuvable.';
-export const DECLINED_MESSAGE = 'Cette demande a été refusée.';
-export const ACCEPT_FIRST_MESSAGE = 'Acceptez la demande avant de répondre.';
-export const ONE_MESSAGE_MESSAGE = 'La demande attend une réponse : un seul message à la fois.';
-export const NOT_PENDING_MESSAGE = 'Cette demande n’est plus en attente.';
+const DECLINED_MESSAGE = 'Cette demande a été refusée.';
+const ACCEPT_FIRST_MESSAGE = 'Acceptez la demande avant de répondre.';
+const ONE_MESSAGE_MESSAGE = 'La demande attend une réponse : un seul message à la fois.';
+const NOT_PENDING_MESSAGE = 'Cette demande n’est plus en attente.';
 
 /** The key of a direct conversation: the two account ids, sorted, joined by a colon (one conversation per pair). */
-export function directKeyOf(firstId: string, secondId: string): string {
+function directKeyOf(firstId: string, secondId: string): string {
   return [firstId, secondId].sort().join(':');
 }
 

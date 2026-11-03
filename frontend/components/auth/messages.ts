@@ -16,7 +16,7 @@ const UNEXPECTED_ERROR_MESSAGE = 'Une erreur est survenue. Réessayez.';
 export const SESSION_EXPIRED_MESSAGE = 'Votre session a expiré. Reconnectez-vous pour continuer.';
 
 /** Wait shown after a 429: "45 secondes", "1 minute", "15 minutes". Rounded up to the minute from 60 s. */
-export function formatWait(seconds: number): string {
+function formatWait(seconds: number): string {
   if (seconds < 60) {
     return seconds <= 1 ? '1 seconde' : `${seconds} secondes`;
   }

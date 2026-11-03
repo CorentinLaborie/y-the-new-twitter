@@ -2,7 +2,8 @@ import { Logger } from '@nestjs/common';
 import { eraseAccount } from './account-erasure';
 import { Clock } from './clock';
 import { MaintenancePrismaService } from './maintenance-prisma.service';
-import { PURGE_JOB_NAME, PurgeService } from './purge.service';
+import { PurgeService } from './purge.service';
+
 
 jest.mock('./account-erasure', () => ({ eraseAccount: jest.fn() }));
 
@@ -31,7 +32,7 @@ function fakeDatabase(
       typeof arg === 'function' ? arg({}) : Promise.all(arg),
     ),
     // The lease statement returns the row when this instance takes the lease, and no row when another holds it.
-    $queryRaw: jest.fn().mockResolvedValue([{ key: PURGE_JOB_NAME }]),
+    $queryRaw: jest.fn().mockResolvedValue([{ key: 'retention-purge' }]),
   };
 }
 

@@ -11,7 +11,7 @@ import type { ReplyReactionKind, ReplyView } from '@/lib/replies-api';
 import { DeleteReplyDialog } from './delete-reply-dialog';
 import { MentionText } from './mention-text';
 
-export type ReplyItemProps = {
+type ReplyItemProps = {
   reply: ReplyView;
   /** Handle of the signed-in viewer, or null when nobody is signed in. */
   viewerHandle: string | null;

@@ -15,7 +15,7 @@ const CONTENT_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 /** The purge lease lasts 10 minutes (owner decision 2026-10-20): a crashed run is retried after that. */
 const PURGE_LEASE_MS = 10 * 60 * 1000;
 
-export const PURGE_JOB_NAME = 'retention-purge';
+const PURGE_JOB_NAME = 'retention-purge';
 
 /** One account is erased in one transaction, which may take longer than the default 5 seconds (R16). */
 const ACCOUNT_PURGE_TIMEOUT_MS = 60 * 1000;

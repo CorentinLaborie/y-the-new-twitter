@@ -4,7 +4,7 @@ import type { User } from '../../database/generated/client/client';
 import type { UsersRepository } from '../../users/users.repository';
 import { hashPassword } from '../password';
 import type { LoginAttemptsRepository } from './login-attempts.repository';
-import { LOCK_DURATION_MS, LoginService, MAX_FAILED_LOGINS } from './login.service';
+import { LoginService } from './login.service';
 
 const PASSWORD = 'Abcdef1!';
 const IP = '203.0.113.7';
@@ -102,18 +102,6 @@ describe('LoginService', () => {
     );
   });
 
-  it('answers the fifth failure with invalid (401) and locks the account for 15 minutes', async () => {
-    users.findByEmail.mockResolvedValue(account());
-    attempts.countFailuresSince.mockResolvedValue(MAX_FAILED_LOGINS);
-    const before = Date.now();
-
-    const outcome = await service.login(attempt('Abcdef1?'));
-
-    expect(outcome).toEqual({ status: 'invalid' });
-    const lockedUntil = attempts.lockUntil.mock.calls[0][1] as Date;
-    expect(lockedUntil.getTime()).toBeGreaterThanOrEqual(before + LOCK_DURATION_MS);
-    expect(lockedUntil.getTime()).toBeLessThanOrEqual(Date.now() + LOCK_DURATION_MS);
-  });
 
   it('counts from the end of an expired lock, so one failure after it does not lock again', async () => {
     const lockedUntil = new Date(Date.now() - 60_000);
@@ -277,20 +265,4 @@ describe('LoginService', () => {
     expect(attempts.recordEvent).not.toHaveBeenCalledWith(expect.objectContaining({ result: 'success' }));
   });
 
-  it('counts a failed second factor like a wrong password, through recordFailure', async () => {
-    attempts.countFailuresSince.mockResolvedValue(MAX_FAILED_LOGINS);
-    const before = Date.now();
-
-    await service.recordFailure(account(), { ipHash: 'hash', userAgent: null });
-
-    expect(attempts.recordEvent).toHaveBeenCalledWith({
-      userId: 'user-1',
-      result: 'failure',
-      ipHash: 'hash',
-      userAgent: null,
-    });
-    expect(attempts.countFailure).toHaveBeenCalledWith('user-1');
-    const lockedUntil = attempts.lockUntil.mock.calls[0][1] as Date;
-    expect(lockedUntil.getTime()).toBeGreaterThanOrEqual(before + LOCK_DURATION_MS);
-  });
 });

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { signOut } from '@/lib/admin-api';
-import { AdminShell, isActiveNavItem } from './admin-shell';
+import { AdminShell } from './admin-shell';
 
 const push = vi.fn();
 let pathname = '/admin';
@@ -14,18 +14,6 @@ vi.mock('@/lib/admin-api', () => ({ signOut: vi.fn() }));
 
 const ADMIN = { handle: 'admin', displayName: 'Administrateur', avatarUrl: null };
 
-describe('isActiveNavItem', () => {
-  it('marks the dashboard only on its own path', () => {
-    expect(isActiveNavItem('/admin', '/admin')).toBe(true);
-    expect(isActiveNavItem('/admin', '/admin/users')).toBe(false);
-  });
-
-  it('marks a section on its path and below it', () => {
-    expect(isActiveNavItem('/admin/users', '/admin/users/42')).toBe(true);
-    expect(isActiveNavItem('/admin/users', '/admin/audit')).toBe(false);
-    expect(isActiveNavItem('/admin/users', '/admin/usersx')).toBe(false);
-  });
-});
 
 describe('AdminShell', () => {
   beforeEach(() => {

@@ -12,13 +12,13 @@ import { apiRequest, type ApiProblem, type ApiResult } from '@/lib/api-client';
 /** Value of the `reason` parameter of the login URL. */
 export const SESSION_EXPIRED_REASON = 'session-expired';
 
-export const SESSION_EXPIRED_LOGIN_PATH = `/login?reason=${SESSION_EXPIRED_REASON}`;
+const SESSION_EXPIRED_LOGIN_PATH = `/login?reason=${SESSION_EXPIRED_REASON}`;
 
 type ApiMethod = Parameters<typeof apiRequest>[0];
 type ApiOptions = Parameters<typeof apiRequest>[2];
 
 /** True when the API refused the call because the visitor has no valid session. */
-export function isSessionExpired(problem: ApiProblem): boolean {
+function isSessionExpired(problem: ApiProblem): boolean {
   return problem.status === 401;
 }
 

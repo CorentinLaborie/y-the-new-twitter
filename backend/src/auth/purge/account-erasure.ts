@@ -3,10 +3,10 @@ import { lockAccountGraphExclusive } from '../../users/account-graph-lock';
 import { recalculateCounters } from '../../users/recalculate-counters';
 
 /** The maintenance client or a transaction of it: the purge runs on the maintenance account only (DEC-059). */
-export type ErasureDb = Prisma.TransactionClient;
+type ErasureDb = Prisma.TransactionClient;
 
 /** Shown as the name of an erased account (DEC-029, R16). */
-export const ERASED_DISPLAY_NAME = 'Compte supprimé';
+const ERASED_DISPLAY_NAME = 'Compte supprimé';
 
 /** A password hash no password can match: a malformed hash is refused by verifyPassword. */
 const UNUSABLE_PASSWORD_HASH = '!erased';

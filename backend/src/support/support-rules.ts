@@ -12,7 +12,7 @@ export function normalizeContactText(text: string): string {
 }
 
 /** Number of characters of a contact message, after normalizeContactText. An emoji counts as one. */
-export function contactTextLength(text: string): number {
+function contactTextLength(text: string): number {
   return Array.from(normalizeContactText(text)).length;
 }
 

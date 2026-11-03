@@ -27,7 +27,7 @@ const MAX_NEXT_LENGTH = 2048;
 // Control characters and backslashes: browsers may read "/\host" as a protocol-relative URL.
 const FORBIDDEN_CHARACTERS = /[\u0000-\u001f\u007f\\]/;
 
-export function isProtectedPath(pathname: string): boolean {
+function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PATHS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 

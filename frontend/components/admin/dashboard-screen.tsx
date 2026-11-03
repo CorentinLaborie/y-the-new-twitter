@@ -12,7 +12,7 @@ import { formatAdminDate, formatAdminDateTime, formatAdminDuration } from '@/lib
 import type { ApiProblem } from '@/lib/api-client';
 
 /** How many of the latest actions the dashboard shows. */
-export const RECENT_ACTIONS_LIMIT = 4;
+const RECENT_ACTIONS_LIMIT = 4;
 
 type ActionsState =
   { status: 'loading' } | { status: 'error'; problem: ApiProblem } | { status: 'ready'; items: AuditEntry[] };

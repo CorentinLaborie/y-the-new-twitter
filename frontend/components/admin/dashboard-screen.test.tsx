@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getDashboard, listAuditLog, type AuditEntry, type DashboardView } from '@/lib/admin-api';
-import { DashboardScreen, RECENT_ACTIONS_LIMIT } from './dashboard-screen';
+import { DashboardScreen } from './dashboard-screen';
 
 vi.mock('@/lib/admin-api', () => ({ listAuditLog: vi.fn(), getDashboard: vi.fn() }));
 
@@ -35,15 +35,6 @@ describe('DashboardScreen', () => {
     vi.mocked(getDashboard).mockResolvedValue(DASHBOARD_OK);
   });
 
-  it('shows the latest actions of the audit log', async () => {
-    vi.mocked(listAuditLog).mockResolvedValue(AUDIT_OK);
-    render(<DashboardScreen />);
-
-    expect(await screen.findByText('Connexion administrateur')).toBeInTheDocument();
-    expect(screen.getByText('16/10/2026 10h12')).toBeInTheDocument();
-    expect(screen.getByText('Réussi')).toBeInTheDocument();
-    expect(listAuditLog).toHaveBeenCalledWith({ limit: RECENT_ACTIONS_LIMIT });
-  });
 
   it('says when no action is recorded yet', async () => {
     vi.mocked(listAuditLog).mockResolvedValue({

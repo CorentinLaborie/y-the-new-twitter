@@ -29,7 +29,7 @@ const API_BASE_URL = apiBaseUrl();
  * The address a request is sent to. A relative address (empty API address) only works in the browser: the server
  * (the back-office guard, which runs in Node) calls the API on this machine instead.
  */
-export function requestBaseUrl(
+function requestBaseUrl(
   base: string,
   onServer: boolean,
   internal: string | undefined = process.env.API_INTERNAL_URL,

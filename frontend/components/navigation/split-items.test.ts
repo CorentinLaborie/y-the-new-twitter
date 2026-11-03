@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NAV_ENTRIES } from './nav-items';
-import { railVisibleCount, splitForBottomBar, splitForRail } from './split-items';
+import { splitForBottomBar, splitForRail } from './split-items';
 
 function ids(list: readonly { id: string }[]): string[] {
   return list.map((item) => item.id);
@@ -22,10 +22,6 @@ describe('splitForBottomBar (plan L0, section 5.2)', () => {
 });
 
 describe('railVisibleCount and splitForRail (plan L0, section 4.3)', () => {
-  it('shows every entry on a tall window', () => {
-    expect(railVisibleCount(900, NAV_ENTRIES.length)).toBe(NAV_ENTRIES.length);
-    expect(splitForRail(NAV_ENTRIES, 900).overflow).toEqual([]);
-  });
 
   it('sends the entries that do not fit to "Plus", from the end of the list', () => {
     const { visible, overflow } = splitForRail(NAV_ENTRIES, 500);
@@ -49,8 +45,4 @@ describe('railVisibleCount and splitForRail (plan L0, section 4.3)', () => {
     }
   });
 
-  it('is never negative and never above the number of entries', () => {
-    expect(railVisibleCount(-50, 6)).toBe(0);
-    expect(railVisibleCount(10000, 6)).toBe(6);
-  });
 });

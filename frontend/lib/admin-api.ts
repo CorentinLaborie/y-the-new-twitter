@@ -74,7 +74,7 @@ export type AuditListOptions = {
 };
 
 /** Path of the account search, with only the parameters that are set. */
-export function accountListPath(options: AccountListOptions = {}): string {
+function accountListPath(options: AccountListOptions = {}): string {
   return `/admin/users${withQuery({
     q: options.q,
     status: options.status,
@@ -84,7 +84,7 @@ export function accountListPath(options: AccountListOptions = {}): string {
 }
 
 /** Path of the audit log listing, with only the parameters that are set. */
-export function auditListPath(options: AuditListOptions = {}): string {
+function auditListPath(options: AuditListOptions = {}): string {
   return `/admin/audit-log${withQuery({
     cursor: options.cursor,
     limit: options.limit,
@@ -321,7 +321,7 @@ export type DashboardView = {
 };
 
 /** Path of the report list, with only the parameters that are set. */
-export function reportListPath(options: ReportListOptions = {}): string {
+function reportListPath(options: ReportListOptions = {}): string {
   return `/admin/reports${withQuery({
     status: options.status,
     reason: options.reason,
@@ -331,7 +331,7 @@ export function reportListPath(options: ReportListOptions = {}): string {
 }
 
 /** Path of the thread list, with only the parameters that are set. */
-export function supportListPath(options: SupportListOptions = {}): string {
+function supportListPath(options: SupportListOptions = {}): string {
   return `/admin/support-threads${withQuery({
     status: options.status,
     cursor: options.cursor,

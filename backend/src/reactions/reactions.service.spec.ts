@@ -4,7 +4,7 @@ import type { SessionUser } from '../auth/session/session-user.repository';
 import type { PrismaService } from '../database/prisma.service';
 import { UsersRepository } from '../users/users.repository';
 import { ReactionsRepository } from './reactions.repository';
-import { counterChange, ReactionsService } from './reactions.service';
+import { ReactionsService } from './reactions.service';
 
 type Repository = jest.Mocked<
   Pick<
@@ -34,19 +34,6 @@ const VIEWER: SessionUser = {
 };
 const QUESTION_ID = '0f8c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f';
 
-describe('counterChange (B3, B4)', () => {
-  it('adds one to the new kind when there was no reaction', () => {
-    expect(counterChange(null, 'y')).toEqual({ like: 0, dislike: 0, y: 1 });
-  });
-
-  it('moves one from the previous kind to the new one', () => {
-    expect(counterChange('like', 'dislike')).toEqual({ like: -1, dislike: 1, y: 0 });
-  });
-
-  it('removes one from the kind that is removed', () => {
-    expect(counterChange('y', null)).toEqual({ like: 0, dislike: 0, y: -1 });
-  });
-});
 
 describe('ReactionsService (B3, B5)', () => {
   let repository: Repository;

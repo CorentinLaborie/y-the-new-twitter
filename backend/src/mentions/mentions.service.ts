@@ -5,7 +5,7 @@ import { MentionsDb, MentionsRepository, MentionTarget } from './mentions.reposi
 const MENTION_REFUSED = 'Un des comptes mentionnés ne peut pas être mentionné.';
 
 /** How many accounts the selector of a mention proposes. */
-export const SUGGESTION_LIMIT = 5;
+const SUGGESTION_LIMIT = 5;
 
 /** An account the selector proposes: its handle and its display name. */
 export type MentionSuggestion = { handle: string; displayName: string; avatarUrl: string | null };
@@ -14,7 +14,7 @@ export type MentionSuggestion = { handle: string; displayName: string; avatarUrl
  * Keeps at most SUGGESTION_LIMIT accounts: the handles that start with the query first, then the others that contain it,
  * each group in the order it came (handle order). The comparison ignores case.
  */
-export function rankMentionSuggestions(
+function rankMentionSuggestions(
   candidates: readonly MentionSuggestion[],
   query: string,
 ): MentionSuggestion[] {

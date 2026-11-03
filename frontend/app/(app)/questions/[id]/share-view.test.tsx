@@ -2,7 +2,10 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Conversation } from '@/components/conversation/conversation';
 import { deleteReaction, putReaction } from '@/lib/feed-api';
-import { getQuestion, type QuestionDetail } from '@/lib/question-detail-api';
+import type { FeedQuestion } from '@/lib/feed-api';
+import { getQuestion } from '@/lib/question-detail-api';
+
+type QuestionDetail = FeedQuestion & { counters: FeedQuestion['counters'] & { reply: number } };
 import { ShareView } from './share-view';
 
 // The conversation is written in another part of M3 (lot C): this test checks the props the view passes to it.

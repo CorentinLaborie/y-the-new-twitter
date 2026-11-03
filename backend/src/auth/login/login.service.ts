@@ -8,9 +8,9 @@ import type { SessionUser } from '../session/session-user.repository';
 import { LoginAttemptsRepository } from './login-attempts.repository';
 
 /** Failed attempts on one account before it is locked (section 9.4). */
-export const MAX_FAILED_LOGINS = 5;
+const MAX_FAILED_LOGINS = 5;
 /** Lock duration after the fifth failure, in milliseconds (section 9.4). */
-export const LOCK_DURATION_MS = 15 * 60 * 1000;
+const LOCK_DURATION_MS = 15 * 60 * 1000;
 /** Failures count within this window, in milliseconds (section 9.4: 5 failures in 15 minutes). */
 const FAILURE_WINDOW_MS = 15 * 60 * 1000;
 const USER_AGENT_MAX_LENGTH = 255;

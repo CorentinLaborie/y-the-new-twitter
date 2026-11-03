@@ -31,7 +31,7 @@ interface AuditChainCheck {
  * A NULL value is `null`, and details are their canonical JSON text (DEC-064). The text comes from
  * the values the application holds, never from what the database returns.
  */
-export function auditMessage(entry: AuditEntry): string {
+function auditMessage(entry: AuditEntry): string {
   return JSON.stringify([
     entry.prevHash,
     entry.id,

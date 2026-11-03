@@ -9,7 +9,7 @@ import { ReactionResponseDto } from './dto/reaction-response.dto';
 import { CounterChange, ReactionsDb, ReactionsRepository } from './reactions.repository';
 
 /** How the three counters change when a reaction goes from `previous` to `next` (null: none). */
-export function counterChange(previous: ReactionKind | null, next: ReactionKind | null): CounterChange {
+function counterChange(previous: ReactionKind | null, next: ReactionKind | null): CounterChange {
   const change = { like: 0, dislike: 0, y: 0 };
   if (previous !== null) {
     change[previous] -= 1;

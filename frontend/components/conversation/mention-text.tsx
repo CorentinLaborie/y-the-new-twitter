@@ -20,7 +20,7 @@ export type Mention = {
 };
 
 /** The mentions of a text, in order of appearance. */
-export function findMentions(text: string): Mention[] {
+function findMentions(text: string): Mention[] {
   return [...text.matchAll(MENTION_PATTERN)].map((match) => ({
     handle: match[1],
     index: match.index,

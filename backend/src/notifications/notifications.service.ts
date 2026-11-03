@@ -27,7 +27,7 @@ export interface NotificationPage {
 }
 
 /** Turns one database row into the view the API returns. */
-export function toNotificationView(row: NotificationRow): NotificationView {
+function toNotificationView(row: NotificationRow): NotificationView {
   return {
     id: row.id,
     type: row.type,

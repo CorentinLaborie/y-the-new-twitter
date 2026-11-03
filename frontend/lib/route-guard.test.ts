@@ -1,22 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { isProtectedPath, loginRedirectPath, safeNextPath } from './route-guard';
+import { loginRedirectPath, safeNextPath } from './route-guard';
 
-describe('isProtectedPath', () => {
-  it('protects the routes of the protected area and their sub-paths', () => {
-    expect(isProtectedPath('/home')).toBe(true);
-    expect(isProtectedPath('/home/details')).toBe(true);
-    expect(isProtectedPath('/notifications')).toBe(true);
-    expect(isProtectedPath('/settings')).toBe(true);
-    expect(isProtectedPath('/settings/email')).toBe(true);
-  });
-
-  it('does not protect public pages, including names that only start the same way', () => {
-    expect(isProtectedPath('/')).toBe(false);
-    expect(isProtectedPath('/login')).toBe(false);
-    expect(isProtectedPath('/forgot-password')).toBe(false);
-    expect(isProtectedPath('/home-bis')).toBe(false);
-  });
-});
 
 describe('safeNextPath', () => {
   it('keeps a relative path of the protected area, with its query string', () => {

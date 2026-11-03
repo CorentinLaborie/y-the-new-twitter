@@ -4,7 +4,7 @@ import { timingSafeEqual, randomBytes } from 'node:crypto';
 import { Request, Response } from 'express';
 import { allowedOrigins } from '../../config/allowed-origins';
 
-export const CSRF_HEADER = 'x-csrf-token';
+const CSRF_HEADER = 'x-csrf-token';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -12,7 +12,7 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
  * The cookie name. Outside local it has the __Host- prefix: a browser then accepts it only when it is Secure, has
  * path / and no Domain attribute, so a sibling subdomain cannot set or overwrite it (the cookie is HTTPS-only there).
  */
-export function csrfCookieName(profile: string): string {
+function csrfCookieName(profile: string): string {
   return profile === 'local' ? 'y_csrf' : '__Host-y_csrf';
 }
 

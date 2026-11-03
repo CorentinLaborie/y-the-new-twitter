@@ -10,7 +10,7 @@ import { ProfileResponseDto } from './dto/profile-response.dto';
 import { ProfilesRepository } from './profiles.repository';
 
 /** The 404 message of a profile that does not exist or is not visible to the viewer (same as the follow routes). */
-export const PROFILE_NOT_FOUND_MESSAGE = 'Compte introuvable.';
+const PROFILE_NOT_FOUND_MESSAGE = 'Compte introuvable.';
 
 /**
  * Public profiles (L1). A profile is visible when its account is active and not blocked in either direction with the
