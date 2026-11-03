@@ -8,7 +8,7 @@ const WINDOW_MS = 15 * MINUTE_MS;
 /**
  * The store with the database mocked: the counting statement is one query that returns the hits of the window and
  * the seconds left. The window reset itself happens in that statement, so these tests cover what the store does
- * with the answer and the statement it sends. The reset against a real database is covered by the e2e spec.
+ * with the answer and the statement it sends. The reset against a real database is not tested in this file.
  */
 describe('PostgresRateLimitStorage (section 9.4, DEC-194)', () => {
   let queryRaw: jest.Mock;

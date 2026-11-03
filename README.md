@@ -42,7 +42,6 @@ The backend refuses to start when a required secret is missing, and prints only 
 ```bash
 cd backend
 npm run lint && npm test             # unit tests (no Docker needed)
-npm run test:e2e                     # end-to-end and migration tests: Docker must run
 npm run openapi:check                # the API contract matches backend/openapi.yaml
 npm run security:code                # Semgrep, through Docker
 npm run security:dependencies        # Dependency-Check, through Docker; set NVD_API_KEY in the environment (optional, slow without it)

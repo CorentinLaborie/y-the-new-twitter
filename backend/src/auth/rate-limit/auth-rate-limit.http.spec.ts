@@ -32,7 +32,7 @@ class ProbeController {
 
 /**
  * The guard over HTTP, with the in-memory throttler storage in place of PostgreSQL: this file tests the guard, and the
- * PostgreSQL store has its own unit and e2e specs. Trust proxy is on so each test can pick its client IP.
+ * PostgreSQL store has its own unit specs. Trust proxy is on so each test can pick its client IP.
  */
 describe('AuthRateLimit over HTTP (in-memory storage)', () => {
   let app: INestApplication;
