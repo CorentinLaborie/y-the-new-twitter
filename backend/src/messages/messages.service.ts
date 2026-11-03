@@ -134,6 +134,7 @@ export class MessagesService {
       viewer.id,
       query.requests === true,
       query.archived === true,
+      query.blocked === true,
       after,
       limit + 1,
     );

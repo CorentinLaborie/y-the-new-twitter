@@ -42,6 +42,15 @@ export class ConversationListQueryDto {
   @IsBoolean()
   archived?: boolean;
 
+  @ApiPropertyOptional({
+    description:
+      'true: the conversations with an account the viewer has blocked, archived or not. Absent or false: the others.',
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => value === 'true' || value === true)
+  @IsBoolean()
+  blocked?: boolean;
+
   @ApiPropertyOptional({ maxLength: CURSOR_MAX_LENGTH })
   @IsOptional()
   @IsString()

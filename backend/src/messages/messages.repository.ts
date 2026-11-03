@@ -198,12 +198,14 @@ export class MessagesRepository {
   /**
    * One page of the viewer's conversations: the accepted ones, or the requests waiting for the viewer, either still
    * active (not archived) or archived. Only the conversations whose other participant may still be written to are
-   * listed; the newest message comes first.
+   * listed; the newest message comes first. With `blocked`, the list holds the conversations with an account the viewer
+   * has blocked, archived or not, and the other participant is the one the viewer blocked.
    */
   listConversations(
     viewerId: string,
     requests: boolean,
     archived: boolean,
+    blocked: boolean,
     after: KeysetPosition | undefined,
     take: number,
   ) {
@@ -213,11 +215,16 @@ export class MessagesRepository {
           {
             userId: viewerId,
             requestStatus: requests ? 'pending' : 'accepted',
-            archivedAt: archived ? { not: null } : null,
+            archivedAt: blocked ? undefined : archived ? { not: null } : null,
           },
           {
             conversation: {
-              participants: { some: { userId: { not: viewerId }, user: visibleAccountTo(viewerId) } },
+              participants: {
+                some: {
+                  userId: { not: viewerId },
+                  user: blocked ? { blockedBy: { some: { blockerId: viewerId } } } : visibleAccountTo(viewerId),
+                },
+              },
             },
           },
           afterConversation(after),

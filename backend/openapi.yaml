@@ -1788,6 +1788,13 @@ paths:
             the active ones."
           schema:
             type: boolean
+        - name: blocked
+          required: false
+          in: query
+          description: "true: the conversations with an account the viewer has blocked,
+            archived or not. Absent or false: the others."
+          schema:
+            type: boolean
         - name: cursor
           required: false
           in: query

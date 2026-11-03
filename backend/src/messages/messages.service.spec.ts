@@ -224,7 +224,7 @@ describe('MessagesService (section 9 of the conditions)', () => {
 
     const page = await service.list(VIEWER, { requests: true, limit: 2 } as never);
 
-    expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', true, false, undefined, 3);
+    expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', true, false, false, undefined, 3);
     expect(page.conversations.map((item) => item.id)).toEqual(['c-1', 'c-2']);
     expect(page.conversations[0]).toMatchObject({
       status: 'pending',
@@ -281,8 +281,25 @@ describe('MessagesService (section 9 of the conditions)', () => {
 
     const page = await service.list(VIEWER, { requests: false, archived: true, limit: 20 } as never);
 
-    expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', false, true, undefined, 21);
+    expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', false, true, false, undefined, 21);
     expect(page.conversations[0]).toMatchObject({ muted: true, archived: true });
+  });
+
+  it('lists the conversations with the accounts the viewer blocked when asked', async () => {
+    const row = {
+      conversationId: CONVERSATION_ID,
+      requestStatus: 'accepted' as const,
+      lastReadAt: null,
+      mutedAt: null,
+      archivedAt: null,
+      conversation: conversation('accepted', 'accepted'),
+    };
+    repository.listConversations.mockResolvedValueOnce([row] as never);
+
+    const page = await service.list(VIEWER, { blocked: true, limit: 20 } as never);
+
+    expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', false, false, true, undefined, 21);
+    expect(page.conversations).toHaveLength(1);
   });
 
   it('shows a conversation neither muted nor archived when the viewer’s row has no time', async () => {
