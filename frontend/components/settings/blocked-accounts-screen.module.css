@@ -1,0 +1,14 @@
+/* The photo, or the initial, of a blocked account at the start of its row (DEC-351). */
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent, #e0e7ff);
+  color: var(--primary, #4f46e5);
+  font-size: 14px;
+  font-weight: 600;
+}

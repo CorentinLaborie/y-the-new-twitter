@@ -22,7 +22,7 @@ const REPLY: ReplyView = {
   questionId: 'question-1',
   text: '@Robert44 je rejoins ton point.',
   createdAt: '2026-10-16T16:40:00Z',
-  author: { handle: 'corentin', displayName: 'Corentin Laborie' },
+  author: { handle: 'corentin', displayName: 'Corentin Laborie', avatarUrl: null },
   counters: { like: 3, dislike: 1 },
   viewerReactions: [],
   mentionLinks: [],

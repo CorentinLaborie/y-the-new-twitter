@@ -1,4 +1,4 @@
-import { avatarInitial } from '@/components/feed/avatar-initial';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import type { NavViewer } from './nav-items';
 import { classNames } from './nav-link';
 import styles from './navigation.module.css';
@@ -29,9 +29,7 @@ export function AccountButton({
       aria-label={variant === 'rail' ? `Options du compte de ${viewer.displayName}` : undefined}
       onClick={onClick}
     >
-      <span className={styles.avatar} aria-hidden="true">
-        {avatarInitial(viewer.displayName)}
-      </span>
+      <UserAvatar className={styles.avatar} displayName={viewer.displayName} avatarUrl={viewer.avatarUrl} />
       {variant === 'rail' ? null : (
         <span className={styles.accountText}>
           <span className={styles.accountName}>{viewer.displayName}</span>

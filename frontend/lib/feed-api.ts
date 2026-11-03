@@ -50,7 +50,7 @@ export type FeedQuestion = ReactionState & {
   hashtags: string[];
   createdAt: string;
   /** `viewerFollows`: whether the signed-in viewer follows the author (false on their own questions). */
-  author: { handle: string; displayName: string; viewerFollows: boolean };
+  author: { handle: string; displayName: string; avatarUrl: string | null; viewerFollows: boolean };
   /** The reactions and the reply count (QuestionCountersDto). The reaction answers do not send `reply`. */
   counters: ReactionCounters & { reply: number };
   /** `viewerSaved`: whether the signed-in viewer saved the question (L4, false for the question just published). */

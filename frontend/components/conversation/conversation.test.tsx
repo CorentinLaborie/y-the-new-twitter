@@ -57,7 +57,7 @@ function reply(id: string, overrides: Partial<ReplyView> = {}): ReplyView {
     questionId: 'q-1',
     text: `Réponse ${id}`,
     createdAt: '2026-10-16T10:00:00Z',
-    author: { handle: 'robert', displayName: 'Robert' },
+    author: { handle: 'robert', displayName: 'Robert', avatarUrl: null },
     counters: { like: 2, dislike: 0 },
     viewerReactions: [],
     mentionLinks: [],

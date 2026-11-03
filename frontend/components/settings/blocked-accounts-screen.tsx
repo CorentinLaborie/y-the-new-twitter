@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import {
   BLOCKED_EMPTY_MESSAGE,
   UNBLOCK_FAILED_MESSAGE,
   unblockedMessage,
 } from '@/components/block/block-rules';
 import { type BlockedAccount, listBlockedAccounts, unblockAccount } from '@/lib/blocks-api';
+import styles from './blocked-accounts-screen.module.css';
 
 const LOAD_FAILED_MESSAGE = 'La liste des comptes bloqués n’a pas pu être chargée.';
 
@@ -73,7 +75,11 @@ export function BlockedAccountsScreen() {
       {loadFailed ? (
         <>
           <p role="alert">{LOAD_FAILED_MESSAGE}</p>
-          <button type="button" className="y-btn y-btn-md y-btn-outline y-btn-pill" onClick={() => setReloadKey((key) => key + 1)}>
+          <button
+            type="button"
+            className="y-btn y-btn-md y-btn-outline y-btn-pill"
+            onClick={() => setReloadKey((key) => key + 1)}
+          >
             Réessayer
           </button>
         </>
@@ -84,7 +90,15 @@ export function BlockedAccountsScreen() {
       {accounts !== null && accounts.length > 0 ? (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {accounts.map((account) => (
-            <li key={account.handle} style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 44 }}>
+            <li
+              key={account.handle}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 44 }}
+            >
+              <UserAvatar
+                className={styles.avatar}
+                displayName={account.displayName}
+                avatarUrl={account.avatarUrl}
+              />
               <span style={{ flex: 1, minWidth: 0 }}>
                 <strong>{account.displayName}</strong> <span>@{account.handle}</span>
               </span>

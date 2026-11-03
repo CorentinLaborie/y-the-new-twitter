@@ -27,7 +27,7 @@ export type NotificationType =
   | 'follow'
   | 'mention';
 
-export type NotificationActor = { handle: string; displayName: string };
+export type NotificationActor = { handle: string; displayName: string; avatarUrl: string | null };
 
 export type NotificationTarget = { id: string; text: string };
 
@@ -49,7 +49,10 @@ export type NotificationPage = { items: NotificationView[]; nextCursor: string |
 export type NotificationTab = 'all' | 'mention';
 
 /** One page of notifications. `cursor` is the nextCursor of the previous page, absent for the first one. */
-export function fetchNotificationPage(tab: NotificationTab, cursor?: string): Promise<ApiResult<NotificationPage>> {
+export function fetchNotificationPage(
+  tab: NotificationTab,
+  cursor?: string,
+): Promise<ApiResult<NotificationPage>> {
   const query = new URLSearchParams();
   if (tab === 'mention') {
     query.set('type', 'mention');

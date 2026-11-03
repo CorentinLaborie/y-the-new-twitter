@@ -16,12 +16,12 @@ import type { FeedQuestion } from '@/lib/feed-api';
 
 export type TrendingHashtag = { name: string; reactions: number };
 
-export type SuggestedAccount = { id: string; handle: string; displayName: string };
+export type SuggestedAccount = { id: string; handle: string; displayName: string; avatarUrl: string | null };
 
 export type SearchResult = {
   questions: FeedQuestion[];
   hashtags: { name: string }[];
-  accounts: { handle: string; displayName: string }[];
+  accounts: { handle: string; displayName: string; avatarUrl: string | null }[];
 };
 
 export type HashtagPage = { questions: FeedQuestion[]; nextCursor: string | null };

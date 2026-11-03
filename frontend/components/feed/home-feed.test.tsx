@@ -36,7 +36,7 @@ function question(id: string, text: string): FeedQuestion {
     text,
     hashtags: ['attente'],
     createdAt: '2026-10-14T08:41:00Z',
-    author: { handle: `user_${id}`, displayName: `Personne ${id}`, viewerFollows: false },
+    author: { handle: `user_${id}`, displayName: `Personne ${id}`, avatarUrl: null, viewerFollows: false },
     counters: { like: 10, dislike: 2, y: 49, reply: 0 },
     yThreshold: 50,
     conversationOpen: false,
@@ -65,7 +65,7 @@ function reply(id: string, text: string): ReplyView {
     questionId: 'a',
     text,
     createdAt: '2026-10-14T09:00:00Z',
-    author: { handle: 'bob', displayName: 'Bob' },
+    author: { handle: 'bob', displayName: 'Bob', avatarUrl: null },
     counters: { like: 0, dislike: 0 },
     viewerReactions: [],
     mentionLinks: [],
@@ -98,7 +98,9 @@ describe('HomeFeed', () => {
   it('shows skeleton cards in a busy region while the first page loads', () => {
     vi.mocked(fetchFeedPage).mockReturnValue(new Promise(() => {}));
 
-    const { container } = render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    const { container } = render(
+      <HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />,
+    );
 
     expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
     expect(screen.getAllByRole('status', { name: 'Chargement…' })).toHaveLength(3);
@@ -108,7 +110,7 @@ describe('HomeFeed', () => {
   it('shows the empty state when the feed has no question', async () => {
     vi.mocked(fetchFeedPage).mockResolvedValue(page([]));
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     expect(await screen.findByRole('heading', { name: 'Rien à lire pour l’instant' })).toBeInTheDocument();
     expect(screen.getByText('Posez la première question ou explorez les tendances.')).toBeInTheDocument();
@@ -118,7 +120,7 @@ describe('HomeFeed', () => {
   it('turns publishing off in the composer of a suspended account', async () => {
     vi.mocked(fetchFeedPage).mockResolvedValue(page([]));
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended />);
 
     expect(await screen.findByRole('heading', { name: 'Rien à lire pour l’instant' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Poster' })).toBeDisabled();
@@ -132,7 +134,7 @@ describe('HomeFeed', () => {
       page([question('a', 'Première question'), question('b', 'Deuxième question')]),
     );
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     const items = await screen.findAllByRole('listitem');
     expect(items).toHaveLength(2);
@@ -149,7 +151,7 @@ describe('HomeFeed', () => {
       .mockResolvedValueOnce(failure)
       .mockResolvedValueOnce(page([question('a', 'Question après reprise')]));
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Impossible de charger le fil');
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
@@ -165,7 +167,7 @@ describe('HomeFeed', () => {
       problem: { status: 403, title: 'Interdit', detail: 'Votre compte est suspendu.' },
     });
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Votre compte est suspendu.');
@@ -178,7 +180,7 @@ describe('HomeFeed', () => {
       problem: { status: 403, title: 'Interdit', detail: 'Account suspended.', code: 'account_suspended' },
     });
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Votre compte est suspendu.');
     expect(screen.queryByText('Account suspended.')).not.toBeInTheDocument();
@@ -189,7 +191,7 @@ describe('HomeFeed', () => {
       .mockResolvedValueOnce(page([question('a', 'Page une')], 'curseur-2'))
       .mockResolvedValueOnce(page([question('b', 'Page deux')], null));
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Voir plus' }));
 
@@ -205,7 +207,7 @@ describe('HomeFeed', () => {
       .mockResolvedValueOnce(failure)
       .mockResolvedValueOnce(page([question('b', 'Page deux')], null));
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Voir plus' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Impossible de charger le fil');
@@ -225,7 +227,7 @@ describe('HomeFeed', () => {
       body: question('new', 'Question tout juste postée'),
     });
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
     await screen.findByText('Question existante');
 
     fireEvent.change(screen.getByLabelText('Posez votre question'), {
@@ -242,7 +244,7 @@ describe('HomeFeed', () => {
   it('shows the empty state with a link to the explore page (DEC-168)', async () => {
     vi.mocked(fetchFeedPage).mockResolvedValue(page([]));
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     expect(await screen.findByRole('heading', { name: 'Rien à lire pour l’instant' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Explorer' })).toHaveAttribute('href', '/explore');
@@ -251,7 +253,7 @@ describe('HomeFeed', () => {
   it('does not show the empty state when the trending block has questions', async () => {
     vi.mocked(fetchFeedPage).mockResolvedValue(page([], null, [question('t1', 'Question en tête')]));
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     expect(await screen.findByText('Question en tête')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Rien à lire pour l’instant' })).not.toBeInTheDocument();
@@ -265,7 +267,7 @@ describe('HomeFeed', () => {
         page([question('b', 'Question arrivée'), question('a', 'Question déjà affichée')]),
       );
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
     await screen.findByText('Question déjà affichée');
     expect(screen.queryByRole('button', { name: /nouvelle/ })).not.toBeInTheDocument();
 
@@ -292,7 +294,7 @@ describe('HomeFeed', () => {
         ]),
       );
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
     await screen.findByText('Question déjà affichée');
 
     await act(() => vi.advanceTimersByTimeAsync(30_000));
@@ -312,7 +314,7 @@ describe('HomeFeed', () => {
       ]),
     );
 
-    render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
     expect(await screen.findByText(/50\/50/)).toHaveTextContent('50/50 · atteint');
   });
@@ -320,7 +322,7 @@ describe('HomeFeed', () => {
   describe('reactions', () => {
     async function renderOneQuestion() {
       vi.mocked(fetchFeedPage).mockResolvedValue(page([question('a', 'Question à réagir')]));
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       await screen.findByText('Question à réagir');
       return {
         like: screen.getByRole('button', { name: /J’aime/ }),
@@ -427,7 +429,7 @@ describe('HomeFeed', () => {
         page([questionWithReplies('a', 'Question fermée', 3, false)]),
       );
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       const countButton = await screen.findByRole('button', { name: '3 réponses' });
       fireEvent.click(countButton);
 
@@ -450,7 +452,7 @@ describe('HomeFeed', () => {
         },
       });
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       fireEvent.click(await screen.findByRole('button', { name: '2 réponses' }));
 
       expect(await screen.findByText('Première réponse')).toBeInTheDocument();
@@ -469,7 +471,7 @@ describe('HomeFeed', () => {
         body: { items: [reply('r1', 'Réponse visible')], nextCursor: null },
       });
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       const countButton = await screen.findByRole('button', { name: '1 réponse' });
       countButton.focus();
       fireEvent.click(countButton);
@@ -491,7 +493,7 @@ describe('HomeFeed', () => {
         body: { items: [reply('r1', 'Réponse visible')], nextCursor: null },
       });
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       const countButton = await screen.findByRole('button', { name: '1 réponse' });
       expect(countButton).toHaveAttribute('aria-expanded', 'false');
 
@@ -513,7 +515,7 @@ describe('HomeFeed', () => {
         body: { items: [reply('r1', 'Réponse dans le cadre')], nextCursor: null },
       });
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       fireEvent.click(await screen.findByRole('button', { name: '1 réponse' }));
 
       const thread = (await screen.findByText('Réponse dans le cadre')).closest('[class*="thread"]');
@@ -534,7 +536,7 @@ describe('HomeFeed', () => {
       });
       vi.mocked(createReply).mockResolvedValue({ ok: true, status: 201, body: reply('r9', 'Réponse posée') });
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       fireEvent.click(await screen.findByRole('button', { name: '2 réponses' }));
       await screen.findByText('Deuxième réponse');
 
@@ -556,7 +558,7 @@ describe('HomeFeed', () => {
         body: { counters: { like: 11, dislike: 2, y: 49 }, viewerReactions: ['like'] },
       });
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       await screen.findByText('Question avec réponses');
       const like = screen.getByRole('button', { name: /J’aime/ });
 
@@ -574,7 +576,7 @@ describe('HomeFeed', () => {
         page([question('a', 'Question de la liste')], null, [question('t', 'Question tendance')]),
       );
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
       const block = await screen.findByRole('region', { name: 'Tendances pour vous' });
       expect(within(block).getByText('Question tendance')).toBeInTheDocument();
@@ -585,7 +587,7 @@ describe('HomeFeed', () => {
     it('hides the block when there is no trending question', async () => {
       vi.mocked(fetchFeedPage).mockResolvedValue(page([question('a', 'Question de la liste')]));
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
 
       await screen.findByText('Question de la liste');
       expect(screen.queryByText('Tendances pour vous')).not.toBeInTheDocument();
@@ -596,7 +598,7 @@ describe('HomeFeed', () => {
       vi.mocked(fetchFeedPage).mockResolvedValue(page([], null, [question('t', 'Question tendance')]));
       vi.mocked(putReaction).mockResolvedValue({ ok: true, status: 200, body: {} });
 
-      render(<HomeFeed displayName="Alice" viewerHandle="alice" suspended={false} />);
+      render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
       const block = await screen.findByRole('region', { name: 'Tendances pour vous' });
       const like = within(block).getByRole('button', { name: /J’aime/ });
 
@@ -617,7 +619,9 @@ describe('HomeFeed on the Abonnements tab (L3)', () => {
   it('asks the following tab, and shows its own empty text', async () => {
     vi.mocked(fetchFeedPage).mockResolvedValue(page([]));
 
-    render(<HomeFeed displayName="Alice" viewerHandle="me" suspended={false} tab="following" />);
+    render(
+      <HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="me" suspended={false} tab="following" />,
+    );
 
     expect(
       await screen.findByText('Les questions des comptes que vous suivez apparaîtront ici.'),
@@ -631,16 +635,18 @@ describe('HomeFeed on the Abonnements tab (L3)', () => {
   it('takes the questions of an author off the list at once when the viewer unfollows them there', async () => {
     const alice = {
       ...question('q1', 'Question d’Alice'),
-      author: { handle: 'alice', displayName: 'Alice', viewerFollows: true },
+      author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: true },
     };
     const bob = {
       ...question('q2', 'Question de Bob'),
-      author: { handle: 'bob', displayName: 'Bob', viewerFollows: true },
+      author: { handle: 'bob', displayName: 'Bob', avatarUrl: null, viewerFollows: true },
     };
     vi.mocked(fetchFeedPage).mockResolvedValue(page([alice, bob]));
     vi.mocked(unfollowUser).mockResolvedValue({ ok: true, status: 204, body: undefined } as never);
 
-    render(<HomeFeed displayName="Me" viewerHandle="me" suspended={false} tab="following" />);
+    render(
+      <HomeFeed displayName="Me" avatarUrl={null} viewerHandle="me" suspended={false} tab="following" />,
+    );
     await screen.findByText('Question d’Alice');
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Plus d’options' })[0]);

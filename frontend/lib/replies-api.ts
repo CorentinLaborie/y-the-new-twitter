@@ -33,7 +33,7 @@ export type ReplyView = {
   questionId: string;
   text: string;
   createdAt: string;
-  author: { handle: string; displayName: string };
+  author: { handle: string; displayName: string; avatarUrl: string | null };
   counters: ReplyCounters;
   viewerReactions: ReplyReactionKind[];
   /** Lowercase handles of the mentions whose profile can be opened; the other mentions stay plain text. */

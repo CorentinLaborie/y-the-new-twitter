@@ -12,7 +12,7 @@ function line(overrides: Partial<NotificationView> = {}): NotificationView {
     type: 'reply_to_question',
     createdAt: CREATED,
     readAt: null,
-    actor: { handle: 'alice', displayName: 'AliceY' },
+    actor: { handle: 'alice', displayName: 'AliceY', avatarUrl: null },
     actorCount: 1,
     question: { id: 'q1', text: 'Pourquoi le silence nous inquiète ?' },
     reply: { id: 'r1', text: 'Parce qu’on remplit le silence.' },
@@ -55,15 +55,21 @@ describe('NotificationItem', () => {
   });
 
   it('shows a line without question as text, with no link', () => {
-    renderItem(line({ type: 'conversation_opened', actor: null, actorCount: 1, question: null, reply: null }));
+    renderItem(
+      line({ type: 'conversation_opened', actor: null, actorCount: 1, question: null, reply: null }),
+    );
 
     expect(screen.queryByRole('link')).toBeNull();
-    expect(screen.getByText('Votre question a atteint 50 Y : la conversation est ouverte')).toBeInTheDocument();
+    expect(
+      screen.getByText('Votre question a atteint 50 Y : la conversation est ouverte'),
+    ).toBeInTheDocument();
   });
 
   it('counts the other actors of a grouped reaction in its sentence', () => {
     renderItem(line({ type: 'reaction_y', actorCount: 13 }));
 
-    expect(screen.getByRole('link')).toHaveTextContent('AliceY et 12 autres ont réagi « Y » à votre question');
+    expect(screen.getByRole('link')).toHaveTextContent(
+      'AliceY et 12 autres ont réagi « Y » à votre question',
+    );
   });
 });

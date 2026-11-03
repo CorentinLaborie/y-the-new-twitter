@@ -5,7 +5,7 @@ import { DesktopSidebar } from './desktop-sidebar';
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
 vi.mock('@/lib/auth-api', () => ({ logout: vi.fn() }));
 
-const VIEWER = { handle: 'alice', displayName: 'Alice Martin' };
+const VIEWER = { handle: 'alice', displayName: 'Alice Martin', avatarUrl: null };
 
 function renderSidebar(pathname: string, unread = 0) {
   render(<DesktopSidebar pathname={pathname} viewer={VIEWER} unread={unread} />);

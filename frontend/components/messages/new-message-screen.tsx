@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { avatarInitial } from '@/components/feed/avatar-initial';
 import { fetchMentionSuggestions, type MentionSuggestion } from '@/lib/mention-api';
 import { startConversation } from '@/lib/messages-api';
 import { MESSAGE_MAX_LENGTH, sendFailureMessage } from './message-rules';
@@ -147,9 +147,11 @@ export function NewMessageScreen() {
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => pick(account.handle)}
                 >
-                  <span className={styles.pickerAvatar} aria-hidden="true">
-                    {avatarInitial(account.displayName)}
-                  </span>
+                  <UserAvatar
+                    className={styles.pickerAvatar}
+                    displayName={account.displayName}
+                    avatarUrl={account.avatarUrl}
+                  />
                   <span className={styles.rowText}>
                     <strong>{account.displayName}</strong>
                     <span className={styles.handle}>@{account.handle}</span>

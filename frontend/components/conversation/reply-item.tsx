@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react';
-import { avatarInitial } from '@/components/feed/avatar-initial';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { FeedIcon } from '@/components/feed/feed-icon';
 import { formatPostDate } from '@/components/feed/format-date';
 import styles from '@/components/feed/feed.module.css';
@@ -127,9 +127,11 @@ export function ReplyItem({ reply, viewerHandle, reactionPending, onReact, onDel
   return (
     <article className={`${styles.card} ${styles.replyCard}`}>
       <header className={styles.cardHead}>
-        <span className={`${styles.avatar} ${styles.cardAvatar}`} aria-hidden="true">
-          {avatarInitial(reply.author.displayName)}
-        </span>
+        <UserAvatar
+          className={`${styles.avatar} ${styles.cardAvatar}`}
+          displayName={reply.author.displayName}
+          avatarUrl={reply.author.avatarUrl}
+        />
         <div className={styles.who}>
           <span className={styles.name}>{reply.author.displayName}</span>
           <span className={styles.meta}>

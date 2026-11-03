@@ -46,12 +46,21 @@ describe('requireSession', () => {
     vi.mocked(getSession).mockResolvedValue({
       ok: true,
       status: 200,
-      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active', suspensionReason: null } },
+      body: {
+        user: {
+          handle: 'marthe',
+          displayName: 'Marthe',
+          avatarUrl: null,
+          status: 'active',
+          suspensionReason: null,
+        },
+      },
     });
 
     await expect(requireSession()).resolves.toEqual({
       handle: 'marthe',
       displayName: 'Marthe',
+      avatarUrl: null,
       status: 'active',
       suspensionReason: null,
     });
@@ -93,7 +102,15 @@ describe('requireSession', () => {
     vi.mocked(getSession).mockResolvedValue({
       ok: true,
       status: 200,
-      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active', suspensionReason: null } },
+      body: {
+        user: {
+          handle: 'marthe',
+          displayName: 'Marthe',
+          avatarUrl: null,
+          status: 'active',
+          suspensionReason: null,
+        },
+      },
     });
     requestedPath.value = '/home';
 

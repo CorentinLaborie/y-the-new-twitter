@@ -29,7 +29,12 @@ export type OwnProfileChanges = { handle?: string; displayName?: string; bio?: s
 export type ProfileQuestionsPage = { questions: FeedQuestion[]; nextCursor: string | null };
 
 /** An account in a follower or following list, with the viewer's follow state for its row. */
-export type FollowAccount = { handle: string; displayName: string; viewerFollows: boolean };
+export type FollowAccount = {
+  handle: string;
+  displayName: string;
+  avatarUrl: string | null;
+  viewerFollows: boolean;
+};
 
 export type FollowListPage = { items: FollowAccount[]; nextCursor: string | null };
 

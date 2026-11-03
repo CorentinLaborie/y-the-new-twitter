@@ -13,7 +13,7 @@ vi.mock('@/lib/notifications-api', () => ({
 }));
 vi.mock('@/lib/auth-api', () => ({ logout: vi.fn() }));
 
-const VIEWER = { handle: 'alice', displayName: 'Alice Martin' };
+const VIEWER = { handle: 'alice', displayName: 'Alice Martin', avatarUrl: null };
 
 describe('AppShell (plan L0, sections 4, 5 and 6)', () => {
   beforeEach(() => {

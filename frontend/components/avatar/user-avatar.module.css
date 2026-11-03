@@ -1,0 +1,6 @@
+/* A photo fills the circle of the surface that shows it, cropped to its centre. */
+.photo {
+  display: block;
+  flex: none;
+  object-fit: cover;
+}

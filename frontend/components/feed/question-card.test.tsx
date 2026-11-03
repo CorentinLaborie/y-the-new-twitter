@@ -42,7 +42,7 @@ function question(overrides: Partial<FeedQuestion> = {}): FeedQuestion {
     text: 'Le télétravail rend-il les débats moins violents ?',
     hashtags: ['attente'],
     createdAt: '2026-10-14T08:41:00Z',
-    author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
+    author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: false },
     counters: { like: 10, dislike: 2, y: 49, reply: 0 },
     yThreshold: 50,
     conversationOpen: false,
@@ -279,7 +279,9 @@ describe('QuestionCard follow control (L3)', () => {
 
   it('shows the pill with the state of the author, and none on the viewer own question', () => {
     renderCard({
-      question: question({ author: { handle: 'alice', displayName: 'Alice', viewerFollows: true } }),
+      question: question({
+        author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: true },
+      }),
       viewer: OTHER_VIEWER,
     });
     expect(screen.getByRole('button', { name: 'Suivi @alice' })).toBeInTheDocument();
@@ -287,7 +289,9 @@ describe('QuestionCard follow control (L3)', () => {
 
   it('shows no follow control on the viewer own question', () => {
     renderCard({
-      question: question({ author: { handle: 'me', displayName: 'Moi', viewerFollows: false } }),
+      question: question({
+        author: { handle: 'me', displayName: 'Moi', avatarUrl: null, viewerFollows: false },
+      }),
       viewer: OTHER_VIEWER,
     });
     expect(screen.queryByRole('button', { name: /@me$/ })).not.toBeInTheDocument();
@@ -300,7 +304,9 @@ describe('QuestionCard follow control (L3)', () => {
 
   it('removes the follow from the menu entry, and the pill shows "Suivre" at once', async () => {
     renderCard({
-      question: question({ author: { handle: 'alice', displayName: 'Alice', viewerFollows: true } }),
+      question: question({
+        author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: true },
+      }),
       viewer: OTHER_VIEWER,
     });
 
@@ -313,7 +319,9 @@ describe('QuestionCard follow control (L3)', () => {
 
   it('offers no follow menu entry to a suspended viewer', () => {
     renderCard({
-      question: question({ author: { handle: 'alice', displayName: 'Alice', viewerFollows: true } }),
+      question: question({
+        author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: true },
+      }),
       viewer: { handle: 'me', suspended: true },
     });
 
@@ -350,5 +358,20 @@ describe('QuestionCard save button (L4)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retirer des signets' }));
 
     await waitFor(() => expect(onBookmarkChange).toHaveBeenCalledWith(false));
+  });
+
+  it('shows the photo of the author when the account has one (DEC-351)', () => {
+    renderCard({
+      question: question({
+        author: {
+          handle: 'alice',
+          displayName: 'Alice',
+          avatarUrl: '/avatars/alice.jpg',
+          viewerFollows: false,
+        },
+      }),
+    });
+
+    expect(document.querySelector('img')?.getAttribute('src')).toContain('/avatars/alice.jpg');
   });
 });

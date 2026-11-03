@@ -19,11 +19,13 @@ const TABS: readonly { id: FeedTabId; label: string }[] = [
 export function HomeTabs({
   initialTab,
   displayName,
+  avatarUrl,
   viewerHandle,
   suspended,
 }: {
   initialTab: FeedTabId;
   displayName: string;
+  avatarUrl: string | null;
   viewerHandle: string | null;
   suspended: boolean;
 }) {
@@ -87,6 +89,7 @@ export function HomeTabs({
           key={tab}
           tab={tab}
           displayName={displayName}
+          avatarUrl={avatarUrl}
           viewerHandle={viewerHandle}
           suspended={suspended}
         />

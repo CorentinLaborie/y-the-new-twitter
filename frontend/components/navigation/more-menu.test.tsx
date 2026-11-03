@@ -10,7 +10,7 @@ const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh }) }));
 vi.mock('@/lib/auth-api', () => ({ logout: vi.fn() }));
 
-const VIEWER = { handle: 'alice', displayName: 'Alice Martin' };
+const VIEWER = { handle: 'alice', displayName: 'Alice Martin', avatarUrl: null };
 const NOTIFICATIONS = NAV_ENTRIES.filter((entry) => entry.id === 'notifications');
 const BOOKMARKS_AND_PROFILE = NAV_ENTRIES.filter(
   (entry) => entry.id === 'bookmarks' || entry.id === 'profile',

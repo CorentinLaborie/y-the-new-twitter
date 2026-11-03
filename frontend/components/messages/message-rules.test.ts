@@ -18,7 +18,7 @@ const BASE: ConversationView = {
   id: 'c1',
   status: 'accepted',
   initiatedByViewer: true,
-  other: { handle: 'MarkL', displayName: 'MarkL' },
+  other: { handle: 'MarkL', displayName: 'MarkL', avatarUrl: null },
   lastMessageAt: '2026-10-27T09:33:00.000Z',
   lastMessage: null,
   otherLastReadAt: null,

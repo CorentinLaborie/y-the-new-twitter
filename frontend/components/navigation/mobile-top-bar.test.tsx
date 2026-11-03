@@ -5,7 +5,7 @@ import { MobileTopBar } from './mobile-top-bar';
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
 vi.mock('@/lib/auth-api', () => ({ logout: vi.fn() }));
 
-const VIEWER = { handle: 'alice', displayName: 'Alice Martin' };
+const VIEWER = { handle: 'alice', displayName: 'Alice Martin', avatarUrl: null };
 
 function renderTopBar(unread: number) {
   render(<MobileTopBar pathname="/home" viewer={VIEWER} unread={unread} />);

@@ -1,14 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { BlockDialog } from '@/components/block/block-dialog';
-import { apiBaseUrl } from '@/lib/api-client';
 import { EditProfileDialog } from './edit-profile-dialog';
 import { blockedMessage } from '@/components/block/block-rules';
 import { FollowButton } from '@/components/follow/follow-button';
-import { avatarInitial } from '@/components/feed/avatar-initial';
 import { FeedError, FeedLoading, CONNECTION_FAILURE_MESSAGE } from '@/components/feed/feed-states';
 import { QuestionCard } from '@/components/feed/question-card';
 import type { FeedQuestion } from '@/lib/feed-api';
@@ -119,13 +118,11 @@ export function ProfileScreen({
     <div className={styles.screen}>
       <section className={styles.head} aria-label={`Profil de ${profile.displayName}`}>
         <div className={styles.top}>
-          {profile.avatarUrl === null ? (
-            <span className={styles.avatar} aria-hidden="true">
-              {avatarInitial(profile.displayName)}
-            </span>
-          ) : (
-            <img className={styles.avatar} src={`${apiBaseUrl()}${profile.avatarUrl}`} alt="" />
-          )}
+          <UserAvatar
+            className={styles.avatar}
+            displayName={profile.displayName}
+            avatarUrl={profile.avatarUrl}
+          />
           {profile.isOwnAccount && !suspended ? (
             <button
               type="button"

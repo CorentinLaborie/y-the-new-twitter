@@ -5,7 +5,7 @@ import { MobileBottomBar } from './mobile-bottom-bar';
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
 vi.mock('@/lib/auth-api', () => ({ logout: vi.fn() }));
 
-const VIEWER = { handle: 'alice', displayName: 'Alice Martin' };
+const VIEWER = { handle: 'alice', displayName: 'Alice Martin', avatarUrl: null };
 
 function renderBar(pathname: string, unread = 0) {
   render(<MobileBottomBar pathname={pathname} viewer={VIEWER} unread={unread} />);

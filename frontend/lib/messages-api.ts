@@ -22,7 +22,7 @@ export type ConversationView = {
   id: string;
   status: ConversationStatus;
   initiatedByViewer: boolean;
-  other: { handle: string; displayName: string };
+  other: { handle: string; displayName: string; avatarUrl: string | null };
   lastMessageAt: string;
   /** When the other account last read the conversation, or null when it has not. */
   otherLastReadAt: string | null;
@@ -40,7 +40,12 @@ export type ConversationPage = { conversations: ConversationView[]; nextCursor: 
 export type MessagePage = { messages: MessageView[]; nextCursor: string | null };
 
 /** Which list the viewer reads: the accepted conversations, the requests waiting for them, or the archived ones. */
-export type ConversationListOptions = { requests?: boolean; archived?: boolean; cursor?: string; limit?: number };
+export type ConversationListOptions = {
+  requests?: boolean;
+  archived?: boolean;
+  cursor?: string;
+  limit?: number;
+};
 
 function conversationPath(conversationId: string): string {
   return `/messages/conversations/${encodeURIComponent(conversationId)}`;
@@ -59,7 +64,10 @@ function withQuery(path: string, params: Record<string, string | undefined>): st
 }
 
 /** Opens the conversation with a handle, or writes to the one already open. */
-export function startConversation(handle: string, text: string): Promise<ApiResult<{ conversationId: string }>> {
+export function startConversation(
+  handle: string,
+  text: string,
+): Promise<ApiResult<{ conversationId: string }>> {
   return protectedApiRequest<{ conversationId: string }>('POST', '/messages/conversations', {
     body: { handle, text },
   });
@@ -71,7 +79,9 @@ export function fetchConversation(conversationId: string): Promise<ApiResult<Con
 }
 
 /** One page of the viewer's conversations, requests or archives, after the cursor of the previous page. */
-export function fetchConversations(options: ConversationListOptions = {}): Promise<ApiResult<ConversationPage>> {
+export function fetchConversations(
+  options: ConversationListOptions = {},
+): Promise<ApiResult<ConversationPage>> {
   const path = withQuery('/messages/conversations', {
     requests: options.requests ? 'true' : undefined,
     archived: options.archived ? 'true' : undefined,
@@ -92,7 +102,9 @@ export function fetchMessages(
 
 /** Writes a message in a conversation the viewer takes part in. */
 export function sendMessage(conversationId: string, text: string): Promise<ApiResult<MessageView>> {
-  return protectedApiRequest<MessageView>('POST', `${conversationPath(conversationId)}/messages`, { body: { text } });
+  return protectedApiRequest<MessageView>('POST', `${conversationPath(conversationId)}/messages`, {
+    body: { text },
+  });
 }
 
 /** Accepts a request waiting for the viewer. */

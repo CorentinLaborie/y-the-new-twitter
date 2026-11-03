@@ -25,7 +25,13 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
   });
 
   it('shows nothing for an active account', async () => {
-    answerWith({ handle: 'alice', displayName: 'Alice', status: 'active', suspensionReason: null });
+    answerWith({
+      handle: 'alice',
+      displayName: 'Alice',
+      avatarUrl: null,
+      status: 'active',
+      suspensionReason: null,
+    });
 
     const { container } = render(<SuspendedBanner />);
     await settle();
@@ -47,7 +53,13 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
   });
 
   it('shows the suspension sentence and the legal-notice sentence when no reason is given', async () => {
-    answerWith({ handle: 'alice', displayName: 'Alice', status: 'suspended', suspensionReason: null });
+    answerWith({
+      handle: 'alice',
+      displayName: 'Alice',
+      avatarUrl: null,
+      status: 'suspended',
+      suspensionReason: null,
+    });
 
     render(<SuspendedBanner />);
 
@@ -58,7 +70,13 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
   });
 
   it('treats a blank reason as no reason', async () => {
-    answerWith({ handle: 'alice', displayName: 'Alice', status: 'suspended', suspensionReason: '   ' });
+    answerWith({
+      handle: 'alice',
+      displayName: 'Alice',
+      avatarUrl: null,
+      status: 'suspended',
+      suspensionReason: '   ',
+    });
 
     render(<SuspendedBanner />);
 
@@ -70,6 +88,7 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
     answerWith({
       handle: 'alice',
       displayName: 'Alice',
+      avatarUrl: null,
       status: 'suspended',
       suspensionReason: 'Spam répété.',
     });
@@ -81,7 +100,13 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
   });
 
   it('opens the contact form from the button, and closes it again', async () => {
-    answerWith({ handle: 'alice', displayName: 'Alice', status: 'suspended', suspensionReason: null });
+    answerWith({
+      handle: 'alice',
+      displayName: 'Alice',
+      avatarUrl: null,
+      status: 'suspended',
+      suspensionReason: null,
+    });
     render(<SuspendedBanner />);
     const toggle = await screen.findByRole('button', { name: 'Contacter l’administrateur' });
 
@@ -92,7 +117,9 @@ describe('SuspendedBanner (section 3.4, section 12.6)', () => {
 
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(
-      screen.getByText('Expliquez votre situation : l’administrateur vous répond par e-mail, à l’adresse de votre compte.'),
+      screen.getByText(
+        'Expliquez votre situation : l’administrateur vous répond par e-mail, à l’adresse de votre compte.',
+      ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Votre message')).toBeInTheDocument();
     expect(screen.getByText('0/1000')).toBeInTheDocument();

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { avatarInitial } from '@/components/feed/avatar-initial';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { fetchProfile, type ProfileView } from '@/lib/profile-api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
@@ -214,9 +214,11 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
   return (
     <section aria-label={`Conversation avec ${conversation.other.displayName}`}>
       <header className={styles.threadHeader}>
-        <span className={styles.threadAvatar} aria-hidden="true">
-          {avatarInitial(conversation.other.displayName)}
-        </span>
+        <UserAvatar
+          className={styles.threadAvatar}
+          displayName={conversation.other.displayName}
+          avatarUrl={conversation.other.avatarUrl}
+        />
         <div className={styles.threadName}>
           <h2>{conversation.other.displayName}</h2>
           <p>

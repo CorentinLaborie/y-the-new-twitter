@@ -15,7 +15,11 @@ export type AccountStatus = 'pending_verification' | 'active' | 'suspended' | 'p
  * The signed-in user of GET /auth/session: the account fields, the status of the account, and the reason of its
  * suspension (set only while the status is suspended, null otherwise).
  */
-export type SessionUser = ApiUser & { status: AccountStatus; suspensionReason: string | null };
+export type SessionUser = ApiUser & {
+  avatarUrl: string | null;
+  status: AccountStatus;
+  suspensionReason: string | null;
+};
 
 type SignupInput = {
   handle: string;

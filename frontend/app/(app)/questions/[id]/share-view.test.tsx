@@ -27,7 +27,7 @@ function detail(overrides: Partial<QuestionDetail> = {}): QuestionDetail {
     text: 'Faut-il partager ses doutes ?',
     hashtags: ['reflexion'],
     createdAt: '2026-10-14T08:41:00Z',
-    author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
+    author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: false },
     counters: { like: 10, dislike: 2, y: 49, reply: 4 },
     yThreshold: 50,
     conversationOpen: false,

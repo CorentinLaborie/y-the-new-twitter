@@ -19,8 +19,8 @@ describe('FollowListScreen (L3, section 7.4)', () => {
       status: 200,
       body: {
         items: [
-          { handle: 'bob', displayName: 'Bob', viewerFollows: true },
-          { handle: 'me', displayName: 'Moi', viewerFollows: false },
+          { handle: 'bob', displayName: 'Bob', avatarUrl: null, viewerFollows: true },
+          { handle: 'me', displayName: 'Moi', avatarUrl: null, viewerFollows: false },
         ],
         nextCursor: null,
       },
@@ -50,12 +50,18 @@ describe('FollowListScreen (L3, section 7.4)', () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        body: { items: [{ handle: 'bob', displayName: 'Bob', viewerFollows: false }], nextCursor: 'suite' },
+        body: {
+          items: [{ handle: 'bob', displayName: 'Bob', avatarUrl: null, viewerFollows: false }],
+          nextCursor: 'suite',
+        },
       })
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        body: { items: [{ handle: 'carol', displayName: 'Carol', viewerFollows: false }], nextCursor: null },
+        body: {
+          items: [{ handle: 'carol', displayName: 'Carol', avatarUrl: null, viewerFollows: false }],
+          nextCursor: null,
+        },
       });
 
     render(<FollowListScreen handle="alice" list="following" viewerHandle="me" suspended={false} />);

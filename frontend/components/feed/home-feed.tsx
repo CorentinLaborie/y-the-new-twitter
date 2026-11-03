@@ -101,11 +101,13 @@ function newQuestionsLabel(count: number): string {
  */
 export function HomeFeed({
   displayName,
+  avatarUrl,
   viewerHandle,
   suspended,
   tab = 'for-you',
 }: {
   displayName: string;
+  avatarUrl: string | null;
   viewerHandle: string | null;
   /** True for a suspended account: the composer keeps publishing off. */
   suspended: boolean;
@@ -333,7 +335,12 @@ export function HomeFeed({
 
   return (
     <div className={styles.feed}>
-      <Composer displayName={displayName} suspended={suspended} onPosted={handleQuestionPosted} />
+      <Composer
+        displayName={displayName}
+        avatarUrl={avatarUrl}
+        suspended={suspended}
+        onPosted={handleQuestionPosted}
+      />
 
       {trendingQuestions.length > 0 ? (
         <section className={styles.trending} aria-labelledby="trending-title">

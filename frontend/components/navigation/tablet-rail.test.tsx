@@ -5,7 +5,7 @@ import { TabletRail } from './tablet-rail';
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
 vi.mock('@/lib/auth-api', () => ({ logout: vi.fn() }));
 
-const VIEWER = { handle: 'alice', displayName: 'Alice Martin' };
+const VIEWER = { handle: 'alice', displayName: 'Alice Martin', avatarUrl: null };
 const ORIGINAL_HEIGHT = window.innerHeight;
 
 function renderRail(height: number, unread = 0, pathname = '/home') {

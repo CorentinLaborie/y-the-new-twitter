@@ -1,13 +1,13 @@
 'use client';
 
 import { useId, useRef, useState, type FormEvent } from 'react';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { Notice } from '@/components/auth/notice';
 import { MentionPicker } from '@/components/conversation/mention-picker';
 import { useMentionPicker } from '@/components/conversation/use-mention-picker';
 import { messageForCode, messageForStatus } from '@/lib/api-messages';
 import { newIdempotencyKey } from '@/lib/idempotency';
 import { postQuestion, type FeedQuestion } from '@/lib/feed-api';
-import { avatarInitial } from './avatar-initial';
 import { FeedIcon } from './feed-icon';
 import styles from './feed.module.css';
 import {
@@ -21,6 +21,8 @@ import {
 type ComposerProps = {
   /** Display name of the signed-in user, for the avatar. */
   displayName: string;
+  /** The profile photo of the signed-in user, or null for the initial (DEC-351). */
+  avatarUrl: string | null;
   /** True for a suspended account: publishing is off (R13, DEC-095), and the composer says why. */
   suspended: boolean;
   /** Called with the question the API created, so that the feed shows it first. */
@@ -35,7 +37,7 @@ const SUSPENDED_PUBLISHING_MESSAGE = 'Votre compte est suspendu : la publication
  * Over the limit the text is refused with a message, and the button stays off. The API refusal is shown as a notice.
  * A suspended account gets the button off, with the reason of it under the composer.
  */
-export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
+export function Composer({ displayName, avatarUrl, suspended, onPosted }: ComposerProps) {
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -88,9 +90,11 @@ export function Composer({ displayName, suspended, onPosted }: ComposerProps) {
 
   return (
     <form id="composer" className={styles.composer} onSubmit={handleSubmit}>
-      <span className={`${styles.avatar} ${styles.composerAvatar}`} aria-hidden="true">
-        {avatarInitial(displayName)}
-      </span>
+      <UserAvatar
+        className={`${styles.avatar} ${styles.composerAvatar}`}
+        displayName={displayName}
+        avatarUrl={avatarUrl}
+      />
       <div className={styles.composerBody}>
         <label htmlFor={textareaId} className={styles.composerLabel}>
           Posez votre question

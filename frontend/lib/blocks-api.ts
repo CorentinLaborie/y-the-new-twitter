@@ -17,6 +17,7 @@ import { protectedApiRequest } from '@/lib/session-expired';
 export type BlockedAccount = {
   handle: string;
   displayName: string;
+  avatarUrl: string | null;
   blockedAt: string;
 };
 
@@ -38,10 +39,9 @@ export function unblockAccount(handle: string): Promise<ApiResult<void>> {
 }
 
 /** One page of the accounts the viewer blocks. Without `cursor` it is the first page. */
-export function listBlockedAccounts({
-  cursor,
-  limit,
-}: { cursor?: string; limit?: number } = {}): Promise<ApiResult<BlockPage>> {
+export function listBlockedAccounts({ cursor, limit }: { cursor?: string; limit?: number } = {}): Promise<
+  ApiResult<BlockPage>
+> {
   const query = new URLSearchParams();
   if (cursor) {
     query.set('cursor', cursor);

@@ -5,8 +5,18 @@ import { BlockedAccountsScreen } from './blocked-accounts-screen';
 
 vi.mock('@/lib/blocks-api', () => ({ listBlockedAccounts: vi.fn(), unblockAccount: vi.fn() }));
 
-const ALICE_BLOCK = { handle: 'bob', displayName: 'Bob', blockedAt: '2026-10-23T09:00:00.000Z' };
-const CAROL_BLOCK = { handle: 'carol', displayName: 'Carol', blockedAt: '2026-10-22T09:00:00.000Z' };
+const ALICE_BLOCK = {
+  handle: 'bob',
+  displayName: 'Bob',
+  avatarUrl: null,
+  blockedAt: '2026-10-23T09:00:00.000Z',
+};
+const CAROL_BLOCK = {
+  handle: 'carol',
+  displayName: 'Carol',
+  avatarUrl: null,
+  blockedAt: '2026-10-22T09:00:00.000Z',
+};
 
 beforeEach(() => {
   vi.mocked(listBlockedAccounts).mockReset();
@@ -29,7 +39,11 @@ describe('BlockedAccountsScreen', () => {
   });
 
   it('says so when no account is blocked', async () => {
-    vi.mocked(listBlockedAccounts).mockResolvedValue({ ok: true, status: 200, body: { items: [], nextCursor: null } });
+    vi.mocked(listBlockedAccounts).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: { items: [], nextCursor: null },
+    });
 
     render(<BlockedAccountsScreen />);
 
@@ -58,7 +72,10 @@ describe('BlockedAccountsScreen', () => {
       status: 200,
       body: { items: [ALICE_BLOCK], nextCursor: null },
     });
-    vi.mocked(unblockAccount).mockResolvedValue({ ok: false, problem: { status: 500, title: 'Erreur', detail: 'Erreur.' } });
+    vi.mocked(unblockAccount).mockResolvedValue({
+      ok: false,
+      problem: { status: 500, title: 'Erreur', detail: 'Erreur.' },
+    });
 
     render(<BlockedAccountsScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Débloquer' }));
@@ -74,7 +91,9 @@ describe('BlockedAccountsScreen', () => {
 
     render(<BlockedAccountsScreen />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('La liste des comptes bloqués n’a pas pu être chargée.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'La liste des comptes bloqués n’a pas pu être chargée.',
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
     expect(await screen.findByText('Bob')).toBeInTheDocument();
   });

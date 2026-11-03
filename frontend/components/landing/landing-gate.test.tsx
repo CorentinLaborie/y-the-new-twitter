@@ -36,7 +36,15 @@ describe('LandingGate', () => {
     vi.mocked(getSession).mockResolvedValue({
       ok: true,
       status: 200,
-      body: { user: { handle: 'marthe', displayName: 'Marthe', status: 'active', suspensionReason: null } },
+      body: {
+        user: {
+          handle: 'marthe',
+          displayName: 'Marthe',
+          avatarUrl: null,
+          status: 'active',
+          suspensionReason: null,
+        },
+      },
     });
 
     await expect(LandingGate()).rejects.toMatchObject({ target: '/home' });

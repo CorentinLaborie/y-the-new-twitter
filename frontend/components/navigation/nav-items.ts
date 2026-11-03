@@ -27,7 +27,7 @@ export type NavEntry = {
 };
 
 /** The signed-in user the navigation links to (the profile route needs the handle). */
-export type NavViewer = { handle: string; displayName: string };
+export type NavViewer = { handle: string; displayName: string; avatarUrl: string | null };
 
 /** The seven destinations of the app, in the order of the boards. "Plus" is not an entry: it opens the more menu. */
 export const NAV_ENTRIES: readonly NavEntry[] = [

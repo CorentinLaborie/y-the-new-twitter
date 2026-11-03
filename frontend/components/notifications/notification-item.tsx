@@ -1,6 +1,6 @@
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { YMark } from '@/components/brand/y-mark';
-import { avatarInitial } from '@/components/feed/avatar-initial';
 import { notificationText } from '@/lib/notification-text';
 import type { NotificationView } from '@/lib/notifications-api';
 import { relativeTime } from './relative-time';
@@ -24,9 +24,11 @@ export function NotificationItem({ line, now }: { line: NotificationView; now: n
         </>
       ) : null}
       {line.actor ? (
-        <span className={styles.avatar} aria-hidden="true">
-          {avatarInitial(line.actor.displayName)}
-        </span>
+        <UserAvatar
+          className={styles.avatar}
+          displayName={line.actor.displayName}
+          avatarUrl={line.actor.avatarUrl}
+        />
       ) : (
         <span className={styles.avatar} aria-hidden="true">
           <YMark size={18} />

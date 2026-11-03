@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useEffect, useState } from 'react';
-import { avatarInitial } from '@/components/feed/avatar-initial';
 import { FeedIcon } from '@/components/feed/feed-icon';
 import { fetchConversations, type ConversationView } from '@/lib/messages-api';
 import {
@@ -196,9 +196,11 @@ function ConversationRow({ conversation }: { conversation: ConversationView }) {
         className={styles.row}
         aria-label={`Conversation avec ${conversation.other.displayName}${conversation.unread ? ', non lue' : ''}`}
       >
-        <span className={styles.avatar} aria-hidden="true">
-          {avatarInitial(conversation.other.displayName)}
-        </span>
+        <UserAvatar
+          className={styles.avatar}
+          displayName={conversation.other.displayName}
+          avatarUrl={conversation.other.avatarUrl}
+        />
         <span className={styles.rowText}>
           <span className={styles.nameLine}>
             <strong>{conversation.other.displayName}</strong>{' '}

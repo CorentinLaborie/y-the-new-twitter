@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ConversationRuleDialog } from '@/components/question/conversation-rule-dialog';
 import { copyQuestionLink, questionLink } from '@/components/question/copy-link';
@@ -14,7 +15,6 @@ import { REPORT_SENT_MESSAGE } from '@/components/report/report-rules';
 import { UnfollowMenuItem } from '@/components/follow/unfollow-menu-item';
 import { hashtagHref } from '@/lib/explore-rules';
 import type { FeedQuestion, ReactionKind } from '@/lib/feed-api';
-import { avatarInitial } from './avatar-initial';
 import { FeedIcon } from './feed-icon';
 import { formatPostDate } from './format-date';
 import { REACTION_KINDS } from './reaction-rules';
@@ -157,9 +157,11 @@ export function QuestionCard({
   return (
     <article className={styles.card}>
       <header className={styles.cardHead}>
-        <span className={`${styles.avatar} ${styles.cardAvatar}`} aria-hidden="true">
-          {avatarInitial(question.author.displayName)}
-        </span>
+        <UserAvatar
+          className={`${styles.avatar} ${styles.cardAvatar}`}
+          displayName={question.author.displayName}
+          avatarUrl={question.author.avatarUrl}
+        />
         <div className={styles.who}>
           <span className={styles.name}>{question.author.displayName}</span>
           <span className={styles.meta}>

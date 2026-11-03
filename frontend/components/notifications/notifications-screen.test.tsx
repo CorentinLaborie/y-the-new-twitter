@@ -1,6 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchNotificationPage, markAllNotificationsRead, type NotificationPage, type NotificationView } from '@/lib/notifications-api';
+import {
+  fetchNotificationPage,
+  markAllNotificationsRead,
+  type NotificationPage,
+  type NotificationView,
+} from '@/lib/notifications-api';
 import { NotificationsScreen } from './notifications-screen';
 
 vi.mock('@/lib/notifications-api', () => ({
@@ -19,7 +24,7 @@ function line(id: string, overrides: Partial<NotificationView> = {}): Notificati
     type: 'reply_to_question',
     createdAt: new Date().toISOString(),
     readAt: null,
-    actor: { handle: `user_${id}`, displayName: `Personne ${id}` },
+    actor: { handle: `user_${id}`, displayName: `Personne ${id}`, avatarUrl: null },
     actorCount: 1,
     question: { id: `q-${id}`, text: `Question ${id}` },
     reply: null,
@@ -115,12 +120,16 @@ describe('NotificationsScreen', () => {
     renderScreen('mention');
 
     expect(
-      await screen.findByText('Les mentions de votre pseudo dans les questions et les réponses apparaîtront ici.'),
+      await screen.findByText(
+        'Les mentions de votre pseudo dans les questions et les réponses apparaîtront ici.',
+      ),
     ).toBeInTheDocument();
   });
 
   it('shows the error state with a retry that loads the page again', async () => {
-    vi.mocked(fetchNotificationPage).mockResolvedValueOnce(failure).mockResolvedValueOnce(page([line('a')]));
+    vi.mocked(fetchNotificationPage)
+      .mockResolvedValueOnce(failure)
+      .mockResolvedValueOnce(page([line('a')]));
     renderScreen();
 
     const alert = await screen.findByRole('alert');
@@ -232,7 +241,9 @@ describe('NotificationsScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Tout marquer comme lu' }));
 
-    await waitFor(() => expect(screen.getByRole('link', { name: /Personne a/ }).textContent).not.toContain('Non lue'));
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: /Personne a/ }).textContent).not.toContain('Non lue'),
+    );
     expect(screen.getByRole('button', { name: 'Tout marquer comme lu' })).toBeDisabled();
     expect(screen.getByRole('heading', { level: 1 })).toHaveFocus();
   });

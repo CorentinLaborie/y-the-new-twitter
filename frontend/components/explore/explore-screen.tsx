@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { FeedError, FeedLoading } from '@/components/feed/feed-states';
@@ -153,6 +154,11 @@ export function ExploreScreen({
           {shownTypeahead.accounts.map((account) => (
             <li key={`account-${account.handle}`}>
               <Link href={`/u/${account.handle}`} className={styles.typeaheadItem}>
+                <UserAvatar
+                  className={styles.avatar}
+                  displayName={account.displayName}
+                  avatarUrl={account.avatarUrl}
+                />
                 {account.displayName} <span className={styles.muted}>@{account.handle}</span>
               </Link>
             </li>
@@ -228,6 +234,11 @@ export function ExploreScreen({
                     {data.accounts.map((account) => (
                       <li key={account.id}>
                         <Link href={`/u/${account.handle}`} className={styles.account}>
+                          <UserAvatar
+                            className={styles.avatar}
+                            displayName={account.displayName}
+                            avatarUrl={account.avatarUrl}
+                          />
                           <span className={styles.trendName}>{account.displayName}</span>
                           <span className={styles.muted}>@{account.handle}</span>
                         </Link>
@@ -282,6 +293,11 @@ function SearchResults({
           {result.accounts.map((account) => (
             <li key={account.handle}>
               <Link href={`/u/${account.handle}`} className={styles.account}>
+                <UserAvatar
+                  className={styles.avatar}
+                  displayName={account.displayName}
+                  avatarUrl={account.avatarUrl}
+                />
                 <span className={styles.trendName}>{account.displayName}</span>
                 <span className={styles.muted}>@{account.handle}</span>
               </Link>

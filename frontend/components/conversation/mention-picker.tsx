@@ -1,6 +1,7 @@
 'use client';
 
 import type { MentionSuggestion } from '@/lib/mention-api';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import styles from './mention-picker.module.css';
 
 export type MentionPickerProps = {
@@ -42,6 +43,11 @@ export function MentionPicker({
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => onPick(suggestion.handle)}
         >
+          <UserAvatar
+            className={styles.avatar}
+            displayName={suggestion.displayName}
+            avatarUrl={suggestion.avatarUrl}
+          />
           <span className={styles.name}>{suggestion.displayName}</span>
           <span className={styles.handle}>@{suggestion.handle}</span>
         </button>

@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { MentionPicker } from './mention-picker';
 
 const suggestions = [
-  { handle: 'Robert44', displayName: 'Robert' },
-  { handle: 'Robert_Lm', displayName: 'Robert L.' },
+  { handle: 'Robert44', displayName: 'Robert', avatarUrl: null },
+  { handle: 'Robert_Lm', displayName: 'Robert L.', avatarUrl: null },
 ];
 
 describe('MentionPicker', () => {
@@ -12,7 +12,8 @@ describe('MentionPicker', () => {
     render(<MentionPicker id="picker" suggestions={suggestions} activeIndex={1} onPick={() => {}} />);
 
     const options = screen.getAllByRole('option');
-    expect(options.map((option) => option.textContent)).toEqual(['Robert@Robert44', 'Robert L.@Robert_Lm']);
+    expect(options[0]).toHaveTextContent('Robert@Robert44');
+    expect(options[1]).toHaveTextContent('Robert L.@Robert_Lm');
     expect(options.map((option) => option.getAttribute('aria-selected'))).toEqual(['false', 'true']);
   });
 
@@ -26,7 +27,9 @@ describe('MentionPicker', () => {
   });
 
   it('renders nothing when no account is proposed', () => {
-    const { container } = render(<MentionPicker id="picker" suggestions={[]} activeIndex={0} onPick={() => {}} />);
+    const { container } = render(
+      <MentionPicker id="picker" suggestions={[]} activeIndex={0} onPick={() => {}} />,
+    );
 
     expect(container.firstChild).toBeNull();
   });

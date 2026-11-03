@@ -185,3 +185,20 @@
     flex: 0 0 320px;
   }
 }
+
+/* The photo, or the initial, of an account in a row (DEC-351). */
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--accent, #e0e7ff);
+  color: var(--primary, #4f46e5);
+  font-size: 12px;
+  font-weight: 600;
+  vertical-align: middle;
+}

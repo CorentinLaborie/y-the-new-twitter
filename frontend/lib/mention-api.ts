@@ -12,7 +12,7 @@ import type { ApiResult } from '@/lib/api-client';
 import { protectedApiRequest } from '@/lib/session-expired';
 
 /** An account the selector proposes. */
-export type MentionSuggestion = { handle: string; displayName: string };
+export type MentionSuggestion = { handle: string; displayName: string; avatarUrl: string | null };
 
 /** The answer of the selector: the accounts in the order to show them. */
 export type MentionSuggestionPage = { items: MentionSuggestion[] };

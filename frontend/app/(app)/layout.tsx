@@ -16,7 +16,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
 async function SessionGate({ children }: { children: ReactNode }) {
   const user = await requireSession();
   return (
-    <AppShell viewer={{ handle: user.handle, displayName: user.displayName }}>
+    <AppShell viewer={{ handle: user.handle, displayName: user.displayName, avatarUrl: user.avatarUrl }}>
       <SuspendedBanner />
       {children}
     </AppShell>

@@ -13,7 +13,7 @@ const POSTED: ReplyView = {
   questionId: 'q-1',
   text: 'Une réponse',
   createdAt: '2026-10-20T09:00:00Z',
-  author: { handle: 'alice', displayName: 'Alice' },
+  author: { handle: 'alice', displayName: 'Alice', avatarUrl: null },
   counters: { like: 0, dislike: 0 },
   viewerReactions: [],
   mentionLinks: [],
@@ -71,7 +71,9 @@ describe('ReplyComposer', () => {
     expect(counter()).toHaveTextContent('281/280');
     expect(counter()).toHaveAttribute('data-over', 'true');
     expect(
-      screen.getByText('Votre réponse dépasse la limite de 280 caractères. Retirez 1 caractère pour publier.'),
+      screen.getByText(
+        'Votre réponse dépasse la limite de 280 caractères. Retirez 1 caractère pour publier.',
+      ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Votre réponse')).toHaveAttribute('aria-invalid', 'true');
     expect(sendButton()).toBeDisabled();

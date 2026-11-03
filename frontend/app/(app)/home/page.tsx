@@ -22,6 +22,7 @@ export default async function HomePage({
       <HomeTabs
         initialTab={tabFrom(tab)}
         displayName={user.displayName}
+        avatarUrl={user.avatarUrl}
         viewerHandle={user.handle}
         suspended={user.status === 'suspended'}
       />

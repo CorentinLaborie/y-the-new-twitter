@@ -42,7 +42,7 @@ function conversation(overrides: Partial<ConversationView> = {}): ConversationVi
     id: CONVERSATION_ID,
     status: 'accepted',
     initiatedByViewer: true,
-    other: { handle: 'alice', displayName: 'Alice' },
+    other: { handle: 'alice', displayName: 'Alice', avatarUrl: null },
     lastMessageAt: '2026-10-27T09:33:00.000Z',
     lastMessage: null,
     otherLastReadAt: null,
@@ -108,7 +108,7 @@ describe('ConversationScreen', () => {
       conversation({
         status: 'pending',
         initiatedByViewer: false,
-        other: { handle: 'bob', displayName: 'Bob' },
+        other: { handle: 'bob', displayName: 'Bob', avatarUrl: null },
       }),
     );
     vi.mocked(acceptRequest).mockResolvedValue(OK(undefined));

@@ -24,7 +24,7 @@ describe('Composer: mention selector (M3)', () => {
   });
 
   it('opens the selector while a question is typed after an @', async () => {
-    render(<Composer displayName="Alice" suspended={false} onPosted={() => {}} />);
+    render(<Composer displayName="Alice" avatarUrl={null} suspended={false} onPosted={() => {}} />);
 
     fireEvent.change(textarea(), { target: { value: 'Qu’en pense @Ro' } });
 
@@ -33,7 +33,7 @@ describe('Composer: mention selector (M3)', () => {
   });
 
   it('writes the picked handle in the question, with a space after it', async () => {
-    render(<Composer displayName="Alice" suspended={false} onPosted={() => {}} />);
+    render(<Composer displayName="Alice" avatarUrl={null} suspended={false} onPosted={() => {}} />);
     fireEvent.change(textarea(), { target: { value: '@Ro' } });
 
     fireEvent.click(await screen.findByRole('option', { name: /Robert44/ }));
@@ -43,7 +43,7 @@ describe('Composer: mention selector (M3)', () => {
   });
 
   it('picks with Entrée and does not post the question', async () => {
-    render(<Composer displayName="Alice" suspended={false} onPosted={() => {}} />);
+    render(<Composer displayName="Alice" avatarUrl={null} suspended={false} onPosted={() => {}} />);
     fireEvent.change(textarea(), { target: { value: '@Ro' } });
     await screen.findByRole('option', { name: /Robert44/ });
 

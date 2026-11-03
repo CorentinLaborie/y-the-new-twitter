@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useEffect, useState } from 'react';
-import { avatarInitial } from '@/components/feed/avatar-initial';
 import { CONNECTION_FAILURE_MESSAGE, FeedError, FeedLoading } from '@/components/feed/feed-states';
 import { FollowButton } from '@/components/follow/follow-button';
 import { fetchFollowList, type FollowAccount } from '@/lib/profile-api';
@@ -121,9 +121,11 @@ export function FollowListScreen({
         <ul className={styles.accounts} aria-label={title}>
           {accounts.map((account) => (
             <li key={account.handle} className={styles.account}>
-              <span className={styles.avatarSmall} aria-hidden="true">
-                {avatarInitial(account.displayName)}
-              </span>
+              <UserAvatar
+                className={styles.avatarSmall}
+                displayName={account.displayName}
+                avatarUrl={account.avatarUrl}
+              />
               <span className={styles.accountText}>
                 <Link href={`/u/${account.handle}`} className={styles.accountName}>
                   {account.displayName}

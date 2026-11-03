@@ -15,7 +15,7 @@ function question(id: string, text: string): FeedQuestion {
     text,
     hashtags: ['tests'],
     createdAt: '2026-10-27T10:00:00.000Z',
-    author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
+    author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: false },
     counters: { like: 0, dislike: 0, y: 0, reply: 0 },
     yThreshold: 50,
     conversationOpen: false,
