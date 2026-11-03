@@ -8,7 +8,7 @@ const MENTION_REFUSED = 'Un des comptes mentionnés ne peut pas être mentionné
 export const SUGGESTION_LIMIT = 5;
 
 /** An account the selector proposes: its handle and its display name. */
-export type MentionSuggestion = { handle: string; displayName: string };
+export type MentionSuggestion = { handle: string; displayName: string; avatarUrl: string | null };
 
 /**
  * Keeps at most SUGGESTION_LIMIT accounts: the handles that start with the query first, then the others that contain it,

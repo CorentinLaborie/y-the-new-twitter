@@ -97,7 +97,12 @@ describe('MessagesService (section 9 of the conditions)', () => {
       NotFoundException,
     );
 
-    repository.findRecipient.mockResolvedValueOnce({ id: 'viewer-1', handle: 'viewer', displayName: 'Viewer' });
+    repository.findRecipient.mockResolvedValueOnce({
+      id: 'viewer-1',
+      handle: 'viewer',
+      displayName: 'Viewer',
+      avatarUrl: null,
+    });
     await expect(service.start(VIEWER, { handle: 'viewer', text: 'Bonjour' }, NOW)).rejects.toBeInstanceOf(
       UnprocessableEntityException,
     );
@@ -123,7 +128,9 @@ describe('MessagesService (section 9 of the conditions)', () => {
     await service.start(VIEWER, { handle: 'alice', text: 'Bonjour' }, NOW);
 
     expect(repository.follows).toHaveBeenCalledWith('other-1', 'viewer-1');
-    expect(repository.createDirect).toHaveBeenCalledWith(expect.objectContaining({ recipientStatus: 'accepted' }));
+    expect(repository.createDirect).toHaveBeenCalledWith(
+      expect.objectContaining({ recipientStatus: 'accepted' }),
+    );
   });
 
   it('writes to the open conversation instead of opening a second one', async () => {
@@ -188,7 +195,9 @@ describe('MessagesService (section 9 of the conditions)', () => {
   it('answers 404 to a conversation the viewer does not take part in or cannot see', async () => {
     repository.findParticipation.mockResolvedValueOnce(null);
 
-    await expect(service.send(VIEWER, CONVERSATION_ID, 'Salut', NOW)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.send(VIEWER, CONVERSATION_ID, 'Salut', NOW)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('lets the recipient of a request accept it, and refuses a second answer with 409', async () => {
@@ -210,11 +219,29 @@ describe('MessagesService (section 9 of the conditions)', () => {
   });
 
   it('shows the newest message on the list, and whether the viewer wrote it', async () => {
-    const newest = (senderId: string, body: string) => ({ ...conversation('accepted', 'accepted'), messages: [{ body, senderId }] });
+    const newest = (senderId: string, body: string) => ({
+      ...conversation('accepted', 'accepted'),
+      messages: [{ body, senderId }],
+    });
     const rows = [
-      { conversationId: 'c-1', requestStatus: 'accepted' as const, lastReadAt: null, conversation: newest('viewer-1', 'Vous') },
-      { conversationId: 'c-2', requestStatus: 'accepted' as const, lastReadAt: null, conversation: newest('other-1', 'Bonjour') },
-      { conversationId: 'c-3', requestStatus: 'accepted' as const, lastReadAt: null, conversation: { ...conversation('accepted', 'accepted'), messages: [] } },
+      {
+        conversationId: 'c-1',
+        requestStatus: 'accepted' as const,
+        lastReadAt: null,
+        conversation: newest('viewer-1', 'Vous'),
+      },
+      {
+        conversationId: 'c-2',
+        requestStatus: 'accepted' as const,
+        lastReadAt: null,
+        conversation: newest('other-1', 'Bonjour'),
+      },
+      {
+        conversationId: 'c-3',
+        requestStatus: 'accepted' as const,
+        lastReadAt: null,
+        conversation: { ...conversation('accepted', 'accepted'), messages: [] },
+      },
     ];
     repository.listConversations.mockResolvedValueOnce(rows as never);
 
@@ -240,7 +267,11 @@ describe('MessagesService (section 9 of the conditions)', () => {
 
     expect(repository.listConversations).toHaveBeenCalledWith('viewer-1', true, false, undefined, 3);
     expect(page.conversations.map((item) => item.id)).toEqual(['c-1', 'c-2']);
-    expect(page.conversations[0]).toMatchObject({ status: 'pending', initiatedByViewer: false, unread: true });
+    expect(page.conversations[0]).toMatchObject({
+      status: 'pending',
+      initiatedByViewer: false,
+      unread: true,
+    });
     expect(page.nextCursor).toBe(
       encodeKeysetCursor({ createdAt: new Date('2026-10-26T10:00:00.000Z'), id: 'c-2' }),
     );
@@ -273,7 +304,9 @@ describe('MessagesService (section 9 of the conditions)', () => {
   it('lets muting leave sending possible', async () => {
     await service.mute(VIEWER, CONVERSATION_ID, NOW);
 
-    await expect(service.send(VIEWER, CONVERSATION_ID, 'Toujours là', NOW)).resolves.toMatchObject({ mine: true });
+    await expect(service.send(VIEWER, CONVERSATION_ID, 'Toujours là', NOW)).resolves.toMatchObject({
+      mine: true,
+    });
   });
 
   it('lists the archived conversations when asked, and shows muted and archived on the view', async () => {

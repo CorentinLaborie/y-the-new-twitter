@@ -30,6 +30,7 @@ const VIEWER: SessionUser = {
   id: 'viewer-1',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };
@@ -198,16 +199,41 @@ describe('FollowsService (E1, E2, E5)', () => {
   describe('lists (E5)', () => {
     const at = (iso: string) => new Date(iso);
 
+    it('gives the address of each listed account photo (DEC-351)', async () => {
+      repository.findFollowerPage.mockResolvedValue([
+        {
+          createdAt: at('2026-10-20T10:00:02.000Z'),
+          accountId: 'a-9',
+          handle: 'eve',
+          displayName: 'Eve',
+          avatarUrl: '/avatars/eve.jpg',
+        },
+      ]);
+      repository.findFollowedIds.mockResolvedValue(new Set());
+
+      const page = await service.listFollowers(VIEWER, 'bob', { limit: 20 });
+
+      expect(page.items[0]).toMatchObject({ handle: 'eve', avatarUrl: '/avatars/eve.jpg' });
+    });
+
     it('says for each account of a list whether the viewer follows it', async () => {
       repository.findFollowerPage.mockResolvedValue([
-        { createdAt: at('2026-10-20T10:00:02.000Z'), accountId: 'a-2', handle: 'dan', displayName: 'Dan' },
+        {
+          createdAt: at('2026-10-20T10:00:02.000Z'),
+          accountId: 'a-2',
+          handle: 'dan',
+          displayName: 'Dan',
+          avatarUrl: null,
+        },
       ]);
       repository.findFollowedIds.mockResolvedValue(new Set(['a-2']));
 
       const page = await service.listFollowers(VIEWER, 'bob', { limit: 20 });
 
       expect(repository.findFollowedIds).toHaveBeenCalledWith(prisma, 'viewer-1', ['a-2']);
-      expect(page.items).toEqual([{ handle: 'dan', displayName: 'Dan', viewerFollows: true }]);
+      expect(page.items).toEqual([
+        { handle: 'dan', displayName: 'Dan', avatarUrl: null, viewerFollows: true },
+      ]);
     });
 
     it('returns the accounts in the author format, newest follow first, with the next cursor of the last shown row', async () => {
@@ -217,17 +243,30 @@ describe('FollowsService (E1, E2, E5)', () => {
           accountId: 'a-3',
           handle: 'carol',
           displayName: 'Carol',
+          avatarUrl: null,
         },
-        { createdAt: at('2026-10-20T10:00:02.000Z'), accountId: 'a-2', handle: 'dan', displayName: 'Dan' },
-        { createdAt: at('2026-10-20T10:00:01.000Z'), accountId: 'a-1', handle: 'erin', displayName: 'Erin' },
+        {
+          createdAt: at('2026-10-20T10:00:02.000Z'),
+          accountId: 'a-2',
+          handle: 'dan',
+          displayName: 'Dan',
+          avatarUrl: null,
+        },
+        {
+          createdAt: at('2026-10-20T10:00:01.000Z'),
+          accountId: 'a-1',
+          handle: 'erin',
+          displayName: 'Erin',
+          avatarUrl: null,
+        },
       ]);
 
       const page = await service.listFollowers(VIEWER, 'bob', { limit: 2 });
 
       expect(page).toEqual({
         items: [
-          { handle: 'carol', displayName: 'Carol', viewerFollows: false },
-          { handle: 'dan', displayName: 'Dan', viewerFollows: false },
+          { handle: 'carol', displayName: 'Carol', avatarUrl: null, viewerFollows: false },
+          { handle: 'dan', displayName: 'Dan', avatarUrl: null, viewerFollows: false },
         ],
         nextCursor: encodeKeysetCursor({ createdAt: at('2026-10-20T10:00:02.000Z'), id: 'a-2' }),
       });
@@ -241,13 +280,19 @@ describe('FollowsService (E1, E2, E5)', () => {
 
     it('has no next cursor on the last page', async () => {
       repository.findFollowingPage.mockResolvedValue([
-        { createdAt: at('2026-10-20T10:00:01.000Z'), accountId: 'a-1', handle: 'erin', displayName: 'Erin' },
+        {
+          createdAt: at('2026-10-20T10:00:01.000Z'),
+          accountId: 'a-1',
+          handle: 'erin',
+          displayName: 'Erin',
+          avatarUrl: null,
+        },
       ]);
 
       const page = await service.listFollowing(VIEWER, 'bob', { limit: 20 });
 
       expect(page).toEqual({
-        items: [{ handle: 'erin', displayName: 'Erin', viewerFollows: false }],
+        items: [{ handle: 'erin', displayName: 'Erin', avatarUrl: null, viewerFollows: false }],
         nextCursor: null,
       });
     });

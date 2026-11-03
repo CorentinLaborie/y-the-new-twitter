@@ -15,6 +15,7 @@ const VIEWER: SessionUser = {
   id: '4c5d6e7f-1a2b-4c3d-8e9f-0a1b2c3d4e5f',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };
@@ -34,6 +35,7 @@ function row(overrides: Partial<NotificationRow> = {}): NotificationRow {
     has_unread: true,
     actor_handle: 'bob',
     actor_display_name: 'Bob',
+    actor_avatar_url: null,
     question_body: 'Une question ?',
     reply_body: null,
     ...overrides,
@@ -47,7 +49,7 @@ describe('toNotificationView', () => {
       type: 'reaction_like',
       createdAt: '2026-10-22T10:00:00.000Z',
       readAt: null,
-      actor: { handle: 'bob', displayName: 'Bob' },
+      actor: { handle: 'bob', displayName: 'Bob', avatarUrl: null },
       actorCount: 1,
       question: { id: 'q-1', text: 'Une question ?' },
       reply: null,
@@ -65,7 +67,9 @@ describe('toNotificationView', () => {
   it('gives the read date only when the line has no unread row', () => {
     const readAt = new Date('2026-10-22T11:00:00.000Z');
 
-    expect(toNotificationView(row({ has_unread: false, read_at: readAt })).readAt).toBe('2026-10-22T11:00:00.000Z');
+    expect(toNotificationView(row({ has_unread: false, read_at: readAt })).readAt).toBe(
+      '2026-10-22T11:00:00.000Z',
+    );
     expect(toNotificationView(row({ has_unread: true, read_at: readAt })).readAt).toBeNull();
   });
 
@@ -107,7 +111,11 @@ describe('NotificationsService', () => {
   let service: NotificationsService;
 
   beforeEach(() => {
-    repository = { findPage: jest.fn(), countUnread: jest.fn(), markAllRead: jest.fn() } as unknown as Repository;
+    repository = {
+      findPage: jest.fn(),
+      countUnread: jest.fn(),
+      markAllRead: jest.fn(),
+    } as unknown as Repository;
     prisma = {} as PrismaService;
     service = new NotificationsService(prisma, repository as unknown as NotificationsRepository);
   });
@@ -151,9 +159,9 @@ describe('NotificationsService', () => {
   });
 
   it('refuses an account that is neither active nor suspended', async () => {
-    await expect(service.list({ ...VIEWER, status: 'pending_deletion' }, 20, undefined, undefined)).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(
+      service.list({ ...VIEWER, status: 'pending_deletion' }, 20, undefined, undefined),
+    ).rejects.toThrow(ForbiddenException);
     await expect(service.unreadCount({ ...VIEWER, status: 'pending_verification' })).rejects.toThrow(
       ForbiddenException,
     );
@@ -185,5 +193,13 @@ describe('NotificationsService', () => {
     await service.markAllRead(VIEWER, [OTHER_ID]);
 
     expect(repository.markAllRead).toHaveBeenCalledWith(prisma, VIEWER.id, expect.any(Date), [OTHER_ID]);
+  });
+});
+
+describe('toNotificationView actor photo (DEC-351)', () => {
+  it('gives the address of the actor photo, so the line can show it', () => {
+    const view = toNotificationView(row({ actor_avatar_url: '/avatars/bob.jpg' }));
+
+    expect(view.actor).toEqual({ handle: 'bob', displayName: 'Bob', avatarUrl: '/avatars/bob.jpg' });
   });
 });

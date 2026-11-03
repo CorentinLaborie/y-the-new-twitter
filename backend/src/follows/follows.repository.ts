@@ -14,6 +14,7 @@ export interface FollowListRow {
   readonly accountId: string;
   readonly handle: string;
   readonly displayName: string;
+  readonly avatarUrl: string | null;
 }
 
 export interface FollowPageQuery {
@@ -136,7 +137,7 @@ export class FollowsRepository {
       select: {
         createdAt: true,
         followerId: true,
-        follower: { select: { handle: true, displayName: true } },
+        follower: { select: { handle: true, displayName: true, avatarUrl: true } },
       },
     });
 
@@ -145,6 +146,7 @@ export class FollowsRepository {
       accountId: row.followerId,
       handle: row.follower.handle,
       displayName: row.follower.displayName,
+      avatarUrl: row.follower.avatarUrl,
     }));
   }
 
@@ -163,7 +165,7 @@ export class FollowsRepository {
       select: {
         createdAt: true,
         followeeId: true,
-        followee: { select: { handle: true, displayName: true } },
+        followee: { select: { handle: true, displayName: true, avatarUrl: true } },
       },
     });
 
@@ -172,6 +174,7 @@ export class FollowsRepository {
       accountId: row.followeeId,
       handle: row.followee.handle,
       displayName: row.followee.displayName,
+      avatarUrl: row.followee.avatarUrl,
     }));
   }
 }

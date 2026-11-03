@@ -30,6 +30,7 @@ export interface NotificationRow {
   readonly has_unread: boolean;
   readonly actor_handle: string | null;
   readonly actor_display_name: string | null;
+  readonly actor_avatar_url: string | null;
   readonly question_body: string | null;
   readonly reply_body: string | null;
 }
@@ -110,7 +111,7 @@ export class NotificationsRepository {
       )
       SELECT latest.id, latest.type, latest.created_at, latest.read_at, latest.actor_id, latest.question_id,
         latest.reply_id, groups.actor_count, groups.has_unread,
-        actor.handle AS actor_handle, actor.display_name AS actor_display_name,
+        actor.handle AS actor_handle, actor.display_name AS actor_display_name, actor.avatar_url AS actor_avatar_url,
         q.body AS question_body, r.body AS reply_body
       FROM latest
       JOIN groups USING (group_key)
@@ -137,9 +138,17 @@ export class NotificationsRepository {
    * Marks the unread lines of the viewer as read now, or only the lines of `ids` when given (the lines the page showed).
    * Lines already read keep their date.
    */
-  async markAllRead(db: NotificationsDb, viewerId: string, at: Date, ids?: string[]): Promise<Prisma.BatchPayload> {
+  async markAllRead(
+    db: NotificationsDb,
+    viewerId: string,
+    at: Date,
+    ids?: string[],
+  ): Promise<Prisma.BatchPayload> {
     if (ids === undefined) {
-      return db.notification.updateMany({ where: { recipientId: viewerId, readAt: null }, data: { readAt: at } });
+      return db.notification.updateMany({
+        where: { recipientId: viewerId, readAt: null },
+        data: { readAt: at },
+      });
     }
     const shown = await db.notification.updateMany({
       where: { recipientId: viewerId, readAt: null, id: { in: ids } },

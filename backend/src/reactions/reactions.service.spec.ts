@@ -28,6 +28,7 @@ const VIEWER: SessionUser = {
   id: 'user-1',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };
@@ -225,7 +226,7 @@ describe('ReactionsService (B3, B5)', () => {
     expect(repository.setQuestionReaction).not.toHaveBeenCalled();
   });
 
-  it("writes one reaction notice to the author for a new reaction (L2, section 4.1)", async () => {
+  it('writes one reaction notice to the author for a new reaction (L2, section 4.1)', async () => {
     await service.set(VIEWER, QUESTION_ID, 'like');
 
     expect(repository.writeReactionNotification).toHaveBeenCalledWith(

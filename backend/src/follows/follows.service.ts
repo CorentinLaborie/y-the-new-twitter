@@ -30,6 +30,7 @@ function toListPage(
     items: items.map((row) => ({
       handle: row.handle,
       displayName: row.displayName,
+      avatarUrl: row.avatarUrl,
       viewerFollows: followedIds.has(row.accountId),
     })),
     nextCursor:

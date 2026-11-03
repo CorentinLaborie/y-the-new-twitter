@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { ForbiddenException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { encodeKeysetCursor } from '../common/pagination/keyset-cursor';
 import type { PrismaService } from '../database/prisma.service';
@@ -25,6 +21,7 @@ const VIEWER: SessionUser = {
   id: 'viewer-1',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };
@@ -39,21 +36,22 @@ describe('BlocksService (L6, S2)', () => {
   beforeEach(() => {
     repository = {
       findAccountByHandle: jest.fn().mockResolvedValue(TARGET),
-      lockAccounts: jest
-        .fn()
-        .mockResolvedValue(
-          new Map([
-            [VIEWER.id, 'active'],
-            [TARGET.id, 'active'],
-          ]),
-        ),
+      lockAccounts: jest.fn().mockResolvedValue(
+        new Map([
+          [VIEWER.id, 'active'],
+          [TARGET.id, 'active'],
+        ]),
+      ),
       createBlock: jest.fn().mockResolvedValue(true),
       deleteBlock: jest.fn().mockResolvedValue({ count: 1 }),
       removeFollowsBetween: jest.fn().mockResolvedValue(undefined),
       findBlockPage: jest.fn().mockResolvedValue([]),
     };
     prisma = { $transaction: jest.fn((write) => write(DB)) };
-    service = new BlocksService(prisma as unknown as PrismaService, repository as unknown as BlocksRepository);
+    service = new BlocksService(
+      prisma as unknown as PrismaService,
+      repository as unknown as BlocksRepository,
+    );
   });
 
   describe('block', () => {
@@ -144,7 +142,11 @@ describe('BlocksService (L6, S2)', () => {
     it('returns the blocked accounts, most recent first, with the cursor of the next page', async () => {
       const blockedAt = new Date('2026-10-23T09:00:00.000Z');
       repository.findBlockPage.mockResolvedValue([
-        { createdAt: blockedAt, blockedId: 'target-1', blocked: { handle: 'bob', displayName: 'Bob' } },
+        {
+          createdAt: blockedAt,
+          blockedId: 'target-1',
+          blocked: { handle: 'bob', displayName: 'Bob', avatarUrl: null },
+        },
         {
           createdAt: new Date('2026-10-22T09:00:00.000Z'),
           blockedId: 'target-2',
@@ -155,14 +157,18 @@ describe('BlocksService (L6, S2)', () => {
       const page = await service.list(VIEWER, { limit: 1 } as never);
 
       expect(page).toEqual({
-        items: [{ handle: 'bob', displayName: 'Bob', blockedAt }],
+        items: [{ handle: 'bob', displayName: 'Bob', avatarUrl: null, blockedAt }],
         nextCursor: encodeKeysetCursor({ createdAt: blockedAt, id: 'target-1' }),
       });
     });
 
     it('returns no cursor on the last page', async () => {
       repository.findBlockPage.mockResolvedValue([
-        { createdAt: new Date(), blockedId: 'target-1', blocked: { handle: 'bob', displayName: 'Bob' } },
+        {
+          createdAt: new Date(),
+          blockedId: 'target-1',
+          blocked: { handle: 'bob', displayName: 'Bob', avatarUrl: null },
+        },
       ] as never);
 
       const page = await service.list(VIEWER, { limit: 20 } as never);

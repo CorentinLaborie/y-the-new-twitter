@@ -16,6 +16,7 @@ const VIEWER: SessionUser = {
   id: 'viewer-1',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };

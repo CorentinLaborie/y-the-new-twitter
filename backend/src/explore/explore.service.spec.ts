@@ -9,6 +9,7 @@ const VIEWER: SessionUser = {
   id: '11111111-1111-4111-8111-111111111111',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };
@@ -31,7 +32,7 @@ function row(id: string, createdAt: Date) {
     moderationStatus: 'visible' as const,
     moderatedAt: null,
     authorId: 'author-1',
-    author: { handle: 'bob', displayName: 'Bob' },
+    author: { handle: 'bob', displayName: 'Bob', avatarUrl: null },
     hashtags: [{ hashtag: { name: 'tests' }, createdAt, questionId: id, hashtagId: 'hashtag-1' }],
   };
 }
@@ -118,14 +119,14 @@ describe('ExploreService', () => {
   it('searches with the hashtag text in lowercase and returns the three groups', async () => {
     const { service, explore } = setup();
     explore.searchHashtags.mockResolvedValue([{ name: 'tests' }]);
-    explore.searchAccounts.mockResolvedValue([{ handle: 'bob', displayName: 'Bob' }]);
+    explore.searchAccounts.mockResolvedValue([{ handle: 'bob', displayName: 'Bob', avatarUrl: null }]);
 
     const result = await service.search(VIEWER, 'Tes');
 
     expect(explore.searchHashtags).toHaveBeenCalledWith('tes', 5);
     expect(explore.searchQuestions).toHaveBeenCalledWith(VIEWER.id, 'Tes', 10);
     expect(result.hashtags).toEqual([{ name: 'tests' }]);
-    expect(result.accounts).toEqual([{ handle: 'bob', displayName: 'Bob' }]);
+    expect(result.accounts).toEqual([{ handle: 'bob', displayName: 'Bob', avatarUrl: null }]);
   });
 
   it('pages a hashtag with a cursor built from the last row of the page', async () => {
@@ -152,11 +153,15 @@ describe('ExploreService', () => {
 
   it('returns the suggested accounts from the repository', async () => {
     const { service, explore } = setup();
-    explore.suggestedAccounts.mockResolvedValue([{ id: OTHER_ID, handle: 'carol', displayName: 'Carol' }]);
+    explore.suggestedAccounts.mockResolvedValue([
+      { id: OTHER_ID, handle: 'carol', displayName: 'Carol', avatarUrl: null },
+    ]);
 
     const result = await service.suggestions(VIEWER);
 
     expect(explore.suggestedAccounts).toHaveBeenCalledWith(VIEWER.id, new Date('2026-10-26T12:00:00Z'), 5);
-    expect(result.accounts).toEqual([{ id: OTHER_ID, handle: 'carol', displayName: 'Carol' }]);
+    expect(result.accounts).toEqual([
+      { id: OTHER_ID, handle: 'carol', displayName: 'Carol', avatarUrl: null },
+    ]);
   });
 });

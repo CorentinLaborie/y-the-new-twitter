@@ -7,11 +7,7 @@ import {
 import type { SessionUser } from '../auth/session/session-user.repository';
 import { decodeKeysetCursor, encodeKeysetCursor } from '../common/pagination/keyset-cursor';
 import { MessagesRepository, type ConversationRow, type ParticipationRow } from './messages.repository';
-import {
-  ConversationListQueryDto,
-  MessageQueryDto,
-  StartConversationDto,
-} from './dto/messages.dto';
+import { ConversationListQueryDto, MessageQueryDto, StartConversationDto } from './dto/messages.dto';
 
 export const RECIPIENT_NOT_FOUND_MESSAGE = 'Compte introuvable.';
 export const SELF_MESSAGE = 'Vous ne pouvez pas vous écrire à vous-même.';
@@ -39,7 +35,7 @@ export interface ConversationView {
   id: string;
   status: 'pending' | 'accepted' | 'declined';
   initiatedByViewer: boolean;
-  other: { handle: string; displayName: string };
+  other: { handle: string; displayName: string; avatarUrl: string | null };
   lastMessageAt: string;
   /** When the other account last read the conversation, or null when it has not. */
   otherLastReadAt: string | null;
@@ -60,7 +56,11 @@ export class MessagesService {
   constructor(private readonly messages: MessagesRepository) {}
 
   /** Opens the conversation with a handle, or writes to the one already open. Returns the conversation id. */
-  async start(viewer: SessionUser, dto: StartConversationDto, now: Date): Promise<{ conversationId: string }> {
+  async start(
+    viewer: SessionUser,
+    dto: StartConversationDto,
+    now: Date,
+  ): Promise<{ conversationId: string }> {
     const recipient = await this.messages.findRecipient(viewer.id, dto.handle);
     if (recipient === null) {
       throw new NotFoundException(RECIPIENT_NOT_FOUND_MESSAGE);
@@ -101,7 +101,10 @@ export class MessagesService {
     if (mine.requestStatus === 'pending') {
       throw new ConflictException(ACCEPT_FIRST_MESSAGE);
     }
-    if (other.requestStatus === 'pending' && (await this.messages.countMessagesBy(conversationId, viewer.id)) >= 1) {
+    if (
+      other.requestStatus === 'pending' &&
+      (await this.messages.countMessagesBy(conversationId, viewer.id)) >= 1
+    ) {
       throw new ConflictException(ONE_MESSAGE_MESSAGE);
     }
 
@@ -121,10 +124,19 @@ export class MessagesService {
   }
 
   /** The viewer's conversations, or the requests waiting for them, active or archived, the newest message first, in pages. */
-  async list(viewer: SessionUser, query: ConversationListQueryDto): Promise<{ conversations: ConversationView[]; nextCursor: string | null }> {
+  async list(
+    viewer: SessionUser,
+    query: ConversationListQueryDto,
+  ): Promise<{ conversations: ConversationView[]; nextCursor: string | null }> {
     const limit = query.limit;
     const after = query.cursor === undefined ? undefined : decodeKeysetCursor(query.cursor);
-    const rows = await this.messages.listConversations(viewer.id, query.requests === true, query.archived === true, after, limit + 1);
+    const rows = await this.messages.listConversations(
+      viewer.id,
+      query.requests === true,
+      query.archived === true,
+      after,
+      limit + 1,
+    );
     const page = rows.slice(0, limit);
     const last = page.at(-1);
 
@@ -132,7 +144,10 @@ export class MessagesService {
       conversations: page.map((row) => toConversationView(row, viewer.id)),
       nextCursor:
         rows.length > limit && last !== undefined
-          ? encodeKeysetCursor({ createdAt: last.conversation.lastMessageAt ?? new Date(0), id: last.conversationId })
+          ? encodeKeysetCursor({
+              createdAt: last.conversation.lastMessageAt ?? new Date(0),
+              id: last.conversationId,
+            })
           : null,
     };
   }
@@ -145,7 +160,11 @@ export class MessagesService {
   }
 
   /** One page of the messages of a conversation, the newest first. */
-  async messagesOf(viewer: SessionUser, conversationId: string, query: MessageQueryDto): Promise<{ messages: MessageView[]; nextCursor: string | null }> {
+  async messagesOf(
+    viewer: SessionUser,
+    conversationId: string,
+    query: MessageQueryDto,
+  ): Promise<{ messages: MessageView[]; nextCursor: string | null }> {
     await this.participation(viewer, conversationId);
     const limit = query.limit;
     const after = query.cursor === undefined ? undefined : decodeKeysetCursor(query.cursor);
@@ -193,17 +212,31 @@ export class MessagesService {
     return this.setArchived(viewer, conversationId, false, now);
   }
 
-  private async setMuted(viewer: SessionUser, conversationId: string, muted: boolean, now: Date): Promise<void> {
+  private async setMuted(
+    viewer: SessionUser,
+    conversationId: string,
+    muted: boolean,
+    now: Date,
+  ): Promise<void> {
     await this.participation(viewer, conversationId);
     await this.messages.setMuted(conversationId, viewer.id, muted, now);
   }
 
-  private async setArchived(viewer: SessionUser, conversationId: string, archived: boolean, now: Date): Promise<void> {
+  private async setArchived(
+    viewer: SessionUser,
+    conversationId: string,
+    archived: boolean,
+    now: Date,
+  ): Promise<void> {
     await this.participation(viewer, conversationId);
     await this.messages.setArchived(conversationId, viewer.id, archived, now);
   }
 
-  private async answer(viewer: SessionUser, conversationId: string, status: 'accepted' | 'declined'): Promise<void> {
+  private async answer(
+    viewer: SessionUser,
+    conversationId: string,
+    status: 'accepted' | 'declined',
+  ): Promise<void> {
     const conversation = await this.participation(viewer, conversationId);
     if (ownRow(conversation, viewer.id).requestStatus !== 'pending') {
       throw new ConflictException(NOT_PENDING_MESSAGE);
@@ -259,7 +292,11 @@ function toConversationView(row: ParticipationRow, viewerId: string): Conversati
     id: conversation.id,
     status: row.requestStatus,
     initiatedByViewer: conversation.initiatedById === viewerId,
-    other: { handle: other.user.handle, displayName: other.user.displayName },
+    other: {
+      handle: other.user.handle,
+      displayName: other.user.displayName,
+      avatarUrl: other.user.avatarUrl,
+    },
     lastMessageAt: lastMessageAt.toISOString(),
     otherLastReadAt: other.lastReadAt?.toISOString() ?? null,
     lastMessage: latest === undefined ? null : { text: latest.body, mine: latest.senderId === viewerId },

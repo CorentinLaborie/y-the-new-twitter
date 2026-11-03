@@ -14,10 +14,7 @@ function afterPosition(after: KeysetPosition | undefined): Prisma.BlockWhereInpu
   }
 
   return {
-    OR: [
-      { createdAt: { lt: after.createdAt } },
-      { createdAt: after.createdAt, blockedId: { lt: after.id } },
-    ],
+    OR: [{ createdAt: { lt: after.createdAt } }, { createdAt: after.createdAt, blockedId: { lt: after.id } }],
   };
 }
 
@@ -87,7 +84,7 @@ export class BlocksRepository {
       select: {
         createdAt: true,
         blockedId: true,
-        blocked: { select: { handle: true, displayName: true } },
+        blocked: { select: { handle: true, displayName: true, avatarUrl: true } },
       },
     });
   }

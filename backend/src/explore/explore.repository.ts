@@ -16,6 +16,7 @@ export interface SuggestedAccountRow {
   readonly id: string;
   readonly handle: string;
   readonly displayName: string;
+  readonly avatarUrl: string | null;
 }
 
 /**
@@ -160,7 +161,7 @@ export class ExploreRepository {
       },
       orderBy: { handle: 'asc' },
       take,
-      select: { handle: true, displayName: true },
+      select: { handle: true, displayName: true, avatarUrl: true },
     });
   }
 
@@ -178,7 +179,7 @@ export class ExploreRepository {
         WHERE own.author_id = ${viewerId}::uuid
       ),
       candidates AS (
-        SELECT u.id, u.handle, u.display_name AS "displayName"
+        SELECT u.id, u.handle, u.display_name AS "displayName", u.avatar_url AS "avatarUrl"
         FROM users u
         WHERE u.status = 'active'
           AND u.id <> ${viewerId}::uuid
@@ -187,7 +188,7 @@ export class ExploreRepository {
             OR (b.blocker_id = u.id AND b.blocked_id = ${viewerId}::uuid))
           AND EXISTS (SELECT 1 FROM questions q WHERE q.author_id = u.id AND q.deleted_at IS NULL AND q.moderation_status = 'visible')
       )
-      SELECT c.id, c.handle, c."displayName"
+      SELECT c.id, c.handle, c."displayName", c."avatarUrl"
       FROM candidates c
       LEFT JOIN LATERAL (
         SELECT COUNT(*)::int AS n

@@ -26,11 +26,16 @@ export class MentionsRepository {
       where: {
         AND: [
           visibleAccountTo(viewerId),
-          { OR: [{ followedBy: { some: { followerId: viewerId } } }, { follows: { some: { followeeId: viewerId } } }] },
+          {
+            OR: [
+              { followedBy: { some: { followerId: viewerId } } },
+              { follows: { some: { followeeId: viewerId } } },
+            ],
+          },
           { handle: { contains: query, mode: 'insensitive' } },
         ],
       },
-      select: { handle: true, displayName: true },
+      select: { handle: true, displayName: true, avatarUrl: true },
       orderBy: { handle: 'asc' },
       take: SUGGESTION_CANDIDATE_LIMIT,
     });

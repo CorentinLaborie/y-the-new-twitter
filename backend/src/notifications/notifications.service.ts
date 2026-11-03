@@ -10,7 +10,11 @@ export interface NotificationView {
   readonly type: NotificationType;
   readonly createdAt: string;
   readonly readAt: string | null;
-  readonly actor: { readonly handle: string; readonly displayName: string } | null;
+  readonly actor: {
+    readonly handle: string;
+    readonly displayName: string;
+    readonly avatarUrl: string | null;
+  } | null;
   readonly actorCount: number;
   readonly question: { readonly id: string; readonly text: string } | null;
   readonly reply: { readonly id: string; readonly text: string } | null;
@@ -29,17 +33,20 @@ export function toNotificationView(row: NotificationRow): NotificationView {
     type: row.type,
     createdAt: row.created_at.toISOString(),
     readAt: row.has_unread ? null : (row.read_at?.toISOString() ?? null),
-    actor: row.actor_id && row.actor_handle && row.actor_display_name
-      ? { handle: row.actor_handle, displayName: row.actor_display_name }
-      : null,
+    actor:
+      row.actor_id && row.actor_handle && row.actor_display_name
+        ? { handle: row.actor_handle, displayName: row.actor_display_name, avatarUrl: row.actor_avatar_url }
+        : null,
     actorCount: row.actor_count,
-    question: row.question_id && row.question_body !== null ? { id: row.question_id, text: row.question_body } : null,
+    question:
+      row.question_id && row.question_body !== null ? { id: row.question_id, text: row.question_body } : null,
     reply: row.reply_id && row.reply_body !== null ? { id: row.reply_id, text: row.reply_body } : null,
   };
 }
 
 // The id must be a full UUID: a 36-character string of dashes would pass the length check and fail the ::uuid cast (500).
-const CURSOR_PATTERN = /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)\|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
+const CURSOR_PATTERN =
+  /^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)\|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 
 /** The cursor is the creation time and id of the last row of a page, base64url-encoded. */
 export function encodeCursor(cursor: NotificationCursor): string {
@@ -82,7 +89,8 @@ export class NotificationsService {
     const rows = await this.notifications.findPage(this.prisma, viewer.id, limit + 1, type, cursor);
     const pageRows = rows.slice(0, limit);
     const last = pageRows.at(-1);
-    const nextCursor = rows.length > limit && last ? encodeCursor({ createdAt: last.created_at, id: last.id }) : null;
+    const nextCursor =
+      rows.length > limit && last ? encodeCursor({ createdAt: last.created_at, id: last.id }) : null;
 
     return { items: pageRows.map(toNotificationView), nextCursor };
   }

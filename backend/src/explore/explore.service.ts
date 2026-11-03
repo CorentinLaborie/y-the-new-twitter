@@ -22,7 +22,11 @@ const HASHTAG_PAGE_DEFAULT = 20;
 export interface SearchResult {
   readonly questions: QuestionResponseDto[];
   readonly hashtags: { readonly name: string }[];
-  readonly accounts: { readonly handle: string; readonly displayName: string }[];
+  readonly accounts: {
+    readonly handle: string;
+    readonly displayName: string;
+    readonly avatarUrl: string | null;
+  }[];
 }
 
 export interface HashtagPage {

@@ -10,7 +10,7 @@ export type MessagesDb = Prisma.TransactionClient;
 /** A conversation with its participants and their public names: the viewer finds its own row and the other one. */
 const CONVERSATION_INCLUDE = {
   participants: {
-    include: { user: { select: { id: true, handle: true, displayName: true } } },
+    include: { user: { select: { id: true, handle: true, displayName: true, avatarUrl: true } } },
   },
   // The newest message only: the list shows its text under the other account.
   messages: {
@@ -61,7 +61,7 @@ export class MessagesRepository {
   findRecipient(viewerId: string, handle: string) {
     return this.prisma.user.findFirst({
       where: { AND: [{ handle }, visibleAccountTo(viewerId)] },
-      select: { id: true, handle: true, displayName: true },
+      select: { id: true, handle: true, displayName: true, avatarUrl: true },
     });
   }
 
@@ -106,7 +106,12 @@ export class MessagesRepository {
         select: { id: true },
       });
       await tx.message.create({
-        data: { conversationId: conversation.id, senderId: change.initiatorId, body: change.text, createdAt: change.now },
+        data: {
+          conversationId: conversation.id,
+          senderId: change.initiatorId,
+          body: change.text,
+          createdAt: change.now,
+        },
       });
 
       return conversation.id;
@@ -126,7 +131,12 @@ export class MessagesRepository {
   }
 
   /** Writes a message and moves the time of the last message of its conversation, in one transaction. */
-  appendMessage(conversationId: string, senderId: string, text: string, now: Date): Promise<{ id: string; createdAt: Date }> {
+  appendMessage(
+    conversationId: string,
+    senderId: string,
+    text: string,
+    now: Date,
+  ): Promise<{ id: string; createdAt: Date }> {
     return this.prisma.$transaction(async (tx) => {
       const message = await tx.message.create({
         data: { conversationId, senderId, body: text, createdAt: now },
@@ -144,7 +154,11 @@ export class MessagesRepository {
   }
 
   /** Answers a request: only a request still pending for this participant changes. False when nothing changed. */
-  async answerRequest(conversationId: string, userId: string, status: 'accepted' | 'declined'): Promise<boolean> {
+  async answerRequest(
+    conversationId: string,
+    userId: string,
+    status: 'accepted' | 'declined',
+  ): Promise<boolean> {
     const result = await this.prisma.conversationParticipant.updateMany({
       where: { conversationId, userId, requestStatus: 'pending' },
       data: { requestStatus: status },
@@ -188,12 +202,26 @@ export class MessagesRepository {
    * active (not archived) or archived. Only the conversations whose other participant may still be written to are
    * listed; the newest message comes first.
    */
-  listConversations(viewerId: string, requests: boolean, archived: boolean, after: KeysetPosition | undefined, take: number) {
+  listConversations(
+    viewerId: string,
+    requests: boolean,
+    archived: boolean,
+    after: KeysetPosition | undefined,
+    take: number,
+  ) {
     return this.prisma.conversationParticipant.findMany({
       where: {
         AND: [
-          { userId: viewerId, requestStatus: requests ? 'pending' : 'accepted', archivedAt: archived ? { not: null } : null },
-          { conversation: { participants: { some: { userId: { not: viewerId }, user: visibleAccountTo(viewerId) } } } },
+          {
+            userId: viewerId,
+            requestStatus: requests ? 'pending' : 'accepted',
+            archivedAt: archived ? { not: null } : null,
+          },
+          {
+            conversation: {
+              participants: { some: { userId: { not: viewerId }, user: visibleAccountTo(viewerId) } },
+            },
+          },
           afterConversation(after),
         ],
       },

@@ -2642,6 +2642,12 @@ components:
         displayName:
           type: string
           example: Alice
+        avatarUrl:
+          type: string
+          nullable: true
+          example: /avatars/3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b.jpg
+          description: Address of the profile photo, or null when the account has none
+            (the initial is shown then).
         status:
           type: string
           enum:
@@ -2662,6 +2668,7 @@ components:
       required:
         - handle
         - displayName
+        - avatarUrl
         - status
         - suspensionReason
     CurrentSessionResponseDto:
@@ -2772,6 +2779,12 @@ components:
         displayName:
           type: string
           example: Alice
+        avatarUrl:
+          type: string
+          nullable: true
+          example: /avatars/3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b.jpg
+          description: Address of the profile photo, or null when the account has none
+            (the initial is shown then).
         viewerFollows:
           type: boolean
           example: false
@@ -2780,6 +2793,7 @@ components:
       required:
         - handle
         - displayName
+        - avatarUrl
         - viewerFollows
     QuestionCountersDto:
       type: object
@@ -2947,9 +2961,16 @@ components:
         displayName:
           type: string
           example: Alice
+        avatarUrl:
+          type: string
+          nullable: true
+          example: /avatars/3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b.jpg
+          description: Address of the profile photo, or null when the account has none
+            (the initial is shown then).
       required:
         - handle
         - displayName
+        - avatarUrl
     ReplyCountersDto:
       type: object
       properties:
@@ -3059,12 +3080,19 @@ components:
         displayName:
           type: string
           example: Bob Martin
+        avatarUrl:
+          type: string
+          nullable: true
+          example: /avatars/3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b.jpg
+          description: Address of the profile photo, or null when the account has none
+            (the initial is shown then).
         blockedAt:
           format: date-time
           type: string
       required:
         - handle
         - displayName
+        - avatarUrl
         - blockedAt
     BlockPageDto:
       type: object
@@ -3200,6 +3228,12 @@ components:
         displayName:
           type: string
           example: Alice
+        avatarUrl:
+          type: string
+          nullable: true
+          example: /avatars/3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b.jpg
+          description: Address of the profile photo, or null when the account has none
+            (the initial is shown then).
         viewerFollows:
           type: boolean
           example: false
@@ -3207,6 +3241,7 @@ components:
       required:
         - handle
         - displayName
+        - avatarUrl
         - viewerFollows
     FollowListPageDto:
       type: object
@@ -3349,9 +3384,16 @@ components:
         displayName:
           type: string
           example: Bob
+        avatarUrl:
+          type: string
+          nullable: true
+          example: /avatars/3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b.jpg
+          description: Address of the profile photo, or null when the account has none
+            (the initial is shown then).
       required:
         - handle
         - displayName
+        - avatarUrl
     NotificationTargetDto:
       type: object
       properties:

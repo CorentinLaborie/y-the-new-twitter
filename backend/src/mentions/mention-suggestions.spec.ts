@@ -4,7 +4,7 @@ import { MentionsService, rankMentionSuggestions, SUGGESTION_LIMIT } from './men
 type Repository = jest.Mocked<Pick<MentionsRepository, 'findSuggestionCandidates' | 'findVisibleHandles'>>;
 
 const DB = 'tx';
-const account = (handle: string) => ({ handle, displayName: handle });
+const account = (handle: string) => ({ handle, displayName: handle, avatarUrl: null });
 
 describe('rankMentionSuggestions (M3, selector)', () => {
   it('puts the handles that start with the query first, then the others that contain it', () => {

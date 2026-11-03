@@ -176,7 +176,7 @@ describe('FollowsRepository (E1, E2, E5)', () => {
         {
           createdAt: at,
           followerId: 'account-1',
-          follower: { handle: 'carol', displayName: 'Carol' },
+          follower: { handle: 'carol', displayName: 'Carol', avatarUrl: null },
         },
       ]);
 
@@ -187,7 +187,9 @@ describe('FollowsRepository (E1, E2, E5)', () => {
           after: undefined,
           take: 21,
         }),
-      ).resolves.toEqual([{ createdAt: at, accountId: 'account-1', handle: 'carol', displayName: 'Carol' }]);
+      ).resolves.toEqual([
+        { createdAt: at, accountId: 'account-1', handle: 'carol', displayName: 'Carol', avatarUrl: null },
+      ]);
     });
   });
 });

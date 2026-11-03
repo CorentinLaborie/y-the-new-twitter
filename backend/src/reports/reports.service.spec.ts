@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import type { SessionUser } from '../auth/session/session-user.repository';
 import type { PrismaService } from '../database/prisma.service';
 import { IdempotencyService } from '../common/idempotency/idempotency.service';
@@ -16,6 +21,7 @@ const REPORTER: SessionUser = {
   id: 'user-1',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };
@@ -51,7 +57,9 @@ describe('ReportsService (L6, S1)', () => {
 
   describe('target', () => {
     it('refuses a report with no target (400)', async () => {
-      await expect(service.create(REPORTER, { reason: 'spam' } as never)).rejects.toThrow(BadRequestException);
+      await expect(service.create(REPORTER, { reason: 'spam' } as never)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('treats a null target as absent: null plus a reply is one target, two nulls are none (400)', async () => {
@@ -177,11 +185,16 @@ describe('ReportsService (L6, S1)', () => {
 
       await service.create(REPORTER, { questionId: QUESTION_ID, reason: 'spam' }, key);
 
-      expect(idempotency.run).toHaveBeenCalledWith(REPORTER.id, key, expect.any(String), expect.any(Function));
+      expect(idempotency.run).toHaveBeenCalledWith(
+        REPORTER.id,
+        key,
+        expect.any(String),
+        expect.any(Function),
+      );
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
   });
-describe('reading (L6, read route)', () => {
+  describe('reading (L6, read route)', () => {
     const OWN_ROW = {
       id: 'report-1',
       status: 'open' as const,
@@ -210,7 +223,10 @@ describe('reading (L6, read route)', () => {
     it('answers a reply report with the reply as target', async () => {
       repository.findOwnReport.mockResolvedValue({ ...OWN_ROW, questionId: null, replyId: REPLY_ID });
 
-      await expect(service.get(REPORTER, 'report-1')).resolves.toMatchObject({ targetKind: 'reply', targetId: REPLY_ID });
+      await expect(service.get(REPORTER, 'report-1')).resolves.toMatchObject({
+        targetKind: 'reply',
+        targetId: REPLY_ID,
+      });
     });
 
     it('answers a report of another account, or an unknown id, as not found (404)', async () => {

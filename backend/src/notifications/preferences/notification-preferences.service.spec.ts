@@ -7,6 +7,7 @@ const VIEWER: SessionUser = {
   id: 'user-1',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };
@@ -18,7 +19,9 @@ describe('NotificationPreferencesService (L5, step 8)', () => {
   beforeEach(() => {
     repository = {
       findAll: jest.fn().mockResolvedValue([{ type: 'follow', enabled: false }]),
-      upsert: jest.fn().mockImplementation(async (_user: string, type: string, enabled: boolean) => ({ type, enabled })),
+      upsert: jest
+        .fn()
+        .mockImplementation(async (_user: string, type: string, enabled: boolean) => ({ type, enabled })),
     };
     service = new NotificationPreferencesService(repository as unknown as NotificationPreferencesRepository);
   });

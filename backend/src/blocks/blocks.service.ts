@@ -73,6 +73,7 @@ export class BlocksService {
       items: items.map((row) => ({
         handle: row.blocked.handle,
         displayName: row.blocked.displayName,
+        avatarUrl: row.blocked.avatarUrl,
         blockedAt: row.createdAt,
       })),
       nextCursor:
