@@ -9,6 +9,15 @@ class CurrentUserDto {
   readonly displayName!: string;
 
   @ApiProperty({
+    type: String,
+    nullable: true,
+    example: '/avatars/3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b.jpg',
+    description:
+      'Address of the profile photo, or null when the account has none (the initial is shown then).',
+  })
+  readonly avatarUrl!: string | null;
+
+  @ApiProperty({
     enum: Object.values(AccountStatus),
     example: 'active',
     description: 'Status of the account. A suspended account still gets its session (section 3.4).',

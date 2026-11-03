@@ -21,3 +21,26 @@ describe('toReplyView mentionLinks (M3)', () => {
     expect(view.mentionLinks).toEqual([]);
   });
 });
+
+describe('toReplyView author (photo everywhere, DEC-351)', () => {
+  it('gives the address of the author photo, or null without one', () => {
+    const withPhoto = toReplyView(
+      {
+        ...(row as object),
+        author: { handle: 'alice', displayName: 'Alice', avatarUrl: '/avatars/alice.jpg' },
+      } as never,
+      { likeCount: 0, dislikeCount: 0 },
+      [],
+      new Set(),
+    );
+    const withoutPhoto = toReplyView(
+      { ...(row as object), author: { handle: 'alice', displayName: 'Alice', avatarUrl: null } } as never,
+      { likeCount: 0, dislikeCount: 0 },
+      [],
+      new Set(),
+    );
+
+    expect(withPhoto.author.avatarUrl).toBe('/avatars/alice.jpg');
+    expect(withoutPhoto.author.avatarUrl).toBeNull();
+  });
+});

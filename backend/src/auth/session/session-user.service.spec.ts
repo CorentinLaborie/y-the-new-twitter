@@ -6,6 +6,7 @@ function userWith(overrides: Partial<SessionUser>): SessionUser {
     id: 'user-1',
     handle: 'alice',
     displayName: 'Alice',
+    avatarUrl: null,
     role: 'user',
     status: 'active',
     ...overrides,

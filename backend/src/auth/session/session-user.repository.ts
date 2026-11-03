@@ -7,6 +7,7 @@ export interface SessionUser {
   readonly id: string;
   readonly handle: string;
   readonly displayName: string;
+  readonly avatarUrl: string | null;
   readonly role: UserRole;
   readonly status: AccountStatus;
 }
@@ -19,7 +20,7 @@ export class SessionUserRepository {
   findById(id: string): Promise<SessionUser | null> {
     return this.prisma.user.findFirst({
       where: { id, status: { not: 'deleted' } },
-      select: { id: true, handle: true, displayName: true, role: true, status: true },
+      select: { id: true, handle: true, displayName: true, avatarUrl: true, role: true, status: true },
     });
   }
 

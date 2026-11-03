@@ -69,13 +69,7 @@ export class QuestionsService {
       if (removed === null) {
         throw new NotFoundException(QUESTION_NOT_FOUND_MESSAGE);
       }
-      const view = toQuestionView(
-        { ...removed, body: '', hashtags: [] },
-        threshold,
-        [],
-        false,
-        false,
-      );
+      const view = toQuestionView({ ...removed, body: '', hashtags: [] }, threshold, [], false, false);
       return { ...view, removedByModeration: true };
     }
     const reactions = await this.questions.findViewerReactions(viewer.id, [questionId]);
@@ -106,7 +100,7 @@ export class QuestionsService {
     return toQuestionView(
       {
         ...question,
-        author: { handle: author.handle, displayName: author.displayName },
+        author: { handle: author.handle, displayName: author.displayName, avatarUrl: author.avatarUrl },
         hashtags: hashtags.map((name) => ({ hashtag: { name } })),
       },
       this.config.getOrThrow<number>('Y_CONVERSATION_THRESHOLD'),

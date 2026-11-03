@@ -8,6 +8,7 @@ function userWith(overrides: Partial<SessionUser>): SessionUser {
     id: 'user-1',
     handle: 'alice',
     displayName: 'Alice',
+    avatarUrl: null,
     role: 'user',
     status: 'active',
     ...overrides,
@@ -43,7 +44,7 @@ describe('SessionController GET /auth/session', () => {
     const { controller, users } = controllerFor(userWith({ status: 'active' }), 'Ancien motif');
 
     expect(await controller.current(REQUEST)).toEqual({
-      user: { handle: 'alice', displayName: 'Alice', status: 'active', suspensionReason: null },
+      user: { handle: 'alice', displayName: 'Alice', avatarUrl: null, status: 'active', suspensionReason: null },
     });
     expect(users.suspensionReasonOf).not.toHaveBeenCalled();
   });
@@ -52,7 +53,7 @@ describe('SessionController GET /auth/session', () => {
     const { controller, users } = controllerFor(userWith({ status: 'suspended' }), 'Spam répété.');
 
     expect(await controller.current(REQUEST)).toEqual({
-      user: { handle: 'alice', displayName: 'Alice', status: 'suspended', suspensionReason: 'Spam répété.' },
+      user: { handle: 'alice', displayName: 'Alice', avatarUrl: null, status: 'suspended', suspensionReason: 'Spam répété.' },
     });
     expect(users.suspensionReasonOf).toHaveBeenCalledWith('user-1');
   });
@@ -61,7 +62,7 @@ describe('SessionController GET /auth/session', () => {
     const { controller } = controllerFor(userWith({ status: 'suspended' }), null);
 
     expect(await controller.current(REQUEST)).toEqual({
-      user: { handle: 'alice', displayName: 'Alice', status: 'suspended', suspensionReason: null },
+      user: { handle: 'alice', displayName: 'Alice', avatarUrl: null, status: 'suspended', suspensionReason: null },
     });
   });
 
@@ -69,7 +70,7 @@ describe('SessionController GET /auth/session', () => {
     const { controller, users } = controllerFor(userWith({ status: 'pending_deletion' }), 'Motif ancien');
 
     expect(await controller.current(REQUEST)).toEqual({
-      user: { handle: 'alice', displayName: 'Alice', status: 'pending_deletion', suspensionReason: null },
+      user: { handle: 'alice', displayName: 'Alice', avatarUrl: null, status: 'pending_deletion', suspensionReason: null },
     });
     expect(users.suspensionReasonOf).not.toHaveBeenCalled();
   });

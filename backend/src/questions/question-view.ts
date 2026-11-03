@@ -4,7 +4,7 @@ import type { QuestionResponseDto } from './dto/question-response.dto';
 
 /** What a question view needs: the author's public names and the hashtags, read with the question. */
 export const QUESTION_VIEW_INCLUDE = {
-  author: { select: { handle: true, displayName: true } },
+  author: { select: { handle: true, displayName: true, avatarUrl: true } },
   hashtags: { include: { hashtag: { select: { name: true } } } },
 } satisfies Prisma.QuestionInclude;
 
@@ -67,6 +67,7 @@ export function toQuestionView(
     author: {
       handle: row.author.handle,
       displayName: row.author.displayName,
+      avatarUrl: row.author.avatarUrl,
       viewerFollows: viewerFollowsAuthor,
     },
     hashtags: row.hashtags.map((link) => link.hashtag.name).sort(),

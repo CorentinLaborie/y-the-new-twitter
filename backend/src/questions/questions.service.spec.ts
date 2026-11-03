@@ -21,6 +21,7 @@ const AUTHOR: SessionUser = {
   id: 'user-1',
   handle: 'alice',
   displayName: 'Alice',
+  avatarUrl: null,
   role: 'user',
   status: 'active',
 };
@@ -100,7 +101,7 @@ describe('QuestionsService (B2, section 9.1)', () => {
       id: 'question-1',
       text: 'Bonjour tout le monde',
       createdAt: '2026-10-20T10:41:00.000Z',
-      author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
+      author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: false },
       hashtags: [],
       counters: { like: 0, dislike: 0, y: 0, reply: 0 },
       yThreshold: 50,
@@ -229,7 +230,11 @@ describe('QuestionsService (B2, section 9.1)', () => {
 type DetailRepository = jest.Mocked<
   Pick<
     QuestionsRepository,
-    'findVisibleQuestion' | 'findOwnHiddenQuestion' | 'findViewerReactions' | 'findViewerSaved' | 'findFollowedAuthorIds'
+    | 'findVisibleQuestion'
+    | 'findOwnHiddenQuestion'
+    | 'findViewerReactions'
+    | 'findViewerSaved'
+    | 'findFollowedAuthorIds'
   >
 >;
 type VisibleRow = NonNullable<Awaited<ReturnType<QuestionsRepository['findVisibleQuestion']>>>;
@@ -239,6 +244,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
     id: 'viewer-1',
     handle: 'bob',
     displayName: 'Bob',
+    avatarUrl: null,
     role: 'user',
     status: 'active',
   };
@@ -257,7 +263,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
       replyCount: 1,
       conversationOpenedAt: CREATED_AT,
       authorId: 'author-1',
-      author: { handle: 'alice', displayName: 'Alice' },
+      author: { handle: 'alice', displayName: 'Alice', avatarUrl: null },
       hashtags: [{ hashtag: { name: 'irl' } }],
       ...overrides,
     } as unknown as VisibleRow;
@@ -304,7 +310,7 @@ describe('QuestionsService.findVisible (M3, F11, R13, R14)', () => {
       id: 'question-1',
       text: 'Bonjour #irl',
       createdAt: '2026-10-20T10:41:00.000Z',
-      author: { handle: 'alice', displayName: 'Alice', viewerFollows: false },
+      author: { handle: 'alice', displayName: 'Alice', avatarUrl: null, viewerFollows: false },
       hashtags: ['irl'],
       counters: { like: 2, dislike: 0, y: 3, reply: 1 },
       yThreshold: 50,

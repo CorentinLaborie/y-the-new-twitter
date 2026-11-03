@@ -5,7 +5,7 @@ import type { ReplyResponseDto } from './dto/reply-response.dto';
 
 /** What a reply view needs: the author's public names, read with the reply. */
 export const REPLY_VIEW_INCLUDE = {
-  author: { select: { handle: true, displayName: true } },
+  author: { select: { handle: true, displayName: true, avatarUrl: true } },
 } satisfies Prisma.ReplyInclude;
 
 type ReplyRow = Prisma.ReplyGetPayload<{ include: typeof REPLY_VIEW_INCLUDE }>;
@@ -42,7 +42,11 @@ export function toReplyView(
     questionId: row.questionId,
     text: row.body,
     createdAt: row.createdAt.toISOString(),
-    author: { handle: row.author.handle, displayName: row.author.displayName },
+    author: {
+      handle: row.author.handle,
+      displayName: row.author.displayName,
+      avatarUrl: row.author.avatarUrl,
+    },
     counters: { like: counters.likeCount, dislike: counters.dislikeCount },
     viewerReactions: [...viewerReactions],
     mentionLinks: extractMentionHandles(row.body).filter((handle) => linkable.has(handle)),

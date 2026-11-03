@@ -34,6 +34,7 @@ export class SessionController {
     return {
       handle: user.handle,
       displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
       status: user.status,
       suspensionReason: user.status === 'suspended' ? await this.users.suspensionReasonOf(user.id) : null,
     };

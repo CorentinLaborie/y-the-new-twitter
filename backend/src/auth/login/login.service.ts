@@ -160,6 +160,7 @@ export class LoginService {
         id: account.id,
         handle: account.handle,
         displayName: account.displayName,
+        avatarUrl: account.avatarUrl,
         role: account.role,
         status,
       },

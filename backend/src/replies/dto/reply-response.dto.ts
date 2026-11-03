@@ -15,6 +15,15 @@ class ReplyAuthorDto {
 
   @ApiProperty({ example: 'Alice' })
   readonly displayName!: string;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: '/avatars/3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b.jpg',
+    description:
+      'Address of the profile photo, or null when the account has none (the initial is shown then).',
+  })
+  readonly avatarUrl!: string | null;
 }
 
 /** A reply as the API returns it (section 9.2). `viewerReactions` lists the viewer's own kinds: both can be set (R2). */
@@ -40,7 +49,8 @@ export class ReplyResponseDto {
   @ApiProperty({
     isArray: true,
     type: String,
-    description: 'Lowercase handles of the mentions whose profile can be opened. The other mentions are plain text.',
+    description:
+      'Lowercase handles of the mentions whose profile can be opened. The other mentions are plain text.',
   })
   readonly mentionLinks!: readonly string[];
 
