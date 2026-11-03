@@ -61,6 +61,17 @@ describe('MessagesScreen', () => {
     expect(await screen.findByRole('heading', { name: 'Aucune demande en attente' })).toBeInTheDocument();
   });
 
+  it('reads the list again when the viewer comes back to it, so an unblocked account leaves Bloqués', async () => {
+    vi.mocked(fetchConversations).mockResolvedValue(OK({ conversations: [], nextCursor: null }));
+    render(<MessagesScreen />);
+    await screen.findByRole('heading', { name: 'Aucune conversation' });
+    const callsBefore = vi.mocked(fetchConversations).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchConversations).mock.calls.length).toBeGreaterThan(callsBefore));
+  });
+
   it('reads the blocked conversations when the Bloqués tab is chosen', async () => {
     vi.mocked(fetchConversations).mockResolvedValue(OK({ conversations: [], nextCursor: null }));
     render(<MessagesScreen />);

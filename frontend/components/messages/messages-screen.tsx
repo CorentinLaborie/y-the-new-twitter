@@ -89,6 +89,19 @@ export function MessagesScreen() {
     setAttempt((count) => count + 1);
   }
 
+  // Going back from a conversation restores this screen without running its loading effect: ask the list again, so an
+  // account unblocked in the meantime leaves the Bloqués tab.
+  useEffect(() => {
+    function reloadOnBack() {
+      setAttempt((count) => count + 1);
+    }
+    window.addEventListener('popstate', reloadOnBack);
+
+    return () => {
+      window.removeEventListener('popstate', reloadOnBack);
+    };
+  }, []);
+
   async function loadMore(cursor: string) {
     setAnswer((current) =>
       current?.tab === tab && current.state.phase === 'ready'
@@ -285,7 +298,10 @@ function MessagesEmpty({ tab }: { tab: MessagesTab }) {
           <FeedIcon name="message-circle" size={28} />
         </span>
         <h2>Aucun compte bloqué</h2>
-        <p>Les conversations avec les comptes que vous bloquez apparaîtront ici. Vous ne recevez plus leurs messages.</p>
+        <p>
+          Les conversations avec les comptes que vous bloquez apparaîtront ici. Vous ne recevez plus leurs
+          messages.
+        </p>
       </div>
     );
   }
