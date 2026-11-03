@@ -23,6 +23,7 @@ const ACCOUNT: AccountView = {
   id: ACCOUNT_ID,
   handle: 'AliceY',
   displayName: 'Alice',
+  avatarUrl: null,
   status: 'suspended',
   role: 'user',
   maskedEmail: 'a***@d***.fr',

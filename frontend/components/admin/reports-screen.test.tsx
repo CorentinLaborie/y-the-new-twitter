@@ -17,6 +17,7 @@ const REPORT: ReportListItem = {
     body: 'Peut-être que les gens ont envie de se protéger derrière un écran ?',
     authorHandle: 'Robert44',
     authorDisplayName: 'Robert',
+    authorAvatarUrl: null,
     moderationStatus: 'visible',
     createdAt: '2026-10-12T09:00:00.000Z',
   },

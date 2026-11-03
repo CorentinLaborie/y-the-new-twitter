@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
+import avatarStyles from './admin-avatar.module.css';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
@@ -114,6 +116,11 @@ function AccountDetails({
               Résumé du compte
             </h2>
             <p>
+              <UserAvatar
+                className={avatarStyles.avatar}
+                displayName={account.displayName}
+                avatarUrl={account.avatarUrl}
+              />
               <strong>{account.displayName}</strong> <span className={styles.muted}>@{account.handle}</span>
             </p>
             <dl className={styles.definitions}>

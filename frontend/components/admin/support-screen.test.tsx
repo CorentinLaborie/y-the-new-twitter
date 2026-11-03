@@ -15,6 +15,7 @@ const THREAD: SupportThreadListItem = {
     id: '1b4e28ba-2fa1-41d2-883f-0016d3cca427',
     handle: 'MarkL',
     displayName: 'Mark',
+    avatarUrl: null,
     status: 'suspended',
     maskedEmail: 'm***@e***.test',
     createdAt: '2026-08-21T00:00:00.000Z',

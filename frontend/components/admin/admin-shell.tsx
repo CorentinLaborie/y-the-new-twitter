@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
+import avatarStyles from './admin-avatar.module.css';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { YMark } from '@/components/brand/y-mark';
@@ -60,6 +62,11 @@ export function AdminShell({ user, children }: { user: AdminUser; children: Reac
           })}
         </nav>
         <div className={styles.sideFoot}>
+          <UserAvatar
+            className={avatarStyles.avatar}
+            displayName={user.displayName}
+            avatarUrl={user.avatarUrl}
+          />
           <strong>{user.displayName}</strong>
           <span>@{user.handle}</span>
           <button type="button" className={styles.signOut} onClick={handleSignOut}>

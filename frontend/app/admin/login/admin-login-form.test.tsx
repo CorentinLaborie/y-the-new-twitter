@@ -42,7 +42,7 @@ describe('AdminLoginForm', () => {
     vi.mocked(adminLogin).mockResolvedValue({
       ok: true,
       status: 200,
-      body: { status: 'ok', user: { handle: 'admin', displayName: 'Administrateur' } },
+      body: { status: 'ok', user: { handle: 'admin', displayName: 'Administrateur', avatarUrl: null } },
     });
     render(<AdminLoginForm />);
 

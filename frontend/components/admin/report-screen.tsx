@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
+import avatarStyles from './admin-avatar.module.css';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
@@ -77,6 +79,11 @@ export function ReportScreen({ id }: { id: string }) {
                 Contenu signalé
               </h2>
               <p className={styles.muted}>
+                <UserAvatar
+                  className={avatarStyles.avatar}
+                  displayName={report.target.authorDisplayName}
+                  avatarUrl={report.target.authorAvatarUrl}
+                />
                 {REPORT_TARGET_LABELS[report.target.type]} de @{report.target.authorHandle} ·{' '}
                 {report.target.authorDisplayName}
                 {' · '}
@@ -156,7 +163,11 @@ export function ReportScreen({ id }: { id: string }) {
               </div>
               {decided ? <p className={styles.muted}>Ce signalement a déjà été traité.</p> : null}
               {restorable ? (
-                <button type="button" className={styles.secondaryButton} onClick={() => setDecision('restore')}>
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => setDecision('restore')}
+                >
                   Restaurer le contenu
                 </button>
               ) : null}

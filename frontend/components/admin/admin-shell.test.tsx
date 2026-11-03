@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/lib/admin-api', () => ({ signOut: vi.fn() }));
 
-const ADMIN = { handle: 'admin', displayName: 'Administrateur' };
+const ADMIN = { handle: 'admin', displayName: 'Administrateur', avatarUrl: null };
 
 describe('isActiveNavItem', () => {
   it('marks the dashboard only on its own path', () => {

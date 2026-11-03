@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
+import avatarStyles from './admin-avatar.module.css';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Button } from '@/components/auth/button';
 import { TextField } from '@/components/auth/text-field';
@@ -164,7 +166,16 @@ export function AccountsScreen() {
                   <td>
                     <Link href={`/admin/users/${account.id}`}>@{account.handle}</Link>
                   </td>
-                  <td>{account.displayName}</td>
+                  <td>
+                    <span className={avatarStyles.name}>
+                      <UserAvatar
+                        className={avatarStyles.avatar}
+                        displayName={account.displayName}
+                        avatarUrl={account.avatarUrl}
+                      />
+                      {account.displayName}
+                    </span>
+                  </td>
                   <td className={styles.mono}>{account.maskedEmail}</td>
                   <td>
                     <StatusLabel tone={accountStatusTone(account.status)}>

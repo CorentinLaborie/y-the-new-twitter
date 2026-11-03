@@ -26,6 +26,7 @@ const OPEN: ReportDetail = {
     body: 'Pourquoi les gens préfèrent-ils les réponses rapides ?',
     authorHandle: 'AliceY',
     authorDisplayName: 'Alice',
+    authorAvatarUrl: null,
     moderationStatus: 'visible',
     createdAt: '2026-10-10T08:00:00.000Z',
   },

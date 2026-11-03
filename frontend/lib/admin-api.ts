@@ -10,7 +10,7 @@ import type { AccountStatus } from '@/lib/auth-api';
 export type AdminRole = 'user' | 'moderator' | 'admin';
 
 /** The administrator as the back-office API names them (AdminUserView). */
-export type AdminUser = { handle: string; displayName: string };
+export type AdminUser = { handle: string; displayName: string; avatarUrl: string | null };
 
 /** The answer of POST /admin/login: the administrator, when the email and the password are right. */
 export type AdminLoginResult = { status: 'ok'; user: AdminUser };
@@ -23,6 +23,7 @@ export type AccountListItem = {
   id: string;
   handle: string;
   displayName: string;
+  avatarUrl: string | null;
   status: AccountStatus;
   role: AdminRole;
   maskedEmail: string;
@@ -201,6 +202,7 @@ export type ReportTarget = {
   body: string;
   authorHandle: string;
   authorDisplayName: string;
+  authorAvatarUrl: string | null;
   moderationStatus: ModerationStatus;
   createdAt: string;
 };
@@ -265,6 +267,7 @@ export type SupportAccount = {
   id: string;
   handle: string;
   displayName: string;
+  avatarUrl: string | null;
   status: AccountStatus;
   maskedEmail: string;
   createdAt: string;

@@ -18,6 +18,7 @@ const CLOSED = {
     id: 'account-1',
     handle: 'MarkL',
     displayName: 'Mark',
+    avatarUrl: null,
     status: 'suspended' as const,
     maskedEmail: 'm***@e***.test',
     createdAt: '2026-08-21T00:00:00.000Z',

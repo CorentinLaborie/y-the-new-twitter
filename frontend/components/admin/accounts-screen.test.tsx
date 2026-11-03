@@ -9,6 +9,7 @@ const ALICE: AccountListItem = {
   id: '11111111-1111-4111-8111-111111111111',
   handle: 'AliceY',
   displayName: 'Alice',
+  avatarUrl: null,
   status: 'active',
   role: 'user',
   maskedEmail: 'a***@d***.fr',
@@ -27,6 +28,24 @@ const MARK: AccountListItem = {
 describe('AccountsScreen', () => {
   beforeEach(() => {
     vi.mocked(listAccounts).mockReset();
+  });
+
+  it('shows the photo of an account in its row, or its initial without one (DEC-351)', async () => {
+    vi.mocked(listAccounts).mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: {
+        items: [
+          { ...ALICE, avatarUrl: '/avatars/alice.jpg' },
+          { ...MARK, avatarUrl: null },
+        ],
+        nextCursor: null,
+      },
+    });
+    render(<AccountsScreen />);
+
+    await screen.findByRole('link', { name: '@AliceY' });
+    expect(document.querySelector('img')?.getAttribute('src')).toContain('/avatars/alice.jpg');
   });
 
   it('lists the accounts, each linked to its view, with the masked address and the status', async () => {

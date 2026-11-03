@@ -25,7 +25,7 @@ vi.mock('next/headers', () => ({
 vi.mock('@/lib/admin-api', () => ({ getAdminSession: vi.fn() }));
 
 const SESSION = {
-  user: { handle: 'corentin', displayName: 'Corentin' },
+  user: { handle: 'corentin', displayName: 'Corentin', avatarUrl: null },
   idleExpiresAt: '2026-10-21T12:30:00.000Z',
   expiresAt: '2026-10-21T20:00:00.000Z',
 };

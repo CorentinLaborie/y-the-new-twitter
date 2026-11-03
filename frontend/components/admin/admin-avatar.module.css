@@ -1,0 +1,22 @@
+/* The photo, or the initial, of an account on the back-office screens (DEC-351). */
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--accent, #e0e7ff);
+  color: var(--primary, #4f46e5);
+  font-size: 13px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+/* A name next to its avatar, on one line. */
+.name {
+  display: inline-flex;
+  align-items: center;
+}

@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { UserAvatar } from '@/components/avatar/user-avatar';
+import avatarStyles from './admin-avatar.module.css';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
@@ -181,6 +183,11 @@ export function SupportThreadScreen({ id }: { id: string }) {
                 Compte
               </h2>
               <p>
+                <UserAvatar
+                  className={avatarStyles.avatar}
+                  displayName={thread.account.displayName}
+                  avatarUrl={thread.account.avatarUrl}
+                />
                 <strong>{thread.account.displayName}</strong>
                 <br />
                 <span className={styles.muted}>@{thread.account.handle}</span>
