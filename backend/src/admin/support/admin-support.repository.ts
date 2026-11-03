@@ -41,7 +41,7 @@ export type SupportThreadRow = Prisma.SupportThreadGetPayload<{
 }>;
 
 /** One answer of an administrator, as the repository writes it. The rules that choose it are in the service. */
-export interface SupportReplyWrite {
+interface SupportReplyWrite {
   threadId: string;
   adminId: string;
   body: string;
@@ -51,7 +51,7 @@ export interface SupportReplyWrite {
 }
 
 /** The closing of a thread by an administrator, as the repository writes it. */
-export interface SupportCloseWrite {
+interface SupportCloseWrite {
   threadId: string;
   adminId: string;
   now: Date;

@@ -4,7 +4,7 @@
  * Storage can be blocked (private mode, browser policy): then nothing is kept and the next page asks for the address.
  * Call these from client code only: the server has no sessionStorage.
  */
-export const PENDING_EMAIL_KEY = 'y.pendingEmail';
+const PENDING_EMAIL_KEY = 'y.pendingEmail';
 
 export function rememberPendingEmail(email: string): void {
   try {

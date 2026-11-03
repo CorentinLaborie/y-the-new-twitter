@@ -6,7 +6,7 @@
 import type { NavEntry } from './nav-items';
 
 /** Mobile bottom bar: the first four entries show, the rest goes to "Plus" (the fifth case). */
-export const BOTTOM_BAR_ENTRY_COUNT = 4;
+const BOTTOM_BAR_ENTRY_COUNT = 4;
 
 /** Height of one rail row: the 50 px target and its 8 px gap. */
 const RAIL_ROW_HEIGHT = 58;
@@ -17,7 +17,7 @@ const RAIL_ROW_HEIGHT = 58;
  */
 const RAIL_FIXED_HEIGHT = 304;
 
-export type SplitEntries = { visible: NavEntry[]; overflow: NavEntry[] };
+type SplitEntries = { visible: NavEntry[]; overflow: NavEntry[] };
 
 /** Mobile bottom bar split: entries 1 to 4 show, the others go to the "Plus" sheet. */
 export function splitForBottomBar(entries: readonly NavEntry[]): SplitEntries {

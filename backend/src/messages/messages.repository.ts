@@ -5,8 +5,6 @@ import { PrismaService } from '../database/prisma.service';
 import { visibleAccountTo } from '../users/account-visibility';
 
 /** The Prisma client or a transaction opened by the service. */
-export type MessagesDb = Prisma.TransactionClient;
-
 /** A conversation with its participants and their public names: the viewer finds its own row and the other one. */
 const CONVERSATION_INCLUDE = {
   participants: {

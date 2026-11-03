@@ -21,7 +21,7 @@ export function isContactMessageValid(text: string): boolean {
 
 type ContactReceipt = { reference: string };
 
-export type ContactResult = { ok: true; reference: string } | { ok: false; problem: ApiProblem };
+type ContactResult = { ok: true; reference: string } | { ok: false; problem: ApiProblem };
 
 /** Sends the message to the administrator. The reference of the thread comes back, as `CNT-AAAAMMJJ-NNNN`. */
 export async function sendContactMessage(text: string): Promise<ContactResult> {

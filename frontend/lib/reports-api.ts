@@ -18,7 +18,7 @@ import { protectedApiRequest } from '@/lib/session-expired';
 export const REPORT_DETAILS_MAX_LENGTH = 280;
 
 /** The six reasons of a report, in the order of the menu (DEC-011). */
-export const REPORT_REASONS = [
+const REPORT_REASONS = [
   'spam',
   'harassment',
   'hate',
@@ -33,7 +33,7 @@ export type ReportReason = (typeof REPORT_REASONS)[number];
 export type ReportTarget = { questionId: string } | { replyId: string };
 
 /** The report as the API answers it. A new report is always open. */
-export type ReportReceipt = {
+type ReportReceipt = {
   id: string;
   status: 'open';
   createdAt: string;

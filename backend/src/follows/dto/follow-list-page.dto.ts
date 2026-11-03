@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 /** An account in a list, in the author format of the questions (handle and display name). */
-export class FollowAccountDto {
+class FollowAccountDto {
   @ApiProperty({ example: 'alice' })
   readonly handle!: string;
 

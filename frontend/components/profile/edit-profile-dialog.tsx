@@ -15,7 +15,7 @@ import { avatarFailureMessage, changedFields, photoError, saveFailureMessage } f
 import styles from './edit-profile-dialog.module.css';
 
 /** The bio of a profile is at most 160 characters (section 12.7, DEC-105). */
-export const BIO_MAX_LENGTH = 160;
+const BIO_MAX_LENGTH = 160;
 
 type EditProfileDialogProps = {
   open: boolean;

@@ -17,7 +17,7 @@ export interface FollowListRow {
   readonly avatarUrl: string | null;
 }
 
-export interface FollowPageQuery {
+interface FollowPageQuery {
   /** The account whose list is read: the followee of a follower list, the follower of a following list. */
   readonly ownerId: string;
   readonly viewerId: string;

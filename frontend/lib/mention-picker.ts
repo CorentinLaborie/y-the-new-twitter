@@ -4,7 +4,7 @@
  * no letter, digit, underscore or '@' right before the '@' (the rule of components/conversation/mention-text.tsx).
  */
 
-export const MENTION_HANDLE_MAX_LENGTH = 30;
+const MENTION_HANDLE_MAX_LENGTH = 30;
 
 /** The mention being typed: the index of its '@', the index of the caret after it, and the handle typed so far. */
 export type MentionQuery = { start: number; end: number; query: string };

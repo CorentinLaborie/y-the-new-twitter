@@ -7,7 +7,7 @@ import { FollowListQueryDto } from '../../follows/dto/follow-list-query.dto';
 const SEARCH_MAX_LENGTH = 100;
 
 /** The orders of the saved list: by save date (the default), or by the date of the question (DEC-350). */
-export const BOOKMARK_SORTS = ['saved', 'question'] as const;
+const BOOKMARK_SORTS = ['saved', 'question'] as const;
 export type BookmarkSort = (typeof BOOKMARK_SORTS)[number];
 
 /** Query of the saved list: the cursor and the page size, an optional search (L4, section 9.2), and the order. */

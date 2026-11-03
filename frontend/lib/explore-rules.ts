@@ -9,7 +9,7 @@ export const SEARCH_MAX_LENGTH = 100;
 export const SEARCH_PLACEHOLDER = 'Question, compte ou #hashtag';
 
 /** The label of the trend reactions (DEC-091). */
-export const TRENDS_WINDOW_LABEL = 'sur 24 h';
+const TRENDS_WINDOW_LABEL = 'sur 24 h';
 
 /** The text sent to the search: trimmed, cut to the limit. An empty result means no search. */
 export function normalizeSearch(value: string): string {

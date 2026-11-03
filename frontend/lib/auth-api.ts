@@ -6,7 +6,7 @@
 
 import { apiRequest } from '@/lib/api-client';
 
-export type ApiUser = { handle: string; displayName: string };
+type ApiUser = { handle: string; displayName: string };
 
 /** Account status, as GET /auth/session sends it in `user.status`. */
 export type AccountStatus = 'pending_verification' | 'active' | 'suspended' | 'pending_deletion' | 'deleted';

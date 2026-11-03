@@ -6,7 +6,7 @@ import { YIcon } from '@/components/brand/y-icon';
 import { classNames } from './nav-link';
 import styles from './navigation.module.css';
 
-export type PosterVariant = 'sidebar' | 'rail' | 'menu';
+type PosterVariant = 'sidebar' | 'rail' | 'menu';
 
 /**
  * "Poster" button (plan L0, decision 8). On the home page it scrolls to the composer and focuses it. Elsewhere the link

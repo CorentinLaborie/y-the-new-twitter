@@ -15,7 +15,7 @@ import { protectedApiRequest } from '@/lib/session-expired';
 export type MentionSuggestion = { handle: string; displayName: string; avatarUrl: string | null };
 
 /** The answer of the selector: the accounts in the order to show them. */
-export type MentionSuggestionPage = { items: MentionSuggestion[] };
+type MentionSuggestionPage = { items: MentionSuggestion[] };
 
 /** The accounts proposed for the handle typed so far. */
 export function fetchMentionSuggestions(query: string): Promise<ApiResult<MentionSuggestionPage>> {

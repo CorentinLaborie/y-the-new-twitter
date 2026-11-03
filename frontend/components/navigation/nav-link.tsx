@@ -5,7 +5,7 @@ import styles from './navigation.module.css';
 import { entryAccessibleName, unreadBadgeText } from './unread-label';
 
 /** Where the link sits: the sidebar (icon and label), the rail (icon), the bottom bar (icon, label below), the sheet. */
-export type NavLinkVariant = 'sidebar' | 'rail' | 'bar' | 'sheet';
+type NavLinkVariant = 'sidebar' | 'rail' | 'bar' | 'sheet';
 
 type NavLinkProps = {
   entry: NavEntry;
@@ -48,7 +48,7 @@ export function NavLink({ entry, viewer, pathname, unread, variant, onNavigate }
 }
 
 /** The unread count on an icon. Hidden from the accessible tree: the link name carries the count. */
-export function NavBadge({ text }: { text: string }) {
+function NavBadge({ text }: { text: string }) {
   return (
     <span className={styles.badge} aria-hidden="true">
       {text}

@@ -3,7 +3,7 @@ import { Prisma } from '../database/generated/client/client';
 import type { NotificationType } from '../database/generated/client/client';
 
 /** The Prisma client or a transaction opened by the service. */
-export type NotificationsDb = Prisma.TransactionClient;
+type NotificationsDb = Prisma.TransactionClient;
 
 /** The types that group one line per question and type (section 4.1). */
 const REACTION_TYPES: NotificationType[] = ['reaction_like', 'reaction_dislike', 'reaction_y'];

@@ -9,9 +9,9 @@ import { decodeKeysetCursor, encodeKeysetCursor } from '../common/pagination/key
 import { MessagesRepository, type ConversationRow, type ParticipationRow } from './messages.repository';
 import { ConversationListQueryDto, MessageQueryDto, StartConversationDto } from './dto/messages.dto';
 
-export const RECIPIENT_NOT_FOUND_MESSAGE = 'Compte introuvable.';
-export const SELF_MESSAGE = 'Vous ne pouvez pas vous écrire à vous-même.';
-export const CONVERSATION_NOT_FOUND_MESSAGE = 'Conversation introuvable.';
+const RECIPIENT_NOT_FOUND_MESSAGE = 'Compte introuvable.';
+const SELF_MESSAGE = 'Vous ne pouvez pas vous écrire à vous-même.';
+const CONVERSATION_NOT_FOUND_MESSAGE = 'Conversation introuvable.';
 export const DECLINED_MESSAGE = 'Cette demande a été refusée.';
 export const ACCEPT_FIRST_MESSAGE = 'Acceptez la demande avant de répondre.';
 export const ONE_MESSAGE_MESSAGE = 'La demande attend une réponse : un seul message à la fois.';

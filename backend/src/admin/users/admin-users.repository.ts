@@ -8,7 +8,7 @@ import type { AuditDb } from '../audit/audit-log.repository';
 import type { ContactThreadPlan, ContactThreadState, RequestedAccountStatus } from './status-change';
 
 /** One status change, as the repository writes it. The rules that choose it are in the service. */
-export interface StatusChangeWrite {
+interface StatusChangeWrite {
   userId: string;
   /** The status the change was decided from. The write only applies while the account still has it (no lost update). */
   expectedStatus: AccountStatus;
@@ -24,7 +24,7 @@ export interface StatusChangeWrite {
 }
 
 /** One deletion window started by an administrator, as the repository writes it. */
-export interface DeletionWrite {
+interface DeletionWrite {
   userId: string;
   now: Date;
   /** The end of the window: the purge erases the account from this date (R16). */

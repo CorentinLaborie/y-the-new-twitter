@@ -6,7 +6,7 @@ import { visibleAccountTo } from '../users/account-visibility';
 export type MentionsDb = Prisma.TransactionClient;
 
 /** How many accounts the repository reads for the suggestions before the service keeps five of them. */
-export const SUGGESTION_CANDIDATE_LIMIT = 50;
+const SUGGESTION_CANDIDATE_LIMIT = 50;
 
 /** Where a mention is written: its question, and its reply when the text is a reply. */
 export interface MentionTarget {

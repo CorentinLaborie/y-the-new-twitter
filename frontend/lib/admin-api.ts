@@ -13,7 +13,7 @@ export type AdminRole = 'user' | 'moderator' | 'admin';
 export type AdminUser = { handle: string; displayName: string; avatarUrl: string | null };
 
 /** The answer of POST /admin/login: the administrator, when the email and the password are right. */
-export type AdminLoginResult = { status: 'ok'; user: AdminUser };
+type AdminLoginResult = { status: 'ok'; user: AdminUser };
 
 /** GET /admin/session: the administrator and when the back-office session ends. Times are ISO strings. */
 export type AdminSession = { user: AdminUser; idleExpiresAt: string; expiresAt: string };

@@ -65,7 +65,7 @@ export interface ReportDecisionWrite {
 }
 
 /** One restoration of hidden content, as the repository writes it. The audit entry is written in the same transaction. */
-export interface ReportRestoreWrite {
+interface ReportRestoreWrite {
   target: ReportTarget;
   now: Date;
   /** Writes the audit entry inside the same transaction: if it fails, the restoration is rolled back. */

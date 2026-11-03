@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 /** One account in the list of blocked accounts, with the time of its block (most recent first). */
-export class BlockedAccountDto {
+class BlockedAccountDto {
   @ApiProperty({ example: 'bob' })
   handle!: string;
 

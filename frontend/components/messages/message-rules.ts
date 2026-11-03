@@ -131,7 +131,7 @@ function dayLabel(iso: string, now: Date): string {
 }
 
 /** One row of the thread: a day separator, or a message with the line under it when its run ends. */
-export type ThreadItem =
+type ThreadItem =
   | { kind: 'day'; key: string; label: string }
   | { kind: 'message'; key: string; text: string; mine: boolean; meta: string | null };
 

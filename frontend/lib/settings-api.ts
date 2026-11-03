@@ -69,7 +69,7 @@ export type AccountDeletionRequest = {
 };
 
 /** The answer to a deletion request: the date the account is purged. */
-export type AccountDeletionReceipt = { deletionPurgeAt: string };
+type AccountDeletionReceipt = { deletionPurgeAt: string };
 
 /**
  * Asks for the deletion of the account (200, the purge date). The session is closed by the server: the caller shows the

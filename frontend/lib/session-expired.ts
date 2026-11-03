@@ -26,7 +26,7 @@ export function isSessionExpired(problem: ApiProblem): boolean {
  * Sends the browser to the login page with the session-expired marker. `replace` keeps the protected page out of the
  * history, so Back does not return to a page that needs a session.
  */
-export function redirectToSessionExpiredLogin(): void {
+function redirectToSessionExpiredLogin(): void {
   if (typeof window === 'undefined') {
     return;
   }

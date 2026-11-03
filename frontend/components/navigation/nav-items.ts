@@ -5,7 +5,7 @@
 
 import type { YIconName } from '@/components/brand/y-icon';
 
-export type NavEntryId = 'home' | 'explore' | 'notifications' | 'messages' | 'bookmarks' | 'profile';
+type NavEntryId = 'home' | 'explore' | 'notifications' | 'messages' | 'bookmarks' | 'profile';
 
 export type NavEntry = {
   id: NavEntryId;

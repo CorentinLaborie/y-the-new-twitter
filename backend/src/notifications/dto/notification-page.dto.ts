@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 /** Who did the action, or null for a system notification. */
-export class NotificationActorDto {
+class NotificationActorDto {
   @ApiProperty({ example: 'bob' })
   readonly handle!: string;
 
@@ -19,7 +19,7 @@ export class NotificationActorDto {
 }
 
 /** A question or a reply a notification refers to. */
-export class NotificationTargetDto {
+class NotificationTargetDto {
   @ApiProperty({ format: 'uuid' })
   readonly id!: string;
 
@@ -28,7 +28,7 @@ export class NotificationTargetDto {
 }
 
 /** One notification. Reactions of the same kind on the same question are one line, with `actorCount` actors. */
-export class NotificationViewDto {
+class NotificationViewDto {
   @ApiProperty({ format: 'uuid' })
   readonly id!: string;
 

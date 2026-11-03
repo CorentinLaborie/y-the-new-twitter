@@ -62,7 +62,7 @@ const FOLLOWS = [
 ] as const;
 
 /** Writes the fictional dataset in one transaction. Safe to run more than once. */
-export async function seedDatabase(prisma: PrismaClient): Promise<void> {
+async function seedDatabase(prisma: PrismaClient): Promise<void> {
   await prisma.$transaction(async (tx) => {
     for (const user of USERS) {
       await tx.user.upsert({

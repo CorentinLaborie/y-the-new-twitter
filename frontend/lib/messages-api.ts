@@ -15,7 +15,7 @@ import type { ApiResult } from '@/lib/api-client';
 import { protectedApiRequest } from '@/lib/session-expired';
 
 /** The request state of a conversation as the viewer sees it. */
-export type ConversationStatus = 'pending' | 'accepted' | 'declined';
+type ConversationStatus = 'pending' | 'accepted' | 'declined';
 
 /** One conversation of the viewer's lists, with the other account and the viewer's own state. */
 export type ConversationView = {
@@ -37,7 +37,7 @@ export type ConversationView = {
 export type MessageView = { id: string; text: string; createdAt: string; mine: boolean };
 
 export type ConversationPage = { conversations: ConversationView[]; nextCursor: string | null };
-export type MessagePage = { messages: MessageView[]; nextCursor: string | null };
+type MessagePage = { messages: MessageView[]; nextCursor: string | null };
 
 /** Which list the viewer reads: the accepted conversations, the requests waiting for them, or the archived ones. */
 export type ConversationListOptions = {

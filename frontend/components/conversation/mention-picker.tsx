@@ -4,7 +4,7 @@ import type { MentionSuggestion } from '@/lib/mention-api';
 import { UserAvatar } from '@/components/avatar/user-avatar';
 import styles from './mention-picker.module.css';
 
-export type MentionPickerProps = {
+type MentionPickerProps = {
   id: string;
   /** The accounts proposed for the handle typed so far, already in the order to show them. */
   suggestions: readonly MentionSuggestion[];

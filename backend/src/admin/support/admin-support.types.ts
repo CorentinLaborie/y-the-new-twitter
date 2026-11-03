@@ -38,7 +38,7 @@ export interface SupportThreadPage {
 }
 
 /** One message of a thread: written by the account (user) or by an administrator (admin). */
-export interface SupportMessageView {
+interface SupportMessageView {
   id: string;
   authorType: SupportAuthorType;
   body: string;
@@ -46,7 +46,7 @@ export interface SupportMessageView {
 }
 
 /** The account of a thread, with what the thread needs of its suspension. */
-export interface SupportThreadAccountView extends SupportAccountView {
+interface SupportThreadAccountView extends SupportAccountView {
   /** The time of the last status change of the account: the suspension, when the account is suspended. */
   statusChangedAt: string | null;
   suspensionReason: string | null;

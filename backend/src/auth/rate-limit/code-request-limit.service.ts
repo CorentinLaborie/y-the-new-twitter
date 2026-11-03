@@ -5,7 +5,7 @@ import { ACCOUNT_CODE_REQUEST_POLICY } from './auth-rate-limit.policies';
 import { RATE_LIMIT_STORAGE } from './rate-limit.module';
 
 /** The account a code request is for: its id, or the e-mail address when no account has it. */
-export type CodeRequestAccount = { readonly userId: string } | { readonly email: string };
+type CodeRequestAccount = { readonly userId: string } | { readonly email: string };
 
 /**
  * The per-account limit on code requests (section 9.4), counted in PostgreSQL with the IP counters (DEC-194).

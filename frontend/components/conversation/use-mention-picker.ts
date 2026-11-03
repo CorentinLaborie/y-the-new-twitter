@@ -5,7 +5,7 @@ import { fetchMentionSuggestions, type MentionSuggestion } from '@/lib/mention-a
 import { insertMention, mentionQueryAt, type MentionQuery } from '@/lib/mention-picker';
 
 /** The selector open under a textarea: the mention being typed, the accounts proposed and the row the keyboard is on. */
-export type PickerState = { mention: MentionQuery; suggestions: MentionSuggestion[]; activeIndex: number };
+type PickerState = { mention: MentionQuery; suggestions: MentionSuggestion[]; activeIndex: number };
 
 /**
  * The '@' selector of a text field (section M3), shared by the question and the reply composers. The caller keeps the
