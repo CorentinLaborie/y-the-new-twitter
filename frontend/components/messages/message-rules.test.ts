@@ -25,6 +25,7 @@ const BASE: ConversationView = {
   unread: false,
   muted: false,
   archived: false,
+  blockedByViewer: false,
 };
 
 const problem = (status: number): ApiProblem => ({ status, title: 'x', detail: 'x' });

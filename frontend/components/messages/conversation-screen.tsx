@@ -6,6 +6,7 @@ import { fetchProfile, type ProfileView } from '@/lib/profile-api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { BlockDialog } from '@/components/block/block-dialog';
+import { unblockAccount } from '@/lib/blocks-api';
 import {
   acceptRequest,
   archiveConversation,
@@ -120,6 +121,23 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
   const writable = canWrite(conversation, viewerHasWritten);
   const notice = composerNotice(conversation, viewerHasWritten);
   const waitingForAnswer = conversation.status === 'pending' && !conversation.initiatedByViewer;
+
+  /** Unblocks the account, then reads the conversation again: it becomes writable and shows in Messages. */
+  async function unblock() {
+    const result = await unblockAccount(conversation.other.handle);
+    if (!result.ok) {
+      patch({ actionError: loadFailureMessage(result.problem) });
+      return;
+    }
+    const refreshed = await fetchConversation(conversationId);
+    if (!refreshed.ok) {
+      patch({ actionError: loadFailureMessage(refreshed.problem) });
+      return;
+    }
+    setState((current) =>
+      current.phase === 'ready' ? { ...current, conversation: refreshed.body, actionError: null } : current,
+    );
+  }
 
   function patch(update: Partial<Pick<ReadyThread, 'more' | 'actionError'>>) {
     setState((current) => (current.phase === 'ready' ? { ...current, ...update } : current));
@@ -255,19 +273,21 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
                 {conversation.archived ? 'Désarchiver' : 'Archiver'}
               </button>
             </li>
-            <li role="none">
-              <button
-                className={styles.menuItem}
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setBlockOpen(true);
-                }}
-              >
-                Bloquer
-              </button>
-            </li>
+            {conversation.blockedByViewer ? null : (
+              <li role="none">
+                <button
+                  className={styles.menuItem}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setBlockOpen(true);
+                  }}
+                >
+                  Bloquer
+                </button>
+              </li>
+            )}
           </ul>
         ) : null}
       </header>
@@ -341,36 +361,45 @@ export function ConversationScreen({ conversationId }: { conversationId: string 
       {notice !== null ? <p>{notice}</p> : null}
       {actionError !== null ? <p role="alert">{actionError}</p> : null}
 
-      <form onSubmit={send} aria-label="Écrire un message" className={styles.composer}>
-        <label htmlFor="message-draft" className={styles.visuallyHidden}>
-          Écrire un message à {conversation.other.displayName}
-        </label>
-        <textarea
-          className={styles.composerField}
-          placeholder="Écrire un message"
-          id="message-draft"
-          value={draft}
-          maxLength={MESSAGE_MAX_LENGTH}
-          onChange={(event) => setDraft(event.target.value)}
-          disabled={!writable || sending}
-          rows={2}
-        />
-        <div className={styles.composerFooter}>
-          <p aria-live="polite" className={styles.counter}>
-            {draft.length} / {MESSAGE_MAX_LENGTH}
-          </p>
-          <button
-            type="submit"
-            className={styles.sendButton}
-            aria-label="Envoyer"
-            disabled={!writable || sending || draft.trim() === ''}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 11l18-8-8 18-2-8-8-2z" fill="currentColor" />
-            </svg>
+      {conversation.blockedByViewer ? (
+        <div className={styles.blockedPanel}>
+          <p>Vous avez bloqué {conversation.other.displayName}. Vous ne pouvez plus lui écrire.</p>
+          <button type="button" className={styles.unblockButton} onClick={() => void unblock()}>
+            Débloquer @{conversation.other.handle}
           </button>
         </div>
-      </form>
+      ) : (
+        <form onSubmit={send} aria-label="Écrire un message" className={styles.composer}>
+          <label htmlFor="message-draft" className={styles.visuallyHidden}>
+            Écrire un message à {conversation.other.displayName}
+          </label>
+          <textarea
+            className={styles.composerField}
+            placeholder="Écrire un message"
+            id="message-draft"
+            value={draft}
+            maxLength={MESSAGE_MAX_LENGTH}
+            onChange={(event) => setDraft(event.target.value)}
+            disabled={!writable || sending}
+            rows={2}
+          />
+          <div className={styles.composerFooter}>
+            <p aria-live="polite" className={styles.counter}>
+              {draft.length} / {MESSAGE_MAX_LENGTH}
+            </p>
+            <button
+              type="submit"
+              className={styles.sendButton}
+              aria-label="Envoyer"
+              disabled={!writable || sending || draft.trim() === ''}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 11l18-8-8 18-2-8-8-2z" fill="currentColor" />
+              </svg>
+            </button>
+          </div>
+        </form>
+      )}
 
       <BlockDialog
         open={blockOpen}

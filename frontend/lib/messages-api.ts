@@ -31,6 +31,8 @@ export type ConversationView = {
   unread: boolean;
   muted: boolean;
   archived: boolean;
+  /** True when the viewer has blocked the other account: the conversation is read-only, with an unblock button. */
+  blockedByViewer: boolean;
 };
 
 /** One message of a conversation. `mine` is true when the viewer wrote it. */

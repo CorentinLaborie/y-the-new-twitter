@@ -635,6 +635,29 @@
   border-top: 1px solid var(--color-border);
 }
 
+/* The read-only panel of a conversation with an account the viewer blocked: no composer, only the unblock button. */
+.blockedPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-16);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted-foreground);
+}
+
+.unblockButton {
+  min-height: 44px;
+  align-self: flex-start;
+  padding: 0 var(--space-16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .composerField {
   box-sizing: border-box;
   width: 100%;

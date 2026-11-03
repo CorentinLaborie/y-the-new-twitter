@@ -9,13 +9,13 @@ import {
   type ConversationView,
   type MessageView,
 } from '@/lib/messages-api';
-import { blockAccount } from '@/lib/blocks-api';
+import { blockAccount, unblockAccount } from '@/lib/blocks-api';
 import { ConversationScreen } from './conversation-screen';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-vi.mock('@/lib/blocks-api', () => ({ blockAccount: vi.fn() }));
+vi.mock('@/lib/blocks-api', () => ({ blockAccount: vi.fn(), unblockAccount: vi.fn() }));
 
 vi.mock('@/lib/messages-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/messages-api')>();
@@ -49,6 +49,7 @@ function conversation(overrides: Partial<ConversationView> = {}): ConversationVi
     unread: false,
     muted: false,
     archived: false,
+    blockedByViewer: false,
     ...overrides,
   };
 }
@@ -127,6 +128,29 @@ describe('ConversationScreen', () => {
 
     expect(await screen.findByText('Cette demande a été refusée.')).toBeInTheDocument();
     expect(screen.getByRole('textbox')).toBeDisabled();
+  });
+
+  it('shows a blocked account read-only, with the Débloquer button and no composer', async () => {
+    loadThread(conversation({ blockedByViewer: true }));
+
+    render(<ConversationScreen conversationId={CONVERSATION_ID} />);
+
+    expect(await screen.findByRole('button', { name: 'Débloquer @alice' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByText('Réponse')).toBeInTheDocument();
+  });
+
+  it('unblocks the account and opens the composer again', async () => {
+    loadThread(conversation({ blockedByViewer: true }));
+    vi.mocked(unblockAccount).mockResolvedValue(OK(undefined));
+
+    render(<ConversationScreen conversationId={CONVERSATION_ID} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Débloquer @alice' }));
+    vi.mocked(fetchConversation).mockResolvedValue(OK(conversation()));
+
+    await waitFor(() => expect(unblockAccount).toHaveBeenCalledWith('alice'));
+    expect(await screen.findByRole('textbox')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Débloquer @alice' })).not.toBeInTheDocument();
   });
 
   it('sends a message, shows it in the thread and clears the composer', async () => {

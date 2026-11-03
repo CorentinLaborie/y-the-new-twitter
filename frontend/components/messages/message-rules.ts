@@ -49,6 +49,9 @@ export function conversationStateLabel(conversation: ConversationView): string {
  * accepted first. A request the viewer sent allows one message only, until it is accepted.
  */
 export function canWrite(conversation: ConversationView, viewerHasWritten: boolean): boolean {
+  if (conversation.blockedByViewer) {
+    return false;
+  }
   if (conversation.status === 'declined') {
     return false;
   }

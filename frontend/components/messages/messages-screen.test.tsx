@@ -22,6 +22,7 @@ function conversation(id: string, overrides: Partial<ConversationView> = {}): Co
     unread: false,
     muted: false,
     archived: false,
+    blockedByViewer: false,
     ...overrides,
   };
 }
