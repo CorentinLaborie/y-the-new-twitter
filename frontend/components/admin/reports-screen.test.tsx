@@ -147,3 +147,22 @@ describe('ReportsScreen', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Le service est indisponible.');
   });
 });
+
+describe('ReportsScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(listReports).mockResolvedValue(FAILED);
+    render(<ReportsScreen />);
+    await waitFor(() => expect(vi.mocked(listReports)).toHaveBeenCalled());
+    const before = vi.mocked(listReports).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(listReports).mock.calls.length).toBeGreaterThan(before));
+  });
+});

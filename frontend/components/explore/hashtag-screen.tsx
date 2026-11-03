@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { FeedError, FeedLoading } from '@/components/feed/feed-states';
 import { FeedIcon } from '@/components/feed/feed-icon';
 import { EXPLORE_LOAD_FAILURE } from '@/lib/explore-rules';
@@ -26,6 +27,7 @@ export function HashtagScreen({
   viewer: { handle: string; suspended: boolean };
 }) {
   const [attempt, setAttempt] = useState(0);
+  useReloadOnBack(() => setAttempt((count) => count + 1));
   // The state of an earlier tag or attempt is never shown: each stored state carries the key it answers.
   const [stored, setStored] = useState<{ tag: string; attempt: number; state: State } | null>(null);
   const state: State =

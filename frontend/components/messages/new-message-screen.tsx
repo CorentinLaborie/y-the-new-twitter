@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { fetchMentionSuggestions, type MentionSuggestion } from '@/lib/mention-api';
 import { startConversation } from '@/lib/messages-api';
 import { MESSAGE_MAX_LENGTH, sendFailureMessage } from './message-rules';
@@ -40,6 +41,9 @@ export function NewMessageScreen() {
   const listShown = listOpen && suggestions.length > 0;
   const recipient = handle.trim().replace(/^@/, '');
 
+  const [reloadKey, setReloadKey] = useState(0);
+  useReloadOnBack(() => setReloadKey((count) => count + 1));
+
   // The accounts the viewer follows or that follow the viewer, for the text typed so far (the same list as the mentions).
   useEffect(() => {
     let current = true;
@@ -56,7 +60,7 @@ export function NewMessageScreen() {
       current = false;
       window.clearTimeout(timer);
     };
-  }, [recipient]);
+  }, [recipient, reloadKey]);
 
   function pick(account: string) {
     setHandle(account);

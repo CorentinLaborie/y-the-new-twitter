@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { Button } from '@/components/auth/button';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
@@ -67,6 +68,8 @@ export function AuditScreen() {
     },
     [],
   );
+
+  useReloadOnBack(() => void fetchPage(action, undefined, []));
 
   useEffect(() => {
     void fetchPage('', undefined, []);

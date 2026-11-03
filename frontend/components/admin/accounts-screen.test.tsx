@@ -119,3 +119,22 @@ describe('AccountsScreen', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Le service ne répond pas.');
   });
 });
+
+describe('AccountsScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(listAccounts).mockResolvedValue(FAILED);
+    render(<AccountsScreen />);
+    await waitFor(() => expect(vi.mocked(listAccounts)).toHaveBeenCalled());
+    const before = vi.mocked(listAccounts).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(listAccounts).mock.calls.length).toBeGreaterThan(before));
+  });
+});

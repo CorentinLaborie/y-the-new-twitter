@@ -72,3 +72,22 @@ describe('FollowListScreen (L3, section 7.4)', () => {
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Voir plus' })).not.toBeInTheDocument());
   });
 });
+
+describe('FollowListScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(fetchFollowList).mockResolvedValue(FAILED);
+    render(<FollowListScreen handle="alice" list="following" viewerHandle="me" suspended={false} />);
+    await waitFor(() => expect(vi.mocked(fetchFollowList)).toHaveBeenCalled());
+    const before = vi.mocked(fetchFollowList).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchFollowList).mock.calls.length).toBeGreaterThan(before));
+  });
+});

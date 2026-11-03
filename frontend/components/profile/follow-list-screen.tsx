@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useEffect, useState } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { CONNECTION_FAILURE_MESSAGE, FeedError, FeedLoading } from '@/components/feed/feed-states';
 import { FollowButton } from '@/components/follow/follow-button';
 import { fetchFollowList, type FollowAccount } from '@/lib/profile-api';
@@ -36,6 +37,7 @@ export function FollowListScreen({
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [moreStatus, setMoreStatus] = useState<'idle' | 'loading' | 'failed'>('idle');
   const [attempt, setAttempt] = useState(0);
+  useReloadOnBack(() => setAttempt((count) => count + 1));
 
   useEffect(() => {
     let active = true;

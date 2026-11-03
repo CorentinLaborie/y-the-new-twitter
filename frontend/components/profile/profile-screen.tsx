@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { BlockDialog } from '@/components/block/block-dialog';
 import { EditProfileDialog } from './edit-profile-dialog';
 import { blockedMessage } from '@/components/block/block-rules';
@@ -71,6 +72,8 @@ export function ProfileScreen({
   useEffect(() => {
     loadFirst();
   }, [loadFirst]);
+
+  useReloadOnBack(loadFirst);
 
   function loadMore(cursor: string) {
     setMoreStatus('loading');

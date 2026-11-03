@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { listAuditLog, type AuditEntry } from '@/lib/admin-api';
 import { AuditScreen } from './audit-screen';
@@ -84,5 +84,24 @@ describe('AuditScreen', () => {
     render(<AuditScreen />);
 
     expect(await screen.findByText('Aucune entrée pour ce filtre.')).toBeInTheDocument();
+  });
+});
+
+describe('AuditScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(listAuditLog).mockResolvedValue(FAILED);
+    render(<AuditScreen />);
+    await waitFor(() => expect(vi.mocked(listAuditLog)).toHaveBeenCalled());
+    const before = vi.mocked(listAuditLog).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(listAuditLog).mock.calls.length).toBeGreaterThan(before));
   });
 });

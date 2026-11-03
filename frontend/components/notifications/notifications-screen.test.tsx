@@ -271,3 +271,22 @@ describe('NotificationsScreen', () => {
     timers.mockRestore();
   });
 });
+
+describe('NotificationsScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(fetchNotificationPage).mockResolvedValue(FAILED);
+    render(<NotificationsScreen initialTab="all" suspended={false} />);
+    await waitFor(() => expect(vi.mocked(fetchNotificationPage)).toHaveBeenCalled());
+    const before = vi.mocked(fetchNotificationPage).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchNotificationPage).mock.calls.length).toBeGreaterThan(before));
+  });
+});

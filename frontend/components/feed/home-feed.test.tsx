@@ -657,3 +657,22 @@ describe('HomeFeed on the Abonnements tab (L3)', () => {
     expect(unfollowUser).toHaveBeenCalledWith('alice');
   });
 });
+
+describe('HomeFeed goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(fetchFeedPage).mockResolvedValue(FAILED);
+    render(<HomeFeed displayName="Alice" avatarUrl={null} viewerHandle="alice" suspended={false} />);
+    await waitFor(() => expect(vi.mocked(fetchFeedPage)).toHaveBeenCalled());
+    const before = vi.mocked(fetchFeedPage).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchFeedPage).mock.calls.length).toBeGreaterThan(before));
+  });
+});

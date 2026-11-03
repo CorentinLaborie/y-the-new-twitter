@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchMentionSuggestions } from '@/lib/mention-api';
 import { NewMessageScreen } from './new-message-screen';
@@ -75,5 +75,24 @@ describe('NewMessageScreen (Messages-New boards)', () => {
 
     expect(screen.getByLabelText('Rechercher une personne')).toHaveValue('alice');
     expect(screen.queryByRole('listbox', { name: 'Personnes suggérées' })).not.toBeInTheDocument();
+  });
+});
+
+describe('NewMessageScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(fetchMentionSuggestions).mockResolvedValue(FAILED);
+    render(<NewMessageScreen />);
+    await waitFor(() => expect(vi.mocked(fetchMentionSuggestions)).toHaveBeenCalled());
+    const before = vi.mocked(fetchMentionSuggestions).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchMentionSuggestions).mock.calls.length).toBeGreaterThan(before));
   });
 });

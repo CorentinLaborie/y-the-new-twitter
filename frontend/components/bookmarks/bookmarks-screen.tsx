@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import type { ApiResult } from '@/lib/api-client';
 import { fetchBookmarkPage, type BookmarkPage, type BookmarkSort } from '@/lib/bookmarks-api';
 import { deleteReaction, putReaction, type FeedQuestion, type ReactionKind } from '@/lib/feed-api';
@@ -95,6 +96,8 @@ export function BookmarksScreen({
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<BookmarkSort>('saved');
+  const [reloadKey, setReloadKey] = useState(0);
+  useReloadOnBack(() => setReloadKey((count) => count + 1));
 
   useEffect(() => {
     let current = true;
@@ -107,7 +110,7 @@ export function BookmarksScreen({
     return () => {
       current = false;
     };
-  }, [search, sort]);
+  }, [search, sort, reloadKey]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

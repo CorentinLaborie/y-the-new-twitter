@@ -110,3 +110,22 @@ describe('BookmarksScreen (L4)', () => {
     expect(screen.queryByRole('button', { name: 'Voir plus' })).not.toBeInTheDocument();
   });
 });
+
+describe('BookmarksScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(fetchBookmarkPage).mockResolvedValue(FAILED);
+    render(<BookmarksScreen viewerHandle="viewer" viewerSuspended={false} />);
+    await waitFor(() => expect(vi.mocked(fetchBookmarkPage)).toHaveBeenCalled());
+    const before = vi.mocked(fetchBookmarkPage).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchBookmarkPage).mock.calls.length).toBeGreaterThan(before));
+  });
+});

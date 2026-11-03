@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { FeedError, FeedLoading } from '@/components/feed/feed-states';
 import { FeedIcon } from '@/components/feed/feed-icon';
 import {
@@ -84,6 +85,13 @@ export function ExploreScreen({
   const [results, reloadResults] = useLoad(`search:${query}`, () =>
     query === '' ? Promise.resolve({ ok: true as const, status: 200, body: EMPTY_RESULT }) : search(query),
   );
+
+  useReloadOnBack(() => {
+    reloadTrends();
+    reloadPopular();
+    reloadSuggestions();
+    reloadResults();
+  });
 
   // Suggestions while typing: the same search, after a short pause, while the field differs from the query.
   useEffect(() => {

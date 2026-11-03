@@ -112,3 +112,22 @@ describe('BlockedAccountsScreen', () => {
     expect(listBlockedAccounts).toHaveBeenLastCalledWith({ cursor: 'next' });
   });
 });
+
+describe('BlockedAccountsScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(listBlockedAccounts).mockResolvedValue(FAILED);
+    render(<BlockedAccountsScreen />);
+    await waitFor(() => expect(vi.mocked(listBlockedAccounts)).toHaveBeenCalled());
+    const before = vi.mocked(listBlockedAccounts).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(listBlockedAccounts).mock.calls.length).toBeGreaterThan(before));
+  });
+});

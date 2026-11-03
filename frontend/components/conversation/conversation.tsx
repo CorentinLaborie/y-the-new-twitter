@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { Notice } from '@/components/auth/notice';
 import { feedFailureMessage } from '@/components/feed/feed-states';
 import styles from '@/components/feed/feed.module.css';
@@ -125,6 +126,7 @@ export function Conversation({
 }: ConversationProps) {
   const [listState, setListState] = useState<ListState>(() => initialList(questionId));
   const [attempt, setAttempt] = useState(0);
+  useReloadOnBack(() => setAttempt((value) => value + 1));
   // The count shown in the caption: the prop, moved by the replies this view posts or deletes.
   const [countState, setCountState] = useState({ base: replyCount, value: replyCount });
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import {
   deleteReaction,
   fetchFeedPage,
@@ -184,6 +185,8 @@ export function HomeFeed({
     setState((current) => ({ ...current, phase: 'loading' }));
     fetchFeedPage(undefined, tab).then(applyFirstPage);
   }
+
+  useReloadOnBack(retryFirstPage);
 
   function loadMore(cursor: string) {
     setState((current) => ({ ...current, nextPageStatus: 'loading' }));

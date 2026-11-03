@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchPopular, fetchSuggestions, fetchTrends, search } from '@/lib/explore-api';
 import type { FeedQuestion } from '@/lib/feed-api';
@@ -89,5 +89,26 @@ describe('ExploreScreen (M4)', () => {
 
     expect(replace).toHaveBeenCalledWith('/explore', { scroll: false });
     expect(screen.getByRole('searchbox')).toHaveValue('');
+  });
+});
+
+describe('ExploreScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(fetchTrends).mockResolvedValue(FAILED);
+    vi.mocked(fetchPopular).mockResolvedValue(FAILED);
+    vi.mocked(fetchSuggestions).mockResolvedValue(FAILED);
+    render(<ExploreScreen initialQuery="" viewer={{ handle: 'viewer', suspended: false }} />);
+    await waitFor(() => expect(vi.mocked(fetchTrends)).toHaveBeenCalled());
+    const before = vi.mocked(fetchTrends).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchTrends).mock.calls.length).toBeGreaterThan(before));
   });
 });

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { Button } from '@/components/auth/button';
 import { AdminPage } from '@/components/admin/admin-page';
 import { AdminLoadError, AdminLoading } from '@/components/admin/admin-states';
@@ -71,6 +72,8 @@ export function SupportScreen() {
     },
     [],
   );
+
+  useReloadOnBack(() => void fetchPage(filter, undefined, []));
 
   useEffect(() => {
     void fetchPage(ALL_THREADS, undefined, []);

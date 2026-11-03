@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchHashtagPage } from '@/lib/explore-api';
 import type { FeedQuestion } from '@/lib/feed-api';
@@ -55,5 +55,24 @@ describe('HashtagScreen (M4)', () => {
     render(<HashtagScreen tag="rien" viewer={{ handle: 'viewer', suspended: false }} />);
 
     expect(await screen.findByRole('heading', { name: 'Aucune question avec #rien' })).toBeInTheDocument();
+  });
+});
+
+describe('HashtagScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(fetchHashtagPage).mockResolvedValue(FAILED);
+    render(<HashtagScreen tag="tests" viewer={{ handle: 'viewer', suspended: false }} />);
+    await waitFor(() => expect(vi.mocked(fetchHashtagPage)).toHaveBeenCalled());
+    const before = vi.mocked(fetchHashtagPage).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchHashtagPage).mock.calls.length).toBeGreaterThan(before));
   });
 });

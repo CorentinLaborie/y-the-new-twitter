@@ -253,3 +253,23 @@ describe('ProfileScreen (L1)', () => {
     expect(await screen.findByRole('dialog', { name: 'Modifier le profil' })).toBeInTheDocument();
   });
 });
+
+describe('ProfileScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(fetchProfile).mockResolvedValue(FAILED);
+    vi.mocked(fetchProfileQuestions).mockResolvedValue(FAILED);
+    render(<ProfileScreen handle="alice" viewerHandle="me" suspended={false} />);
+    await waitFor(() => expect(vi.mocked(fetchProfile)).toHaveBeenCalled());
+    const before = vi.mocked(fetchProfile).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(fetchProfile).mock.calls.length).toBeGreaterThan(before));
+  });
+});

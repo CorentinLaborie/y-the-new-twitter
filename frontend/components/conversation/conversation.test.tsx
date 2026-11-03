@@ -376,3 +376,31 @@ describe('Conversation', () => {
     expect(onReplyCountChange).not.toHaveBeenCalled();
   });
 });
+
+describe('Conversation goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(listReplies).mockResolvedValue(FAILED);
+    render(
+      <Conversation
+        questionId="q-1"
+        yCount={50}
+        yThreshold={50}
+        conversationOpen
+        viewerHandle="alice"
+        replyCount={2}
+      />,
+    );
+    await waitFor(() => expect(vi.mocked(listReplies)).toHaveBeenCalled());
+    const before = vi.mocked(listReplies).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(listReplies).mock.calls.length).toBeGreaterThan(before));
+  });
+});

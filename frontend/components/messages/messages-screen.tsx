@@ -5,6 +5,7 @@ import { UserAvatar } from '@/components/avatar/user-avatar';
 import { useEffect, useState } from 'react';
 import { FeedIcon } from '@/components/feed/feed-icon';
 import { fetchConversations, type ConversationView } from '@/lib/messages-api';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import {
   conversationStateLabel,
   formatRowTime,
@@ -91,16 +92,7 @@ export function MessagesScreen() {
 
   // Going back from a conversation restores this screen without running its loading effect: ask the list again, so an
   // account unblocked in the meantime leaves the Bloqués tab.
-  useEffect(() => {
-    function reloadOnBack() {
-      setAttempt((count) => count + 1);
-    }
-    window.addEventListener('popstate', reloadOnBack);
-
-    return () => {
-      window.removeEventListener('popstate', reloadOnBack);
-    };
-  }, []);
+  useReloadOnBack(() => setAttempt((count) => count + 1));
 
   async function loadMore(cursor: string) {
     setAnswer((current) =>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { UserAvatar } from '@/components/avatar/user-avatar';
 import {
   BLOCKED_EMPTY_MESSAGE,
@@ -23,6 +24,7 @@ export function BlockedAccountsScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  useReloadOnBack(() => setReloadKey((count) => count + 1));
 
   useEffect(() => {
     let active = true;

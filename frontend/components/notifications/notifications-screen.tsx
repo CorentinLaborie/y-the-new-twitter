@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import type { ApiResult } from '@/lib/api-client';
 import {
   fetchNotificationPage,
@@ -132,6 +133,8 @@ export function NotificationsScreen({ initialTab, suspended }: { initialTab: Not
   useEffect(() => {
     requestFirstPage(initialTab);
   }, [initialTab, requestFirstPage]);
+
+  useReloadOnBack(() => restartFirstPage(tab));
 
   function restartFirstPage(next: NotificationTab) {
     setList(LOADING_LIST);

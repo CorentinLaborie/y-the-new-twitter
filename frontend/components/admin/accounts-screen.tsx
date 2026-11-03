@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { UserAvatar } from '@/components/avatar/user-avatar';
 import avatarStyles from './admin-avatar.module.css';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useReloadOnBack } from '@/lib/use-reload-on-back';
 import { Button } from '@/components/auth/button';
 import { TextField } from '@/components/auth/text-field';
 import { AdminPage } from '@/components/admin/admin-page';
@@ -72,6 +73,8 @@ export function AccountsScreen() {
     },
     [],
   );
+
+  useReloadOnBack(() => void fetchPage({ q: query.trim(), status }, undefined, []));
 
   useEffect(() => {
     void fetchPage(ALL_ACCOUNTS, undefined, []);

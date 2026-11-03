@@ -123,3 +123,22 @@ describe('SupportScreen', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Le service est indisponible.');
   });
 });
+
+describe('SupportScreen goes back to a fresh list', () => {
+  const FAILED = {
+    ok: false,
+    status: 500,
+    problem: { status: 500, title: 'Erreur', detail: 'Erreur' },
+  } as never;
+
+  it('asks the list again when the viewer goes back', async () => {
+    vi.mocked(listSupportThreads).mockResolvedValue(FAILED);
+    render(<SupportScreen />);
+    await waitFor(() => expect(vi.mocked(listSupportThreads)).toHaveBeenCalled());
+    const before = vi.mocked(listSupportThreads).mock.calls.length;
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(vi.mocked(listSupportThreads).mock.calls.length).toBeGreaterThan(before));
+  });
+});
