@@ -128,6 +128,21 @@ export class MessagesRepository {
     });
   }
 
+  /**
+   * The conversation, read-only, when the viewer takes part in it and has blocked the other participant (R14). Only the
+   * blocker gets it, so the blocked account never sees it through this path.
+   */
+  findBlockedParticipation(viewerId: string, conversationId: string): Promise<ConversationRow | null> {
+    return this.prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        participants: { some: { userId: viewerId } },
+        AND: [{ participants: { some: { userId: { not: viewerId }, user: { blockedBy: { some: { blockerId: viewerId } } } } } }],
+      },
+      include: CONVERSATION_INCLUDE,
+    });
+  }
+
   /** Writes a message and moves the time of the last message of its conversation, in one transaction. */
   appendMessage(
     conversationId: string,

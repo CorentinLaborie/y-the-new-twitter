@@ -44,6 +44,8 @@ export interface ConversationView {
   unread: boolean;
   muted: boolean;
   archived: boolean;
+  /** True when the viewer has blocked the other account: the conversation is read-only for the viewer. */
+  blockedByViewer: boolean;
 }
 
 /**
@@ -142,7 +144,7 @@ export class MessagesService {
     const last = page.at(-1);
 
     return {
-      conversations: page.map((row) => toConversationView(row, viewer.id)),
+      conversations: page.map((row) => toConversationView(row, viewer.id, query.blocked === true)),
       nextCursor:
         rows.length > limit && last !== undefined
           ? encodeKeysetCursor({
@@ -155,18 +157,22 @@ export class MessagesService {
 
   /** One conversation the viewer takes part in, as the lists show it. 404 when the viewer cannot see it. */
   async conversation(viewer: SessionUser, conversationId: string): Promise<ConversationView> {
-    const conversation = await this.participation(viewer, conversationId);
+    const readable = await this.readable(viewer, conversationId);
 
-    return toConversationView({ ...ownRow(conversation, viewer.id), conversation }, viewer.id);
+    return toConversationView(
+      { ...ownRow(readable.conversation, viewer.id), conversation: readable.conversation },
+      viewer.id,
+      readable.blocked,
+    );
   }
 
-  /** One page of the messages of a conversation, the newest first. */
+  /** One page of the messages of a conversation, the newest first. Read-only for a conversation the viewer blocked. */
   async messagesOf(
     viewer: SessionUser,
     conversationId: string,
     query: MessageQueryDto,
   ): Promise<{ messages: MessageView[]; nextCursor: string | null }> {
-    await this.participation(viewer, conversationId);
+    await this.readable(viewer, conversationId);
     const limit = query.limit;
     const after = query.cursor === undefined ? undefined : decodeKeysetCursor(query.cursor);
     const rows = await this.messages.listMessages(conversationId, after, limit + 1);
@@ -257,6 +263,26 @@ export class MessagesService {
 
     return conversation;
   }
+
+  /**
+   * The conversation to read: the one the viewer may write to, or else one the viewer has blocked (read-only, blocked
+   * true). 404 for any other.
+   */
+  private async readable(
+    viewer: SessionUser,
+    conversationId: string,
+  ): Promise<{ conversation: ConversationRow; blocked: boolean }> {
+    const conversation = await this.messages.findParticipation(viewer.id, conversationId);
+    if (conversation !== null) {
+      return { conversation, blocked: false };
+    }
+    const blockedConversation = await this.messages.findBlockedParticipation(viewer.id, conversationId);
+    if (blockedConversation === null) {
+      throw new NotFoundException(CONVERSATION_NOT_FOUND_MESSAGE);
+    }
+
+    return { conversation: blockedConversation, blocked: true };
+  }
 }
 
 /** The viewer's own row of participation in a conversation. */
@@ -280,7 +306,7 @@ function otherRow(conversation: ConversationRow, viewerId: string) {
 }
 
 /** A row of the conversation list as the viewer sees it. */
-function toConversationView(row: ParticipationRow, viewerId: string): ConversationView {
+function toConversationView(row: ParticipationRow, viewerId: string, blockedByViewer: boolean): ConversationView {
   const conversation = row.conversation;
   const other = conversation.participants.find((participant) => participant.userId !== viewerId);
   const lastMessageAt = conversation.lastMessageAt ?? conversation.createdAt;
@@ -304,5 +330,6 @@ function toConversationView(row: ParticipationRow, viewerId: string): Conversati
     unread: row.lastReadAt === null || row.lastReadAt < lastMessageAt,
     muted: row.mutedAt !== null,
     archived: row.archivedAt !== null,
+    blockedByViewer,
   };
 }

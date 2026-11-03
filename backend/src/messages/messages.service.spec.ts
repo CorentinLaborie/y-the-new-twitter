@@ -48,6 +48,7 @@ describe('MessagesService (section 9 of the conditions)', () => {
       | 'findByKey'
       | 'createDirect'
       | 'findParticipation'
+      | 'findBlockedParticipation'
       | 'appendMessage'
       | 'countMessagesBy'
       | 'answerRequest'
@@ -67,6 +68,7 @@ describe('MessagesService (section 9 of the conditions)', () => {
       findByKey: jest.fn().mockResolvedValue(null),
       createDirect: jest.fn().mockResolvedValue(CONVERSATION_ID),
       findParticipation: jest.fn().mockResolvedValue(conversation('accepted', 'accepted')),
+      findBlockedParticipation: jest.fn().mockResolvedValue(null),
       appendMessage: jest.fn().mockResolvedValue({ id: 'm-1', createdAt: NOW }),
       countMessagesBy: jest.fn().mockResolvedValue(0),
       answerRequest: jest.fn().mockResolvedValue(true),
@@ -148,6 +150,31 @@ describe('MessagesService (section 9 of the conditions)', () => {
 
   it('answers 404 to a conversation the viewer does not take part in when it is shown alone', async () => {
     repository.findParticipation.mockResolvedValueOnce(null);
+    await expect(service.conversation(VIEWER, CONVERSATION_ID)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('shows a conversation with a blocked account read-only, with the blockedByViewer flag', async () => {
+    repository.findParticipation.mockResolvedValueOnce(null);
+    repository.findBlockedParticipation.mockResolvedValueOnce(conversation('accepted', 'accepted'));
+
+    await expect(service.conversation(VIEWER, CONVERSATION_ID)).resolves.toMatchObject({
+      id: CONVERSATION_ID,
+      other: { handle: 'alice', displayName: 'Alice' },
+      blockedByViewer: true,
+    });
+  });
+
+  it('refuses to write in a conversation with a blocked account, even though it can be read', async () => {
+    repository.findParticipation.mockResolvedValueOnce(null);
+    repository.findBlockedParticipation.mockResolvedValueOnce(conversation('accepted', 'accepted'));
+
+    await expect(service.send(VIEWER, CONVERSATION_ID, 'Salut', NOW)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('answers 404 when the conversation is neither writable nor blocked by the viewer', async () => {
+    repository.findParticipation.mockResolvedValueOnce(null);
+    repository.findBlockedParticipation.mockResolvedValueOnce(null);
+
     await expect(service.conversation(VIEWER, CONVERSATION_ID)).rejects.toBeInstanceOf(NotFoundException);
   });
 
