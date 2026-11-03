@@ -10,6 +10,9 @@ vi.mock('@/lib/profile-api', async (importOriginal) => {
 
 // jsdom does not implement the modal methods of <dialog>: the open state is kept on the attribute.
 beforeAll(() => {
+  // jsdom has no object addresses for files: the preview gets a fixed one, and the calls are checked below.
+  URL.createObjectURL = vi.fn(() => 'blob:preview');
+  URL.revokeObjectURL = vi.fn();
   if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
     HTMLDialogElement.prototype.showModal = function showModal() {
       this.setAttribute('open', '');
@@ -193,5 +196,53 @@ describe('EditProfileDialog (L1, step 4.1)', () => {
 
     expect(screen.getByText('3 / 50')).toBeInTheDocument();
     expect(screen.getByText('3 / 160')).toBeInTheDocument();
+  });
+
+  it('previews the chosen photo before saving, from a temporary address', () => {
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={vi.fn()} />);
+
+    const photo = new File(['\xff\xd8\xff'], 'photo.jpg', { type: 'image/jpeg' });
+    fireEvent.change(screen.getByLabelText('Photo de profil'), { target: { files: [photo] } });
+
+    expect(screen.getByRole('img', { name: 'Aperçu de la nouvelle photo' })).toHaveAttribute(
+      'src',
+      'blob:preview',
+    );
+    expect(URL.createObjectURL).toHaveBeenCalledWith(photo);
+  });
+
+  it('shows the current photo when no new one is chosen', () => {
+    render(
+      <EditProfileDialog
+        open
+        profile={{ ...PROFILE, avatarUrl: '/avatars/current.jpg' }}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('img', { name: 'Photo de profil actuelle' }).getAttribute('src')).toContain(
+      '/avatars/current.jpg',
+    );
+  });
+
+  it('shows a placeholder when there is no photo at all', () => {
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={vi.fn()} />);
+
+    expect(screen.getByText('Aucune photo')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it('releases the temporary address of the preview when the photo is removed', () => {
+    render(<EditProfileDialog open profile={PROFILE} onClose={vi.fn()} onSaved={vi.fn()} />);
+    const input = screen.getByLabelText('Photo de profil');
+
+    fireEvent.change(input, {
+      target: { files: [new File(['\xff\xd8\xff'], 'photo.jpg', { type: 'image/jpeg' })] },
+    });
+    fireEvent.change(input, { target: { files: [] } });
+
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview');
+    expect(screen.getByText('Aucune photo')).toBeInTheDocument();
   });
 });

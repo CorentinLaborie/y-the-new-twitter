@@ -23,3 +23,10 @@
     overflow-y: auto;
   }
 }
+
+/* The wide variant is 700 px from 768 px up. The class is written after the global .y-dialog rule, so it wins over its 360 px. */
+@media (min-width: 768px) {
+  .sheet.wide {
+    max-width: 700px;
+  }
+}

@@ -9,6 +9,8 @@ type SheetDialogProps = {
   description?: string;
   /** Under 768 px: a sheet at the bottom of the screen (default), or the full screen (the profile edit window). */
   mobile?: 'sheet' | 'fullscreen';
+  /** From 768 px: 700 px wide, instead of the default dialog width (the profile edit window). */
+  wide?: boolean;
   onCancel: () => void;
   children: ReactNode;
 };
@@ -24,6 +26,7 @@ export function SheetDialog({
   title,
   description,
   mobile = 'sheet',
+  wide = false,
   onCancel,
   children,
 }: SheetDialogProps) {
@@ -46,7 +49,7 @@ export function SheetDialog({
   return (
     <dialog
       ref={dialogRef}
-      className={`y-dialog ${styles.sheet} ${mobile === 'fullscreen' ? styles.fullscreen : ''}`}
+      className={`y-dialog ${styles.sheet} ${mobile === 'fullscreen' ? styles.fullscreen : ''} ${wide ? styles.wide : ''}`}
       aria-labelledby={titleId}
       aria-describedby={description === undefined ? undefined : textId}
       onCancel={(event) => {

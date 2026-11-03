@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { SheetDialog } from '@/components/dialog/sheet-dialog';
+import { apiBaseUrl } from '@/lib/api-client';
 import {
   updateOwnProfile,
   uploadAvatar,
@@ -31,7 +32,7 @@ type EditProfileDialogProps = {
  */
 export function EditProfileDialog({ open, profile, onClose, onSaved }: EditProfileDialogProps) {
   return (
-    <SheetDialog open={open} title="Modifier le profil" mobile="fullscreen" onCancel={onClose}>
+    <SheetDialog open={open} title="Modifier le profil" mobile="fullscreen" wide onCancel={onClose}>
       {open ? <EditProfileForm profile={profile} onClose={onClose} onSaved={onSaved} /> : null}
     </SheetDialog>
   );
@@ -47,6 +48,7 @@ function EditProfileForm({
   const [bio, setBio] = useState(profile.bio ?? '');
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoFailure, setPhotoFailure] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveFailure, setSaveFailure] = useState<string | null>(null);
 
@@ -56,6 +58,17 @@ function EditProfileForm({
     setPhoto(failure === null ? (chosen ?? null) : null);
     setPhotoFailure(failure);
   }
+
+  /* The chosen photo is previewed before saving. The object address is released when the photo changes or the form closes. */
+  useEffect(() => {
+    if (photo === null) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(photo);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
 
   /*
    * The photo goes first, then the changed fields. If the photo is refused the window stays open with its message. If
@@ -147,6 +160,19 @@ function EditProfileForm({
           accept="image/jpeg,image/png,image/webp"
           onChange={(event) => choosePhoto(event.target.files?.[0])}
         />
+        <div className={styles.preview}>
+          {previewUrl !== null ? (
+            <img src={previewUrl} alt="Aperçu de la nouvelle photo" className={styles.previewImage} />
+          ) : profile.avatarUrl !== null ? (
+            <img
+              src={`${apiBaseUrl()}${profile.avatarUrl}`}
+              alt="Photo de profil actuelle"
+              className={styles.previewImage}
+            />
+          ) : (
+            <span className={styles.previewEmpty}>Aucune photo</span>
+          )}
+        </div>
         {photoFailure === null ? null : (
           <p role="alert" className={styles.error}>
             {photoFailure}
