@@ -21,6 +21,7 @@ const LIST_LABELS: Record<MessagesTab, string> = {
   messages: 'Conversations',
   requests: 'Demandes',
   archived: 'Conversations archivées',
+  blocked: 'Conversations bloquées',
 };
 
 type ReadyList = {
@@ -274,6 +275,17 @@ function MessagesEmpty({ tab }: { tab: MessagesTab }) {
         </span>
         <h2>Aucune conversation archivée</h2>
         <p>Les conversations que vous archivez apparaîtront ici.</p>
+      </div>
+    );
+  }
+  if (tab === 'blocked') {
+    return (
+      <div className="y-empty">
+        <span className="y-empty-icon">
+          <FeedIcon name="message-circle" size={28} />
+        </span>
+        <h2>Aucun compte bloqué</h2>
+        <p>Les conversations avec les comptes que vous bloquez apparaîtront ici. Vous ne recevez plus leurs messages.</p>
       </div>
     );
   }

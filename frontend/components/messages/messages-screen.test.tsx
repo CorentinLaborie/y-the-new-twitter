@@ -60,6 +60,17 @@ describe('MessagesScreen', () => {
     expect(await screen.findByRole('heading', { name: 'Aucune demande en attente' })).toBeInTheDocument();
   });
 
+  it('reads the blocked conversations when the Bloqués tab is chosen', async () => {
+    vi.mocked(fetchConversations).mockResolvedValue(OK({ conversations: [], nextCursor: null }));
+    render(<MessagesScreen />);
+    await screen.findByRole('heading', { name: 'Aucune conversation' });
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Bloqués' }));
+
+    await waitFor(() => expect(fetchConversations).toHaveBeenLastCalledWith({ blocked: true }));
+    expect(await screen.findByRole('heading', { name: 'Aucun compte bloqué' })).toBeInTheDocument();
+  });
+
   it('shows the French failure text when the list cannot be read', async () => {
     vi.mocked(fetchConversations).mockResolvedValue({
       ok: false,

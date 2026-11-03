@@ -55,6 +55,10 @@ describe('messages calls', () => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json({ conversations: [], nextCursor: null })));
     await fetchConversations({ archived: true });
     expect(firstCall().path).toBe('/api/v1/messages/conversations?archived=true');
+
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ conversations: [], nextCursor: null })));
+    await fetchConversations({ blocked: true });
+    expect(firstCall().path).toBe('/api/v1/messages/conversations?blocked=true');
   });
 
   it('reads one conversation with a GET on its path', async () => {

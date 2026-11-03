@@ -2,7 +2,7 @@
  * Client of the private messages (section 9 of the conditions). Contract: backend/openapi.yaml, served under /api/v1.
  *
  * POST /messages/conversations                       201 { conversationId }. Opens or writes to the conversation.
- * GET  /messages/conversations?requests&archived&cursor&limit   200 { conversations, nextCursor }, newest first.
+ * GET  /messages/conversations?requests&archived&blocked&cursor&limit   200 { conversations, nextCursor }, newest first.
  * POST /messages/conversations/{id}/messages         201 MessageView.
  * GET  /messages/conversations/{id}/messages?cursor&limit       200 { messages, nextCursor }, newest first.
  * PUT  /messages/conversations/{id}/accept | decline | read | mute | archive   204.
@@ -39,10 +39,11 @@ export type MessageView = { id: string; text: string; createdAt: string; mine: b
 export type ConversationPage = { conversations: ConversationView[]; nextCursor: string | null };
 type MessagePage = { messages: MessageView[]; nextCursor: string | null };
 
-/** Which list the viewer reads: the accepted conversations, the requests waiting for them, or the archived ones. */
+/** Which list the viewer reads: the accepted conversations, the requests waiting for them, the archived ones, or the blocked ones. */
 export type ConversationListOptions = {
   requests?: boolean;
   archived?: boolean;
+  blocked?: boolean;
   cursor?: string;
   limit?: number;
 };
@@ -85,6 +86,7 @@ export function fetchConversations(
   const path = withQuery('/messages/conversations', {
     requests: options.requests ? 'true' : undefined,
     archived: options.archived ? 'true' : undefined,
+    blocked: options.blocked ? 'true' : undefined,
     cursor: options.cursor,
     limit: options.limit === undefined ? undefined : String(options.limit),
   });

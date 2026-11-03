@@ -7,6 +7,7 @@ import {
   conversationStateLabel,
   listOptionsFor,
   loadFailureMessage,
+  MESSAGES_TABS,
   sendFailureMessage,
   listPreview,
   formatRowTime,
@@ -33,6 +34,11 @@ describe('listOptionsFor', () => {
     expect(listOptionsFor('messages')).toEqual({});
     expect(listOptionsFor('requests')).toEqual({ requests: true });
     expect(listOptionsFor('archived')).toEqual({ archived: true });
+    expect(listOptionsFor('blocked')).toEqual({ blocked: true });
+  });
+
+  it('puts the Bloqués tab after Archivées', () => {
+    expect(MESSAGES_TABS.map((tab) => tab.label)).toEqual(['Messages', 'Demandes', 'Archivées', 'Bloqués']);
   });
 });
 

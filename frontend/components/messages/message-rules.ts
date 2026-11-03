@@ -9,13 +9,14 @@ import type { ConversationListOptions, ConversationView } from '@/lib/messages-a
 /** The longest private message, in characters (DEC-008). The API refuses more. */
 export const MESSAGE_MAX_LENGTH = 1000;
 
-/** The three lists of the screen, one per tab. */
-export type MessagesTab = 'messages' | 'requests' | 'archived';
+/** The four lists of the screen, one per tab. */
+export type MessagesTab = 'messages' | 'requests' | 'archived' | 'blocked';
 
 export const MESSAGES_TABS: readonly { id: MessagesTab; label: string }[] = [
   { id: 'messages', label: 'Messages' },
   { id: 'requests', label: 'Demandes' },
   { id: 'archived', label: 'Archivées' },
+  { id: 'blocked', label: 'Bloqués' },
 ];
 
 /** The list parameters of a tab. The requests tab shows the requests waiting for the viewer. */
@@ -25,6 +26,9 @@ export function listOptionsFor(tab: MessagesTab): ConversationListOptions {
   }
   if (tab === 'archived') {
     return { archived: true };
+  }
+  if (tab === 'blocked') {
+    return { blocked: true };
   }
   return {};
 }
