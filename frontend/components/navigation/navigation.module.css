@@ -228,6 +228,14 @@
   min-width: 0;
 }
 
+/* Under 360 px the five equal columns are too narrow for "Notifications": each column takes its label width. */
+@media (max-width: 359.98px) {
+  .barList {
+    grid-template-columns: repeat(5, auto);
+    justify-content: space-between;
+  }
+}
+
 .bar {
   flex-direction: column;
   justify-content: center;
